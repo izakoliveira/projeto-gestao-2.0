@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Administração de Restrições{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-shield"></i> Administração de Restrições</h4>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="mb-4">
+                        <div class="mb-3">
+                            <label for="usuario_id" class="form-label">Selecione os usuários:</label>
+                            <select class="form-select" id="usuario_id" name="usuario_id" multiple size="5" required
+                                onchange="this.form.submit()">
+                                {% for usuario in usuarios %}
+                                <option value="{{ usuario.id }}" {% if usuario_id and usuario.id|string in usuario_id
+                                    %}selected{% endif %}>{{ usuario.nome }} ({{ usuario.email }})</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Segure Ctrl (Windows) ou Command (Mac) para selecionar
+                                vários.</small>
+                        </div>
+                    </form>
+                    {% if usuario_id %}
+                    <form method="POST">
+                        {% for uid in usuario_id %}
+                        <input type="hidden" name="usuario_id" value="{{ uid }}">
+                        {% endfor %}
+                        <div class="mb-3">
+                            <label class="form-label">Funcionalidades restritas para os usuários selecionados:</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restr_criar_projeto"
+                                    name="restr_criar_projeto" {% if restricoes.get('restr_criar_projeto') %}checked{%
+                                    endif %}>
+                                <label class="form-check-label" for="restr_criar_projeto">Criar Projetos</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restr_editar_projeto"
+                                    name="restr_editar_projeto" {% if restricoes.get('restr_editar_projeto') %}checked{%
+                                    endif %}>
+                                <label class="form-check-label" for="restr_editar_projeto">Editar Projetos</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restr_excluir_projeto"
+                                    name="restr_excluir_projeto" {% if restricoes.get('restr_excluir_projeto')
+                                    %}checked{% endif %}>
+                                <label class="form-check-label" for="restr_excluir_projeto">Excluir Projetos</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restr_criar_tarefa"
+                                    name="restr_criar_tarefa" {% if restricoes.get('restr_criar_tarefa') %}checked{%
+                                    endif %}>
+                                <label class="form-check-label" for="restr_criar_tarefa">Criar Tarefas</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restr_editar_tarefa"
+                                    name="restr_editar_tarefa" {% if restricoes.get('restr_editar_tarefa') %}checked{%
+                                    endif %}>
+                                <label class="form-check-label" for="restr_editar_tarefa">Editar Tarefas</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restr_excluir_tarefa"
+                                    name="restr_excluir_tarefa" {% if restricoes.get('restr_excluir_tarefa') %}checked{%
+                                    endif %}>
+                                <label class="form-check-label" for="restr_excluir_tarefa">Excluir Tarefas</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3">
+                            <i class="fas fa-save"></i> Salvar Restrições
+                        </button>
+                    </form>
+                    {% endif %}
+                    <!-- Interface para feriados manuais (Admin) -->
+                    <hr>
+                    <div id="feriados-manuais-admin" class="mt-3">
+                        <h6>Feriados Manuais (Admin)</h6>
+                        <ul id="lista-feriados-manuais-admin"></ul>
+                        <input type="date" id="input-feriado-manual-admin">
+                        <button class="btn btn-sm btn-primary" onclick="adicionarFeriadoManualAdmin()">Adicionar Feriado
+                            Manual</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function getFeriadosManuaisStorage(ano) {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        return (dados[ano] || []);
+    }
+
+    function setFeriadosManuaisStorage(ano, lista) {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        dados[ano] = lista;
+        localStorage.setItem('feriadosManuais', JSON.stringify(dados));
+    }
+
+    function renderizarFeriadosManuaisAdmin(ano) {
+        const lista = getFeriadosManuaisStorage(ano);
+        const ul = document.getElementById('lista-feriados-manuais-admin');
+        if (!ul) return;
+        ul.innerHTML = '';
+        lista.forEach(data => {
+            const li = document.createElement('li');
+            li.textContent = data;
+            const btn = document.createElement('button');
+            btn.textContent = 'Remover';
+            btn.className = 'btn btn-sm btn-danger ms-2';
+            btn.onclick = function () {
+                removerFeriadoManualAdmin(data, ano);
+            };
+            li.appendChild(btn);
+            ul.appendChild(li);
+        });
+    }
+
+    function adicionarFeriadoManualAdmin() {
+        const ano = new Date().getFullYear();
+        const input = document.getElementById('input-feriado-manual-admin');
+        const data = input.value;
+        if (!data) return;
+        let lista = getFeriadosManuaisStorage(ano);
+        if (!lista.includes(data)) {
+            lista.push(data);
+            setFeriadosManuaisStorage(ano, lista);
+            renderizarFeriadosManuaisAdmin(ano);
+        }
+        input.value = '';
+    }
+
+    function removerFeriadoManualAdmin(data, ano) {
+        let lista = getFeriadosManuaisStorage(ano);
+        lista = lista.filter(d => d !== data);
+        setFeriadosManuaisStorage(ano, lista);
+        renderizarFeriadosManuaisAdmin(ano);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const ano = new Date().getFullYear();
+        renderizarFeriadosManuaisAdmin(ano);
+    });
+</script>
+{% endblock %}

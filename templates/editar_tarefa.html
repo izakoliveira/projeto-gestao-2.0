@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-edit"></i> Editar Tarefa
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nome">
+                                        <i class="fas fa-tasks"></i> Nome da Tarefa:
+                                    </label>
+                                    <input type="text" class="form-control" name="nome" value="{{ tarefa.nome }}"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="colecao">
+                                        <i class="fas fa-folder"></i> Coleção:
+                                    </label>
+                                    <input type="text" class="form-control" name="colecao"
+                                        value="{{ tarefa.colecao or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="status">
+                                        <i class="fas fa-info-circle"></i> Status:
+                                    </label>
+                                    <select class="form-control" name="status" required>
+                                        <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif %}>
+                                            Pendente</option>
+                                        <option value="em progresso" {% if tarefa.status=='em progresso' %}selected{%
+                                            endif %}>Em Progresso</option>
+                                        <option value="concluída" {% if tarefa.status=='concluída' %}selected{% endif
+                                            %}>Concluída</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="descricao">
+                                <i class="fas fa-align-left"></i> Descrição:
+                            </label>
+                            <textarea class="form-control" name="descricao" rows="3">{{ tarefa.descricao }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="data_inicio">
+                                        <i class="fas fa-calendar-plus"></i> Data de Início:
+                                    </label>
+                                    <input type="date" class="form-control" name="data_inicio"
+                                        value="{{ tarefa.data_inicio }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="data_fim">
+                                        <i class="fas fa-calendar-check"></i> Data de Término:
+                                    </label>
+                                    <input type="date" class="form-control" name="data_fim"
+                                        value="{{ tarefa.data_fim }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="usuario_id">
+                                <i class="fas fa-user"></i> Responsável:
+                            </label>
+                            <select class="form-control" name="usuario_id" id="usuario_id">
+                                <option value="">Selecione um responsável</option>
+                                {% for usuario in usuarios %}
+                                <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id %}selected{% endif
+                                    %}>
+                                    {{ usuario.nome }} ({{ usuario.email }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary btn-lg"
+                                onclick="return checarResponsavelSelecionado();">
+                                <i class="fas fa-save"></i> Salvar Alterações
+                            </button>
+                            <a href="{{ url_for('detalhes_projeto', projeto_id=tarefa.projeto_id) }}"
+                                class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Intercepta o submit do formulário para AJAX
+    const form = document.querySelector('form');
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        // Checa responsável (aviso, mas permite salvar)
+        var usuarioId = document.getElementById('usuario_id').value;
+        if (!usuarioId) {
+            exibirToastResponsavel();
+        }
+        // Monta dados do formulário
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => { data[key] = value; });
+        // Envia via fetch
+        const url = window.location.pathname;
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify(data)
+            });
+            const result = await resp.json();
+            if (result.sucesso) {
+                exibirToastSucesso('Tarefa editada com sucesso!');
+                setTimeout(function () {
+                    window.location.href = "{{ url_for('detalhes_projeto', projeto_id=tarefa.projeto_id) }}";
+                }, 2000);
+            } else {
+                exibirToastErro(result.erro || 'Erro ao editar tarefa.');
+            }
+        } catch (err) {
+            exibirToastErro('Erro de comunicação com o servidor.');
+        }
+    });
+
+    function exibirToastResponsavel() {
+        var toastContainer = document.getElementById('toastContainerAviso');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainerAviso';
+            toastContainer.className = 'position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = 1080;
+            toastContainer.style.minWidth = '300px';
+            document.body.appendChild(toastContainer);
+        }
+        var toastId = 'toastResponsavel_' + Date.now();
+        var toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-warning border-0" role="alert" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Atenção: Nenhum responsável selecionado para esta tarefa!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+            </div>
+        </div>`;
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        var toastEl = document.getElementById(toastId);
+        var toast = new bootstrap.Toast(toastEl);
+        toast.show();
+        toastEl.addEventListener('hidden.bs.toast', function () { toastEl.remove(); });
+    }
+
+    function exibirToastSucesso(msg) {
+        var toastContainer = document.getElementById('toastContainerGlobal');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainerGlobal';
+            toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+            toastContainer.style.zIndex = 1080;
+            toastContainer.style.minWidth = '300px';
+            document.body.appendChild(toastContainer);
+        }
+        var toastId = 'toastSucesso_' + Date.now();
+        var toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-success border-0" role="alert" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i> ${msg}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+            </div>
+        </div>`;
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        var toastEl = document.getElementById(toastId);
+        var toast = new bootstrap.Toast(toastEl);
+        toast.show();
+        toastEl.addEventListener('hidden.bs.toast', function () { toastEl.remove(); });
+    }
+
+    function exibirToastErro(msg) {
+        var toastContainer = document.getElementById('toastContainerAviso');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainerAviso';
+            toastContainer.className = 'position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = 1080;
+            toastContainer.style.minWidth = '300px';
+            document.body.appendChild(toastContainer);
+        }
+        var toastId = 'toastErro_' + Date.now();
+        var toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-danger border-0" role="alert" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-times-circle me-2"></i> ${msg}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+            </div>
+        </div>`;
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        var toastEl = document.getElementById(toastId);
+        var toast = new bootstrap.Toast(toastEl);
+        toast.show();
+        toastEl.addEventListener('hidden.bs.toast', function () { toastEl.remove(); });
+    }
+</script>
+{% endblock %}

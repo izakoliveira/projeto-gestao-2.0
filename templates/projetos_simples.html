@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0"><i class="fas fa-project-diagram"></i> Meus Projetos</h1>
+        <a href="/logout" class="btn btn-danger">Logout</a>
+    </div>
+
+    {% if projetos %}
+    <div class="row">
+        {% for projeto in projetos %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-project-diagram"></i> {{ projeto.nome }}</h5>
+                    <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}">
+                        {{ projeto.status or 'Sem status' }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-2"><i class="fas fa-align-left"></i> {{ projeto.descricao or 'Sem descrição' }}</p>
+                    <div class="mb-2">
+                        <i class="fas fa-calendar"></i> <strong>Início:</strong> {{ projeto.data_inicio or 'Não definida' }}<br>
+                        <i class="fas fa-calendar-check"></i> <strong>Término:</strong> {{ projeto.data_fim or 'Não definida' }}
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                    <div class="btn-group" role="group">
+                        <a href="/projetos/{{ projeto.id }}" class="btn btn-info btn-sm" title="Ver Detalhes">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="/projetos/excluir/{{ projeto.id }}"
+                            onclick="return confirm('Tem certeza que deseja excluir?')" class="btn btn-danger btn-sm"
+                            title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-info-circle fa-2x mb-3"></i>
+        <h5>Nenhum projeto encontrado</h5>
+        <p>Você não tem projetos cadastrados.</p>
+    </div>
+    {% endif %}
+
+    <!-- Gantt geral -->
+    <div class="card mb-4 mt-5">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-chart-bar"></i> Gantt Geral de Todos os Projetos
+        </div>
+        <div class="card-body">
+            <div id="gantt_geral" style="width:100%; height:400px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.5.0/dist/frappe-gantt.css">
+<script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.5.0/dist/frappe-gantt.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ganttDiv = document.getElementById('gantt_geral');
+    
+    if (ganttDiv && typeof Gantt !== 'undefined') {
+        const dadosGantt = {{ gantt_geral_data | tojson | safe }};
+        
+        // Dados de exemplo se não houver dados
+        let tarefas = dadosGantt && dadosGantt.length > 0 ? dadosGantt : [
+            {
+                id: '1',
+                name: 'Tarefa de Exemplo 1',
+                start: '2025-01-01',
+                end: '2025-01-15',
+                progress: 50,
+                dependencies: '',
+                custom_class: 'status-em-progresso'
+            },
+            {
+                id: '2',
+                name: 'Tarefa de Exemplo 2',
+                start: '2025-01-10',
+                end: '2025-01-25',
+                progress: 30,
+                dependencies: '1',
+                custom_class: 'status-pendente'
+            }
+        ];
+        
+        try {
+            new Gantt("#gantt_geral", tarefas, {
+                view_mode: 'Month',
+                date_format: 'YYYY-MM-DD',
+                show_progress: true,
+                show_arrows: true,
+                show_today: true,
+                show_weekends: true,
+                language: 'pt'
+            });
+        } catch (error) {
+            console.error('Erro ao inicializar Gantt:', error);
+            ganttDiv.innerHTML = '<p style="color: red;">Erro ao carregar o Gantt</p>';
+        }
+    }
+});
+</script>
+{% endblock %} 

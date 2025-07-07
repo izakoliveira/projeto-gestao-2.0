@@ -1,0 +1,1362 @@
+{% extends "base.html" %}
+
+{% set numero_para_id = {} %}
+{% for t in tarefas %}
+{% set _ = numero_para_id.update({loop.index|string: t.id}) %}
+{% endfor %}
+
+{% set id_para_ordem = {} %}
+{% for t in tarefas %}
+{% set _ = id_para_ordem.update({t.id: t.ordem|string}) %}
+{% endfor %}
+
+{% macro extrair_ids_predecessoras(predecessoras, numero_para_id) -%}
+{%- set ids = [] -%}
+{%- for pred in predecessoras.split(';') if pred -%}
+{%- set num = pred.split('FS')[0].split('SS')[0].split('FF')[0].split('SF')[0] -%}
+{%- set id = numero_para_id.get(num, num) -%}
+{%- set _ = ids.append(id) -%}
+{%- endfor -%}
+{{ ids|join(',') }}
+{%- endmacro %}
+
+{% block content %}
+<div class="container-fluid mt-4" style="padding-left: 15px; padding-right: 0px; padding-bottom: 24px;">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="fas fa-project-diagram"></i> {{ projeto.nome }}
+                        </h2>
+                        <div>
+                            <a href="{{ url_for('editar_projeto', projeto_id=projeto.id) }}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{{ url_for('criar_tarefa', projeto_id=projeto.id) }}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Nova Tarefa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5><i class="fas fa-align-left"></i> Descrição:</h5>
+                            <p class="text-muted">{{ projeto.descricao or 'Sem descrição' }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-calendar"></i> Período do Projeto:</h6>
+                                    <p class="mb-1">
+                                        <strong>Início:</strong> {{ projeto.data_inicio }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Término:</strong> {{ projeto.data_fim }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
+                            <a href="{{ url_for('criar_tarefa', projeto_id=projeto.id) }}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Nova Tarefa
+                            </a>
+                        </div>
+
+                        {% if tarefas %}
+                        <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                            <table class="table table-hover w-100" id="tabela-tarefas-inline"
+                                style="font-size: 0.95em;">
+                                <colgroup>
+                                    <col style="width: 32px;">
+                                    <col style="width: 40px;">
+                                    <col style="width: 300px;">
+                                    <col>
+                                    <col>
+                                    <col style="width: 100px;">
+                                    <col style="width: 100px;">
+                                    <col style="width: 150px;">
+                                    <col>
+                                    <col>
+                                    <col style="width: 100px;">
+                                </colgroup>
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="width:32px"></th>
+                                        <th>Nº</th>
+                                        <th>Nome</th>
+                                        <th>Predecessoras</th>
+                                        <th>Data Início</th>
+                                        <th>Data Término</th>
+                                        <th>Duração (dias)</th>
+                                        <th>Status</th>
+                                        <th>Responsável</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tarefa in tarefas %}
+                                    <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
+                                        <td class="drag-handle"
+                                            style="cursor: grab; text-align:center; font-size:1.3em; color:#888;">
+                                            &#9776;</td>
+                                        <td class="numero-tarefa">{{ tarefa.ordem or '' }}</td>
+                                        <td><input type="text" class="form-control form-control-sm"
+                                                value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome"></td>
+                                        <td class="predecessoras-td">
+                                            <button type="button"
+                                                class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                                onclick="abrirModalPredecessora(this)"><i
+                                                    class="fas fa-link"></i></button>
+                                            <input type="text" class="form-control form-control-sm"
+                                                value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
+                                                name="predecessoras" placeholder="Ex: 2FS+2d"
+                                                onchange="onPredecessorasEdit(this)"
+                                                onkeyup="onPredecessorasEdit(this)">
+                                        </td>
+                                        <td><input type="date" class="form-control form-control-sm"
+                                                value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
+                                                name="data_inicio" {% if tarefa.data_inicio_calculada %}
+                                                data-calculada="1" readonly style="background:#fffbe6;" {% endif %}
+                                                oninput="onInicioOuFimEdit(this)"></td>
+                                        <td><input type="date" class="form-control form-control-sm"
+                                                value="{{ tarefa.data_fim_iso }}" data-id="{{ tarefa.id }}"
+                                                name="data_fim" {% if tarefa.data_fim_calculada %} data-calculada="1"
+                                                readonly style="background:#fffbe6;" {% endif %}
+                                                oninput="onDuracaoOuFimEdit(this)"
+                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
+                                        <td><input type="number" class="form-control form-control-sm" name="duracao"
+                                                min="1" value="{{ tarefa.duracao or '' }}"
+                                                oninput="onDuracaoOuFimEdit(this)"
+                                                onblur="onDuracaoOuFimEdit(this, true)"
+                                                onkeyup="onDuracaoOuFimEdit(this)">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
+                                                name="status">
+                                                <option value="pendente" {% if tarefa.status=='pendente' %}selected{%
+                                                    endif %}>Pendente</option>
+                                                <option value="em progresso" {% if tarefa.status=='em progresso'
+                                                    %}selected{% endif %}>Em Progresso</option>
+                                                <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
+                                                    endif %}>Concluída</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="usuario_id"
+                                                data-id="{{ tarefa.id }}">
+                                                <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
+                                                    responsável</option>
+                                                {% for usuario in usuarios %}
+                                                <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
+                                                    %}selected{% endif %}>{{ usuario.email }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
+                                                    class="fas fa-save"></i></button>
+                                            <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
+                                                class="btn btn-warning btn-sm" title="Editar tarefa"><i
+                                                    class="fas fa-edit"></i></a>
+                                            <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i
+                                                    class="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <!-- Linha para nova tarefa -->
+                                    <tr id="linha-nova-tarefa">
+                                        <td></td>
+                                        <td></td>
+                                        <td><input type="text" class="form-control form-control-sm" name="nome"
+                                                placeholder="Nova tarefa"></td>
+                                        <td class="predecessoras-td">
+                                            <button type="button"
+                                                class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                                onclick="abrirModalPredecessora(this)"><i
+                                                    class="fas fa-link"></i></button>
+                                            <input type="text" class="form-control form-control-sm" name="predecessoras"
+                                                value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
+                                                onkeyup="onPredecessorasEdit(this)">
+                                        </td>
+                                        <td><input type="date" class="form-control form-control-sm" name="data_inicio"
+                                                oninput="onInicioOuFimEdit(this)"></td>
+                                        <td><input type="date" class="form-control form-control-sm" name="data_fim"
+                                                oninput="onDuracaoOuFimEdit(this)"
+                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
+                                        <td><input type="number" class="form-control form-control-sm" name="duracao"
+                                                min="1" placeholder="Dias" oninput="onDuracaoOuFimEdit(this)"
+                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="status">
+                                                <option value="pendente">Pendente</option>
+                                                <option value="em progresso">Em Progresso</option>
+                                                <option value="concluída">Concluída</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="usuario_id">
+                                                <option value="">Sem responsável</option>
+                                                {% for usuario in usuarios %}
+                                                <option value="{{ usuario.id }}">{{ usuario.email }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-success btn-sm"
+                                                onclick="criarTarefaNovaLinha(this)"><i
+                                                    class="fas fa-plus"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if tarefas|length > 5 %}
+                        <div class="text-center mt-3">
+                            <p class="text-muted">Mostrando 5 de {{ tarefas|length }} tarefas</p>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle fa-2x mb-3"></i>
+                            <h5>Nenhuma tarefa encontrada</h5>
+                            <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
+                            <a href="{{ url_for('criar_tarefa', projeto_id=projeto.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Criar Primeira Tarefa
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-end mt-2">
+                        <button class="btn btn-primary" type="button" onclick="salvarTodasTarefas()">
+                            <i class="fas fa-save"></i> Salvar todas
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <i class="fas fa-chart-bar"></i> Gráfico de Gantt
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="mb-2 d-flex align-items-center gap-2 flex-wrap">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="zoomFontOut()">-</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="zoomFontIn()">+</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('day')">Dia</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('week')">Semana</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('month')">Mês</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('year')">Ano</button>
+                            </div>
+                            <div id="gantt_here" style="width:100%; height:500px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('projetos') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar para a Lista de Projetos
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal avançado de seleção de predecessoras -->
+<div class="modal fade" id="modalPredecessora" tabindex="-1" aria-labelledby="modalPredecessoraLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPredecessoraLabel">Selecionar Predecessoras</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Tarefa</th>
+                            <th>Tipo</th>
+                            <th>Deslocamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tarefa in tarefas %}
+                        <tr>
+                            <td><input type="checkbox" class="chk-pred" data-id="{{ tarefa.id }}"></td>
+                            <td>{{ tarefa.nome }}</td>
+                            <td>
+                                <select class="form-select form-select-sm tipo-pred" data-id="{{ tarefa.id }}">
+                                    <option value="FS">FS</option>
+                                    <option value="SS">SS</option>
+                                    <option value="FF">FF</option>
+                                    <option value="SF">SF</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="form-control form-control-sm desloc-pred"
+                                    data-id="{{ tarefa.id }}" placeholder="Ex: +2d, -1d"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnSalvarPredecessoras">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css">
+<style>
+    /* Força a largura da tabela interna do Gantt igual à tabela de tarefas */
+    #gantt_here .gantt_grid,
+    #gantt_here .gantt_task {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* Remove qualquer border extra do Gantt */
+    #gantt_here .gantt_grid,
+    #gantt_here .gantt_task,
+    #gantt_here .gantt_grid_data,
+    #gantt_here .gantt_task_bg {
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    /* Ajuste fino: diminua ou aumente até alinhar visualmente */
+    #gantt_here {
+        padding-left: 0 !important;
+        padding-right: 0px !important;
+        margin-left: -2px !important;
+        margin-right: 0px !important;
+        transition: font-size 0.2s;
+    }
+
+    /* Remove as linhas de grade do grid (coluna lateral) do Gantt */
+    .gantt_grid .gantt_row,
+    .gantt_grid .gantt_grid_head_row {
+        border-bottom: none !important;
+    }
+
+    .gantt_grid .gantt_grid_head_cell,
+    .gantt_grid .gantt_cell {
+        border-right: none !important;
+    }
+
+    /* Remove apenas as linhas verticais da área das barras (task area) */
+    .gantt_task .gantt_task_cell {
+        border-right: none !important;
+    }
+
+    /* Remove as linhas de grade do cabeçalho do Gantt */
+    .gantt_scale_cell,
+    .gantt_scale_row {
+        border-right: none !important;
+        border-bottom: none !important;
+    }
+
+    #gantt_here * {
+        font-size: inherit !important;
+    }
+
+    /* Destacar datas em vermelho se sábado, domingo ou feriado */
+    .data-vermelha {
+        border: 2px solid red !important;
+        background: #ffeaea !important;
+    }
+
+    #tabela-tarefas-inline input[name="duracao"] {
+        width: 55px !important;
+        max-width: 55px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline input[type="date"] {
+        width: 110px !important;
+        max-width: 110px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline select[name="status"] {
+        width: 120px !important;
+        max-width: 150px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline td,
+    #tabela-tarefas-inline th {
+        padding-left: 4px;
+        padding-right: 4px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    #tabela-tarefas-inline input,
+    #tabela-tarefas-inline select {
+        height: 40px !important;
+        line-height: 20px !important;
+        vertical-align: middle !important;
+    }
+
+    #tabela-tarefas-inline .btn {
+        margin: 0px 3px 0px 0px !important;
+        padding: 8px 8px !important;
+    }
+
+    #tabela-tarefas-inline td:last-child {
+        white-space: nowrap;
+    }
+
+    #tabela-tarefas-inline input[name="nome"] {
+        width: 280px !important;
+        max-width: 280px !important;
+        min-width: 280px !important;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    #tabela-tarefas-inline input[name="predecessoras"] {
+        width: 120px !important;
+        max-width: 180px !important;
+        min-width: 60px !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline input[type="date"] {
+        width: 110px !important;
+        max-width: 110px !important;
+        min-width: 0 !important;
+        padding-left: 6px;
+        padding-right: 3px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline select[name="status"] {
+        width: 130px !important;
+        max-width: 150px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline select[name="usuario_id"] {
+        width: 150px !important;
+        max-width: 180px !important;
+        min-width: 0 !important;
+        padding-left: 8px;
+        padding-right: 8px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline td.drag-handle {
+        width: 25px !important;
+        min-width: 25px !important;
+        max-width: 32px !important;
+        text-align: center;
+        vertical-align: middle !important;
+        font-size: 1.3em;
+        color: #888;
+        padding-left: 4px !important;
+        padding-right: 0px !important;
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa {
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 40px !important;
+        text-align: center;
+        vertical-align: middle !important;
+        font-weight: bold;
+        padding: 0 !important;
+    }
+
+    .linha-colecao {
+        background-color: #e0e7ef !important;
+    }
+</style>
+<script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    window.idParaOrdem = {{ id_para_ordem | tojson }};
+
+    gantt.config.xml_date = "%Y-%m-%d";
+
+    function setZoom(value) {
+        localStorage.setItem('gantt_zoom', value);
+        switch (value) {
+            case "day":
+                gantt.config.scales = [
+                    { unit: "day", step: 1, format: "%d %b" }
+                ];
+                gantt.config.scale_height = 27;
+                break;
+            case "week":
+                gantt.config.scales = [
+                    { unit: "week", step: 1, format: "Semana %W" },
+                    { unit: "day", step: 1, format: "%d %M" }
+                ];
+                gantt.config.scale_height = 50;
+                break;
+            case "month":
+                gantt.config.scales = [
+                    { unit: "month", step: 1, format: "%M %Y" },
+                    { unit: "week", step: 1, format: "S%W" }
+                ];
+                gantt.config.scale_height = 50;
+                break;
+            case "year":
+                gantt.config.scales = [
+                    { unit: "year", step: 1, format: "%Y" },
+                    { unit: "month", step: 1, format: "%M" }
+                ];
+                gantt.config.scale_height = 50;
+                break;
+        }
+        gantt.render();
+    }
+
+    gantt.attachEvent("onColumnResizeEnd", function (index, width) {
+        if (index === 0) {
+            localStorage.setItem('gantt_col_width', width);
+        }
+    });
+
+    // Tradução das labels e datas
+    gantt.locale = {
+        date: {
+            month_full: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
+            month_short: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+            day_full: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"],
+            day_short: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+        },
+        labels: {
+            new_task: "Nova tarefa",
+            dhx_cal_today_button: "Hoje",
+            day_tab: "Dia",
+            week_tab: "Semana",
+            month_tab: "Mês",
+            new_event: "Novo evento",
+            icon_save: "Salvar",
+            icon_cancel: "Cancelar",
+            icon_details: "Detalhes",
+            icon_edit: "Editar",
+            icon_delete: "Excluir",
+            confirm_closing: "",
+            confirm_deleting: "A tarefa será excluída permanentemente. Tem certeza?",
+            section_description: "Descrição",
+            section_time: "Período",
+            section_type: "Tipo",
+            column_text: "Nome da tarefa",
+            column_start_date: "Início",
+            column_duration: "Duração",
+            column_add: "",
+            link: "Dependência",
+            confirm_link_deleting: "será removida",
+            link_start: " (início)",
+            link_end: " (fim)",
+            type_task: "Tarefa",
+            type_project: "Projeto",
+            type_milestone: "Marco",
+            minutes: "Minutos",
+            hours: "Horas",
+            days: "Dias",
+            weeks: "Semanas",
+            months: "Meses",
+            years: "Anos",
+            message_ok: "OK",
+            message_cancel: "Cancelar"
+        }
+    };
+
+    // Remover o nome da tarefa de dentro das barras
+    gantt.templates.task_text = function (start, end, task) {
+        return "";
+    };
+
+    // Função para calcular dias úteis entre duas datas
+    function calcularDiasUteis(dataInicio, dataFim) {
+        // Garante que as datas sejam objetos Date
+        let startDate = (dataInicio instanceof Date) ? dataInicio : new Date(dataInicio);
+        let endDate = (dataFim instanceof Date) ? dataFim : new Date(dataFim);
+        if (isNaN(startDate) || isNaN(endDate)) return 0;
+        let count = 0;
+        let current = new Date(startDate);
+        while (current <= endDate) {
+            const yyyy = current.getFullYear();
+            const mm = String(current.getMonth() + 1).padStart(2, '0');
+            const dd = String(current.getDate()).padStart(2, '0');
+            const dataStr = `${yyyy}-${mm}-${dd}`;
+            const diaSemana = current.getDay();
+            if (diaSemana !== 0 && diaSemana !== 6 && !isFeriado(dataStr)) {
+                count++;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        return count;
+    }
+
+    // Função para formatar datas no padrão dd/mm/aaaa
+    function formatarDataBR(date) {
+        let d = (date instanceof Date) ? date : new Date(date);
+        if (isNaN(d)) return '';
+        let dia = String(d.getDate()).padStart(2, '0');
+        let mes = String(d.getMonth() + 1).padStart(2, '0');
+        let ano = d.getFullYear();
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    // Tooltip ao passar o mouse sobre a barra
+    gantt.templates.tooltip_text = function (start, end, task) {
+        var diasUteis = 'N/A';
+        try {
+            if (start && end) {
+                diasUteis = calcularDiasUteis(start, end);
+            }
+        } catch (e) {
+            diasUteis = 'N/A';
+        }
+        // Ajusta a data de término para ser inclusiva
+        var dataTerminoInclusiva = end ? new Date((end instanceof Date ? end : new Date(end)).getTime() - 24 * 60 * 60 * 1000) : end;
+        return (
+            "<b>Nome:</b> " + task.text + "<br/>" +
+            "<b>Início:</b> " + formatarDataBR(start) + "<br/>" +
+            "<b>Término:</b> " + formatarDataBR(dataTerminoInclusiva) + "<br/>" +
+            "<b>Duração:</b> " + task.duration + " dias<br/>" +
+            "<b>Dias úteis:</b> " + diasUteis + " dias"
+        );
+    };
+
+    // Ativar explicitamente o plugin de tooltip
+    gantt.plugins({ tooltip: true });
+
+    gantt.init("gantt_here");
+    var tarefas = {{ tarefas_gantt| tojson | safe }};
+    var all_links = {{ all_links| tojson | safe }};
+    gantt.parse({
+        data: tarefas,
+        links: all_links
+    });
+
+    // Zoom de fonte (+ e -) garantido com window.onload
+    window.onload = function () {
+        const baseMinColumnWidth = 50; // valor base para a escala mais detalhada
+        const baseTaskNameColWidth = 200; // largura base da coluna Nome da tarefa (reduzida)
+        let ganttZoomFont = parseFloat(localStorage.getItem('gantt_font_zoom')) || 1;
+        let savedMinColWidth = parseFloat(localStorage.getItem('gantt_min_column_width'));
+        let savedRowHeight = parseFloat(localStorage.getItem('gantt_row_height'));
+        let savedBarHeight = parseFloat(localStorage.getItem('gantt_bar_height'));
+        let savedTaskNameColWidth = parseFloat(localStorage.getItem('gantt_task_name_col_width'));
+        // Restaurar zoom salvo
+        const savedZoom = localStorage.getItem('gantt_zoom') || 'month';
+        setZoom(savedZoom);
+
+        function applyFontZoom() {
+            document.getElementById('gantt_here').style.fontSize = (ganttZoomFont * 100) + '%';
+            gantt.config.min_column_width = savedMinColWidth || baseMinColumnWidth * ganttZoomFont;
+            gantt.config.row_height = savedRowHeight || 40 * ganttZoomFont;
+            gantt.config.bar_height = savedBarHeight || 24 * ganttZoomFont;
+            // Ajustar largura da coluna Nome da tarefa proporcional ao zoom, mas permitir sobrescrever pelo localStorage
+            let taskNameColWidth = savedTaskNameColWidth || baseTaskNameColWidth * ganttZoomFont;
+            gantt.config.columns = [
+                { name: "text", label: "Nome da tarefa", tree: true, width: taskNameColWidth },
+                { name: "add", label: "", width: 40 }
+            ];
+            localStorage.setItem('gantt_font_zoom', ganttZoomFont);
+            localStorage.setItem('gantt_min_column_width', gantt.config.min_column_width);
+            localStorage.setItem('gantt_row_height', gantt.config.row_height);
+            localStorage.setItem('gantt_bar_height', gantt.config.bar_height);
+            localStorage.setItem('gantt_task_name_col_width', taskNameColWidth);
+            // Reinicializar o Gantt para aplicar nova largura de coluna
+            gantt.clearAll();
+            gantt.init("gantt_here");
+            gantt.parse({
+                data: tarefas,
+                links: all_links
+            });
+        }
+
+        window.zoomFontIn = function () {
+            ganttZoomFont = Math.min(2, ganttZoomFont + 0.1); // até 200%
+            // Limpa largura salva para recalcular
+            localStorage.removeItem('gantt_task_name_col_width');
+            applyFontZoom();
+        }
+
+        window.zoomFontOut = function () {
+            ganttZoomFont = Math.max(0.5, ganttZoomFont - 0.1); // até 50%
+            // Limpa largura salva para recalcular
+            localStorage.removeItem('gantt_task_name_col_width');
+            applyFontZoom();
+        }
+
+        // Ao carregar a página, aplique o zoom salvo e restaure configurações
+        applyFontZoom();
+    }
+
+    // Variável global para feriados
+    var feriadosAnbima = [];
+
+    function isFeriado(dateStr) {
+        const result = feriadosAnbima.includes(dateStr);
+        console.log('isFeriado?', dateStr, result, feriadosAnbima);
+        return result;
+    }
+
+    function carregarFeriadosBrasilAPI(ano, uf, cidade) {
+        let url = `https://brasilapi.com.br/api/feriados/v1/${ano}`;
+        if (uf && cidade) {
+            url += `?estado=${uf}&cidade=${cidade}`;
+        }
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                feriadosAnbima = data.map(f => f.date);
+                // Feriados manuais de todos os anos
+                const feriadosManuais = getTodosFeriadosManuais();
+                feriadosAnbima = feriadosAnbima.concat(feriadosManuais);
+                console.log('Feriados carregados:', feriadosAnbima);
+                marcarDatasVermelhas();
+            });
+    }
+
+    function marcarDatasVermelhas() {
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            const val = input.value;
+            if (!val) {
+                input.classList.remove('data-vermelha');
+                return;
+            }
+            const [yyyy, mm, dd] = val.split('-');
+            if (!yyyy || !mm || !dd) {
+                input.classList.remove('data-vermelha');
+                return;
+            }
+            const day = new Date(`${yyyy}-${mm}-${dd}T00:00:00`).getDay();
+            const feriado = isFeriado(val);
+            // LOG para depuração
+            console.log('Input:', input, 'Valor:', val, 'Dia da semana:', day, 'Feriado:', feriado);
+            if (day === 0 || day === 6 || feriado) {
+                input.classList.add('data-vermelha');
+            } else {
+                input.classList.remove('data-vermelha');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const anoAtual = new Date().getFullYear();
+        const uf = 'GO';
+        const cidade = 'GOIANIA';
+        carregarFeriadosBrasilAPI(anoAtual, uf, cidade);
+
+        // Delegação para qualquer input de data, inclusive dinâmico
+        document.body.addEventListener('input', function (e) {
+            if (e.target && e.target.type === 'date') {
+                setTimeout(marcarDatasVermelhas, 10);
+            }
+        });
+        document.body.addEventListener('change', function (e) {
+            if (e.target && e.target.type === 'date') {
+                setTimeout(marcarDatasVermelhas, 10);
+            }
+        });
+
+        // Observa mudanças na tabela para inputs dinâmicos
+        const tabela = document.getElementById('tabela-tarefas-inline');
+        if (tabela) {
+            const observer = new MutationObserver(() => setTimeout(marcarDatasVermelhas, 10));
+            observer.observe(tabela, { childList: true, subtree: true });
+        }
+
+        // Chama ao carregar
+        setTimeout(marcarDatasVermelhas, 10);
+    });
+
+    // Funções utilitárias para feriados manuais (usadas pelo sistema, sem interface)
+    function getFeriadosManuaisStorage(ano) {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        return (dados[ano] || []);
+    }
+    function setFeriadosManuaisStorage(ano, lista) {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        dados[ano] = lista;
+        localStorage.setItem('feriadosManuais', JSON.stringify(dados));
+    }
+    // Nova função: retorna todos os feriados manuais de todos os anos
+    function getTodosFeriadosManuais() {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        let todos = [];
+        Object.values(dados).forEach(arr => { todos = todos.concat(arr); });
+        return todos;
+    }
+
+    // Nova função global para evitar erro de referência
+    function onInicioOuFimEdit(input) {
+        setTimeout(() => {
+            const tr = input.closest('tr');
+            const dataInicio = tr.querySelector('input[name="data_inicio"]').value;
+            const dataFim = tr.querySelector('input[name="data_fim"]').value;
+            const duracaoInput = tr.querySelector('input[name="duracao"]');
+            if (dataInicio && dataFim) {
+                const dur = calcularDuracao(dataInicio, dataFim);
+                if (duracaoInput) duracaoInput.value = dur;
+            }
+            marcarDatasVermelhas();
+        }, 10);
+    }
+    window.onInicioOuFimEdit = onInicioOuFimEdit;
+
+    // Debounce para o cálculo de duração
+    window._debounceTimers = window._debounceTimers || new WeakMap();
+    function onDuracaoOuFimEdit(input, immediate) {
+        const tr = input.closest('tr');
+        if (!immediate) {
+            // Debounce: só executa se o usuário parar de digitar por 400ms
+            if (window._debounceTimers.has(tr)) clearTimeout(window._debounceTimers.get(tr));
+            const timer = setTimeout(() => {
+                _onDuracaoOuFimEditExec(input);
+                window._debounceTimers.delete(tr);
+            }, 400);
+            window._debounceTimers.set(tr, timer);
+        } else {
+            if (window._debounceTimers.has(tr)) clearTimeout(window._debounceTimers.get(tr));
+            _onDuracaoOuFimEditExec(input);
+        }
+    }
+    function _onDuracaoOuFimEditExec(input) {
+        const tr = input.closest('tr');
+        const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+        const dataFimInput = tr.querySelector('input[name="data_fim"]');
+        const duracaoInput = tr.querySelector('input[name="duracao"]');
+        const duracao = parseInt(duracaoInput.value, 10);
+        const dataInicio = dataInicioInput.value;
+        const dataFim = dataFimInput.value;
+        if (duracao && duracao > 0) {
+            if (dataInicioInput.readOnly && !dataFimInput.readOnly && dataInicio) {
+                const inicio = new Date(dataInicio);
+                inicio.setDate(inicio.getDate() + duracao - 1);
+                dataFimInput.value = inicio.toISOString().split('T')[0];
+            }
+            else if (dataFimInput.readOnly && !dataInicioInput.readOnly && dataFim) {
+                const fim = new Date(dataFim);
+                fim.setDate(fim.getDate() - duracao + 1);
+                dataInicioInput.value = fim.toISOString().split('T')[0];
+            }
+            else if (!dataInicioInput.readOnly && !dataFimInput.readOnly) {
+                if (dataInicio) {
+                    const inicio = new Date(dataInicio);
+                    inicio.setDate(inicio.getDate() + duracao - 1);
+                    dataFimInput.value = inicio.toISOString().split('T')[0];
+                } else if (dataFim) {
+                    const fim = new Date(dataFim);
+                    fim.setDate(fim.getDate() - duracao + 1);
+                    dataInicioInput.value = fim.toISOString().split('T')[0];
+                }
+            }
+        }
+        marcarDatasVermelhas();
+    }
+    window.onDuracaoOuFimEdit = onDuracaoOuFimEdit;
+
+    // Indicativo visual para datas calculadas automaticamente (exemplo: fundo amarelo)
+    function marcarDatasCalculadasPorPredecessora() {
+        document.querySelectorAll('input[name="data_inicio"], input[name="data_fim"]').forEach(input => {
+            if (input.dataset.calculada === '1') {
+                input.style.background = '#fffbe6';
+            } else {
+                input.style.background = '';
+            }
+        });
+    }
+
+    function salvarLinhaTarefa(btn) {
+        const tr = btn.closest('tr');
+        const tarefaId = tr.querySelector('input[name="nome"]').dataset.id;
+        const nome = tr.querySelector('input[name="nome"]').value.trim();
+        const predecessoras = tr.querySelector('input[name="predecessoras"]').value.trim();
+        const data_inicio = tr.querySelector('input[name="data_inicio"]').value;
+        const data_fim = tr.querySelector('input[name="data_fim"]').value;
+        const duracao = tr.querySelector('input[name="duracao"]').value;
+        const status = tr.querySelector('select[name="status"]').value;
+        const usuario_id_el = tr.querySelector('select[name="usuario_id"]');
+        let usuario_id = usuario_id_el ? usuario_id_el.value : null;
+        usuario_id = (usuario_id === '' ? null : usuario_id);
+
+        if (!nome) {
+            alert('O nome da tarefa é obrigatório.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        let payload = {
+            nome,
+            predecessoras,
+            data_inicio: data_inicio || null,
+            data_fim: data_fim || null,
+            duracao: duracao || null,
+            status,
+            usuario_id: usuario_id || null
+        };
+        // Se houver input de colecao na linha, envie
+        const colecaoInput = tr.querySelector('input[name="colecao"]');
+        if (colecaoInput) {
+            payload.colecao = colecaoInput.value.trim();
+        }
+        fetch(`/tarefas/editar/${tarefaId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.sucesso) {
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-success');
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-save"></i>';
+                        btn.disabled = false;
+                    }, 1000);
+                } else {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-danger');
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    alert(data.erro || 'Erro ao salvar tarefa.');
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-save"></i>';
+                        btn.disabled = false;
+                    }, 2000);
+                }
+            })
+            .catch(() => {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-danger');
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                alert('Erro ao salvar tarefa.');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-save"></i>';
+                    btn.disabled = false;
+                }, 2000);
+            });
+    }
+    window.salvarLinhaTarefa = salvarLinhaTarefa;
+
+    function abrirModalPredecessora(btn) {
+        const tr = btn.closest('tr');
+        const input = tr.querySelector('input[name="predecessoras"]');
+        // Limpa seleção
+        document.querySelectorAll('.chk-pred').forEach(chk => chk.checked = false);
+        document.querySelectorAll('.tipo-pred').forEach(sel => sel.value = 'FS');
+        document.querySelectorAll('.desloc-pred').forEach(inp => inp.value = '');
+        // Preenche com valores atuais
+        const val = input.value.trim();
+        if (val) {
+            val.split(';').forEach(pred => {
+                if (!pred) return;
+                // Regex para extrair id, tipo e deslocamento
+                const m = pred.match(/^([^FS|SS|FF|SF]+)(FS|SS|FF|SF)?([+-]\d+d)?$/);
+                if (m) {
+                    const id = m[1];
+                    const tipo = m[2] || 'FS';
+                    const desloc = m[3] || '';
+                    const chk = document.querySelector('.chk-pred[data-id="' + id + '"]');
+                    const sel = document.querySelector('.tipo-pred[data-id="' + id + '"]');
+                    const inp = document.querySelector('.desloc-pred[data-id="' + id + '"]');
+                    if (chk) chk.checked = true;
+                    if (sel) sel.value = tipo;
+                    if (inp) inp.value = desloc;
+                }
+            });
+        }
+        window._inputPredecessorasAtivo = input;
+        var modal = new bootstrap.Modal(document.getElementById('modalPredecessora'));
+        modal.show();
+    }
+
+    document.getElementById('btnSalvarPredecessoras').onclick = function () {
+        const preds = [];
+        document.querySelectorAll('.chk-pred:checked').forEach(chk => {
+            const id = chk.getAttribute('data-id');
+            const tipo = document.querySelector('.tipo-pred[data-id="' + id + '"]').value;
+            const desloc = document.querySelector('.desloc-pred[data-id="' + id + '"]').value.trim();
+            const ordem = window.idParaOrdem[id] || id;
+            let pred = ordem + (tipo ? tipo : 'FS') + (desloc ? desloc : '');
+            preds.push(pred);
+        });
+        if (window._inputPredecessorasAtivo) {
+            window._inputPredecessorasAtivo.value = preds.join(';');
+            window._inputPredecessorasAtivo.dispatchEvent(new Event('change'));
+        }
+        var modal = bootstrap.Modal.getInstance(document.getElementById('modalPredecessora'));
+        modal.hide();
+    };
+
+    function calcularDuracao(dataInicio, dataFim) {
+        if (!dataInicio || !dataFim) return '';
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+        if (isNaN(inicio) || isNaN(fim)) return '';
+        // Inclusivo: diferença em dias + 1
+        return Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    // Salvar ao pressionar Tab ou Enter em qualquer input/select da linha
+    function adicionarEventosSalvarTabEnter() {
+        document.querySelectorAll('#tabela-tarefas-inline input, #tabela-tarefas-inline select').forEach(el => {
+            el.addEventListener('keydown', function (e) {
+                const tr = el.closest('tr');
+                if (e.key === 'Enter') {
+                    if (tr && tr.id === 'linha-nova-tarefa') {
+                        // Enter na linha de nova tarefa cria a tarefa
+                        const btnCriar = tr.querySelector('.btn-success');
+                        if (btnCriar && !btnCriar.disabled) {
+                            e.preventDefault();
+                            btnCriar.disabled = true; // previne duplo envio
+                            criarTarefaNovaLinha(btnCriar);
+                            setTimeout(() => { btnCriar.disabled = false; }, 1000); // reabilita após 1s
+                        }
+                    } else if (tr) {
+                        // Enter em linha existente salva
+                        const btnSalvar = tr.querySelector('.btn-success');
+                        if (btnSalvar) {
+                            e.preventDefault();
+                            salvarLinhaTarefa(btnSalvar);
+                        }
+                    }
+                } else if (e.key === 'Tab') {
+                    if (tr && tr.id !== 'linha-nova-tarefa') {
+                        const btnSalvar = tr.querySelector('.btn-success');
+                        if (btnSalvar) {
+                            e.preventDefault();
+                            salvarLinhaTarefa(btnSalvar);
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', adicionarEventosSalvarTabEnter);
+    // Se linhas forem adicionadas dinamicamente, chame adicionarEventosSalvarTabEnter() após inserir a linha
+
+    function criarTarefaNovaLinha(btn) {
+        const tr = btn.closest('tr');
+        const nome = tr.querySelector('input[name="nome"]').value.trim();
+        const predecessoras = tr.querySelector('input[name="predecessoras"]').value.trim();
+        const data_inicio = tr.querySelector('input[name="data_inicio"]').value;
+        const data_fim = tr.querySelector('input[name="data_fim"]').value;
+        const duracao = tr.querySelector('input[name="duracao"]').value;
+        const status = tr.querySelector('select[name="status"]').value;
+        const usuario_id_el = tr.querySelector('select[name="usuario_id"]');
+        let usuario_id = usuario_id_el ? usuario_id_el.value : null;
+        usuario_id = (usuario_id === '' ? null : usuario_id);
+
+        if (!nome) {
+            alert('O nome da tarefa é obrigatório.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        // Pega o id do projeto do contexto Jinja
+        const projeto_id = '{{ projeto.id }}';
+
+        fetch(`/projetos/${projeto_id}/criar_tarefa_rapida`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                nome,
+                predecessoras: predecessoras || null,
+                data_inicio: data_inicio || null,
+                data_fim: data_fim || null,
+                status,
+                usuario_id: usuario_id || null,
+                duracao: duracao || null
+            })
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus"></i>';
+                if (data.sucesso) {
+                    // Insere a nova linha antes da linha de nova tarefa
+                    const tbody = tr.parentElement;
+                    const temp = document.createElement('tbody');
+                    temp.innerHTML = data.html_linha;
+                    const novaLinha = temp.querySelector('tr');
+                    tbody.insertBefore(novaLinha, tr);
+                    // Atualiza o número da nova linha
+                    const linhas = Array.from(tbody.querySelectorAll('tr')).filter(row => row.id !== 'linha-nova-tarefa');
+                    const numero = linhas.length;
+                    const tdNumero = novaLinha.querySelector('.numero-tarefa');
+                    if (tdNumero) tdNumero.textContent = numero;
+                    novaLinha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Limpa os campos da linha de nova tarefa
+                    tr.querySelectorAll('input, select').forEach(el => {
+                        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                        else el.value = '';
+                    });
+                    // Reaplica eventos de salvar ao Tab/Enter e drag&drop
+                    adicionarEventosSalvarTabEnter();
+                    inicializarSortableTarefas();
+                    atualizarNumerosTarefas();
+                } else {
+                    alert('Erro ao criar tarefa: ' + (data.erro || 'Erro desconhecido.'));
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus"></i>';
+                alert('Erro ao criar tarefa: ' + err);
+            });
+    }
+
+    // Função para excluir tarefa via AJAX
+    function excluirTarefa(btn) {
+        if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+        const tr = btn.closest('tr');
+        const tarefaId = tr.querySelector('input[name="nome"]').dataset.id;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        fetch(`/tarefas/excluir/${tarefaId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.sucesso) {
+                    tr.remove();
+                } else {
+                    alert(data.erro || 'Erro ao excluir tarefa.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-trash"></i>';
+                }
+            })
+            .catch(() => {
+                alert('Erro ao excluir tarefa.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i>';
+            });
+    }
+    window.excluirTarefa = excluirTarefa;
+
+    // Drag & Drop com SortableJS
+    function inicializarSortableTarefas() {
+        const tabela = document.getElementById('tabela-tarefas-inline').querySelector('tbody');
+        if (!tabela) return;
+        new Sortable(tabela, {
+            handle: '.drag-handle',
+            animation: 150,
+            filter: '#linha-nova-tarefa',
+            draggable: 'tr:not(#linha-nova-tarefa)',
+            onEnd: function () {
+                // Atualiza os números na coluna "Nº"
+                const linhas = Array.from(tabela.querySelectorAll('tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+                linhas.forEach((tr, idx) => {
+                    const tdNumero = tr.querySelector('.numero-tarefa');
+                    if (tdNumero) tdNumero.textContent = idx + 1;
+                });
+                // Coletar IDs das tarefas na nova ordem
+                const ids = linhas.map(tr => tr.querySelector('input[name="nome"]').dataset.id);
+                // Enviar para o backend
+                fetch('/tarefas/atualizar_ordem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ ids })
+                });
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', inicializarSortableTarefas);
+    // Se linhas forem adicionadas dinamicamente, chame inicializarSortableTarefas() após inserir a linha
+
+    function salvarTodasTarefas() {
+        // Seleciona todos os botões de salvar das linhas de tarefa (exceto a linha de nova tarefa)
+        document.querySelectorAll('#tabela-tarefas-inline tbody tr:not(#linha-nova-tarefa) .btn-success').forEach(btn => {
+            salvarLinhaTarefa(btn);
+        });
+    }
+    window.salvarTodasTarefas = salvarTodasTarefas;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        if (novaLinha) {
+            novaLinha.querySelectorAll('input, select').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+            });
+        }
+    });
+
+    function liberarLinhaNovaTarefa() {
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        if (novaLinha) {
+            novaLinha.querySelectorAll('input, select, button').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+                el.style.pointerEvents = 'auto';
+            });
+            // Força o foco no campo nome ao clicar em qualquer parte da linha
+            novaLinha.onclick = function (e) {
+                const nomeInput = novaLinha.querySelector('input[name="nome"]');
+                if (nomeInput) nomeInput.focus();
+            };
+        }
+    }
+    document.addEventListener('DOMContentLoaded', liberarLinhaNovaTarefa);
+    // E sempre que criar uma nova tarefa, reaplique:
+    const _oldCriarTarefaNovaLinha = criarTarefaNovaLinha;
+    criarTarefaNovaLinha = function (btn) {
+        _oldCriarTarefaNovaLinha(btn);
+        setTimeout(liberarLinhaNovaTarefa, 100);
+    }
+
+    function atualizarNumerosTarefas() {
+        const linhas = Array.from(document.querySelectorAll('#tabela-tarefas-inline tbody tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+        linhas.forEach((tr, idx) => {
+            const tdNumero = tr.querySelector('.numero-tarefa');
+            if (tdNumero) tdNumero.textContent = idx + 1;
+        });
+    }
+
+    function onPredecessorasEdit(input) {
+        const tr = input.closest('tr');
+        const predecessorasStr = input.value.trim();
+        const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+        const dataFimInput = tr.querySelector('input[name="data_fim"]');
+        // Se não há predecessoras, liberar edição manual
+        if (!predecessorasStr) {
+            if (dataInicioInput) {
+                dataInicioInput.readOnly = false;
+                dataInicioInput.dataset.calculada = '';
+                dataInicioInput.style.background = '';
+            }
+            if (dataFimInput) {
+                dataFimInput.readOnly = false;
+                dataFimInput.dataset.calculada = '';
+                dataFimInput.style.background = '';
+            }
+            return;
+        }
+        const preds = predecessorasStr.split(';').map(s => s.trim()).filter(Boolean);
+        if (preds.length === 0) return;
+        // Mapear número de ordem para linha da tabela
+        const linhas = Array.from(document.querySelectorAll('#tabela-tarefas-inline tbody tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+        const ordemParaLinha = {};
+        linhas.forEach(trLinha => {
+            const ordem = trLinha.querySelector('.numero-tarefa')?.textContent?.trim();
+            if (ordem) ordemParaLinha[ordem] = trLinha;
+        });
+        // Para cada predecessora, calcular a data alvo
+        let datasInicio = [];
+        let datasFim = [];
+        preds.forEach(pred => {
+            // Ex: 2FS+2d, 3SS-1d
+            const m = pred.match(/^(\d+)(FS|SS|FF|SF)?([+-]\d+d)?$/);
+            if (!m) return;
+            const ordemPred = m[1];
+            const tipo = m[2] || 'FS';
+            const desloc = m[3] || '';
+            const linhaPred = ordemParaLinha[ordemPred];
+            if (!linhaPred) return;
+            const dataInicioPred = linhaPred.querySelector('input[name="data_inicio"]').value;
+            const dataFimPred = linhaPred.querySelector('input[name="data_fim"]').value;
+            let baseDate = null;
+            if (tipo === 'FS') baseDate = dataFimPred;
+            else if (tipo === 'SS') baseDate = dataInicioPred;
+            else if (tipo === 'FF') baseDate = dataFimPred;
+            else if (tipo === 'SF') baseDate = dataInicioPred;
+            if (!baseDate) return;
+            let data = new Date(baseDate);
+            if (desloc) {
+                const matchDesloc = desloc.match(/([+-])(\d+)d/);
+                if (matchDesloc) {
+                    const sinal = matchDesloc[1] === '+' ? 1 : -1;
+                    const dias = parseInt(matchDesloc[2], 10);
+                    data.setDate(data.getDate() + sinal * dias);
+                }
+            }
+            if (tipo === 'FS' || tipo === 'SS') datasInicio.push(data);
+            else if (tipo === 'FF' || tipo === 'SF') datasFim.push(data);
+        });
+        // Para múltiplas predecessoras: para datas de início, usar a MAIOR; para datas de fim, usar a MAIOR
+        let dataInicioFinal = null;
+        let dataFimFinal = null;
+        datasInicio.forEach(d => { if (!dataInicioFinal || d > dataInicioFinal) dataInicioFinal = d; });
+        datasFim.forEach(d => { if (!dataFimFinal || d > dataFimFinal) dataFimFinal = d; });
+        // Preencher e bloquear os campos conforme o tipo
+        if (dataInicioFinal && dataInicioInput) {
+            dataInicioInput.value = dataInicioFinal.toISOString().split('T')[0];
+            dataInicioInput.dataset.calculada = '1';
+            dataInicioInput.readOnly = true;
+            dataInicioInput.style.background = '#fffbe6';
+        }
+        if (dataFimFinal && dataFimInput) {
+            dataFimInput.value = dataFimFinal.toISOString().split('T')[0];
+            dataFimInput.dataset.calculada = '1';
+            dataFimInput.readOnly = true;
+            dataFimInput.style.background = '#fffbe6';
+        }
+        // Se não houver predecessora para um dos campos, liberar edição
+        if (!dataInicioFinal && dataInicioInput) {
+            dataInicioInput.readOnly = false;
+            dataInicioInput.dataset.calculada = '';
+            dataInicioInput.style.background = '';
+        }
+        if (!dataFimFinal && dataFimInput) {
+            dataFimInput.readOnly = false;
+            dataFimInput.dataset.calculada = '';
+            dataFimInput.style.background = '';
+        }
+        marcarDatasCalculadasPorPredecessora();
+    }
+    window.onPredecessorasEdit = onPredecessorasEdit;
+
+    // Garante que datas calculadas por predecessora fiquem com a cor correta ao carregar a página
+    document.addEventListener('DOMContentLoaded', function () {
+        marcarDatasCalculadasPorPredecessora();
+    });
+</script>
+
+{% endblock %}

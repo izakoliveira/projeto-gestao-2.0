@@ -1,0 +1,13 @@
+# Configurações do Supabase
+SUPABASE_URL=https://zvdpuxggltqejplybzet.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2ZHB1eGdnbHRxZWpwbHliemV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTcyOTAsImV4cCI6MjA2NTMzMzI5MH0.YaDt2gAl_FFolp8Gh5n18ZjwzkLLcQ2EuWzFZTTyEMI
+
+# Chave secreta do Flask
+FLASK_SECRET_KEY=sua_chave_secreta_aqui_123456789
+
+# Configurações de email (opcionais)
+ADMIN_EMAIL=admin@exemplo.com
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=seu_email@gmail.com
+SMTP_PASS=sua_senha_de_app 

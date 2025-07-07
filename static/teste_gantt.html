@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Frappe Gantt</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #gantt {
+            width: 100%;
+            height: 400px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .btn {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn:hover {
+            background: #e9ecef;
+        }
+        .btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste Frappe Gantt</h1>
+        
+        <div class="controls">
+            <h4>Controles:</h4>
+            <button class="btn" onclick="changeView('Day')">Dia</button>
+            <button class="btn" onclick="changeView('Week')">Semana</button>
+            <button class="btn active" onclick="changeView('Month')">Mês</button>
+            <button class="btn" onclick="changeView('Year')">Ano</button>
+            
+            <button class="btn" onclick="today()">Hoje</button>
+            <button class="btn" onclick="prev()">Anterior</button>
+            <button class="btn" onclick="next()">Próximo</button>
+        </div>
+        
+        <div id="gantt"></div>
+        
+        <div style="margin-top: 20px;">
+            <h4>Dados de Teste:</h4>
+            <pre id="dados"></pre>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+    <script>
+        // Dados de teste
+        const tasks = [
+            {
+                id: 'Task 1',
+                name: 'Tarefa 1',
+                start: '2025-01-01',
+                end: '2025-01-15',
+                progress: 50,
+                dependencies: '',
+                custom_class: 'status-em-progresso'
+            },
+            {
+                id: 'Task 2',
+                name: 'Tarefa 2',
+                start: '2025-01-10',
+                end: '2025-01-25',
+                progress: 30,
+                dependencies: 'Task 1',
+                custom_class: 'status-pendente'
+            },
+            {
+                id: 'Task 3',
+                name: 'Tarefa 3',
+                start: '2025-01-20',
+                end: '2025-02-05',
+                progress: 0,
+                dependencies: 'Task 2',
+                custom_class: 'status-pendente'
+            }
+        ];
+
+        // Exibir dados no console e na página
+        console.log('Dados de teste:', tasks);
+        document.getElementById('dados').textContent = JSON.stringify(tasks, null, 2);
+
+        let gantt;
+
+        // Funções de controle
+        function changeView(mode) {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            gantt.change_view_mode(mode);
+        }
+
+        function today() {
+            gantt.today();
+        }
+
+        function prev() {
+            gantt.prev();
+        }
+
+        function next() {
+            gantt.next();
+        }
+
+        // Inicializar o Gantt
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('Inicializando Frappe Gantt...');
+                gantt = new Gantt("#gantt", tasks, {
+                    view_mode: 'Month',
+                    date_format: 'YYYY-MM-DD',
+                    show_progress: true,
+                    show_arrows: true,
+                    show_today: true,
+                    show_weekends: true,
+                    language: 'pt',
+                    on_click: function(task) {
+                        console.log('Tarefa clicada:', task);
+                        alert('Tarefa clicada: ' + task.name);
+                    },
+                    on_date_change: function(task, start, end) {
+                        console.log('Data alterada:', task, start, end);
+                    },
+                    on_progress_change: function(task, progress) {
+                        console.log('Progresso alterado:', task, progress);
+                    }
+                });
+                console.log('Frappe Gantt inicializado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao inicializar Frappe Gantt:', error);
+                document.getElementById('gantt').innerHTML = '<p style="color: red;">Erro ao carregar o Gantt: ' + error.message + '</p>';
+            }
+        });
+    </script>
+</body>
+</html> 

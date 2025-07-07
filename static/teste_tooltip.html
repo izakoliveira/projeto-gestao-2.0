@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Tooltip</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-bar {
+            width: 200px;
+            height: 30px;
+            background: #007bff;
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 3px;
+            position: relative;
+        }
+        .test-bar:hover {
+            background: #0056b3;
+        }
+        
+        /* Tooltip personalizado */
+        .gantt-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gantt-tooltip-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 4px;
+        }
+        
+        .gantt-tooltip-info {
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .gantt-tooltip-label {
+            color: #ccc;
+            font-size: 11px;
+        }
+        
+        .gantt-tooltip-value {
+            color: #fff;
+            font-weight: 500;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste de Tooltip</h1>
+        <p>Passe o mouse sobre a barra azul abaixo para testar o tooltip:</p>
+        
+        <div class="test-bar" id="test-bar"></div>
+        
+        <div style="margin-top: 20px;">
+            <h3>Logs:</h3>
+            <div id="logs" style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logsDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function mostrarTooltip(event, tarefa) {
+            log('Função mostrarTooltip chamada');
+            
+            // Remover tooltip existente
+            esconderTooltip();
+            
+            try {
+                // Calcular dias corridos e úteis
+                const startDate = new Date(tarefa.start);
+                const endDate = new Date(tarefa.end);
+                const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                log(`Dias corridos calculados: ${diasCorridos}`);
+                
+                // Criar tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'gantt-tooltip';
+                tooltip.id = 'gantt-tooltip';
+                
+                // Formatar datas
+                const dataInicio = startDate.toLocaleDateString('pt-BR');
+                const dataFim = endDate.toLocaleDateString('pt-BR');
+                
+                tooltip.innerHTML = `
+                    <div class="gantt-tooltip-title">${tarefa.name || 'Tarefa sem nome'}</div>
+                    <div class="gantt-tooltip-info">
+                        <span class="gantt-tooltip-label">📅 Data Início:</span>
+                        <span class="gantt-tooltip-value">${dataInicio}</span>
+                    </div>
+                    <div class="gantt-tooltip-info">
+                        <span class="gantt-tooltip-label">📅 Data Fim:</span>
+                        <span class="gantt-tooltip-value">${dataFim}</span>
+                    </div>
+                    <div class="gantt-tooltip-info">
+                        <span class="gantt-tooltip-label">📊 Dias Corridos:</span>
+                        <span class="gantt-tooltip-value">${diasCorridos} dias</span>
+                    </div>
+                `;
+                
+                log('Tooltip HTML criado');
+                
+                // Posicionar tooltip
+                document.body.appendChild(tooltip);
+                log('Tooltip adicionado ao DOM');
+                
+                // Posicionar próximo ao mouse
+                const tooltipRect = tooltip.getBoundingClientRect();
+                let left = event.clientX + 10;
+                let top = event.clientY - tooltipRect.height - 10;
+                
+                // Ajustar se sair da tela
+                if (left + tooltipRect.width > window.innerWidth - 10) {
+                    left = event.clientX - tooltipRect.width - 10;
+                }
+                if (top < 10) {
+                    top = event.clientY + 10;
+                }
+                
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
+                
+                log(`Tooltip posicionado em: left=${left}px, top=${top}px`);
+                log('Tooltip criado com sucesso!');
+            } catch (error) {
+                log(`ERRO ao criar tooltip: ${error.message}`);
+                console.error('Erro completo:', error);
+            }
+        }
+        
+        function esconderTooltip() {
+            const tooltip = document.getElementById('gantt-tooltip');
+            if (tooltip) {
+                tooltip.remove();
+                log('Tooltip removido');
+            }
+        }
+        
+        // Dados de teste
+        const tarefaTeste = {
+            name: 'Tarefa de Teste',
+            start: '2025-01-01',
+            end: '2025-01-15',
+            status: 'em-progresso'
+        };
+        
+        // Adicionar eventos à barra de teste
+        document.addEventListener('DOMContentLoaded', function() {
+            log('DOM carregado');
+            
+            const testBar = document.getElementById('test-bar');
+            log('Barra de teste encontrada');
+            
+            testBar.addEventListener('mouseenter', function(e) {
+                log('Mouse entrou na barra');
+                mostrarTooltip(e, tarefaTeste);
+            });
+            
+            testBar.addEventListener('mouseleave', function() {
+                log('Mouse saiu da barra');
+                esconderTooltip();
+            });
+            
+            log('Eventos adicionados à barra de teste');
+        });
+    </script>
+</body>
+</html> 
