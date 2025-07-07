@@ -35,4 +35,4 @@ Este é um sistema de gestão de projetos e tarefas com visualização em Gantt,
 - `docs/` — Documentação e histórico de ajuda
 
 ## Créditos
-- Desenvolvido com auxílio do ChatGPT para automação, debug e UX. 
+- Desenvolvido com auxílio do ChatGPT para automação, debug e UX.
