@@ -146,14 +146,12 @@ def projetos():
     data_fim = request.args.get('data_fim', '')  # Data de término
 
     query = supabase.table("projetos").select("*").eq("usuario_id", usuario_id)
-
     if nome:
         query = query.ilike('nome', f'%{nome}%')
     if data_inicio:
         query = query.gte('data_inicio', data_inicio)
     if data_fim:
         query = query.lte('data_fim', data_fim)
-
     projetos = query.execute().data
 
     tarefas_filtradas = []
@@ -167,14 +165,15 @@ def projetos():
     projeto_ids = [projeto['id'] for projeto in projetos]
     if projeto_ids:
         ids_str = ','.join([f'"{pid}"' for pid in projeto_ids])
+        url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})"
         if status:
-            # Buscar tarefas dos projetos do usuário com o status filtrado
-            url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})&status=eq.{status}"
-        else:
-            # Buscar todas as tarefas dos projetos do usuário
-            url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})"
+            url += f"&status=eq.{status}"
         resp = requests.get(url, headers=headers)
         tarefas_filtradas = resp.json() if resp.status_code == 200 else []
+        # Filtro de colecao (múltiplo)
+        colecao_list = request.args.getlist('colecao')
+        if colecao_list:
+            tarefas_filtradas = [t for t in tarefas_filtradas if t.get('colecao') in colecao_list]
         if status:
             projetos_com_tarefa = set([t['projeto_id'] for t in tarefas_filtradas])
             projetos = [p for p in projetos if p['id'] in projetos_com_tarefa]
@@ -182,7 +181,14 @@ def projetos():
         projetos = []
         tarefas_filtradas = []
 
-    # Formatar as datas
+    # Limites de segurança para evitar travamento
+    MAX_PROJETOS = 100
+    MAX_TAREFAS = 200
+    if len(projetos) > MAX_PROJETOS:
+        projetos = projetos[:MAX_PROJETOS]
+    if len(tarefas_filtradas) > MAX_TAREFAS:
+        tarefas_filtradas = tarefas_filtradas[:MAX_TAREFAS]
+
     for projeto in projetos:
         if projeto.get('data_inicio'):
             try:
@@ -195,14 +201,12 @@ def projetos():
             except Exception:
                 pass
     for tarefa in tarefas_filtradas:
-        # Sempre manter data_inicio_iso/data_fim_iso no formato ISO para o Gantt
         data_inicio_raw = tarefa.get('data_inicio')
         data_fim_raw = tarefa.get('data_fim')
         tarefa['data_inicio_iso'] = ''
         tarefa['data_fim_iso'] = ''
         if data_inicio_raw:
             try:
-                # Aceita tanto %Y-%m-%d quanto %d/%m/%Y
                 if '-' in data_inicio_raw:
                     dt_inicio = datetime.strptime(data_inicio_raw, '%Y-%m-%d')
                 else:
@@ -221,16 +225,13 @@ def projetos():
                 tarefa['data_fim'] = dt_fim.strftime('%d/%m/%Y')
             except Exception:
                 tarefa['data_fim_iso'] = data_fim_raw
-    # Adicionar nome do projeto e do usuário às tarefas filtradas
     if tarefas_filtradas:
-        # Buscar nomes dos projetos
         projeto_ids_tarefas = list(set([t.get('projeto_id') for t in tarefas_filtradas if t.get('projeto_id')]))
         if projeto_ids_tarefas:
             projetos_resp = supabase.table("projetos").select("id, nome").in_("id", projeto_ids_tarefas).execute()
             projetos_dict = {p['id']: p['nome'] for p in projetos_resp.data}
         else:
             projetos_dict = {}
-        # Buscar nomes dos usuários
         usuario_ids_tarefas = list(set([t.get('usuario_id') for t in tarefas_filtradas if t.get('usuario_id')]))
         if usuario_ids_tarefas:
             usuarios_resp = supabase.table("usuarios").select("id, nome").in_("id", usuario_ids_tarefas).execute()
@@ -240,7 +241,6 @@ def projetos():
         for tarefa in tarefas_filtradas:
             tarefa['projeto_nome'] = projetos_dict.get(tarefa.get('projeto_id'), 'Projeto não encontrado')
             tarefa['usuario_nome'] = usuarios_dict.get(tarefa.get('usuario_id'), 'Não designado')
-    # Adicionar lista de tarefas a cada projeto para uso no Gantt
     for projeto in projetos:
         projeto['tarefas'] = []
         for t in tarefas_filtradas:
@@ -248,7 +248,6 @@ def projetos():
                 t_copia = t.copy()
                 di = t_copia.get('data_inicio_iso')
                 df = t_copia.get('data_fim_iso')
-                # Filtro robusto de datas válidas
                 def data_valida(dt):
                     try:
                         if not dt or dt in ('None', '0000-00-00', ''):
@@ -266,7 +265,6 @@ def projetos():
                         projeto['tarefas'].append(t_copia)
                     except Exception:
                         pass
-        # Montar dados para dhtmlxGantt
         gantt_data = []
         gantt_links = []
         for t in projeto['tarefas']:
@@ -277,7 +275,6 @@ def projetos():
                 'duration': t.get('duration', 1),
                 'progress': 0
             })
-            # Links de predecessoras
             preds = t.get('predecessoras')
             if preds:
                 preds_list = [p.strip() for p in preds.split(';') if p.strip()]
@@ -292,26 +289,30 @@ def projetos():
                         })
         projeto['gantt_data'] = gantt_data
         projeto['gantt_links'] = gantt_links
-    # Gantt geral: preparar dados para Frappe Gantt
     gantt_geral_data = []
-    projeto_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-    projeto_id_to_color = {p['id']: projeto_colors[idx % len(projeto_colors)] for idx, p in enumerate(projetos)}
-    projeto_id_to_nome = {p['id']: p['nome'] for p in projetos}
-    
-    # Coletar todas as tarefas únicas por nome
-    tarefas_por_nome = {}
-    for p in projetos:
-        for t in p['gantt_data']:
-            if 'text' in t:
-                tarefas_por_nome.setdefault(t['text'], []).append((t, p['id']))
-    
-    # Criar dados para Frappe Gantt - Versão simplificada
-    print(f'[DEBUG] Total de tarefas por nome: {len(tarefas_por_nome)}')
-    
-    # Se não houver dados, criar dados de exemplo
-    if not tarefas_por_nome:
+    tarefas_unicas = supabase.table('tarefas_unicas').select('nome, ordem').order('ordem').execute().data
+    ordem_tarefas = {t['nome']: t['ordem'] for t in tarefas_unicas}
+    todas_tarefas = []
+    for projeto in projetos:
+        if projeto.get('tarefas'):
+            for tarefa in projeto['tarefas']:
+                tarefa_copia = tarefa.copy()
+                tarefa_copia['projeto_origem'] = projeto['nome']
+                todas_tarefas.append(tarefa_copia)
+    todas_tarefas.sort(key=lambda t: ordem_tarefas.get(t['nome'], 9999))
+    if not todas_tarefas:
         print('[DEBUG] Nenhuma tarefa encontrada, criando dados de exemplo')
         gantt_geral_data = [
+            {
+                'id': 'projeto_geral',
+                'name': 'Projeto Geral',
+                'start': '2025-01-01',
+                'end': '2025-01-25',
+                'progress': 0,
+                'dependencies': '',
+                'custom_class': 'project-group',
+                'type': 'project'
+            },
             {
                 'id': '1',
                 'name': 'Tarefa de Exemplo 1',
@@ -319,89 +320,46 @@ def projetos():
                 'end': '2025-01-15',
                 'progress': 50,
                 'dependencies': '',
-                'custom_class': 'status-em-progresso'
-            },
-            {
-                'id': '2',
-                'name': 'Tarefa de Exemplo 2',
-                'start': '2025-01-10',
-                'end': '2025-01-25',
-                'progress': 30,
-                'dependencies': '1',
-                'custom_class': 'status-pendente'
+                'custom_class': 'status-pendente',
+                'projeto_origem': 'Projeto Geral',
+                'type': 'task',
+                'ordem': 1
             }
         ]
     else:
-        for nome, tarefas_projeto in tarefas_por_nome.items():
-            print(f'[DEBUG] Processando nome: {nome} com {len(tarefas_projeto)} tarefas')
-            for t, projeto_id in tarefas_projeto:
-                # Calcular data de fim baseada na duração
-                data_inicio = t.get('start_date', '')
-                duracao = t.get('duration', 1)
-                data_fim = data_inicio
-                if data_inicio and duracao:
-                    try:
-                        dt_inicio = datetime.strptime(data_inicio, '%Y-%m-%d')
-                        dt_fim = dt_inicio + timedelta(days=duracao-1)
-                        data_fim = dt_fim.strftime('%Y-%m-%d')
-                    except Exception:
-                        data_fim = data_inicio
-                
-                # Buscar status da tarefa original
-                status = 'pendente'
-                for tarefa_original in tarefas_filtradas:
-                    if tarefa_original.get('id') == t.get('id'):
-                        status = tarefa_original.get('status', 'pendente')
-                        break
-                
-                item_gantt = {
-                    'id': str(t.get('id', '')),
-                    'name': t.get('text', 'Tarefa sem nome'),
-                    'start': data_inicio or '2025-01-01',
-                    'end': data_fim or '2025-01-01',
-                    'progress': 0,
-                    'dependencies': '',
-                    'custom_class': f"status-{status.replace(' ', '-')}",
-                    'projeto_nome': projeto_id_to_nome.get(projeto_id, 'Projeto não encontrado'),
-                    'projeto_color': projeto_id_to_color.get(projeto_id, '#667eea')
-                }
-                gantt_geral_data.append(item_gantt)
-                print(f'[DEBUG] Adicionado item: {item_gantt}')
-    
-    print(f'[DEBUG] Total de dados do Gantt: {len(gantt_geral_data)}')
-    print(f'[DEBUG] Primeiros 3 itens: {gantt_geral_data[:3]}')
-    print('\n[DEBUG] Datas das tarefas para o Gantt:')
-    for t in tarefas_filtradas:
-        print(f"Tarefa: {t.get('nome','')} | Início: {t.get('data_inicio_iso')} | Fim: {t.get('data_fim_iso')}")
-    print(f'\n[DEBUG] Total de parents criados: {len([x for x in gantt_geral_data if x.get("type") == "project"])}')
-    print(f'[DEBUG] Total de tarefas agrupadas: {len([x for x in gantt_geral_data if x.get("type") != "project"])}')
-    print('[DEBUG] Exemplo de parent:', next((x for x in gantt_geral_data if x.get('type') == 'project'), None))
-    print('[DEBUG] Exemplo de tarefa:', next((x for x in gantt_geral_data if x.get('type') != 'project'), None))
-    print('[DEBUG] Conteúdo final de gantt_geral_data a ser enviado ao Gantt:')
-    for t in gantt_geral_data:
-        print(t)
-    # Agrupar tarefas_filtradas por nome
-    tarefas_agrupadas = defaultdict(list)
-    for t in tarefas_filtradas:
-        tarefas_agrupadas[t['nome']].append(t)
-    tarefas_filtradas_agrupadas = []
-    for nome, tarefas in tarefas_agrupadas.items():
-        if len(tarefas) == 1:
-            tarefas_filtradas_agrupadas.append(tarefas[0])
-        else:
-            # Agrupa datas e status
-            datas_inicio = [t.get('data_inicio_iso') for t in tarefas if t.get('data_inicio_iso')]
-            datas_fim = [t.get('data_fim_iso') for t in tarefas if t.get('data_fim_iso')]
-            status_set = set(t.get('status') for t in tarefas)
-            usuario_nomes = ', '.join(sorted(set(t.get('usuario_nome') for t in tarefas if t.get('usuario_nome'))))
-            tarefa_base = tarefas[0].copy()
-            tarefa_base['agrupadas'] = len(tarefas)
-            tarefa_base['data_inicio_iso'] = min(datas_inicio) if datas_inicio else ''
-            tarefa_base['data_fim_iso'] = max(datas_fim) if datas_fim else ''
-            tarefa_base['status'] = ', '.join(status_set)
-            tarefa_base['usuario_nome'] = usuario_nomes
-            tarefas_filtradas_agrupadas.append(tarefa_base)
-    return render_template('projetos_gantt_basico.html', projetos=projetos, tarefas_filtradas=tarefas_filtradas_agrupadas, status_filtrado=status, gantt_geral_data=gantt_geral_data)
+        # Definir cores únicas para cada projeto
+        cor_projetos = {}
+        cores = [
+            '#ffc107', '#17a2b8', '#28a745', '#fd7e14', '#6f42c1', '#e83e8c', '#20c997', '#007bff', '#dc3545', '#343a40'
+        ]
+        cor_idx = 0
+        for t in todas_tarefas:
+            projeto_nome = t.get('projeto_origem', 'Projeto não encontrado')
+            if projeto_nome not in cor_projetos:
+                cor_projetos[projeto_nome] = cores[cor_idx % len(cores)]
+                cor_idx += 1
+        for t in todas_tarefas:
+            gantt_geral_data.append({
+                'id': t.get('id'),
+                'name': t.get('nome'),
+                'start': t.get('data_inicio_iso'),
+                'end': t.get('data_fim_iso'),
+                'progress': 0,
+                'dependencies': '',
+                'custom_class': 'status-pendente',
+                'projeto_origem': t.get('projeto_origem'),
+                'type': 'task',
+                'ordem': ordem_tarefas.get(t.get('nome'), 9999),
+                'bar_color': cor_projetos[t.get('projeto_origem', 'Projeto não encontrado')],
+                'colecao': t.get('colecao', '')
+            })
+    # Extrair coleções distintas das tarefas filtradas
+    colecoes = sorted(set(
+        t.get('colecao', '').strip()
+        for t in tarefas_filtradas
+        if t.get('colecao', '').strip()
+    ))
+    return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes)
 
 # Rota de criação de projeto
 @app.route('/projetos/criar', methods=['GET', 'POST'])
@@ -474,12 +432,6 @@ def cadastro():
         else:
             flash("Erro ao cadastrar usuário. Tente novamente mais tarde.")
     return render_template('cadastro.html')
-
-@app.route('/projetos')
-@login_required
-def projetos_protegidos():
-    # Exemplo de rota protegida
-    return render_template('projetos.html')
 
 # Detalhes do projeto
 @app.route('/projetos/<uuid:projeto_id>')
@@ -1235,6 +1187,20 @@ def atualizar_ordem_tarefas():
         return jsonify({'sucesso': True})
     else:
         return jsonify({'sucesso': False, 'erros': erros}), 500
+
+@app.route('/gantt-teste')
+def gantt_teste():
+    # Dados de exemplo para projetos e tarefas
+    projetos = [
+        {'id': 1, 'nome': 'Projeto A', 'descricao': 'Exemplo A', 'status': 'Concluído', 'data_inicio': '2025-03-01', 'data_fim': '2025-06-30'},
+        {'id': 2, 'nome': 'Projeto B', 'descricao': 'Exemplo B', 'status': 'Em Progresso', 'data_inicio': '2025-04-15', 'data_fim': '2025-09-10'},
+    ]
+    gantt_geral_data = [
+        {'name': 'Tarefa 1', 'start': '2025-03-01', 'end': '2025-04-15', 'projeto_nome': 'Projeto A', 'status': 'pendente', 'ordem': 1},
+        {'name': 'Tarefa 2', 'start': '2025-04-16', 'end': '2025-06-30', 'projeto_nome': 'Projeto A', 'status': 'em-progresso', 'ordem': 2},
+        {'name': 'Tarefa 3', 'start': '2025-04-20', 'end': '2025-09-10', 'projeto_nome': 'Projeto B', 'status': 'concluida', 'ordem': 3},
+    ]
+    return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data)
 
 if __name__ == '__main__':
     app.run(debug=True)

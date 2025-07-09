@@ -658,6 +658,13 @@
 
     gantt.init("gantt_here");
     var tarefas = {{ tarefas_gantt| tojson | safe }};
+    if (tarefas.length > 200) {
+        document.addEventListener('DOMContentLoaded', function () {
+            var ganttDiv = document.getElementById('gantt_here');
+            if (ganttDiv) ganttDiv.innerHTML = '<p style="color:red;font-weight:bold;">Muitos dados para exibir. Por favor, filtre o período ou reduza a quantidade de tarefas.</p>';
+        });
+        throw new Error('Muitos dados para exibir');
+    }
     var all_links = {{ all_links| tojson | safe }};
     gantt.parse({
         data: tarefas,

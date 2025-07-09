@@ -101,7 +101,7 @@
             var toastEl = document.getElementById(toastId);
             var toast = new bootstrap.Toast(toastEl);
             toast.show();
-            toastEl.addEventListener('hidden.bs.toast', function() {
+            toastEl.addEventListener('hidden.bs.toast', function () {
                 toastEl.remove();
             });
             {% endfor %}

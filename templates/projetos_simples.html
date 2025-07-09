@@ -14,15 +14,19 @@
             <div class="card h-100 shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-project-diagram"></i> {{ projeto.nome }}</h5>
-                    <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}">
+                    <span
+                        class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}">
                         {{ projeto.status or 'Sem status' }}
                     </span>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted mb-2"><i class="fas fa-align-left"></i> {{ projeto.descricao or 'Sem descrição' }}</p>
+                    <p class="text-muted mb-2"><i class="fas fa-align-left"></i> {{ projeto.descricao or 'Sem descrição'
+                        }}</p>
                     <div class="mb-2">
-                        <i class="fas fa-calendar"></i> <strong>Início:</strong> {{ projeto.data_inicio or 'Não definida' }}<br>
-                        <i class="fas fa-calendar-check"></i> <strong>Término:</strong> {{ projeto.data_fim or 'Não definida' }}
+                        <i class="fas fa-calendar"></i> <strong>Início:</strong> {{ projeto.data_inicio or 'Não
+                        definida' }}<br>
+                        <i class="fas fa-calendar-check"></i> <strong>Término:</strong> {{ projeto.data_fim or 'Não
+                        definida' }}
                     </div>
                 </div>
                 <div class="card-footer bg-white border-0 d-flex justify-content-between">
@@ -69,12 +73,17 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.5.0/dist/frappe-gantt.css">
 <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.5.0/dist/frappe-gantt.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ganttDiv = document.getElementById('gantt_geral');
-    
+    document.addEventListener('DOMContentLoaded', function () {
+        const ganttDiv = document.getElementById('gantt_geral');
+        const dadosGantt = {{ gantt_geral_data | tojson | safe
+    }};
+    if (dadosGantt.length > 200) {
+        if (ganttDiv) ganttDiv.innerHTML = '<p style="color:red;font-weight:bold;">Muitos dados para exibir. Por favor, filtre o período ou reduza a quantidade de tarefas.</p>';
+        return;
+    }
+
     if (ganttDiv && typeof Gantt !== 'undefined') {
-        const dadosGantt = {{ gantt_geral_data | tojson | safe }};
-        
+
         // Dados de exemplo se não houver dados
         let tarefas = dadosGantt && dadosGantt.length > 0 ? dadosGantt : [
             {
@@ -96,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 custom_class: 'status-pendente'
             }
         ];
-        
+
         try {
             new Gantt("#gantt_geral", tarefas, {
                 view_mode: 'Month',
@@ -114,4 +123,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-{% endblock %} 
+{% endblock %}

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Agrupamento Gantt</title>
+    <link rel="stylesheet" href="https://unpkg.com/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Estilos para grupos de projeto */
+        .project-group {
+            background-color: #667eea !important;
+            border: 2px solid #5a6fd8 !important;
+            font-weight: bold !important;
+        }
+
+        .gantt .bar.project-group {
+            fill: #667eea !important;
+            stroke: #5a6fd8 !important;
+            stroke-width: 2 !important;
+        }
+
+        .gantt .bar.project-group:hover {
+            fill: #5a6fd8 !important;
+        }
+
+        /* Estilos para status */
+        .status-pendente {
+            background-color: #ffc107;
+        }
+
+        .status-em-progresso {
+            background-color: #17a2b8;
+        }
+
+        .status-concluida {
+            background-color: #28a745;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Teste de Projeto Único - Todas as Tarefas</h1>
+
+        <div class="controls">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h6 style="margin: 0 0 10px 0;">Visualização:</h6>
+                    <button class="btn" onclick="changeView('Day')">Dia</button>
+                    <button class="btn" onclick="changeView('Week')">Semana</button>
+                    <button class="btn active" onclick="changeView('Month')">Mês</button>
+                    <button class="btn" onclick="changeView('Year')">Ano</button>
+                </div>
+                <div>
+                    <button class="btn" onclick="today()">
+                        <i class="fas fa-calendar-day me-1"></i>Hoje
+                    </button>
+                    <button class="btn" onclick="prev()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="btn" onclick="next()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+            <table style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 220px; text-align: left; padding: 8px;">Tarefa</th>
+                        <th style="text-align: left; padding: 8px;">Cronograma</th>
+                    </tr>
+                </thead>
+                <tbody id="gantt-body"></tbody>
+            </table>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color status-pendente"></div>
+                <span>Pendente</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-em-progresso"></div>
+                <span>Em Progresso</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-concluida"></div>
+                <span>Concluída</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #667eea;"></div>
+                <span>Grupo de Projeto</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+    <script>
+        let gantt;
+
+        // Dados de teste com projeto único
+        const dadosTeste = [
+            // Projeto Geral Único
+            {
+                id: 'projeto_geral',
+                name: 'Projeto Geral - Todas as Tarefas',
+                start: '2025-01-01',
+                end: '2025-03-01',
+                progress: 0,
+                dependencies: '',
+                custom_class: 'project-group',
+                type: 'project'
+            },
+            // Tarefas do Projeto 1
+            {
+                id: 'tarefa_1_1',
+                name: 'Planejamento (Projeto Desenvolvimento Web)',
+                start: '2025-01-01',
+                end: '2025-01-10',
+                progress: 100,
+                dependencies: '',
+                custom_class: 'status-concluida',
+                parent: 'projeto_geral'
+            },
+            {
+                id: 'tarefa_1_2',
+                name: 'Design da Interface (Projeto Desenvolvimento Web)',
+                start: '2025-01-05',
+                end: '2025-01-20',
+                progress: 75,
+                dependencies: 'tarefa_1_1',
+                custom_class: 'status-em-progresso',
+                parent: 'projeto_geral'
+            },
+            {
+                id: 'tarefa_1_3',
+                name: 'Desenvolvimento Frontend (Projeto Desenvolvimento Web)',
+                start: '2025-01-15',
+                end: '2025-02-05',
+                progress: 50,
+                dependencies: 'tarefa_1_2',
+                custom_class: 'status-em-progresso',
+                parent: 'projeto_geral'
+            },
+            {
+                id: 'tarefa_1_4',
+                name: 'Testes (Projeto Desenvolvimento Web)',
+                start: '2025-02-01',
+                end: '2025-02-15',
+                progress: 0,
+                dependencies: 'tarefa_1_3',
+                custom_class: 'status-pendente',
+                parent: 'projeto_geral'
+            },
+
+            // Tarefas do Projeto 2
+            {
+                id: 'tarefa_2_1',
+                name: 'Análise de Mercado (Projeto Marketing Digital)',
+                start: '2025-01-15',
+                end: '2025-01-25',
+                progress: 100,
+                dependencies: '',
+                custom_class: 'status-concluida',
+                parent: 'projeto_geral'
+            },
+            {
+                id: 'tarefa_2_2',
+                name: 'Criação de Conteúdo (Projeto Marketing Digital)',
+                start: '2025-01-20',
+                end: '2025-02-10',
+                progress: 60,
+                dependencies: 'tarefa_2_1',
+                custom_class: 'status-em-progresso',
+                parent: 'projeto_geral'
+            },
+            {
+                id: 'tarefa_2_3',
+                name: 'Campanha Publicitária (Projeto Marketing Digital)',
+                start: '2025-02-05',
+                end: '2025-03-01',
+                progress: 0,
+                dependencies: 'tarefa_2_2',
+                custom_class: 'status-pendente',
+                parent: 'projeto_geral'
+            }
+        ];
+
+        // Funções de controle
+        function changeView(mode) {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            gantt.change_view_mode(mode);
+        }
+
+        function today() {
+            gantt.today();
+        }
+
+        function prev() {
+            gantt.prev();
+        }
+
+        function next() {
+            gantt.next();
+        }
+
+        // Inicializar o Gantt
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                gantt = new Gantt("#gantt_here", dadosTeste, {
+                    view_mode: 'Month',
+                    date_format: 'YYYY-MM-DD',
+                    show_progress: true,
+                    show_arrows: true,
+                    show_today: true,
+                    show_weekends: true,
+                    language: 'pt',
+                    on_click: function (task) {
+                        console.log('Tarefa clicada:', task);
+                        if (task.type === 'project') {
+                            alert(`Projeto Geral\nTodas as tarefas estão agrupadas aqui.\nClique nas tarefas para ver detalhes.`);
+                        } else {
+                            // Extrair informações da tarefa
+                            const nomeTarefa = task.name.split(' (')[0]; // Remove o projeto do nome
+                            const projetoOrigem = task.name.match(/\(([^)]+)\)/)?.[1] || 'Projeto não encontrado';
+                            const status = task.custom_class.replace('status-', '');
+
+                            alert(`Tarefa: ${nomeTarefa}\nProjeto de Origem: ${projetoOrigem}\nStatus: ${status}`);
+                        }
+                    },
+                    on_date_change: function (task, start, end) {
+                        console.log('Data alterada:', task, start, end);
+                    },
+                    on_progress_change: function (task, progress) {
+                        console.log('Progresso alterado:', task, progress);
+                    }
+                });
+
+                console.log('Gantt inicializado com sucesso!');
+                console.log('Dados:', dadosTeste);
+            } catch (error) {
+                console.error('Erro ao inicializar Gantt:', error);
+                document.getElementById('gantt_here').innerHTML =
+                    '<p style="color: red; text-align: center; padding: 20px;">Erro ao carregar o Gantt: ' + error.message + '</p>';
+            }
+        });
+
+        const tarefas = [
+            {
+                nome: "Modelagem",
+                barras: [
+                    { projeto: "Projeto A", inicio: "2025-04-01", fim: "2025-04-20", cor: "#ffc107" },
+                    { projeto: "Projeto B", inicio: "2025-04-10", fim: "2025-04-25", cor: "#17a2b8" }
+                ]
+            },
+            {
+                nome: "Costura",
+                barras: [
+                    { projeto: "Projeto A", inicio: "2025-05-01", fim: "2025-05-15", cor: "#ffc107" },
+                    { projeto: "Projeto C", inicio: "2025-05-10", fim: "2025-05-20", cor: "#28a745" }
+                ]
+            }
+        ];
+
+        // Defina o período do Gantt
+        const dataMin = new Date("2025-04-01");
+        const dataMax = new Date("2025-06-01");
+        const diasTotais = Math.ceil((dataMax - dataMin) / (1000 * 60 * 60 * 24));
+
+        function diasEntre(a, b) {
+            return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
+        }
+
+        const body = document.getElementById('gantt-body');
+        tarefas.forEach(tarefa => {
+            const tr = document.createElement('tr');
+            // Nome da tarefa
+            const tdNome = document.createElement('td');
+            tdNome.textContent = tarefa.nome;
+            tdNome.style.padding = "8px";
+            tr.appendChild(tdNome);
+
+            // Cronograma
+            const tdCrono = document.createElement('td');
+            tdCrono.style.position = "relative";
+            tdCrono.style.height = "32px";
+            tdCrono.style.background = "#f8f9fa";
+            tdCrono.style.minWidth = (diasTotais * 10) + "px"; // 10px por dia
+
+            tarefa.barras.forEach(barra => {
+                const inicio = new Date(barra.inicio);
+                const fim = new Date(barra.fim);
+                const offset = diasEntre(dataMin, inicio);
+                const largura = diasEntre(inicio, fim) + 1;
+
+                const div = document.createElement('div');
+                div.title = `${barra.projeto}: ${barra.inicio} a ${barra.fim}`;
+                div.style.position = "absolute";
+                div.style.left = (offset * 10) + "px";
+                div.style.top = "8px";
+                div.style.height = "16px";
+                div.style.width = (largura * 10) + "px";
+                div.style.background = barra.cor;
+                div.style.borderRadius = "4px";
+                div.style.textAlign = "center";
+                div.style.color = "#fff";
+                div.style.fontSize = "11px";
+                div.style.lineHeight = "16px";
+                div.style.cursor = "pointer";
+                div.textContent = barra.projeto;
+                tdCrono.appendChild(div);
+            });
+
+            tr.appendChild(tdCrono);
+            body.appendChild(tr);
+        });
+    </script>
+</body>
+
+</html>
