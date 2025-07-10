@@ -1,68 +1,87 @@
 # Projeto de Gestão de Projetos com Gantt
 
-## Passo a Passo para rodar, editar e publicar no GitHub
+Sistema web para gestão de projetos com visualização de tarefas em gráfico de Gantt, desenvolvido em Flask e integrado ao Supabase.
 
-### 1. Clonar ou baixar o projeto
-Se já está no seu computador, pule para o próximo passo. Para clonar:
-```sh
-git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+## Funcionalidades
+- Cadastro e login de usuários
+- Criação, edição e exclusão de projetos
+- Criação, edição e exclusão de tarefas
+- Visualização de tarefas em gráfico de Gantt (Frappe Gantt customizado)
+- Agrupamento de tarefas por projeto ou exibição geral
+- Tooltip dinâmico e colorização por projeto
+- Filtros por status, coleção e datas
+- Integração com Supabase para persistência dos dados
+
+## Estrutura de Pastas
+```
+projeto-gestao/
+├── app.py                  # Backend Flask principal
+├── supabase_client.py      # Funções utilitárias para Supabase
+├── detectar_ciclos.py      # Script para detectar ciclos em tarefas
+├── requirements.txt        # Dependências do projeto
+├── restricoes.json         # Restrições de funcionalidades
+├── static/                 # Arquivos estáticos (CSS, JS, HTML de teste)
+├── templates/              # Templates HTML (Jinja2)
+├── docs/                   # Documentação adicional
+├── .env                    # Variáveis de ambiente (não versionado)
+└── README.md               # Este arquivo
 ```
 
-### 2. Instalar dependências
-Crie e ative um ambiente virtual (opcional, mas recomendado):
-```sh
-python -m venv env
-./env/Scripts/activate  # Windows
-source env/bin/activate  # Linux/Mac
-```
-Instale as dependências:
-```sh
-pip install -r requirements.txt
-```
+## Como rodar o projeto
 
-### 3. Configurar variáveis de ambiente
-Copie o arquivo `env_example.txt` para `.env` e ajuste as variáveis conforme necessário.
+1. **Clone o repositório:**
+   ```sh
+   git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+   cd projeto-gestao
+   ```
+2. **Crie e ative o ambiente virtual:**
+   ```sh
+   python -m venv env
+   ./env/Scripts/activate  # Windows
+   source env/bin/activate  # Linux/Mac
+   ```
+3. **Instale as dependências:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+4. **Configure as variáveis de ambiente:**
+   - Copie `env_example.txt` para `.env` e preencha com suas chaves do Supabase e Flask.
+5. **Rode o projeto:**
+   ```sh
+   python app.py
+   ```
+   Acesse [http://localhost:5000](http://localhost:5000)
 
-### 4. Rodar o projeto localmente
-```sh
-python app.py
-```
-Acesse no navegador: [http://localhost:5000](http://localhost:5000)
+## Personalização do Gráfico de Gantt
+- O template principal do Gantt está em `templates/projetos_gantt_basico.html`.
+- Para customizar cores, estilos ou tooltips, edite esse arquivo e o CSS em `static/style.css`.
+- Para testar agrupamentos, use o endpoint `/gantt-teste` ou edite `teste_agrupamento_gantt.html`.
 
-### 5. Editar o projeto
-- Edite os arquivos Python, HTML (templates), CSS e JS conforme necessário.
-- Para atualizar o gráfico de Gantt, edite o arquivo `templates/projetos_gantt_basico.html`.
-
-### 6. Salvar e versionar alterações com Git
-```sh
-git add .
-git commit -m "Descreva sua alteração aqui"
-```
-
-### 7. Publicar no GitHub
-```sh
-git push origin main
-```
-
-### 8. Dicas para Windows
-- Se aparecer erro de "safe.directory", rode:
+## Comandos Git úteis
+- Adicionar mudanças:
   ```sh
-  git config --global --add safe.directory 'D:/projeto-gestao - Copia'
+  git add .
   ```
-- Se aparecer erro de conexão, verifique sua internet, firewall, proxy ou tente em outra rede.
-- Sempre rode apenas o comando (sem o prompt `PS ...>` na frente).
-
-### 9. Outras dicas
-- Para criar um novo repositório, faça isso pelo site do GitHub e depois conecte com `git remote add origin ...`.
-- Para trocar o remoto:
+- Commitar:
+  ```sh
+  git commit -m "Descreva sua alteração aqui"
+  ```
+- Enviar para o GitHub:
+  ```sh
+  git push origin main
+  ```
+- Trocar o remoto:
   ```sh
   git remote set-url origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
   ```
-- Para ver o endereço remoto:
+- Ver endereço remoto:
   ```sh
   git remote -v
   ```
 
----
+## Créditos e Contato
+- Desenvolvido por [Seu Nome] (<seu@email.com>)
+- Integração com [Supabase](https://supabase.com/) e [Frappe Gantt](https://frappe.io/gantt)
 
-Se tiver dúvidas, consulte este README ou peça ajuda! :)
+---
+Se tiver dúvidas, consulte este README ou abra uma issue no repositório!

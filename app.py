@@ -12,6 +12,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from collections import defaultdict
+from urllib.parse import quote
 
 # Carrega as variáveis do .env
 load_dotenv()
@@ -167,14 +168,18 @@ def projetos():
         ids_str = ','.join([f'"{pid}"' for pid in projeto_ids])
         url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})"
         if status:
-            url += f"&status=eq.{status}"
+            # Codificar o status para URL (tratar espaços e caracteres especiais)
+            status_encoded = quote(status)
+            url += f"&status=eq.{status_encoded}"
         resp = requests.get(url, headers=headers)
         tarefas_filtradas = resp.json() if resp.status_code == 200 else []
         # Filtro de colecao (múltiplo)
         colecao_list = request.args.getlist('colecao')
         if colecao_list:
             tarefas_filtradas = [t for t in tarefas_filtradas if t.get('colecao') in colecao_list]
-        if status:
+        
+        # Filtrar projetos que têm tarefas com os filtros aplicados (status e/ou coleção)
+        if status or colecao_list:
             projetos_com_tarefa = set([t['projeto_id'] for t in tarefas_filtradas])
             projetos = [p for p in projetos if p['id'] in projetos_com_tarefa]
     else:
@@ -353,12 +358,32 @@ def projetos():
                 'bar_color': cor_projetos[t.get('projeto_origem', 'Projeto não encontrado')],
                 'colecao': t.get('colecao', '')
             })
-    # Extrair coleções distintas das tarefas filtradas
-    colecoes = sorted(set(
-        t.get('colecao', '').strip()
-        for t in tarefas_filtradas
-        if t.get('colecao', '').strip()
-    ))
+    # Buscar todas as coleções disponíveis no banco (não apenas das tarefas filtradas)
+    try:
+        # Buscar todas as coleções distintas do banco
+        url_colecoes = f"{SUPABASE_URL}/rest/v1/tarefas?select=colecao&colecao=not.is.null"
+        resp_colecoes = requests.get(url_colecoes, headers=headers)
+        if resp_colecoes.status_code == 200:
+            todas_tarefas_colecao = resp_colecoes.json()
+            colecoes = sorted(set(
+                (str(t.get('colecao', '') or '').strip())
+                for t in todas_tarefas_colecao
+                if (str(t.get('colecao', '') or '').strip())
+            ))
+        else:
+            # Fallback: usar apenas das tarefas filtradas
+            colecoes = sorted(set(
+                (str(t.get('colecao', '') or '').strip())
+                for t in tarefas_filtradas
+                if (str(t.get('colecao', '') or '').strip())
+            ))
+    except Exception:
+        # Fallback: usar apenas das tarefas filtradas
+        colecoes = sorted(set(
+            (str(t.get('colecao', '') or '').strip())
+            for t in tarefas_filtradas
+            if (str(t.get('colecao', '') or '').strip())
+        ))
     return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes)
 
 # Rota de criação de projeto
