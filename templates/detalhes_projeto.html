@@ -30,14 +30,7 @@
                         <h2 class="mb-0">
                             <i class="fas fa-project-diagram"></i> {{ projeto.nome }}
                         </h2>
-                        <div>
-                            <a href="{{ url_for('editar_projeto', projeto_id=projeto.id) }}" class="btn btn-warning">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
-                            <a href="{{ url_for('criar_tarefa', projeto_id=projeto.id) }}" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Nova Tarefa
-                            </a>
-                        </div>
+                        <!-- Botões removidos do topo -->
                     </div>
                 </div>
                 <div class="card-body p-3">
@@ -62,183 +55,188 @@
                     </div>
 
                     <div class="mt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
-                            <a href="{{ url_for('criar_tarefa', projeto_id=projeto.id) }}" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Nova Tarefa
-                            </a>
-                        </div>
-
-                        {% if tarefas %}
-                        <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
-                            <table class="table table-hover w-100" id="tabela-tarefas-inline"
-                                style="font-size: 0.95em;">
-                                <colgroup>
-                                    <col style="width: 32px;">
-                                    <col style="width: 40px;">
-                                    <col style="width: 300px;">
-                                    <col>
-                                    <col>
-                                    <col style="width: 100px;">
-                                    <col style="width: 100px;">
-                                    <col style="width: 150px;">
-                                    <col>
-                                    <col>
-                                    <col style="width: 100px;">
-                                </colgroup>
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th style="width:32px"></th>
-                                        <th>Nº</th>
-                                        <th>Nome</th>
-                                        <th>Predecessoras</th>
-                                        <th>Data Início</th>
-                                        <th>Data Término</th>
-                                        <th>Duração (dias)</th>
-                                        <th>Status</th>
-                                        <th>Responsável</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for tarefa in tarefas %}
-                                    <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
-                                        <td class="drag-handle"
-                                            style="cursor: grab; text-align:center; font-size:1.3em; color:#888;">
-                                            &#9776;</td>
-                                        <td class="numero-tarefa">{{ tarefa.ordem or '' }}</td>
-                                        <td><input type="text" class="form-control form-control-sm"
-                                                value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome"></td>
-                                        <td class="predecessoras-td">
-                                            <button type="button"
-                                                class="btn btn-outline-secondary btn-sm btn-predecessora"
-                                                onclick="abrirModalPredecessora(this)"><i
-                                                    class="fas fa-link"></i></button>
-                                            <input type="text" class="form-control form-control-sm"
-                                                value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
-                                                name="predecessoras" placeholder="Ex: 2FS+2d"
-                                                onchange="onPredecessorasEdit(this)"
-                                                onkeyup="onPredecessorasEdit(this)">
-                                        </td>
-                                        <td><input type="date" class="form-control form-control-sm"
-                                                value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
-                                                name="data_inicio" {% if tarefa.data_inicio_calculada %}
-                                                data-calculada="1" readonly style="background:#fffbe6;" {% endif %}
-                                                oninput="onInicioOuFimEdit(this)"></td>
-                                        <td><input type="date" class="form-control form-control-sm"
-                                                value="{{ tarefa.data_fim_iso }}" data-id="{{ tarefa.id }}"
-                                                name="data_fim" {% if tarefa.data_fim_calculada %} data-calculada="1"
-                                                readonly style="background:#fffbe6;" {% endif %}
-                                                oninput="onDuracaoOuFimEdit(this)"
-                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
-                                        <td><input type="number" class="form-control form-control-sm" name="duracao"
-                                                min="1" value="{{ tarefa.duracao or '' }}"
-                                                oninput="onDuracaoOuFimEdit(this)"
-                                                onblur="onDuracaoOuFimEdit(this, true)"
-                                                onkeyup="onDuracaoOuFimEdit(this)">
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
-                                                name="status">
-                                                <option value="pendente" {% if tarefa.status=='pendente' %}selected{%
-                                                    endif %}>Pendente</option>
-                                                <option value="em progresso" {% if tarefa.status=='em progresso'
-                                                    %}selected{% endif %}>Em Progresso</option>
-                                                <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
-                                                    endif %}>Concluída</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="usuario_id"
-                                                data-id="{{ tarefa.id }}">
-                                                <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
-                                                    responsável</option>
-                                                {% for usuario in usuarios %}
-                                                <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
-                                                    %}selected{% endif %}>{{ usuario.email }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
-                                                    class="fas fa-save"></i></button>
-                                            <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
-                                                class="btn btn-warning btn-sm" title="Editar tarefa"><i
-                                                    class="fas fa-edit"></i></a>
-                                            <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i
-                                                    class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                    <!-- Linha para nova tarefa -->
-                                    <tr id="linha-nova-tarefa">
-                                        <td></td>
-                                        <td></td>
-                                        <td><input type="text" class="form-control form-control-sm" name="nome"
-                                                placeholder="Nova tarefa"></td>
-                                        <td class="predecessoras-td">
-                                            <button type="button"
-                                                class="btn btn-outline-secondary btn-sm btn-predecessora"
-                                                onclick="abrirModalPredecessora(this)"><i
-                                                    class="fas fa-link"></i></button>
-                                            <input type="text" class="form-control form-control-sm" name="predecessoras"
-                                                value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
-                                                onkeyup="onPredecessorasEdit(this)">
-                                        </td>
-                                        <td><input type="date" class="form-control form-control-sm" name="data_inicio"
-                                                oninput="onInicioOuFimEdit(this)"></td>
-                                        <td><input type="date" class="form-control form-control-sm" name="data_fim"
-                                                oninput="onDuracaoOuFimEdit(this)"
-                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
-                                        <td><input type="number" class="form-control form-control-sm" name="duracao"
-                                                min="1" placeholder="Dias" oninput="onDuracaoOuFimEdit(this)"
-                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="status">
-                                                <option value="pendente">Pendente</option>
-                                                <option value="em progresso">Em Progresso</option>
-                                                <option value="concluída">Concluída</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="usuario_id">
-                                                <option value="">Sem responsável</option>
-                                                {% for usuario in usuarios %}
-                                                <option value="{{ usuario.id }}">{{ usuario.email }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-success btn-sm"
-                                                onclick="criarTarefaNovaLinha(this)"><i
-                                                    class="fas fa-plus"></i></button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {% if tarefas|length > 5 %}
-                        <div class="text-center mt-3">
-                            <p class="text-muted">Mostrando 5 de {{ tarefas|length }} tarefas</p>
-                        </div>
-                        {% endif %}
-                        {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="fas fa-info-circle fa-2x mb-3"></i>
-                            <h5>Nenhuma tarefa encontrada</h5>
-                            <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
-                            <a href="{{ url_for('criar_tarefa', projeto_id=projeto.id) }}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Criar Primeira Tarefa
-                            </a>
-                        </div>
-                        {% endif %}
+                        <!-- Removido: bloco duplicado de botões acima do título Tarefas do Projeto -->
                     </div>
-                    <div class="d-flex justify-content-end mt-2">
-                        <button class="btn btn-primary" type="button" onclick="salvarTodasTarefas()">
-                            <i class="fas fa-save"></i> Salvar todas
-                        </button>
+                    <div class="d-flex justify-content-between align-items-center mb-0" style="min-height:44px;">
+                        <h5 class="mb-0"><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
+                        <div class="d-flex align-items-center p-0" style="gap: 8px;">
+                            {% if pode_editar_projeto %}
+                            <a href="{{ url_for('editar_projeto', projeto_id=projeto.id) }}"
+                                class="btn btn-warning m-0">
+                                <i class="fas fa-edit"></i> Editar Projeto
+                            </a>
+                            {% endif %}
+                            {% if pode_criar_tarefa %}
+                            <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success m-0">Criar Tarefa</a>
+                            {% endif %}
+                        </div>
                     </div>
+                    {% if tarefas %}
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table class="table table-hover w-100" id="tabela-tarefas-inline" style="font-size: 0.95em;">
+                            <colgroup>
+                                <col style="width: 32px;">
+                                <col style="width: 40px;">
+                                <col style="width: 300px;">
+                                <col>
+                                <col>
+                                <col style="width: 100px;">
+                                <col style="width: 100px;">
+                                <col style="width: 150px;">
+                                <col>
+                                <col>
+                                <col style="width: 100px;">
+                            </colgroup>
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width:32px"></th>
+                                    <th>Nº</th>
+                                    <th>Nome</th>
+                                    {% if pode_editar_predecessoras %}
+                                    <th>Predecessoras</th>
+                                    {% endif %}
+                                    <th>Data Início</th>
+                                    <th>Data Término</th>
+                                    <th>Duração (dias)</th>
+                                    <th>Status</th>
+                                    <th>Responsável</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tarefa in tarefas %}
+                                <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
+                                    <td class="drag-handle"
+                                        style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
+                                        &#9776;</td>
+                                    <td class="numero-tarefa">{{ tarefa.ordem or '' }}</td>
+                                    <td><input type="text" class="form-control form-control-sm"
+                                            value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome" {% if not
+                                            pode_editar_nome_tarefa %}disabled{% endif %}></td>
+                                    {% if pode_editar_predecessoras %}
+                                    <td class="predecessoras-td">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                            onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
+                                        <input type="text" class="form-control form-control-sm"
+                                            value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
+                                            name="predecessoras" placeholder="Ex: 2FS+2d"
+                                            onchange="onPredecessorasEdit(this)" onkeyup="onPredecessorasEdit(this)">
+                                    </td>
+                                    {% endif %}
+                                    <td><input type="date" class="form-control form-control-sm"
+                                            value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
+                                            name="data_inicio" {% if tarefa.data_inicio_calculada %} data-calculada="1"
+                                            readonly style="background:#fffbe6;" {% endif %}
+                                            oninput="onInicioOuFimEdit(this)" {% if not pode_editar_data_inicio
+                                            %}disabled{% endif %}></td>
+                                    <td><input type="date" class="form-control form-control-sm"
+                                            value="{{ tarefa.data_fim_iso }}" data-id="{{ tarefa.id }}" name="data_fim"
+                                            {% if tarefa.data_fim_calculada %} data-calculada="1" readonly
+                                            style="background:#fffbe6;" {% endif %} oninput="onDuracaoOuFimEdit(this)"
+                                            onblur="onDuracaoOuFimEdit(this, true)" {% if not pode_editar_data_termino
+                                            %}disabled{% endif %}></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
+                                            value="{{ tarefa.duracao or '' }}" oninput="onDuracaoOuFimEdit(this)"
+                                            onblur="onDuracaoOuFimEdit(this, true)" onkeyup="onDuracaoOuFimEdit(this)"
+                                            {% if not pode_editar_duracao %}disabled{% endif %}>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
+                                            name="status">
+                                            <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif
+                                                %}>Pendente</option>
+                                            <option value="em progresso" {% if tarefa.status=='em progresso'
+                                                %}selected{% endif %}>Em Progresso</option>
+                                            <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
+                                                endif %}>Concluída</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="usuario_id"
+                                            data-id="{{ tarefa.id }}" {% if not pode_editar_responsavel %}disabled{%
+                                            endif %}>
+                                            <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
+                                                responsável</option>
+                                            {% for usuario in usuarios %}
+                                            <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
+                                                %}selected{% endif %}>{{ usuario.email }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
+                                                class="fas fa-save"></i></button>
+                                        {% if pode_editar_tarefa %}
+                                        <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
+                                            class="btn btn-warning btn-sm" title="Editar tarefa"><i
+                                                class="fas fa-edit"></i></a>
+                                        {% endif %}
+                                        {% if pode_excluir_tarefa %}
+                                        <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i
+                                                class="fas fa-trash"></i></button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Linha para nova tarefa -->
+                                <tr id="linha-nova-tarefa">
+                                    <td></td>
+                                    <td></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="nome"
+                                            placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{%
+                                            endif %}></td>
+                                    {% if pode_editar_predecessoras %}
+                                    <td class="predecessoras-td">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                            onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
+                                        <input type="text" class="form-control form-control-sm" name="predecessoras"
+                                            value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
+                                            onkeyup="onPredecessorasEdit(this)">
+                                    </td>
+                                    {% endif %}
+                                    <td><input type="date" class="form-control form-control-sm" name="data_inicio"
+                                            oninput="onInicioOuFimEdit(this)"></td>
+                                    <td><input type="date" class="form-control form-control-sm" name="data_fim"
+                                            oninput="onDuracaoOuFimEdit(this)" onblur="onDuracaoOuFimEdit(this, true)">
+                                    </td>
+                                    <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
+                                            placeholder="Dias" oninput="onDuracaoOuFimEdit(this)"
+                                            onblur="onDuracaoOuFimEdit(this, true)"></td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="status">
+                                            <option value="pendente">Pendente</option>
+                                            <option value="em progresso">Em Progresso</option>
+                                            <option value="concluída">Concluída</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="usuario_id">
+                                            <option value="">Sem responsável</option>
+                                            {% for usuario in usuarios %}
+                                            <option value="{{ usuario.id }}">{{ usuario.email }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" onclick="criarTarefaNovaLinha(this)"><i
+                                                class="fas fa-plus"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h5>Nenhuma tarefa encontrada</h5>
+                        <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-end mt-2">
+                    <button class="btn btn-primary mb-4" type="button" onclick="salvarTodasTarefas()">
+                        <i class="fas fa-save"></i> Salvar todas
+                    </button>
                 </div>
             </div>
 
@@ -499,6 +497,28 @@
 
     .linha-colecao {
         background-color: #e0e7ef !important;
+    }
+
+    #tabela-tarefas-inline thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #212529 !important;
+        color: #fff !important;
+    }
+
+    #tabela-tarefas-inline {
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #tabela-tarefas-inline select:disabled {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: none !important;
+        cursor: not-allowed;
     }
 </style>
 <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>

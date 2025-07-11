@@ -146,14 +146,31 @@ def projetos():
     data_inicio = request.args.get('data_inicio', '')  # Data de início
     data_fim = request.args.get('data_fim', '')  # Data de término
 
-    query = supabase.table("projetos").select("*").eq("usuario_id", usuario_id)
-    if nome:
-        query = query.ilike('nome', f'%{nome}%')
-    if data_inicio:
-        query = query.gte('data_inicio', data_inicio)
-    if data_fim:
-        query = query.lte('data_fim', data_fim)
-    projetos = query.execute().data
+    if session.get('user_email') == 'izak.gomes59@gmail.com':
+        # Admin vê todos os projetos
+        query = supabase.table("projetos").select("*")
+        if nome:
+            query = query.ilike('nome', f'%{nome}%')
+        if data_inicio:
+            query = query.gte('data_inicio', data_inicio)
+        if data_fim:
+            query = query.lte('data_fim', data_fim)
+        projetos = query.execute().data
+    else:
+        # Usuário comum vê apenas projetos autorizados
+        resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+        projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+        if projetos_ids_visiveis:
+            query = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis)
+            if nome:
+                query = query.ilike('nome', f'%{nome}%')
+            if data_inicio:
+                query = query.gte('data_inicio', data_inicio)
+            if data_fim:
+                query = query.lte('data_fim', data_fim)
+            projetos = query.execute().data
+        else:
+            projetos = []
 
     tarefas_filtradas = []
     SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -295,6 +312,7 @@ def projetos():
         projeto['gantt_data'] = gantt_data
         projeto['gantt_links'] = gantt_links
     gantt_geral_data = []
+    cor_projetos = {}
     tarefas_unicas = supabase.table('tarefas_unicas').select('nome, ordem').order('ordem').execute().data
     ordem_tarefas = {t['nome']: t['ordem'] for t in tarefas_unicas}
     todas_tarefas = []
@@ -333,11 +351,10 @@ def projetos():
         ]
     else:
         # Definir cores únicas para cada projeto
-        cor_projetos = {}
+        cor_idx = 0
         cores = [
             '#ffc107', '#17a2b8', '#28a745', '#fd7e14', '#6f42c1', '#e83e8c', '#20c997', '#007bff', '#dc3545', '#343a40'
         ]
-        cor_idx = 0
         for t in todas_tarefas:
             projeto_nome = t.get('projeto_origem', 'Projeto não encontrado')
             if projeto_nome not in cor_projetos:
@@ -479,14 +496,11 @@ def detalhes_projeto(projeto_id):
     tarefas = []
     try:
         response = requests.get(url, headers=headers)
-        print("[DEBUG] Status code SELECT tarefas:", response.status_code)
-        print("[DEBUG] Resposta SELECT tarefas:", response.text)
         if response.status_code == 200:
             tarefas = response.json()
         else:
             flash(f"Erro ao buscar tarefas: {response.text}")
     except Exception as e:
-        print("[ERRO] Exceção ao buscar tarefas:", e)
         flash(f"Erro ao buscar tarefas: {str(e)}")
     # Buscar informações dos usuários para as tarefas (mantém via supabase-py)
     if tarefas:
@@ -499,17 +513,13 @@ def detalhes_projeto(projeto_id):
                     tarefa['usuarios'] = usuarios_dict[tarefa['usuario_id']]
                 else:
                     tarefa['usuarios'] = None
-    print('[DEBUG] Projeto recebido:', projeto)
     try:
         projeto['data_inicio'] = datetime.strptime(projeto['data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
         projeto['data_fim'] = datetime.strptime(projeto['data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
     except Exception as e:
-        print('[ERRO] Falha ao formatar datas do projeto:', e)
         projeto['data_inicio'] = ''
         projeto['data_fim'] = ''
-    # Formatar as datas das tarefas
     for tarefa in tarefas:
-        # data para exibição e ISO para o Gantt
         if tarefa.get('data_inicio'):
             try:
                 dt_inicio = datetime.strptime(tarefa['data_inicio'], '%Y-%m-%d')
@@ -532,21 +542,16 @@ def detalhes_projeto(projeto_id):
         else:
             tarefa['data_fim'] = ''
             tarefa['data_fim_iso'] = ''
-
-        # NOVO: Marcar se as datas são calculadas por predecessora
         tarefa['data_inicio_calculada'] = False
         tarefa['data_fim_calculada'] = False
         preds = tarefa.get('predecessoras')
         if preds:
             preds_list = [p.strip() for p in preds.split(';') if p.strip()]
             for pred in preds_list:
-                # Ex: 2FS+2d, 3SS-1d, 4FF, 5SF
                 if 'FS' in pred or 'SS' in pred:
                     tarefa['data_inicio_calculada'] = True
                 if 'FF' in pred or 'SF' in pred:
                     tarefa['data_fim_calculada'] = True
-
-    # --- NOVO: Gerar all_links no backend ---
     def extrair_links(tarefas):
         links = []
         for tarefa in tarefas:
@@ -558,13 +563,10 @@ def detalhes_projeto(projeto_id):
                         "id": f"{pred}_{tarefa['id']}",
                         "source": pred,
                         "target": tarefa['id'],
-                        "type": "0"  # ajuste conforme necessário
+                        "type": "0"
                     })
         return links
     all_links = extrair_links(tarefas)
-    # --- FIM NOVO ---
-
-    # --- NOVO: Adaptar tarefas para o formato do Gantt ---
     def tarefas_para_gantt(tarefas):
         tarefas_gantt = []
         for t in tarefas:
@@ -576,18 +578,45 @@ def detalhes_projeto(projeto_id):
             })
         return tarefas_gantt
     tarefas_gantt = tarefas_para_gantt(tarefas)
-    # --- FIM NOVO ---
-
     usuarios_resp = supabase.table("usuarios").select("id, nome, email").execute()
     usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
-
+    # --- NOVO: lógica de permissões ---
+    usuario_email = session.get('user_email')
+    usuario_id = session.get('user_id')
+    is_admin = usuario_email == 'izak.gomes59@gmail.com'
+    is_owner = projeto.get('usuario_id') == usuario_id
+    restricoes = carregar_restricoes()
+    restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+    pode_editar_projeto = is_admin or is_owner or not restricoes_usuario.get('restr_editar_projeto', False)
+    pode_editar_tarefa = is_admin or is_owner or not restricoes_usuario.get('restr_editar_tarefa', False)
+    pode_criar_tarefa = is_admin or is_owner or not restricoes_usuario.get('restr_criar_tarefa', False)
+    pode_excluir_tarefa = is_admin or is_owner or not restricoes_usuario.get('restr_excluir_tarefa', False)
+    pode_editar_responsavel = is_admin or is_owner or not restricoes_usuario.get('restr_editar_responsavel', False)
+    pode_editar_duracao = is_admin or is_owner or not restricoes_usuario.get('restr_editar_duracao', False)
+    pode_editar_data_inicio = is_admin or is_owner or not restricoes_usuario.get('restr_editar_data_inicio', False)
+    pode_editar_data_termino = is_admin or is_owner or not restricoes_usuario.get('restr_editar_data_termino', False)
+    pode_editar_predecessoras = is_admin or is_owner or not restricoes_usuario.get('restr_editar_predecessoras', False)
+    pode_editar_nome_tarefa = is_admin or is_owner or not restricoes_usuario.get('restr_editar_nome_tarefa', False)
+    # --- FIM NOVO ---
     return render_template(
         'detalhes_projeto.html',
         projeto=projeto,
-        tarefas=tarefas,           # Para a tabela
-        tarefas_gantt=tarefas_gantt, # Para o Gantt
+        tarefas=tarefas,
+        tarefas_gantt=tarefas_gantt,
         all_links=all_links,
-        usuarios=usuarios  # Adicionado para o campo de responsável
+        usuarios=usuarios,
+        pode_editar_projeto=pode_editar_projeto,
+        pode_editar_tarefa=pode_editar_tarefa,
+        pode_criar_tarefa=pode_criar_tarefa,
+        pode_excluir_tarefa=pode_excluir_tarefa,
+        pode_editar_responsavel=pode_editar_responsavel,
+        pode_editar_duracao=pode_editar_duracao,
+        pode_editar_data_inicio=pode_editar_data_inicio,
+        pode_editar_data_termino=pode_editar_data_termino,
+        pode_editar_predecessoras=pode_editar_predecessoras,
+        pode_editar_nome_tarefa=pode_editar_nome_tarefa,
+        is_admin=is_admin,
+        is_owner=is_owner
     )
 
 # Editar projeto
@@ -639,9 +668,19 @@ def normaliza_opcional(valor):
 @app.route('/tarefas/criar/<uuid:projeto_id>', methods=['GET', 'POST'])
 @login_required
 def criar_tarefa(projeto_id):
-    if funcionalidade_restrita('restr_criar_tarefa'):
+    # Buscar projeto para checar dono
+    resp = supabase.table("projetos").select("usuario_id").eq("id", str(projeto_id)).single().execute()
+    projeto = resp.data if hasattr(resp, 'data') else None
+    usuario_email = session.get('user_email')
+    usuario_id = session.get('user_id')
+    is_admin = usuario_email == 'izak.gomes59@gmail.com'
+    is_owner = projeto and projeto.get('usuario_id') == usuario_id
+    restricoes = carregar_restricoes()
+    restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+    pode_criar_tarefa = is_admin or is_owner or (restricoes_usuario.get('restr_criar_tarefa') == True)
+    if not pode_criar_tarefa:
         flash('Acesso restrito para criar tarefas.')
-        return redirect(url_for('projetos'))
+        return redirect(f'/projetos/{projeto_id}')
     if request.method == 'POST':
         nome = request.form['nome']
         descricao = request.form.get('descricao', '')
@@ -998,7 +1037,22 @@ def admin_restricoes():
     usuario_id = request.form.getlist('usuario_id') if request.method == 'POST' else request.args.getlist('usuario_id')
     restricoes = carregar_restricoes()
     restricoes_usuario = restricoes.get(usuario_id[0], {}) if usuario_id else {}
-    if request.method == 'POST' and usuario_id:
+    # Buscar todos os projetos para o painel de permissões de visualização
+    projetos = supabase.table("projetos").select("id, nome").execute().data or []
+    print('[DEBUG] Lista de projetos para admin_restricoes:', projetos)
+    projeto_id = request.args.get('projeto_id') or request.form.get('projeto_id')
+    usuarios_visiveis = []
+    if projeto_id:
+        resp = supabase.table("projetos_usuarios_visiveis").select("usuario_id").eq("projeto_id", projeto_id).execute()
+        usuarios_visiveis = [r['usuario_id'] for r in resp.data]
+    if request.method == 'POST' and request.form.get('form_tipo') == 'visualizacao_projeto' and projeto_id:
+        usuarios_selecionados = request.form.getlist('usuarios')
+        supabase.table("projetos_usuarios_visiveis").delete().eq("projeto_id", projeto_id).execute()
+        for uid in usuarios_selecionados:
+            supabase.table("projetos_usuarios_visiveis").insert({"projeto_id": projeto_id, "usuario_id": uid}).execute()
+        flash('Permissões de visualização atualizadas!')
+        usuarios_visiveis = usuarios_selecionados
+    if request.method == 'POST' and usuario_id and (not request.form.get('form_tipo') or request.form.get('form_tipo') == 'restricoes'):
         novas_restricoes = {
             'restr_criar_projeto': bool(request.form.get('restr_criar_projeto')),
             'restr_editar_projeto': bool(request.form.get('restr_editar_projeto')),
@@ -1006,13 +1060,30 @@ def admin_restricoes():
             'restr_criar_tarefa': bool(request.form.get('restr_criar_tarefa')),
             'restr_editar_tarefa': bool(request.form.get('restr_editar_tarefa')),
             'restr_excluir_tarefa': bool(request.form.get('restr_excluir_tarefa')),
+            'restr_editar_responsavel': bool(request.form.get('restr_editar_responsavel')),
+            'restr_editar_duracao': bool(request.form.get('restr_editar_duracao')),
+            'restr_editar_data_inicio': bool(request.form.get('restr_editar_data_inicio')),
+            'restr_editar_data_termino': bool(request.form.get('restr_editar_data_termino')),
+            'restr_editar_predecessoras': bool(request.form.get('restr_editar_predecessoras')),
+            'restr_editar_nome_tarefa': bool(request.form.get('restr_editar_nome_tarefa')),
         }
         for uid in usuario_id:
             restricoes[uid] = novas_restricoes
         salvar_restricoes(restricoes)
         restricoes_usuario = novas_restricoes
         flash('Restrições salvas com sucesso!')
-    return render_template('admin_restricoes.html', restricoes=restricoes_usuario, usuarios=usuarios, usuario_id=usuario_id)
+    return render_template('admin_restricoes.html', restricoes=restricoes_usuario, usuarios=usuarios, usuario_id=usuario_id, projetos=projetos, projeto_id=projeto_id, usuarios_visiveis=usuarios_visiveis)
+
+@app.route('/admin/usuarios_visiveis_projeto')
+@apenas_admin_izak
+@login_required
+def usuarios_visiveis_projeto():
+    projeto_id = request.args.get('projeto_id')
+    if not projeto_id:
+        return jsonify({'usuarios_visiveis': []})
+    resp = supabase.table("projetos_usuarios_visiveis").select("usuario_id").eq("projeto_id", projeto_id).execute()
+    usuarios_visiveis = [r['usuario_id'] for r in resp.data]
+    return jsonify({'usuarios_visiveis': usuarios_visiveis})
 
 def enviar_email_admin(assunto, mensagem):
     admin_email = os.getenv('ADMIN_EMAIL')
