@@ -3,6 +3,38 @@
 {% block title %}Administração de Restrições{% endblock %}
 
 {% block content %}
+<style>
+    .form-check {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    .form-check-input {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .form-check-label {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+        line-height: 1 !important;
+    }
+
+    .row.campos-restricoes {
+        flex-wrap: wrap;
+    }
+
+    .campos-restricoes .col-md-4 {
+        min-width: 200px;
+    }
+
+    .form-check-label {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
@@ -33,84 +65,89 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="font-size:1.1em;">Funcionalidades restritas
                                 para os usuários selecionados:</label>
-                            <div class="row row-cols-1 row-cols-sm-2 g-1 mb-2">
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_criar_projeto"
-                                        name="restr_criar_projeto" {% if restricoes.get('restr_criar_projeto')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_criar_projeto">Criar Projetos</label>
+                            <div class="row campos-restricoes">
+                                <div class="col-md-4 mb-2">
+                                    <strong>Projetos</strong>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_criar_projeto"
+                                            name="restr_criar_projeto" {% if restricoes.get('restr_criar_projeto')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_criar_projeto">Criar Projetos</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_projeto"
+                                            name="restr_editar_projeto" {% if restricoes.get('restr_editar_projeto')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_projeto">Editar
+                                            Projetos</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_excluir_projeto"
+                                            name="restr_excluir_projeto" {% if restricoes.get('restr_excluir_projeto')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_excluir_projeto">Excluir
+                                            Projetos</label>
+                                    </div>
                                 </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_projeto"
-                                        name="restr_editar_projeto" {% if restricoes.get('restr_editar_projeto')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_projeto">Editar Projetos</label>
+                                <div class="col-md-4 mb-2">
+                                    <strong>Tarefas</strong>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_criar_tarefa"
+                                            name="restr_criar_tarefa" {% if restricoes.get('restr_criar_tarefa')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_criar_tarefa">Criar Tarefas</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_tarefa"
+                                            name="restr_editar_tarefa" {% if restricoes.get('restr_editar_tarefa')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_tarefa">Editar Tarefas</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_excluir_tarefa"
+                                            name="restr_excluir_tarefa" {% if restricoes.get('restr_excluir_tarefa')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_excluir_tarefa">Excluir
+                                            Tarefas</label>
+                                    </div>
                                 </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_excluir_projeto"
-                                        name="restr_excluir_projeto" {% if restricoes.get('restr_excluir_projeto')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_excluir_projeto">Excluir Projetos</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_criar_tarefa"
-                                        name="restr_criar_tarefa" {% if restricoes.get('restr_criar_tarefa') %}checked{%
-                                        endif %}>
-                                    <label class="form-check-label" for="restr_criar_tarefa">Criar Tarefas</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_tarefa"
-                                        name="restr_editar_tarefa" {% if restricoes.get('restr_editar_tarefa')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_tarefa">Editar Tarefas</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_excluir_tarefa"
-                                        name="restr_excluir_tarefa" {% if restricoes.get('restr_excluir_tarefa')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_excluir_tarefa">Excluir Tarefas</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_responsavel"
-                                        name="restr_editar_responsavel" {% if restricoes.get('restr_editar_responsavel')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_responsavel">Editar Responsável da
-                                        Tarefa</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_duracao"
-                                        name="restr_editar_duracao" {% if restricoes.get('restr_editar_duracao')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_duracao">Editar Duração
-                                        (dias)</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_data_inicio"
-                                        name="restr_editar_data_inicio" {% if restricoes.get('restr_editar_data_inicio')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_data_inicio">Editar Data
-                                        Início</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_data_termino"
-                                        name="restr_editar_data_termino" {% if
-                                        restricoes.get('restr_editar_data_termino') %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_data_termino">Editar Data
-                                        Término</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_predecessoras"
-                                        name="restr_editar_predecessoras" {% if
-                                        restricoes.get('restr_editar_predecessoras') %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_predecessoras">Editar
-                                        Predecessoras</label>
-                                </div>
-                                <div class="col form-check">
-                                    <input class="form-check-input" type="checkbox" id="restr_editar_nome_tarefa"
-                                        name="restr_editar_nome_tarefa" {% if restricoes.get('restr_editar_nome_tarefa')
-                                        %}checked{% endif %}>
-                                    <label class="form-check-label" for="restr_editar_nome_tarefa">Editar Nome/Ordem da
-                                        Tarefa</label>
+                                <div class="col-md-4 mb-2">
+                                    <strong>Campos da Tarefa</strong>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_responsavel"
+                                            name="restr_editar_responsavel" {% if
+                                            restricoes.get('restr_editar_responsavel') %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_responsavel">Editar
+                                            Responsável</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_duracao"
+                                            name="restr_editar_duracao" {% if restricoes.get('restr_editar_duracao')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_duracao">Editar Duração
+                                            (dias)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_datas"
+                                            name="restr_editar_datas" {% if restricoes.get('restr_editar_datas')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_datas">Editar Datas
+                                            (Início/Término)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_predecessoras"
+                                            name="restr_editar_predecessoras" {% if
+                                            restricoes.get('restr_editar_predecessoras') %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_predecessoras">Editar
+                                            Predecessoras</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_nome_tarefa"
+                                            name="restr_editar_nome_tarefa" {% if
+                                            restricoes.get('restr_editar_nome_tarefa') %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_nome_tarefa">Editar Nome/Ordem
+                                            da Tarefa</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -71,62 +71,77 @@
                             {% endif %}
                         </div>
                     </div>
-                    {% if tarefas %}
-                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        {% if tarefas %}
+                        <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
                         <table class="table table-hover w-100" id="tabela-tarefas-inline" style="font-size: 0.95em;">
-                            <colgroup>
-                                <col style="width: 32px;">
-                                <col style="width: 40px;">
-                                <col style="width: 300px;">
-                                <col>
-                                <col>
-                                <col style="width: 100px;">
-                                <col style="width: 100px;">
-                                <col style="width: 150px;">
-                                <col>
-                                <col>
-                                <col style="width: 100px;">
-                            </colgroup>
-                            <thead class="table-dark">
-                                <tr>
-                                    <th style="width:32px"></th>
-                                    <th>Nº</th>
-                                    <th>Nome</th>
+                                <colgroup>
+                                    <col style="width: 32px;">
+                                    <col style="width: 40px;">
+                                {# Calcular larguras dinâmicas #}
+                                {% set nome_width = 300 %}
+                                {% set responsavel_width = 150 %}
+                                {% set removed_width = 0 %}
+                                {% if not pode_editar_predecessoras %}
+                                    {% set nome_width = nome_width + 120 %} {# toda a largura da predecessora vai para Nome #}
+                                {% endif %}
+                                {% if not pode_editar_tarefa and not pode_excluir_tarefa %}
+                                    {% set responsavel_width = responsavel_width + 100 %} {# toda a largura da coluna de ações vai para Responsável #}
+                                {% endif %}
+                                {% set nome_width = nome_width + (removed_width // 2) %}
+                                {% set responsavel_width = responsavel_width + (removed_width - (removed_width // 2)) %}
+                                <col style="width: {{ nome_width }}px;">
+                                {% if pode_editar_predecessoras %}
+                                    <col style="width: 120px;"> {# Predecessoras #}
+                                {% endif %}
+                                <col> {# Data Início #}
+                                <col> {# Data Término #}
+                                <col style="width: 55px;"> {# Duração (fixa, nunca removida) #}
+                                <col> {# Status #}
+                                <col style="width: {{ responsavel_width }}px;"> {# Responsável #}
+                                {% if pode_editar_tarefa or pode_excluir_tarefa %}
+                                    <col style="width: 100px;"> {# Ações #}
+                                {% endif %}
+                                </colgroup>
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="width:32px"></th>
+                                        <th>Nº</th>
+                                        <th>Nome</th>
                                     {% if pode_editar_predecessoras %}
-                                    <th>Predecessoras</th>
+                                        <th>Predecessoras</th>
                                     {% endif %}
-                                    <th>Data Início</th>
-                                    <th>Data Término</th>
-                                    <th>Duração (dias)</th>
-                                    <th>Status</th>
-                                    <th>Responsável</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for tarefa in tarefas %}
-                                <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
-                                    <td class="drag-handle"
+                                        <th>Data Início</th>
+                                        <th>Data Término</th>
+                                        <th>Duração (dias)</th>
+                                        <th>Status</th>
+                                        <th>Responsável</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tarefa in tarefas %}
+                                    <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
+                                        <td class="drag-handle"
                                         style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
-                                        &#9776;</td>
-                                    <td class="numero-tarefa">{{ tarefa.ordem or '' }}</td>
-                                    <td><input type="text" class="form-control form-control-sm"
+                                            &#9776;</td>
+                                        <td class="numero-tarefa">{{ tarefa.ordem or '' }}</td>
+                                        <td><input type="text" class="form-control form-control-sm"
                                             value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome" {% if not
                                             pode_editar_nome_tarefa %}disabled{% endif %}></td>
                                     {% if pode_editar_predecessoras %}
-                                    <td class="predecessoras-td">
+                                        <td class="predecessoras-td">
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
                                             onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
-                                        <input type="text" class="form-control form-control-sm"
-                                            value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
-                                            name="predecessoras" placeholder="Ex: 2FS+2d"
+                                            <input type="text" class="form-control form-control-sm"
+                                                value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
+                                                name="predecessoras" placeholder="Ex: 2FS+2d"
                                             onchange="onPredecessorasEdit(this)" onkeyup="onPredecessorasEdit(this)">
-                                    </td>
+                                        </td>
                                     {% endif %}
-                                    <td><input type="date" class="form-control form-control-sm"
-                                            value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
+                                        <td><input type="date" class="form-control form-control-sm"
+                                                value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
                                             name="data_inicio" {% if tarefa.data_inicio_calculada %} data-calculada="1"
-                                            readonly style="background:#fffbe6;" {% endif %}
+                                                readonly style="background:#fffbe6;" {% endif %}
                                             oninput="onInicioOuFimEdit(this)" {% if not pode_editar_data_inicio
                                             %}disabled{% endif %}></td>
                                     <td><input type="date" class="form-control form-control-sm"
@@ -139,104 +154,105 @@
                                             value="{{ tarefa.duracao or '' }}" oninput="onDuracaoOuFimEdit(this)"
                                             onblur="onDuracaoOuFimEdit(this, true)" onkeyup="onDuracaoOuFimEdit(this)"
                                             {% if not pode_editar_duracao %}disabled{% endif %}>
-                                    </td>
-                                    <td>
-                                        <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
-                                            name="status">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
+                                                name="status">
                                             <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif
                                                 %}>Pendente</option>
-                                            <option value="em progresso" {% if tarefa.status=='em progresso'
-                                                %}selected{% endif %}>Em Progresso</option>
-                                            <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
-                                                endif %}>Concluída</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="usuario_id"
+                                                <option value="em progresso" {% if tarefa.status=='em progresso'
+                                                    %}selected{% endif %}>Em Progresso</option>
+                                                <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
+                                                    endif %}>Concluída</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="usuario_id"
                                             data-id="{{ tarefa.id }}" {% if not pode_editar_responsavel %}disabled{%
                                             endif %}>
-                                            <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
-                                                responsável</option>
-                                            {% for usuario in usuarios %}
-                                            <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
-                                                %}selected{% endif %}>{{ usuario.email }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
-                                                class="fas fa-save"></i></button>
+                                                <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
+                                                    responsável</option>
+                                                {% for usuario in usuarios %}
+                                                <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
+                                                    %}selected{% endif %}>{{ usuario.email }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
+                                                    class="fas fa-save"></i></button>
                                         {% if pode_editar_tarefa %}
-                                        <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
-                                            class="btn btn-warning btn-sm" title="Editar tarefa"><i
-                                                class="fas fa-edit"></i></a>
+                                            <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
+                                                class="btn btn-warning btn-sm" title="Editar tarefa"><i
+                                                    class="fas fa-edit"></i></a>
                                         {% endif %}
                                         {% if pode_excluir_tarefa %}
-                                        <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i
-                                                class="fas fa-trash"></i></button>
+                                            <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i
+                                                    class="fas fa-trash"></i></button>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                <!-- Linha para nova tarefa -->
-                                <tr id="linha-nova-tarefa">
-                                    <td></td>
-                                    <td></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="nome"
-                                            placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{%
-                                            endif %}></td>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <!-- Linha para nova tarefa -->
+                                    {% if pode_criar_tarefa %}
+                                    <tr id="linha-nova-tarefa">
+                                        <td></td>
+                                        <td></td>
+                                        <td><input type="text" class="form-control form-control-sm" name="nome"
+                                            placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{% endif %}></td>
                                     {% if pode_editar_predecessoras %}
-                                    <td class="predecessoras-td">
+                                        <td class="predecessoras-td">
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
                                             onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
-                                        <input type="text" class="form-control form-control-sm" name="predecessoras"
-                                            value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
-                                            onkeyup="onPredecessorasEdit(this)">
-                                    </td>
+                                            <input type="text" class="form-control form-control-sm" name="predecessoras"
+                                                value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
+                                                onkeyup="onPredecessorasEdit(this)">
+                                        </td>
                                     {% endif %}
-                                    <td><input type="date" class="form-control form-control-sm" name="data_inicio"
-                                            oninput="onInicioOuFimEdit(this)"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="data_fim"
+                                        <td><input type="date" class="form-control form-control-sm" name="data_inicio"
+                                                oninput="onInicioOuFimEdit(this)"></td>
+                                        <td><input type="date" class="form-control form-control-sm" name="data_fim"
                                             oninput="onDuracaoOuFimEdit(this)" onblur="onDuracaoOuFimEdit(this, true)">
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
                                             placeholder="Dias" oninput="onDuracaoOuFimEdit(this)"
-                                            onblur="onDuracaoOuFimEdit(this, true)"></td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="status">
-                                            <option value="pendente">Pendente</option>
-                                            <option value="em progresso">Em Progresso</option>
-                                            <option value="concluída">Concluída</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="usuario_id">
-                                            <option value="">Sem responsável</option>
-                                            {% for usuario in usuarios %}
-                                            <option value="{{ usuario.id }}">{{ usuario.email }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-                                    <td>
+                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="status">
+                                                <option value="pendente">Pendente</option>
+                                                <option value="em progresso">Em Progresso</option>
+                                                <option value="concluída">Concluída</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="usuario_id">
+                                                <option value="">Sem responsável</option>
+                                                {% for usuario in usuarios %}
+                                                <option value="{{ usuario.id }}">{{ usuario.email }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
                                         <button class="btn btn-success btn-sm" onclick="criarTarefaNovaLinha(this)"><i
-                                                class="fas fa-plus"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                                    class="fas fa-plus"></i></button>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle fa-2x mb-3"></i>
+                            <h5>Nenhuma tarefa encontrada</h5>
+                            <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="alert alert-info text-center">
-                        <i class="fas fa-info-circle fa-2x mb-3"></i>
-                        <h5>Nenhuma tarefa encontrada</h5>
-                        <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="d-flex justify-content-end mt-2">
+                    <div class="d-flex justify-content-end mt-2" style="padding-right: 16px;">
                     <button class="btn btn-primary mb-4" type="button" onclick="salvarTodasTarefas()">
-                        <i class="fas fa-save"></i> Salvar todas
-                    </button>
+                            <i class="fas fa-save"></i> Salvar todas
+                        </button>
                 </div>
             </div>
 
@@ -588,9 +604,9 @@
     }
 
     #tabela-tarefas-inline input[name="nome"] {
-        width: 280px !important;
-        max-width: 280px !important;
-        min-width: 280px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         padding-left: 4px;
         padding-right: 4px;
     }
@@ -623,8 +639,8 @@
     }
 
     #tabela-tarefas-inline select[name="usuario_id"] {
-        width: 150px !important;
-        max-width: 180px !important;
+        width: 100% !important;
+        max-width: 100% !important;
         min-width: 0 !important;
         padding-left: 8px;
         padding-right: 8px;
@@ -854,6 +870,23 @@
                 linhaHoje.style.left = left + 'px';
                 linhaHoje.style.height = '100%';
                 hojeContainer.appendChild(linhaHoje);
+                // Adicionar label com a data
+                const hojeLabel = document.createElement('div');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+                hojeLabel.style.position = 'absolute';
+                hojeLabel.style.top = '0px';
+                hojeLabel.style.left = (left + 6) + 'px'; // 6px à direita da linha
+                hojeLabel.style.transform = 'none';
+                hojeLabel.style.fontSize = '12px';
+                hojeLabel.style.color = '#e74c3c';
+                hojeLabel.style.fontWeight = 'bold';
+                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
+                hojeLabel.style.padding = '2px 6px';
+                hojeLabel.style.borderRadius = '4px';
+                hojeLabel.style.zIndex = '20';
+                hojeContainer.appendChild(hojeLabel);
             }
         }
         // Cabeçalho de datas de um nível (apenas dias)

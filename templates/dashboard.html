@@ -16,7 +16,8 @@
     <div class="row mb-4 justify-content-center">
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
             <a href="{{ url_for('projetos') }}" class="text-decoration-none">
-                <div class="stats-card h-100" style="background: linear-gradient(135deg, #5f2c82 0%, #49a09d 100%); cursor:pointer;">
+                <div class="stats-card h-100"
+                    style="background: linear-gradient(135deg, #5f2c82 0%, #49a09d 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="text-white">{{ total_projetos }}</h3>
@@ -29,7 +30,8 @@
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
             <a href="{{ url_for('projetos') }}" class="text-decoration-none">
-                <div class="stats-card h-100" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); cursor:pointer;">
+                <div class="stats-card h-100"
+                    style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="text-white">{{ total_tarefas }}</h3>
@@ -42,7 +44,8 @@
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
             <a href="{{ url_for('projetos') }}?status=pendente" class="text-decoration-none">
-                <div class="stats-card h-100" style="background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%); cursor:pointer;">
+                <div class="stats-card h-100"
+                    style="background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="text-white">{{ tarefas_pendentes }}</h3>
@@ -55,7 +58,8 @@
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
             <a href="{{ url_for('projetos') }}?status=em%20progresso" class="text-decoration-none">
-                <div class="stats-card h-100" style="background: linear-gradient(135deg, #8f00ff 0%, #e100ff 100%); cursor:pointer;">
+                <div class="stats-card h-100"
+                    style="background: linear-gradient(135deg, #8f00ff 0%, #e100ff 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="text-white">{{ tarefas_em_andamento }}</h3>
@@ -68,7 +72,8 @@
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
             <a href="{{ url_for('projetos') }}?status=concluída" class="text-decoration-none">
-                <div class="stats-card h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); cursor:pointer;">
+                <div class="stats-card h-100"
+                    style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="text-white">{{ tarefas_concluidas }}</h3>
@@ -97,35 +102,34 @@
                 </div>
                 <div class="card-body">
                     {% if projetos_recentes %}
-                        <div class="list-group list-group-flush">
-                            {% for projeto in projetos_recentes %}
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-1">{{ projeto.nome }}</h6>
-                                        <small class="text-muted">
-                                            {{ projeto.data_inicio }} - {{ projeto.data_fim }}
-                                        </small>
-                                    </div>
-                                    <div>
-                                        <span class="badge {% if projeto.status == 'concluido' %}bg-success{% elif projeto.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %}">
-                                            {{ projeto.status|title }}
-                                        </span>
-                                        <a href="{{ url_for('detalhes_projeto', projeto_id=projeto.id) }}" 
-                                           class="btn btn-sm btn-outline-primary ms-2">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
+                    <div class="list-group list-group-flush">
+                        {% for projeto in projetos_recentes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ projeto.nome }}</h6>
+                                <small class="text-muted">
+                                    {{ projeto.data_inicio }} - {{ projeto.data_fim }}
+                                </small>
+                            </div>
+                            <div>
+                                <span
+                                    class="badge {% if projeto.status == 'concluido' %}bg-success{% elif projeto.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {{ projeto.status|title }}
+                                </span>
+                                <a href="{{ url_for('detalhes_projeto', projeto_id=projeto.id) }}"
+                                    class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
                         </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Nenhum projeto encontrado</p>
-                            <a href="{{ url_for('criar_projeto') }}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Criar Primeiro Projeto
-                            </a>
-                        </div>
+                    <div class="text-center py-4">
+                        <a href="{{ url_for('criar_projeto') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Criar Primeiro Projeto
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -143,34 +147,36 @@
                 </div>
                 <div class="card-body">
                     {% if tarefas_recentes %}
-                        <div class="list-group list-group-flush">
-                            {% for tarefa in tarefas_recentes %}
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-1">{{ tarefa.nome }}</h6>
-                                        <small class="text-muted">
-                                            {{ tarefa.projetos.nome if tarefa.projetos else 'Projeto não encontrado' }}
-                                        </small>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge {% if tarefa.status == 'concluida' %}bg-success{% elif tarefa.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %} me-2">
-                                            {{ tarefa.status|title }}
-                                        </span>
-                                        <a href="{{ url_for('detalhes_projeto', projeto_id=tarefa.projeto_id) }}#tarefa-{{ tarefa.id }}" class="btn btn-sm btn-outline-primary" title="Ver detalhes da tarefa no projeto">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
+                    <div class="list-group list-group-flush">
+                        {% for tarefa in tarefas_recentes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ tarefa.nome }}</h6>
+                                <small class="text-muted">
+                                    {{ tarefa.projetos.nome if tarefa.projetos else 'Projeto não encontrado' }}
+                                </small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span
+                                    class="badge {% if tarefa.status == 'concluida' %}bg-success{% elif tarefa.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %} me-2">
+                                    {{ tarefa.status|title }}
+                                </span>
+                                <a href="{{ url_for('detalhes_projeto', projeto_id=tarefa.projeto_id) }}#tarefa-{{ tarefa.id }}"
+                                    class="btn btn-sm btn-outline-primary" title="Ver detalhes da tarefa no projeto">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
                         </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Nenhuma tarefa encontrada</p>
-                            <a href="{{ url_for('projetos') }}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Criar Primeira Tarefa
-                            </a>
-                        </div>
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Nenhuma tarefa encontrada</p>
+                        <a href="{{ url_for('projetos') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Criar Primeira Tarefa
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -206,4 +212,4 @@
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

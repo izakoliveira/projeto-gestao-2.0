@@ -324,31 +324,7 @@ def projetos():
                 todas_tarefas.append(tarefa_copia)
     todas_tarefas.sort(key=lambda t: ordem_tarefas.get(t['nome'], 9999))
     if not todas_tarefas:
-        print('[DEBUG] Nenhuma tarefa encontrada, criando dados de exemplo')
-        gantt_geral_data = [
-            {
-                'id': 'projeto_geral',
-                'name': 'Projeto Geral',
-                'start': '2025-01-01',
-                'end': '2025-01-25',
-                'progress': 0,
-                'dependencies': '',
-                'custom_class': 'project-group',
-                'type': 'project'
-            },
-            {
-                'id': '1',
-                'name': 'Tarefa de Exemplo 1',
-                'start': '2025-01-01',
-                'end': '2025-01-15',
-                'progress': 50,
-                'dependencies': '',
-                'custom_class': 'status-pendente',
-                'projeto_origem': 'Projeto Geral',
-                'type': 'task',
-                'ordem': 1
-            }
-        ]
+        gantt_geral_data = []
     else:
         # Definir cores únicas para cada projeto
         cor_idx = 0
@@ -366,8 +342,8 @@ def projetos():
                 'name': t.get('nome'),
                 'start': t.get('data_inicio_iso'),
                 'end': t.get('data_fim_iso'),
-                    'progress': 0,
-                    'dependencies': '',
+                'progress': 0,
+                'dependencies': '',
                 'custom_class': 'status-pendente',
                 'projeto_origem': t.get('projeto_origem'),
                 'type': 'task',
@@ -580,7 +556,7 @@ def detalhes_projeto(projeto_id):
     tarefas_gantt = tarefas_para_gantt(tarefas)
     usuarios_resp = supabase.table("usuarios").select("id, nome, email").execute()
     usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
-    
+
     # --- NOVO: Gerar dados para Gantt customizado ---
     gantt_geral_data = []
     cor_projetos = {}
@@ -951,62 +927,60 @@ def concluir_tarefa(tarefa_id):
 @login_required
 def dashboard():
     usuario_id = session['user_id']
-    
-    # Buscar estatísticas dos projetos
-    projetos_resp = supabase.table("projetos").select("*").eq("usuario_id", usuario_id).execute()
-    projetos = projetos_resp.data if hasattr(projetos_resp, 'data') else []
-    
+    usuario_email = session.get('user_email')
+    # Admin vê todos os projetos
+    if usuario_email == 'izak.gomes59@gmail.com':
+        projetos_resp = supabase.table("projetos").select("*").execute()
+        projetos = projetos_resp.data if hasattr(projetos_resp, 'data') else []
+    else:
+        # Usuário comum vê apenas projetos autorizados
+        resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+        projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+        if projetos_ids_visiveis:
+            projetos_resp = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis).execute()
+            projetos = projetos_resp.data if hasattr(projetos_resp, 'data') else []
+        else:
+            projetos = []
     # Buscar estatísticas das tarefas
     tarefas_resp = supabase.table("tarefas").select("*").execute()
     tarefas = tarefas_resp.data if hasattr(tarefas_resp, 'data') else []
-    
-    # Filtrar tarefas que pertencem aos projetos do usuário
+    # Filtrar tarefas que pertencem aos projetos visíveis
     projeto_ids = [projeto['id'] for projeto in projetos]
     tarefas = [tarefa for tarefa in tarefas if tarefa.get('projeto_id') in projeto_ids]
-    
     # Buscar informações dos projetos para as tarefas
     if tarefas:
         projeto_ids_tarefas = list(set([tarefa.get('projeto_id') for tarefa in tarefas if tarefa.get('projeto_id')]))
         if projeto_ids_tarefas:
             projetos_resp_tarefas = supabase.table("projetos").select("id, nome").in_("id", projeto_ids_tarefas).execute()
             projetos_dict = {projeto['id']: projeto for projeto in projetos_resp_tarefas.data}
-            
-            # Adicionar informações do projeto a cada tarefa
             for tarefa in tarefas:
                 if tarefa.get('projeto_id') and tarefa['projeto_id'] in projetos_dict:
                     tarefa['projetos'] = projetos_dict[tarefa['projeto_id']]
                 else:
                     tarefa['projetos'] = None
-    
     # Calcular estatísticas
     total_projetos = len(projetos)
     projetos_em_andamento = len([p for p in projetos if p.get('status') == 'em progresso'])
     projetos_concluidos = len([p for p in projetos if p.get('status') == 'concluída'])
-    
     total_tarefas = len(tarefas)
     tarefas_pendentes = len([t for t in tarefas if t.get('status') == 'pendente'])
     tarefas_em_andamento = len([t for t in tarefas if t.get('status') == 'em progresso'])
     tarefas_concluidas = len([t for t in tarefas if t.get('status') == 'concluída'])
-    
     # Projetos recentes (últimos 5)
     projetos_recentes = sorted(projetos, key=lambda x: x.get('created_at', ''), reverse=True)[:5]
-    
     # Tarefas recentes (últimas 5)
     tarefas_recentes = sorted(tarefas, key=lambda x: x.get('created_at', ''), reverse=True)[:5]
-    
     # Formatar datas
     for projeto in projetos_recentes:
         if projeto.get('data_inicio'):
             projeto['data_inicio'] = datetime.strptime(projeto['data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
         if projeto.get('data_fim'):
             projeto['data_fim'] = datetime.strptime(projeto['data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
-    
     for tarefa in tarefas_recentes:
         if tarefa.get('data_inicio'):
             tarefa['data_inicio'] = datetime.strptime(tarefa['data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
         if tarefa.get('data_fim'):
             tarefa['data_fim'] = datetime.strptime(tarefa['data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
-    
     return render_template('dashboard.html', 
                          total_projetos=total_projetos,
                          projetos_em_andamento=projetos_em_andamento,
@@ -1100,8 +1074,7 @@ def admin_restricoes():
             'restr_excluir_tarefa': bool(request.form.get('restr_excluir_tarefa')),
             'restr_editar_responsavel': bool(request.form.get('restr_editar_responsavel')),
             'restr_editar_duracao': bool(request.form.get('restr_editar_duracao')),
-            'restr_editar_data_inicio': bool(request.form.get('restr_editar_data_inicio')),
-            'restr_editar_data_termino': bool(request.form.get('restr_editar_data_termino')),
+            'restr_editar_datas': bool(request.form.get('restr_editar_datas')),
             'restr_editar_predecessoras': bool(request.form.get('restr_editar_predecessoras')),
             'restr_editar_nome_tarefa': bool(request.form.get('restr_editar_nome_tarefa')),
         }
