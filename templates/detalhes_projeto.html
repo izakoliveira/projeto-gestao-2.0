@@ -246,16 +246,48 @@
                         <div class="card-header bg-primary text-white">
                             <i class="fas fa-chart-bar"></i> Gráfico de Gantt
                         </div>
-                        <div class="card-body p-3">
-                            <div class="mb-2 d-flex align-items-center gap-2 flex-wrap">
-                                <button class="btn btn-outline-secondary btn-sm" onclick="zoomFontOut()">-</button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="zoomFontIn()">+</button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('day')">Dia</button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('week')">Semana</button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('month')">Mês</button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="setZoom('year')">Ano</button>
+                        <div class="card-body">
+                            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
+                                <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
+                                    style="font-size: 1.2em;">-</button>
+                                <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
+                                <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Aumentar Zoom"
+                                    style="font-size: 1.2em;">+</button>
                             </div>
-                            <div id="gantt_here" style="width:100%; height:500px;"></div>
+                            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <div style="display: flex;">
+                    </div>
+                                </div>
+                                <div id="gantt-cronograma-area" style="position: relative;">
+                                    <div id="gantt-hoje-container"></div>
+                                    <table style="border-collapse: collapse; width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                                    Tarefa
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="gantt-body">
+                                            <!-- Linhas das tarefas geradas via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- Legenda colorida por projeto -->
+                            <div class="legend mt-2"
+                                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                                {% for projeto, cor in projects_colors.items() %}
+                                <div class="legend-item"
+                                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                                    data-projeto="{{ projeto }}">
+                                    <div class="legend-color"
+                                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
+                                    <span>{{ projeto }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -316,66 +348,192 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css">
+<!-- Estilos do Gantt Customizado -->
 <style>
-    /* Força a largura da tabela interna do Gantt igual à tabela de tarefas */
-    #gantt_here .gantt_grid,
-    #gantt_here .gantt_task {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+    /* Estilos do Gantt Customizado */
+    .gantt-header {
+        display: flex;
+        border-bottom: 2px solid #dee2e6;
+        background: #f8f9fa;
+        font-weight: bold;
     }
 
-    /* Remove qualquer border extra do Gantt */
-    #gantt_here .gantt_grid,
-    #gantt_here .gantt_task,
-    #gantt_here .gantt_grid_data,
-    #gantt_here .gantt_task_bg {
-        border-left: none !important;
-        border-right: none !important;
+    .gantt-header-cell {
+        padding: 10px;
+        text-align: center;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        transition: min-width 0.3s ease;
     }
 
-    /* Ajuste fino: diminua ou aumente até alinhar visualmente */
-    #gantt_here {
-        padding-left: 0 !important;
-        padding-right: 0px !important;
-        margin-left: -2px !important;
-        margin-right: 0px !important;
-        transition: font-size 0.2s;
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+        transition: min-width 0.3s ease;
     }
 
-    /* Remove as linhas de grade do grid (coluna lateral) do Gantt */
-    .gantt_grid .gantt_row,
-    .gantt_grid .gantt_grid_head_row {
-        border-bottom: none !important;
+    .gantt-row {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        min-height: 40px;
     }
 
-    .gantt_grid .gantt_grid_head_cell,
-    .gantt_grid .gantt_cell {
-        border-right: none !important;
+    .gantt-row:nth-child(even) {
+        background: #f8f9fa;
     }
 
-    /* Remove apenas as linhas verticais da área das barras (task area) */
-    .gantt_task .gantt_task_cell {
-        border-right: none !important;
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
     }
 
-    /* Remove as linhas de grade do cabeçalho do Gantt */
-    .gantt_scale_cell,
-    .gantt_scale_row {
-        border-right: none !important;
-        border-bottom: none !important;
+    .gantt-task-bar:hover {
+        background: #0056b3;
     }
 
-    #gantt_here * {
-        font-size: inherit !important;
+    /* Coluna fixa para Tarefa */
+    #gantt-custom th:first-child,
+    #gantt-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 50;
+        width: 320px;
+        min-width: 320px;
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    /* Destacar datas em vermelho se sábado, domingo ou feriado */
-    .data-vermelha {
-        border: 2px solid red !important;
-        background: #ffeaea !important;
+    .gantt-hoje-linha {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: repeating-linear-gradient(to bottom,
+                #e74c3c 0px, #e74c3c 8px,
+                transparent 8px, transparent 16px);
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    #gantt-hoje-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
+
+    #gantt-cronograma-area {
+        position: relative;
+    }
+
+    .gantt-row-compact {
+        height: 16px !important;
+    }
+
+    .gantt-bar-compact {
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+    }
+
+    .gantt-tooltip-detalhado {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-row-compact td,
+    .gantt-row-compact th {
+        height: 16px !important;
+        min-height: 16px !important;
+        max-height: 24px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 13px !important;
+    }
+
+    .gantt-h-linha {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #dee2e6;
+        z-index: 0;
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: none !important;
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+    }
+
+    #gantt-custom.dragging {
+        cursor: grabbing !important;
+        user-select: none !important;
     }
 
     #tabela-tarefas-inline input[name="duracao"] {
@@ -524,254 +682,393 @@
 <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-    window.idParaOrdem = {{ id_para_ordem | tojson }};
+    window.ganttData = {{ gantt_geral_data | tojson | safe }};
+</script>
 
-    gantt.config.xml_date = "%Y-%m-%d";
+<script>
+    const larguraBase = 4; // 100% = 4px
+    let larguraDia = larguraBase;
+    const larguraMin = 1;
+    const larguraMax = 32;
+    const ROW_HEIGHT = 32; // altura de cada linha (ajuste conforme seu CSS)
+    const VISIBLE_ROWS = 18; // quantas linhas mostrar de cada vez (ajuste conforme altura do container)
+    let tarefas = [];
+    let nomesOrdenados = [];
+    let grupos = {};
+    let periodo = { min: null, max: null };
+    let diasTotais = 0;
 
-    function setZoom(value) {
-        localStorage.setItem('gantt_zoom', value);
-        switch (value) {
-            case "day":
-                gantt.config.scales = [
-                    { unit: "day", step: 1, format: "%d %b" }
-                ];
-                gantt.config.scale_height = 27;
-                break;
-            case "week":
-                gantt.config.scales = [
-                    { unit: "week", step: 1, format: "Semana %W" },
-                    { unit: "day", step: 1, format: "%d %M" }
-                ];
-                gantt.config.scale_height = 50;
-                break;
-            case "month":
-                gantt.config.scales = [
-                    { unit: "month", step: 1, format: "%M %Y" },
-                    { unit: "week", step: 1, format: "S%W" }
-                ];
-                gantt.config.scale_height = 50;
-                break;
-            case "year":
-                gantt.config.scales = [
-                    { unit: "year", step: 1, format: "%Y" },
-                    { unit: "month", step: 1, format: "%M" }
-                ];
-                gantt.config.scale_height = 50;
-                break;
-        }
-        gantt.render();
-    }
-
-    gantt.attachEvent("onColumnResizeEnd", function (index, width) {
-        if (index === 0) {
-            localStorage.setItem('gantt_col_width', width);
-        }
-    });
-
-    // Tradução das labels e datas
-    gantt.locale = {
-        date: {
-            month_full: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
-            month_short: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
-            day_full: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"],
-            day_short: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
-        },
-        labels: {
-            new_task: "Nova tarefa",
-            dhx_cal_today_button: "Hoje",
-            day_tab: "Dia",
-            week_tab: "Semana",
-            month_tab: "Mês",
-            new_event: "Novo evento",
-            icon_save: "Salvar",
-            icon_cancel: "Cancelar",
-            icon_details: "Detalhes",
-            icon_edit: "Editar",
-            icon_delete: "Excluir",
-            confirm_closing: "",
-            confirm_deleting: "A tarefa será excluída permanentemente. Tem certeza?",
-            section_description: "Descrição",
-            section_time: "Período",
-            section_type: "Tipo",
-            column_text: "Nome da tarefa",
-            column_start_date: "Início",
-            column_duration: "Duração",
-            column_add: "",
-            link: "Dependência",
-            confirm_link_deleting: "será removida",
-            link_start: " (início)",
-            link_end: " (fim)",
-            type_task: "Tarefa",
-            type_project: "Projeto",
-            type_milestone: "Marco",
-            minutes: "Minutos",
-            hours: "Horas",
-            days: "Dias",
-            weeks: "Semanas",
-            months: "Meses",
-            years: "Anos",
-            message_ok: "OK",
-            message_cancel: "Cancelar"
-        }
-    };
-
-    // Remover o nome da tarefa de dentro das barras
-    gantt.templates.task_text = function (start, end, task) {
-        return "";
-    };
-
-    // Função para calcular dias úteis entre duas datas
-    function calcularDiasUteis(dataInicio, dataFim) {
-        // Garante que as datas sejam objetos Date
-        let startDate = (dataInicio instanceof Date) ? dataInicio : new Date(dataInicio);
-        let endDate = (dataFim instanceof Date) ? dataFim : new Date(dataFim);
-        if (isNaN(startDate) || isNaN(endDate)) return 0;
-        let count = 0;
-        let current = new Date(startDate);
-        while (current <= endDate) {
-            const yyyy = current.getFullYear();
-            const mm = String(current.getMonth() + 1).padStart(2, '0');
-            const dd = String(current.getDate()).padStart(2, '0');
-            const dataStr = `${yyyy}-${mm}-${dd}`;
-            const diaSemana = current.getDay();
-            if (diaSemana !== 0 && diaSemana !== 6 && !isFeriado(dataStr)) {
-                count++;
-            }
-            current.setDate(current.getDate() + 1);
-        }
-        return count;
-    }
-
-    // Função para formatar datas no padrão dd/mm/aaaa
-    function formatarDataBR(date) {
-        let d = (date instanceof Date) ? date : new Date(date);
-        if (isNaN(d)) return '';
-        let dia = String(d.getDate()).padStart(2, '0');
-        let mes = String(d.getMonth() + 1).padStart(2, '0');
-        let ano = d.getFullYear();
-        return `${dia}/${mes}/${ano}`;
-    }
-
-    // Tooltip ao passar o mouse sobre a barra
-    gantt.templates.tooltip_text = function (start, end, task) {
-        var diasUteis = 'N/A';
-        try {
-            if (start && end) {
-                diasUteis = calcularDiasUteis(start, end);
-            }
-        } catch (e) {
-            diasUteis = 'N/A';
-        }
-        // Ajusta a data de término para ser inclusiva
-        var dataTerminoInclusiva = end ? new Date((end instanceof Date ? end : new Date(end)).getTime() - 24 * 60 * 60 * 1000) : end;
-        return (
-            "<b>Nome:</b> " + task.text + "<br/>" +
-            "<b>Início:</b> " + formatarDataBR(start) + "<br/>" +
-            "<b>Término:</b> " + formatarDataBR(dataTerminoInclusiva) + "<br/>" +
-            "<b>Duração:</b> " + task.duration + " dias<br/>" +
-            "<b>Dias úteis:</b> " + diasUteis + " dias"
-        );
-    };
-
-    // Ativar explicitamente o plugin de tooltip
-    gantt.plugins({ tooltip: true });
-
-    gantt.init("gantt_here");
-    var tarefas = {{ tarefas_gantt| tojson | safe }};
-    if (tarefas.length > 200) {
-        document.addEventListener('DOMContentLoaded', function () {
-            var ganttDiv = document.getElementById('gantt_here');
-            if (ganttDiv) ganttDiv.innerHTML = '<p style="color:red;font-weight:bold;">Muitos dados para exibir. Por favor, filtre o período ou reduza a quantidade de tarefas.</p>';
+    // Função utilitária para agrupar tarefas por nome
+    function agruparTarefasPorNome(tarefas) {
+        const grupos = {};
+        tarefas.forEach(tarefa => {
+            if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+            grupos[tarefa.name].push(tarefa);
         });
-        throw new Error('Muitos dados para exibir');
+        return grupos;
     }
-    var all_links = {{ all_links| tojson | safe }};
-    gantt.parse({
-        data: tarefas,
-        links: all_links
+
+    // Função para obter datas mínimas e máximas
+    function obterPeriodo(tarefas) {
+        let min = null, max = null;
+        tarefas.forEach(t => {
+            const ini = new Date(t.start);
+            const fim = new Date(t.end);
+            if (!min || ini < min) min = ini;
+            if (!max || fim > max) max = fim;
+        });
+        return { min, max };
+    }
+
+    // Função para calcular dias entre datas
+    function diasEntre(a, b) {
+        return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
+    }
+
+    // Função para cor de status
+    function corStatus(tarefa) {
+        if (tarefa.bar_color) return tarefa.bar_color;
+        if (tarefa.status === 'concluida') return '#28a745';
+        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+        return '#ffc107';
+    }
+
+    // Função para tooltip
+    function tooltipBarra(tarefa) {
+        const ini = new Date(tarefa.start).toLocaleDateString('pt-BR');
+        const fim = new Date(tarefa.end).toLocaleDateString('pt-BR');
+        return `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
+    }
+
+    function calcularDiasUteis(dataInicio, dataFim) {
+        let diasUteis = 0;
+        const dataAtual = new Date(dataInicio);
+        while (dataAtual <= dataFim) {
+            if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+                diasUteis++;
+            }
+            dataAtual.setDate(dataAtual.getDate() + 1);
+        }
+        return diasUteis;
+    }
+
+    function mostrarTooltipDetalhado(event, barra) {
+        esconderTooltipDetalhado();
+        const startDate = new Date(barra.start);
+        const endDate = new Date(barra.end);
+        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        const diasUteis = calcularDiasUteis(startDate, endDate);
+        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+        const tooltip = document.createElement('div');
+        tooltip.className = 'gantt-tooltip-detalhado';
+        tooltip.id = 'gantt-tooltip-detalhado';
+        const dataInicio = startDate.toLocaleDateString('pt-BR');
+        const dataFim = endDate.toLocaleDateString('pt-BR');
+        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+        tooltip.innerHTML = `
+            <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
+            <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
+            <div style="color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;"><b>Coleção:</b> ${barra.colecao || '-'} </div>
+            <div class="gantt-tooltip-info" style="gap: 12px;">
+                <span class="gantt-tooltip-label">🏁 Início:</span>
+                <span class="gantt-tooltip-value">${dataInicio}</span>
+                <span class="gantt-tooltip-label">🎯 Fim:</span>
+                <span class="gantt-tooltip-value">${dataFim}</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Corridos:</span>
+                <span class="gantt-tooltip-value">${diasCorridos} dias</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Úteis:</span>
+                <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
+        atualizarPosicaoTooltipDetalhado(event);
+    }
+
+    function esconderTooltipDetalhado() {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) tooltip.remove();
+    }
+
+    function atualizarPosicaoTooltipDetalhado(event) {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = event.clientX + 12;
+            let top = event.clientY + 12;
+            if (left + tooltipRect.width > window.innerWidth) {
+                left = window.innerWidth - tooltipRect.width - 8;
+            }
+            if (top + tooltipRect.height > window.innerHeight) {
+                top = window.innerHeight - tooltipRect.height - 8;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+    }
+
+    // Função principal para montar o Gantt (sem virtualização)
+    function montarGanttAgrupado() {
+        const dados = window.ganttData || [];
+        const body = document.getElementById('gantt-body');
+        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+        if (!dados.length) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+            return;
+        }
+        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        const grupos = agruparTarefasPorNome(tarefas);
+        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+            return ordemA - ordemB;
+        });
+        const periodo = obterPeriodo(tarefas);
+        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+            return;
+        }
+        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+        // Linha de hoje, cabeçalhos, etc (igual ao seu código)
+        const hojeContainer = document.getElementById('gantt-hoje-container');
+        if (hojeContainer) {
+            hojeContainer.innerHTML = '';
+            hojeContainer.style.position = 'absolute';
+            hojeContainer.style.top = '0';
+            hojeContainer.style.left = '0';
+            hojeContainer.style.bottom = '0';
+            hojeContainer.style.right = '0';
+            hojeContainer.style.zIndex = '10';
+            hojeContainer.style.pointerEvents = 'none';
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            if (hoje >= periodo.min && hoje <= periodo.max) {
+                const offset = diasEntre(periodo.min, hoje);
+                const left = 320 + (offset * larguraDia); // 320px da coluna tarefa
+                const linhaHoje = document.createElement('div');
+                linhaHoje.className = 'gantt-hoje-linha';
+                linhaHoje.style.left = left + 'px';
+                linhaHoje.style.height = '100%';
+                hojeContainer.appendChild(linhaHoje);
+            }
+        }
+        // Cabeçalho de datas de um nível (apenas dias)
+        const dateHeader = document.getElementById('gantt-date-header');
+        if (dateHeader) {
+            dateHeader.innerHTML = '';
+            // Espaço à esquerda para alinhar com a coluna Tarefa
+            const espacoTarefa = document.createElement('div');
+            espacoTarefa.style.width = '320px';
+            espacoTarefa.style.minWidth = '320px';
+            espacoTarefa.style.maxWidth = '320px';
+            espacoTarefa.style.display = 'inline-block';
+            espacoTarefa.style.height = '19px';
+            espacoTarefa.style.background = 'transparent';
+            dateHeader.appendChild(espacoTarefa);
+            // Não renderizar mais os dias
+        }
+        // Renderizar todas as linhas de uma vez
+        body.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        nomesOrdenados.forEach((nome, idx) => {
+            const barras = grupos[nome];
+            const tr = document.createElement('tr');
+            tr.className = 'gantt-row-compact';
+            // Nome da tarefa
+            const tdNome = document.createElement('td');
+            tdNome.textContent = nome;
+            tdNome.title = nome;
+            tdNome.style.padding = "2px 8px";
+            tdNome.style.whiteSpace = "nowrap";
+            tdNome.style.overflow = "hidden";
+            tdNome.style.textOverflow = "ellipsis";
+            tdNome.style.height = "16px";
+            tdNome.style.fontSize = "13px";
+            tr.appendChild(tdNome);
+            // Cronograma
+            const tdCrono = document.createElement('td');
+            tdCrono.style.position = "relative";
+            tdCrono.style.height = "16px";
+            tdCrono.style.background = "#f8f9fa";
+            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+            // Adicionar linha horizontal de grade
+            const linhaH = document.createElement('div');
+            linhaH.className = 'gantt-h-linha';
+            linhaH.style.position = 'absolute';
+            linhaH.style.left = '0';
+            linhaH.style.right = '0';
+            linhaH.style.bottom = '0';
+            linhaH.style.height = '1px';
+            linhaH.style.background = '#dee2e6';
+            linhaH.style.zIndex = '1';
+            tdCrono.appendChild(linhaH);
+            barras.forEach((barra, idx) => {
+                const inicio = new Date(barra.start);
+                const fim = new Date(barra.end);
+                const offset = diasEntre(periodo.min, inicio);
+                const largura = diasEntre(inicio, fim) + 1;
+                const div = document.createElement('div');
+                div.className = 'gantt-bar-compact';
+                div.style.position = "absolute";
+                div.style.left = (offset * larguraDia) + "px";
+                div.style.top = "2px";
+                div.style.height = "8px";
+                div.style.width = (largura * larguraDia) + "px";
+                div.style.background = corStatus(barra);
+                div.style.borderRadius = "4px";
+                div.style.textAlign = "center";
+                div.style.color = "#fff";
+                div.style.fontSize = "11px";
+                div.style.lineHeight = "14px";
+                div.style.cursor = "pointer";
+                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                tdCrono.appendChild(div);
+                div.onmouseenter = function (e) {
+                    mostrarTooltipDetalhado(e, barra);
+                    this._mousemoveHandler = function (ev) {
+                        atualizarPosicaoTooltipDetalhado(ev);
+                    };
+                    this.addEventListener('mousemove', this._mousemoveHandler);
+                };
+                div.onmouseleave = function () {
+                    esconderTooltipDetalhado();
+                    if (this._mousemoveHandler) {
+                        this.removeEventListener('mousemove', this._mousemoveHandler);
+                        this._mousemoveHandler = null;
+                    }
+                };
+            });
+            tr.appendChild(tdCrono);
+            fragment.appendChild(tr);
+        });
+        body.appendChild(fragment);
+    }
+
+    // Evento de scroll para atualizar as linhas visíveis
+    document.addEventListener('DOMContentLoaded', function () {
+        montarGanttAgrupado();
+        function atualizarZoomLabel() {
+            const zoomLabel = document.getElementById('zoom-label');
+            if (zoomLabel) {
+                const percent = Math.round((larguraDia / larguraBase) * 100);
+                zoomLabel.textContent = percent + '%';
+            }
+        }
+        atualizarZoomLabel();
+        document.getElementById('zoom-in').onclick = function () {
+            if (larguraDia < larguraMax) {
+                larguraDia += larguraBase * 0.1;
+                if (larguraDia > larguraMax) larguraDia = larguraMax;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+        document.getElementById('zoom-out').onclick = function () {
+            if (larguraDia > larguraMin) {
+                larguraDia -= larguraBase * 0.1;
+                if (larguraDia < larguraMin) larguraDia = larguraMin;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+
+        // Evidenciar barras ao clicar na legenda (agora com seleção múltipla via Ctrl)
+        let projetosSelecionados = [];
+        document.querySelectorAll('.legend-item').forEach(item => {
+            item.addEventListener('click', function (e) {
+                const projeto = this.getAttribute('data-projeto');
+                if (e.ctrlKey || e.metaKey) {
+                    // Seleção múltipla
+                    const index = projetosSelecionados.indexOf(projeto);
+                    if (index > -1) {
+                        projetosSelecionados.splice(index, 1);
+                    } else {
+                        projetosSelecionados.push(projeto);
+                    }
+                } else {
+                    // Seleção única
+                    projetosSelecionados = [projeto];
+                }
+                if (projetosSelecionados.length === 0) {
+                    // Mostrar todas as barras
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        bar.classList.remove('evidencia', 'apagada');
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => {
+                        l.classList.remove('selecionada');
+                    });
+                } else {
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        if (projetosSelecionados.includes(bar.getAttribute('data-projeto'))) {
+                            bar.classList.add('evidencia');
+                            bar.classList.remove('apagada');
+                        } else {
+                            bar.classList.remove('evidencia');
+                            bar.classList.add('apagada');
+                        }
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => {
+                        const p = l.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(p)) {
+                            l.classList.add('selecionada');
+                        } else {
+                            l.classList.remove('selecionada');
+                        }
+                    });
+                }
+            });
+        });
     });
 
-    // Zoom de fonte (+ e -) garantido com window.onload
-    window.onload = function () {
-        const baseMinColumnWidth = 50; // valor base para a escala mais detalhada
-        const baseTaskNameColWidth = 200; // largura base da coluna Nome da tarefa (reduzida)
-        let ganttZoomFont = parseFloat(localStorage.getItem('gantt_font_zoom')) || 1;
-        let savedMinColWidth = parseFloat(localStorage.getItem('gantt_min_column_width'));
-        let savedRowHeight = parseFloat(localStorage.getItem('gantt_row_height'));
-        let savedBarHeight = parseFloat(localStorage.getItem('gantt_bar_height'));
-        let savedTaskNameColWidth = parseFloat(localStorage.getItem('gantt_task_name_col_width'));
-        // Restaurar zoom salvo
-        const savedZoom = localStorage.getItem('gantt_zoom') || 'month';
-        setZoom(savedZoom);
+    // Sincronizar scroll horizontal do cabeçalho e do corpo do Gantt
+    const ganttCustom = document.getElementById('gantt-custom');
+    const dateHeader = document.getElementById('gantt-date-header');
+    const cronogramaArea = document.getElementById('gantt-cronograma-area');
+    if (ganttCustom && dateHeader && cronogramaArea) {
+        ganttCustom.addEventListener('scroll', function () {
+            dateHeader.scrollLeft = ganttCustom.scrollLeft;
+            cronogramaArea.scrollLeft = ganttCustom.scrollLeft;
+        });
+    }
 
-        function applyFontZoom() {
-            document.getElementById('gantt_here').style.fontSize = (ganttZoomFont * 100) + '%';
-            gantt.config.min_column_width = savedMinColWidth || baseMinColumnWidth * ganttZoomFont;
-            gantt.config.row_height = savedRowHeight || 40 * ganttZoomFont;
-            gantt.config.bar_height = savedBarHeight || 24 * ganttZoomFont;
-            // Ajustar largura da coluna Nome da tarefa proporcional ao zoom, mas permitir sobrescrever pelo localStorage
-            let taskNameColWidth = savedTaskNameColWidth || baseTaskNameColWidth * ganttZoomFont;
-            gantt.config.columns = [
-                { name: "text", label: "Nome da tarefa", tree: true, width: taskNameColWidth },
-                { name: "add", label: "", width: 40 }
-            ];
-            localStorage.setItem('gantt_font_zoom', ganttZoomFont);
-            localStorage.setItem('gantt_min_column_width', gantt.config.min_column_width);
-            localStorage.setItem('gantt_row_height', gantt.config.row_height);
-            localStorage.setItem('gantt_bar_height', gantt.config.bar_height);
-            localStorage.setItem('gantt_task_name_col_width', taskNameColWidth);
-            // Reinicializar o Gantt para aplicar nova largura de coluna
-            gantt.clearAll();
-            gantt.init("gantt_here");
-            gantt.parse({
-                data: tarefas,
-                links: all_links
+    // Pan/drag horizontal no Gantt
+    (function () {
+        const ganttCustom = document.getElementById('gantt-custom');
+        let isDown = false;
+        let startX, scrollLeft;
+        if (ganttCustom) {
+            ganttCustom.addEventListener('mousedown', function (e) {
+                if (e.button !== 0) return; // só botão esquerdo
+                isDown = true;
+                ganttCustom.classList.add('dragging');
+                startX = e.pageX - ganttCustom.offsetLeft;
+                scrollLeft = ganttCustom.scrollLeft;
+                document.body.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function (e) {
+                if (!isDown) return;
+                const x = e.pageX - ganttCustom.offsetLeft;
+                const walk = (x - startX) * -1; // sentido inverso
+                ganttCustom.scrollLeft = scrollLeft + walk;
+            });
+            document.addEventListener('mouseup', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+            // Evita seleção de texto durante o drag
+            ganttCustom.addEventListener('mouseleave', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
             });
         }
-
-        window.zoomFontIn = function () {
-            ganttZoomFont = Math.min(2, ganttZoomFont + 0.1); // até 200%
-            // Limpa largura salva para recalcular
-            localStorage.removeItem('gantt_task_name_col_width');
-            applyFontZoom();
-        }
-
-        window.zoomFontOut = function () {
-            ganttZoomFont = Math.max(0.5, ganttZoomFont - 0.1); // até 50%
-            // Limpa largura salva para recalcular
-            localStorage.removeItem('gantt_task_name_col_width');
-            applyFontZoom();
-        }
-
-        // Ao carregar a página, aplique o zoom salvo e restaure configurações
-        applyFontZoom();
-    }
-
-    // Variável global para feriados
-    var feriadosAnbima = [];
-
-    function isFeriado(dateStr) {
-        const result = feriadosAnbima.includes(dateStr);
-        console.log('isFeriado?', dateStr, result, feriadosAnbima);
-        return result;
-    }
-
-    function carregarFeriadosBrasilAPI(ano, uf, cidade) {
-        let url = `https://brasilapi.com.br/api/feriados/v1/${ano}`;
-        if (uf && cidade) {
-            url += `?estado=${uf}&cidade=${cidade}`;
-        }
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                feriadosAnbima = data.map(f => f.date);
-                // Feriados manuais de todos os anos
-                const feriadosManuais = getTodosFeriadosManuais();
-                feriadosAnbima = feriadosAnbima.concat(feriadosManuais);
-                console.log('Feriados carregados:', feriadosAnbima);
-                marcarDatasVermelhas();
-            });
-    }
+    })();
 
     function marcarDatasVermelhas() {
         document.querySelectorAll('input[type="date"]').forEach(input => {

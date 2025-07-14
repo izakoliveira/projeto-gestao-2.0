@@ -366,8 +366,8 @@ def projetos():
                 'name': t.get('nome'),
                 'start': t.get('data_inicio_iso'),
                 'end': t.get('data_fim_iso'),
-                'progress': 0,
-                'dependencies': '',
+                    'progress': 0,
+                    'dependencies': '',
                 'custom_class': 'status-pendente',
                 'projeto_origem': t.get('projeto_origem'),
                 'type': 'task',
@@ -580,6 +580,42 @@ def detalhes_projeto(projeto_id):
     tarefas_gantt = tarefas_para_gantt(tarefas)
     usuarios_resp = supabase.table("usuarios").select("id, nome, email").execute()
     usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
+    
+    # --- NOVO: Gerar dados para Gantt customizado ---
+    gantt_geral_data = []
+    cor_projetos = {}
+    cores = [
+        '#ffc107', '#17a2b8', '#28a745', '#fd7e14', '#6f42c1', '#e83e8c', '#20c997', '#007bff', '#dc3545', '#343a40'
+    ]
+    
+    # Buscar ordem das tarefas
+    tarefas_unicas = supabase.table('tarefas_unicas').select('nome, ordem').order('ordem').execute().data
+    ordem_tarefas = {t['nome']: t['ordem'] for t in tarefas_unicas}
+    
+    # Processar tarefas para o Gantt customizado
+    for t in tarefas:
+        if t.get('data_inicio_iso') and t.get('data_fim_iso'):
+            # Definir cor única para o projeto
+            projeto_nome = projeto.get('nome', 'Projeto não encontrado')
+            if projeto_nome not in cor_projetos:
+                cor_projetos[projeto_nome] = cores[len(cor_projetos) % len(cores)]
+            
+            gantt_geral_data.append({
+                'id': t.get('id'),
+                'name': t.get('nome'),
+                'start': t.get('data_inicio_iso'),
+                'end': t.get('data_fim_iso'),
+                'progress': 0,
+                'dependencies': '',
+                'custom_class': 'status-pendente',
+                'projeto_origem': projeto_nome,
+                'type': 'task',
+                'ordem': ordem_tarefas.get(t.get('nome'), 9999),
+                'bar_color': cor_projetos[projeto_nome],
+                'colecao': t.get('colecao', ''),
+                'status': t.get('status', 'pendente')
+            })
+    
     # --- NOVO: lógica de permissões ---
     usuario_email = session.get('user_email')
     usuario_id = session.get('user_id')
@@ -605,6 +641,8 @@ def detalhes_projeto(projeto_id):
         tarefas_gantt=tarefas_gantt,
         all_links=all_links,
         usuarios=usuarios,
+        gantt_geral_data=gantt_geral_data,
+        projects_colors=cor_projetos,
         pode_editar_projeto=pode_editar_projeto,
         pode_editar_tarefa=pode_editar_tarefa,
         pode_criar_tarefa=pode_criar_tarefa,
