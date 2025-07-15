@@ -91,6 +91,18 @@
 
     {% if projetos %}
     <div class="row">
+        <!-- Card para criar novo projeto -->
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card compact-card shadow-sm h-100 d-flex align-items-center justify-content-center"
+                style="min-height: 180px; border: 2px dashed #28a745; background: #f8fff8; cursor: pointer;">
+                <a href="/projetos/criar"
+                    class="d-flex flex-column align-items-center justify-content-center text-success text-decoration-none w-100 h-100"
+                    style="height: 100%;">
+                    <div style="font-size: 2.5em; margin-bottom: 0.3em;"><i class="fas fa-plus-circle"></i></div>
+                    <span style="font-size: 1.1em; font-weight: 600;">Novo Projeto</span>
+                </a>
+            </div>
+        </div>
         {% for projeto in projetos %}
         <div class="col-md-6 col-lg-4 mb-3">
             <div class="card compact-card shadow-sm">
@@ -166,11 +178,11 @@
                         <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <a href="/projetos/excluir/{{ projeto.id }}"
-                            onclick="return confirm('Tem certeza que deseja excluir?')" class="btn btn-danger btn-sm"
-                            title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </a>
+                        <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

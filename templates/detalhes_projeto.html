@@ -68,30 +68,34 @@
                             {% endif %}
                             {% if pode_criar_tarefa %}
                             <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success m-0">Criar Tarefa</a>
+                            <button class="btn btn-info m-0" id="btn-importar-excel"><i class="fas fa-file-excel"></i>
+                                Importar do Excel</button>
                             {% endif %}
                         </div>
                     </div>
-                        {% if tarefas %}
-                        <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    {% if tarefas %}
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
                         <table class="table table-hover w-100" id="tabela-tarefas-inline" style="font-size: 0.95em;">
-                                <colgroup>
-                                    <col style="width: 32px;">
-                                    <col style="width: 40px;">
+                            <colgroup>
+                                <col style="width: 32px;">
+                                <col style="width: 40px;">
                                 {# Calcular larguras dinâmicas #}
                                 {% set nome_width = 300 %}
                                 {% set responsavel_width = 150 %}
                                 {% set removed_width = 0 %}
                                 {% if not pode_editar_predecessoras %}
-                                    {% set nome_width = nome_width + 120 %} {# toda a largura da predecessora vai para Nome #}
+                                {% set nome_width = nome_width + 120 %} {# toda a largura da predecessora vai para Nome
+                                #}
                                 {% endif %}
                                 {% if not pode_editar_tarefa and not pode_excluir_tarefa %}
-                                    {% set responsavel_width = responsavel_width + 100 %} {# toda a largura da coluna de ações vai para Responsável #}
+                                {% set responsavel_width = responsavel_width + 100 %} {# toda a largura da coluna de
+                                ações vai para Responsável #}
                                 {% endif %}
                                 {% set nome_width = nome_width + (removed_width // 2) %}
                                 {% set responsavel_width = responsavel_width + (removed_width - (removed_width // 2)) %}
                                 <col style="width: {{ nome_width }}px;">
                                 {% if pode_editar_predecessoras %}
-                                    <col style="width: 120px;"> {# Predecessoras #}
+                                <col style="width: 120px;"> {# Predecessoras #}
                                 {% endif %}
                                 <col> {# Data Início #}
                                 <col> {# Data Término #}
@@ -99,49 +103,49 @@
                                 <col> {# Status #}
                                 <col style="width: {{ responsavel_width }}px;"> {# Responsável #}
                                 {% if pode_editar_tarefa or pode_excluir_tarefa %}
-                                    <col style="width: 100px;"> {# Ações #}
+                                <col style="width: 100px;"> {# Ações #}
                                 {% endif %}
-                                </colgroup>
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th style="width:32px"></th>
-                                        <th>Nº</th>
-                                        <th>Nome</th>
+                            </colgroup>
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width:32px"></th>
+                                    <th>Nº</th>
+                                    <th>Nome</th>
                                     {% if pode_editar_predecessoras %}
-                                        <th>Predecessoras</th>
+                                    <th>Predecessoras</th>
                                     {% endif %}
-                                        <th>Data Início</th>
-                                        <th>Data Término</th>
-                                        <th>Duração (dias)</th>
-                                        <th>Status</th>
-                                        <th>Responsável</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for tarefa in tarefas %}
-                                    <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
-                                        <td class="drag-handle"
+                                    <th>Data Início</th>
+                                    <th>Data Término</th>
+                                    <th>Duração (dias)</th>
+                                    <th>Status</th>
+                                    <th>Responsável</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tarefa in tarefas %}
+                                <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
+                                    <td class="drag-handle"
                                         style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
-                                            &#9776;</td>
-                                        <td class="numero-tarefa">{{ tarefa.ordem or '' }}</td>
-                                        <td><input type="text" class="form-control form-control-sm"
+                                        &#9776;</td>
+                                    <td class="numero-tarefa">{{ tarefa.ordem or '' }}</td>
+                                    <td><input type="text" class="form-control form-control-sm"
                                             value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome" {% if not
                                             pode_editar_nome_tarefa %}disabled{% endif %}></td>
                                     {% if pode_editar_predecessoras %}
-                                        <td class="predecessoras-td">
+                                    <td class="predecessoras-td">
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
                                             onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
-                                            <input type="text" class="form-control form-control-sm"
-                                                value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
-                                                name="predecessoras" placeholder="Ex: 2FS+2d"
+                                        <input type="text" class="form-control form-control-sm"
+                                            value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
+                                            name="predecessoras" placeholder="Ex: 2FS+2d"
                                             onchange="onPredecessorasEdit(this)" onkeyup="onPredecessorasEdit(this)">
-                                        </td>
+                                    </td>
                                     {% endif %}
-                                        <td><input type="date" class="form-control form-control-sm"
-                                                value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
+                                    <td><input type="date" class="form-control form-control-sm"
+                                            value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
                                             name="data_inicio" {% if tarefa.data_inicio_calculada %} data-calculada="1"
-                                                readonly style="background:#fffbe6;" {% endif %}
+                                            readonly style="background:#fffbe6;" {% endif %}
                                             oninput="onInicioOuFimEdit(this)" {% if not pode_editar_data_inicio
                                             %}disabled{% endif %}></td>
                                     <td><input type="date" class="form-control form-control-sm"
@@ -154,105 +158,106 @@
                                             value="{{ tarefa.duracao or '' }}" oninput="onDuracaoOuFimEdit(this)"
                                             onblur="onDuracaoOuFimEdit(this, true)" onkeyup="onDuracaoOuFimEdit(this)"
                                             {% if not pode_editar_duracao %}disabled{% endif %}>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
-                                                name="status">
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
+                                            name="status">
                                             <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif
                                                 %}>Pendente</option>
-                                                <option value="em progresso" {% if tarefa.status=='em progresso'
-                                                    %}selected{% endif %}>Em Progresso</option>
-                                                <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
-                                                    endif %}>Concluída</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="usuario_id"
+                                            <option value="em progresso" {% if tarefa.status=='em progresso'
+                                                %}selected{% endif %}>Em Progresso</option>
+                                            <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
+                                                endif %}>Concluída</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="usuario_id"
                                             data-id="{{ tarefa.id }}" {% if not pode_editar_responsavel %}disabled{%
                                             endif %}>
-                                                <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
-                                                    responsável</option>
-                                                {% for usuario in usuarios %}
-                                                <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
-                                                    %}selected{% endif %}>{{ usuario.email }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
-                                                    class="fas fa-save"></i></button>
+                                            <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
+                                                responsável</option>
+                                            {% for usuario in usuarios %}
+                                            <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
+                                                %}selected{% endif %}>{{ usuario.email }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
+                                                class="fas fa-save"></i></button>
                                         {% if pode_editar_tarefa %}
-                                            <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
-                                                class="btn btn-warning btn-sm" title="Editar tarefa"><i
-                                                    class="fas fa-edit"></i></a>
+                                        <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
+                                            class="btn btn-warning btn-sm" title="Editar tarefa"><i
+                                                class="fas fa-edit"></i></a>
                                         {% endif %}
                                         {% if pode_excluir_tarefa %}
-                                            <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i
-                                                    class="fas fa-trash"></i></button>
+                                        <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i
+                                                class="fas fa-trash"></i></button>
                                         {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                    <!-- Linha para nova tarefa -->
-                                    {% if pode_criar_tarefa %}
-                                    <tr id="linha-nova-tarefa">
-                                        <td></td>
-                                        <td></td>
-                                        <td><input type="text" class="form-control form-control-sm" name="nome"
-                                            placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{% endif %}></td>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Linha para nova tarefa -->
+                                {% if pode_criar_tarefa %}
+                                <tr id="linha-nova-tarefa">
+                                    <td></td>
+                                    <td></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="nome"
+                                            placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{%
+                                            endif %}></td>
                                     {% if pode_editar_predecessoras %}
-                                        <td class="predecessoras-td">
+                                    <td class="predecessoras-td">
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
                                             onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
-                                            <input type="text" class="form-control form-control-sm" name="predecessoras"
-                                                value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
-                                                onkeyup="onPredecessorasEdit(this)">
-                                        </td>
+                                        <input type="text" class="form-control form-control-sm" name="predecessoras"
+                                            value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
+                                            onkeyup="onPredecessorasEdit(this)">
+                                    </td>
                                     {% endif %}
-                                        <td><input type="date" class="form-control form-control-sm" name="data_inicio"
-                                                oninput="onInicioOuFimEdit(this)"></td>
-                                        <td><input type="date" class="form-control form-control-sm" name="data_fim"
+                                    <td><input type="date" class="form-control form-control-sm" name="data_inicio"
+                                            oninput="onInicioOuFimEdit(this)"></td>
+                                    <td><input type="date" class="form-control form-control-sm" name="data_fim"
                                             oninput="onDuracaoOuFimEdit(this)" onblur="onDuracaoOuFimEdit(this, true)">
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
                                             placeholder="Dias" oninput="onDuracaoOuFimEdit(this)"
-                                                onblur="onDuracaoOuFimEdit(this, true)"></td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="status">
-                                                <option value="pendente">Pendente</option>
-                                                <option value="em progresso">Em Progresso</option>
-                                                <option value="concluída">Concluída</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="usuario_id">
-                                                <option value="">Sem responsável</option>
-                                                {% for usuario in usuarios %}
-                                                <option value="{{ usuario.id }}">{{ usuario.email }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </td>
-                                        <td>
+                                            onblur="onDuracaoOuFimEdit(this, true)"></td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="status">
+                                            <option value="pendente">Pendente</option>
+                                            <option value="em progresso">Em Progresso</option>
+                                            <option value="concluída">Concluída</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="usuario_id">
+                                            <option value="">Sem responsável</option>
+                                            {% for usuario in usuarios %}
+                                            <option value="{{ usuario.id }}">{{ usuario.email }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
                                         <button class="btn btn-success btn-sm" onclick="criarTarefaNovaLinha(this)"><i
-                                                    class="fas fa-plus"></i></button>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="fas fa-info-circle fa-2x mb-3"></i>
-                            <h5>Nenhuma tarefa encontrada</h5>
-                            <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
-                        </div>
-                        {% endif %}
+                                                class="fas fa-plus"></i></button>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="d-flex justify-content-end mt-2" style="padding-right: 16px;">
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h5>Nenhuma tarefa encontrada</h5>
+                        <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-end mt-2" style="padding-right: 16px;">
                     <button class="btn btn-primary mb-4" type="button" onclick="salvarTodasTarefas()">
-                            <i class="fas fa-save"></i> Salvar todas
-                        </button>
+                        <i class="fas fa-save"></i> Salvar todas
+                    </button>
                 </div>
             </div>
 
@@ -263,7 +268,8 @@
                             <i class="fas fa-chart-bar"></i> Gráfico de Gantt
                         </div>
                         <div class="card-body">
-                            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
+                            <div
+                                style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
                                 <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
                                     style="font-size: 1.2em;">-</button>
                                 <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
@@ -273,14 +279,15 @@
                             <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
                                 <div style="display: flex; flex-direction: column;">
                                     <div style="display: flex;">
-                    </div>
+                                    </div>
                                 </div>
                                 <div id="gantt-cronograma-area" style="position: relative;">
                                     <div id="gantt-hoje-container"></div>
                                     <table style="border-collapse: collapse; width: 100%;">
                                         <thead>
                                             <tr>
-                                                <th style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                                <th
+                                                    style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
                                                     Tarefa
                                                 </th>
                                             </tr>
@@ -299,7 +306,8 @@
                                     style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
                                     data-projeto="{{ projeto }}">
                                     <div class="legend-color"
-                                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
+                                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};">
+                                    </div>
                                     <span>{{ projeto }}</span>
                                 </div>
                                 {% endfor %}
@@ -1103,26 +1111,67 @@
         }
     })();
 
+    function isFeriado(val) {
+        // val: yyyy-mm-dd
+        const [yyyy, mm, dd] = val.split('-');
+        const feriadosManuais = getTodosFeriadosManuais();
+        const dataBR = `${dd}/${mm}/${yyyy}`;
+        const feriadoManual = feriadosManuais.find(f => f.data === dataBR);
+        if (feriadoManual) {
+            return feriadoManual.nome || 'Feriado';
+        }
+        if (window.feriadosNacionaisDetalhes) {
+            const feriado = window.feriadosNacionaisDetalhes.find(f => f.date === val);
+            if (feriado) return feriado.name || 'Feriado Nacional';
+        }
+        if (window.feriadosNacionais && window.feriadosNacionais.includes(val)) {
+            return 'Feriado Nacional';
+        }
+        return null;
+    }
+
     function marcarDatasVermelhas() {
         document.querySelectorAll('input[type="date"]').forEach(input => {
+            // Garante que o input está dentro de um container relativo
+            let container = input.parentNode;
+            if (!container.classList.contains('data-tooltip-container')) {
+                // Cria um container e move o input para dentro dele
+                const wrapper = document.createElement('span');
+                wrapper.className = 'data-tooltip-container';
+                container.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+                container = wrapper;
+            }
+
+            // Remove motivo anterior, se existir
+            let motivoDiv = container.querySelector('.motivo-data-vermelha');
+            if (motivoDiv) motivoDiv.remove();
+
+            let motivo = '';
             const val = input.value;
-            if (!val) {
-                input.classList.remove('data-vermelha');
-                return;
+            if (val) {
+                const [yyyy, mm, dd] = val.split('-');
+                const day = new Date(`${yyyy}-${mm}-${dd}T00:00:00`).getDay();
+                const feriado = isFeriado(val);
+                if (feriado) {
+                    motivo = feriado;
+                } else if (day === 0) {
+                    motivo = 'Domingo';
+                } else if (day === 6) {
+                    motivo = 'Sábado';
+                }
             }
-            const [yyyy, mm, dd] = val.split('-');
-            if (!yyyy || !mm || !dd) {
-                input.classList.remove('data-vermelha');
-                return;
-            }
-            const day = new Date(`${yyyy}-${mm}-${dd}T00:00:00`).getDay();
-            const feriado = isFeriado(val);
-            // LOG para depuração
-            console.log('Input:', input, 'Valor:', val, 'Dia da semana:', day, 'Feriado:', feriado);
-            if (day === 0 || day === 6 || feriado) {
+
+            if (motivo) {
                 input.classList.add('data-vermelha');
+                input.title = motivo;
+                motivoDiv = document.createElement('div');
+                motivoDiv.className = 'motivo-data-vermelha';
+                motivoDiv.textContent = motivo;
+                container.appendChild(motivoDiv);
             } else {
                 input.classList.remove('data-vermelha');
+                input.removeAttribute('title');
             }
         });
     }
@@ -1174,6 +1223,21 @@
         return todos;
     }
 
+    // Função para buscar feriados nacionais via BrasilAPI
+    function carregarFeriadosBrasilAPI(ano, uf, cidade) {
+        fetch(`https://brasilapi.com.br/api/feriados/v1/${ano}`)
+            .then(resp => resp.json())
+            .then(data => {
+                window.feriadosNacionaisDetalhes = data;
+                window.feriadosNacionais = data.map(f => f.date); // formato yyyy-mm-dd
+            })
+            .catch(() => {
+                window.feriadosNacionais = [];
+                window.feriadosNacionaisDetalhes = [];
+            });
+        // Para feriados municipais, use os manuais
+    }
+
     // Nova função global para evitar erro de referência
     function onInicioOuFimEdit(input) {
         setTimeout(() => {
@@ -1186,9 +1250,18 @@
                 if (duracaoInput) duracaoInput.value = dur;
             }
             marcarDatasVermelhas();
+            // NOVO: Recalcula todas as tarefas dependentes
+            atualizarTarefasDependentes();
         }, 10);
     }
     window.onInicioOuFimEdit = onInicioOuFimEdit;
+
+    // NOVO: Função para recalcular todas as tarefas dependentes
+    function atualizarTarefasDependentes() {
+        document.querySelectorAll('input[name="predecessoras"]').forEach(input => {
+            window.onPredecessorasEdit(input);
+        });
+    }
 
     // Debounce para o cálculo de duração
     window._debounceTimers = window._debounceTimers || new WeakMap();
@@ -1412,7 +1485,9 @@
                             salvarLinhaTarefa(btnSalvar);
                         }
                     }
-                } else if (e.key === 'Tab') {
+                }
+                // NOVO: Ctrl+S ou Cmd+S salva a tarefa da linha atual
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                     if (tr && tr.id !== 'linha-nova-tarefa') {
                         const btnSalvar = tr.querySelector('.btn-success');
                         if (btnSalvar) {
@@ -1539,20 +1614,26 @@
     function inicializarSortableTarefas() {
         const tabela = document.getElementById('tabela-tarefas-inline').querySelector('tbody');
         if (!tabela) return;
+        // Remove a linha de nova tarefa temporariamente
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        let tempLinha = null;
+        if (novaLinha) {
+            tempLinha = novaLinha.parentNode.removeChild(novaLinha);
+        }
+        // Inicializa o Sortable apenas nas linhas existentes
         new Sortable(tabela, {
             handle: '.drag-handle',
             animation: 150,
-            filter: '#linha-nova-tarefa',
-            draggable: 'tr:not(#linha-nova-tarefa)',
+            draggable: 'tr',
             onEnd: function () {
                 // Atualiza os números na coluna "Nº"
-                const linhas = Array.from(tabela.querySelectorAll('tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+                const linhas = Array.from(tabela.querySelectorAll('tr'));
                 linhas.forEach((tr, idx) => {
                     const tdNumero = tr.querySelector('.numero-tarefa');
                     if (tdNumero) tdNumero.textContent = idx + 1;
                 });
                 // Coletar IDs das tarefas na nova ordem
-                const ids = linhas.map(tr => tr.querySelector('input[name="nome"]').dataset.id);
+                const ids = linhas.map(tr => tr.querySelector('input[name="nome"]').dataset.id).filter(Boolean);
                 // Enviar para o backend
                 fetch('/tarefas/atualizar_ordem', {
                     method: 'POST',
@@ -1564,6 +1645,11 @@
                 });
             }
         });
+        // Reinsere a linha de nova tarefa
+        if (tempLinha) {
+            tabela.appendChild(tempLinha);
+            setTimeout(focarNomeNovaTarefa, 50); // Foca após reinserir
+        }
     }
     document.addEventListener('DOMContentLoaded', inicializarSortableTarefas);
     // Se linhas forem adicionadas dinamicamente, chame inicializarSortableTarefas() após inserir a linha
@@ -1594,11 +1680,6 @@
                 el.readOnly = false;
                 el.style.pointerEvents = 'auto';
             });
-            // Força o foco no campo nome ao clicar em qualquer parte da linha
-            novaLinha.onclick = function (e) {
-                const nomeInput = novaLinha.querySelector('input[name="nome"]');
-                if (nomeInput) nomeInput.focus();
-            };
         }
     }
     document.addEventListener('DOMContentLoaded', liberarLinhaNovaTarefa);
@@ -1714,6 +1795,112 @@
     document.addEventListener('DOMContentLoaded', function () {
         marcarDatasCalculadasPorPredecessora();
     });
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(marcarDatasVermelhas, 10);
+    });
+
+    // Função para focar o campo nome da linha de nova tarefa
+    function focarNomeNovaTarefa() {
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        if (novaLinha) {
+            const inputNome = novaLinha.querySelector('input[name="nome"]');
+            if (inputNome && !inputNome.disabled && !inputNome.readOnly) {
+                inputNome.focus();
+                inputNome.select();
+            }
+        }
+    }
+    // Foca ao carregar a página
+    document.addEventListener('DOMContentLoaded', focarNomeNovaTarefa);
+
+    // Modifique a função criarTarefaNovaLinha para focar após limpar os campos
+    const _oldCriarTarefaNovaLinha2 = criarTarefaNovaLinha;
+    criarTarefaNovaLinha = function (btn) {
+        _oldCriarTarefaNovaLinha2(btn);
+        setTimeout(() => {
+            liberarLinhaNovaTarefa();
+            focarNomeNovaTarefa();
+        }, 100);
+    }
+
+        // Modal de Importação do Excel
+        < div class="modal fade" id = "modalImportarExcel" tabindex = "-1" aria - labelledby="modalImportarExcelLabel" aria - hidden="true" >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalImportarExcelLabel">Importar tarefas do Excel</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Cole abaixo os nomes das tarefas (um por linha):</p>
+                        <textarea id="textarea-importar-excel" class="form-control" rows="8" placeholder="Nome da tarefa 1&#10;Nome da tarefa 2&#10;..." ></textarea>
+                        <div id="importar-excel-preview" class="mt-2 small text-muted"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="btn-confirmar-importacao">Importar</button>
+                    </div>
+                </div>
+            </div>
+    </div >
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+        const btnImportar = document.getElementById('btn-importar-excel');
+            if (btnImportar) {
+                btnImportar.addEventListener('click', function () {
+                    const modal = new bootstrap.Modal(document.getElementById('modalImportarExcel'));
+                    document.getElementById('textarea-importar-excel').value = '';
+                    document.getElementById('importar-excel-preview').innerHTML = '';
+                    modal.show();
+                });
+        }
+            // Preview ao digitar
+            const textarea = document.getElementById('textarea-importar-excel');
+            if (textarea) {
+                textarea.addEventListener('input', function () {
+                    const linhas = textarea.value.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+                    document.getElementById('importar-excel-preview').innerText = linhas.length ? `Tarefas a importar: ${linhas.length}` : '';
+                });
+        }
+            // Confirma importação
+            const btnConfirmar = document.getElementById('btn-confirmar-importacao');
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', function () {
+                    const nomes = document.getElementById('textarea-importar-excel').value.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+                    if (!nomes.length) {
+                        alert('Cole pelo menos um nome de tarefa.');
+                        return;
+                    }
+                    btnConfirmar.disabled = true;
+                    btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importando...';
+                    fetch(`/projetos/{{ projeto.id }}/importar_tarefas_excel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ nomes })
+                    })
+                        .then(resp => resp.json())
+                        .then(data => {
+                            btnConfirmar.disabled = false;
+                            btnConfirmar.innerHTML = 'Importar';
+                            if (data.sucesso) {
+                                location.reload();
+                            } else {
+                                alert('Erro ao importar: ' + (data.erro || 'Erro desconhecido.'));
+                            }
+                        })
+                        .catch(err => {
+                            btnConfirmar.disabled = false;
+                            btnConfirmar.innerHTML = 'Importar';
+                            alert('Erro ao importar: ' + err);
+                        });
+                });
+        }
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

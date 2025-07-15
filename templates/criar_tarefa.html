@@ -26,11 +26,11 @@
                 <div class="row mb-2">
                     <div class="col-6">
                         <label for="data_inicio" class="form-label">Início:</label>
-                        <input type="date" class="form-control form-control-sm" name="data_inicio" required>
+                        <input type="date" class="form-control form-control-sm" name="data_inicio">
                     </div>
                     <div class="col-6">
                         <label for="data_fim" class="form-label">Término:</label>
-                        <input type="date" class="form-control form-control-sm" name="data_fim" required>
+                        <input type="date" class="form-control form-control-sm" name="data_fim">
                     </div>
                 </div>
                 <div class="mb-2">
@@ -46,7 +46,7 @@
                     <select class="form-select form-select-sm" name="usuario_id">
                         <option value="" selected>Sem responsável</option>
                         {% for usuario in usuarios %}
-                            <option value="{{ usuario.id }}">{{ usuario.email }}</option>
+                        <option value="{{ usuario.id }}">{{ usuario.email }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -61,70 +61,70 @@
     <!-- Bootstrap 5 JS e dependências -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    // Monta objeto tarefas com datas
-    const tarefas = {};
-    {% for tarefa in tarefas_projeto %}
-        tarefas['{{ tarefa.id }}'] = {inicio: '{{ tarefa.data_inicio }}', fim: '{{ tarefa.data_fim }}'};
-    {% endfor %}
+        // Monta objeto tarefas com datas
+        const tarefas = {};
+        {% for tarefa in tarefas_projeto %}
+        tarefas['{{ tarefa.id }}'] = { inicio: '{{ tarefa.data_inicio }}', fim: '{{ tarefa.data_fim }}' };
+        {% endfor %}
 
-    function atualizarCamposPredecessora() {
-        document.getElementById('campo_data_resultado').value = '';
-    }
-    function adicionarDiasUteis(data, dias, sentido) {
-        let count = 0;
-        let novaData = new Date(data);
-        while (count < dias) {
-            novaData.setDate(novaData.getDate() + (sentido === 'depois' ? 1 : -1));
-            if (novaData.getDay() !== 0 && novaData.getDay() !== 6) {
-                count++;
+        function atualizarCamposPredecessora() {
+            document.getElementById('campo_data_resultado').value = '';
+        }
+        function adicionarDiasUteis(data, dias, sentido) {
+            let count = 0;
+            let novaData = new Date(data);
+            while (count < dias) {
+                novaData.setDate(novaData.getDate() + (sentido === 'depois' ? 1 : -1));
+                if (novaData.getDay() !== 0 && novaData.getDay() !== 6) {
+                    count++;
+                }
+            }
+            return novaData;
+        }
+        function adicionarDiasCorridos(data, dias, sentido) {
+            let novaData = new Date(data);
+            novaData.setDate(novaData.getDate() + (sentido === 'depois' ? dias : -dias));
+            return novaData;
+        }
+        function formatarData(data) {
+            return data.toISOString().split('T')[0];
+        }
+        function calcularDataPredecessora() {
+            const predecessoraId = document.getElementById('predecessoras').value;
+            const referencia = document.getElementById('referencia').value;
+            const deslocamento = document.getElementById('deslocamento').value;
+            const dias = parseInt(document.getElementById('dias').value, 10);
+            const tipoDia = document.getElementById('tipo_dia').value;
+            if (!predecessoraId || !tarefas[predecessoraId]) {
+                alert('Selecione uma predecessora válida.');
+                return;
+            }
+            const dataBase = referencia === 'inicio' ? tarefas[predecessoraId].inicio : tarefas[predecessoraId].fim;
+            if (!dataBase) {
+                alert('A predecessora não possui data definida.');
+                return;
+            }
+            let novaData;
+            if (tipoDia === 'uteis') {
+                novaData = adicionarDiasUteis(dataBase, dias, deslocamento);
+            } else {
+                novaData = adicionarDiasCorridos(dataBase, dias, deslocamento);
+            }
+            document.getElementById('campo_data_resultado').value = formatarData(novaData);
+        }
+        function aplicarDataCalculada() {
+            const data = document.getElementById('campo_data_resultado').value;
+            if (!data) {
+                alert('Calcule a data primeiro.');
+                return;
+            }
+            const aplicar = document.querySelector('input[name="aplicar_data"]:checked').value;
+            if (aplicar === 'inicio') {
+                document.querySelector('input[name="data_inicio"]').value = data;
+            } else {
+                document.querySelector('input[name="data_fim"]').value = data;
             }
         }
-        return novaData;
-    }
-    function adicionarDiasCorridos(data, dias, sentido) {
-        let novaData = new Date(data);
-        novaData.setDate(novaData.getDate() + (sentido === 'depois' ? dias : -dias));
-        return novaData;
-    }
-    function formatarData(data) {
-        return data.toISOString().split('T')[0];
-    }
-    function calcularDataPredecessora() {
-        const predecessoraId = document.getElementById('predecessoras').value;
-        const referencia = document.getElementById('referencia').value;
-        const deslocamento = document.getElementById('deslocamento').value;
-        const dias = parseInt(document.getElementById('dias').value, 10);
-        const tipoDia = document.getElementById('tipo_dia').value;
-        if (!predecessoraId || !tarefas[predecessoraId]) {
-            alert('Selecione uma predecessora válida.');
-            return;
-        }
-        const dataBase = referencia === 'inicio' ? tarefas[predecessoraId].inicio : tarefas[predecessoraId].fim;
-        if (!dataBase) {
-            alert('A predecessora não possui data definida.');
-            return;
-        }
-        let novaData;
-        if (tipoDia === 'uteis') {
-            novaData = adicionarDiasUteis(dataBase, dias, deslocamento);
-        } else {
-            novaData = adicionarDiasCorridos(dataBase, dias, deslocamento);
-        }
-        document.getElementById('campo_data_resultado').value = formatarData(novaData);
-    }
-    function aplicarDataCalculada() {
-        const data = document.getElementById('campo_data_resultado').value;
-        if (!data) {
-            alert('Calcule a data primeiro.');
-            return;
-        }
-        const aplicar = document.querySelector('input[name="aplicar_data"]:checked').value;
-        if (aplicar === 'inicio') {
-            document.querySelector('input[name="data_inicio"]').value = data;
-        } else {
-            document.querySelector('input[name="data_fim"]').value = data;
-        }
-    }
     </script>
 </body>
 

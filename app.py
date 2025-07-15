@@ -393,8 +393,13 @@ def criar_projeto():
         print('usuario_id:', usuario_id)
         nome = request.form['nome']
         descricao = request.form.get('descricao', '')
-        data_inicio = request.form['data_inicio']
-        data_fim = request.form['data_fim']
+        data_inicio = request.form.get('data_inicio')
+        data_fim = request.form.get('data_fim')
+        # Corrigir campos vazios ou só espaços para None
+        if not data_inicio or not str(data_inicio).strip():
+            data_inicio = None
+        if not data_fim or not str(data_fim).strip():
+            data_fim = None
 
         # Validação de dados
         erro = validar_projeto(nome, data_inicio, data_fim)
@@ -670,8 +675,23 @@ def excluir_projeto(projeto_id):
     if funcionalidade_restrita('restr_excluir_projeto'):
         flash('Acesso restrito para excluir projetos.')
         return redirect(url_for('projetos'))
-    supabase.table("projetos").delete().eq("id", str(projeto_id)).execute()
-    flash("Projeto excluído com sucesso!")
+    # Excluir todas as tarefas vinculadas ao projeto
+    supabase.table("tarefas").delete().eq("projeto_id", str(projeto_id)).execute()
+    # Excluir todas as permissões de visualização vinculadas ao projeto
+    supabase.table("projetos_usuarios_visiveis").delete().eq("projeto_id", str(projeto_id)).execute()
+    # Agora excluir o projeto
+    resp = supabase.table("projetos").delete().eq("id", str(projeto_id)).execute()
+    print('[DEBUG] Resposta ao tentar excluir projeto:', vars(resp))
+    # Tenta extrair informações úteis
+    status_code = getattr(resp, 'status_code', None)
+    text = getattr(resp, 'text', None)
+    data = getattr(resp, 'data', None)
+    if status_code and status_code not in [200, 204]:
+        flash(f"Erro ao excluir projeto: {text or resp}")
+    elif data is not None and not data:
+        flash("Projeto não foi excluído. Verifique se não há dependências ou restrições no banco.")
+    else:
+        flash("Projeto excluído com sucesso!")
     return redirect('/projetos')
 
 # Função utilitária para normalizar campos opcionais
@@ -710,6 +730,12 @@ def criar_tarefa(projeto_id):
         duracao = normaliza_opcional(request.form.get('duracao'))
         colecao = request.form.get('colecao')
 
+        # Corrigir datas vazias ou só espaços para None
+        if not data_inicio or not str(data_inicio).strip():
+            data_inicio = None
+        if not data_fim or not str(data_fim).strip():
+            data_fim = None
+
         dados_tarefa = {
             "nome": nome,
             "descricao": descricao,
@@ -738,7 +764,7 @@ def criar_tarefa(projeto_id):
             flash(f"Erro ao criar tarefa: {resp.text}")
         else:
             flash("Tarefa criada com sucesso!")
-        return redirect(request.referrer or f'/projetos/{projeto_id}')
+        return redirect(f'/projetos/{projeto_id}')
     # Buscar o projeto, usuários e tarefas do projeto
     resp = supabase.table("projetos").select("*").eq("id", str(projeto_id)).single().execute()
     projeto = resp.data if hasattr(resp, 'data') else None
@@ -1252,6 +1278,7 @@ def criar_tarefa_rapida(projeto_id):
         </td>
         <td>
             <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i class="fas fa-save"></i></button>
+            <button class="btn btn-warning btn-sm" onclick="editarTarefa(this)"><i class="fas fa-edit"></i></button>
             <button class="btn btn-danger btn-sm" onclick="excluirTarefa(this)"><i class="fas fa-trash"></i></button>
         </td>
     </tr>
@@ -1308,6 +1335,36 @@ def gantt_teste():
         {'name': 'Tarefa 3', 'start': '2025-04-20', 'end': '2025-09-10', 'projeto_nome': 'Projeto B', 'status': 'concluida', 'ordem': 3},
     ]
     return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data)
+
+@app.route('/projetos/<int:projeto_id>/importar_tarefas_excel', methods=['POST'])
+def importar_tarefas_excel(projeto_id):
+    if not request.is_json:
+        return jsonify({'sucesso': False, 'erro': 'Requisição inválida.'}), 400
+    data = request.get_json()
+    nomes = data.get('nomes')
+    if not nomes or not isinstance(nomes, list):
+        return jsonify({'sucesso': False, 'erro': 'Lista de nomes ausente.'}), 400
+    from supabase_client import SUPABASE_URL, SUPABASE_KEY, headers
+    tarefas = []
+    for nome in nomes:
+        if not nome.strip():
+            continue
+        tarefa = {
+            'projeto_id': projeto_id,
+            'nome': nome.strip(),
+        }
+        tarefas.append(tarefa)
+    if not tarefas:
+        return jsonify({'sucesso': False, 'erro': 'Nenhuma tarefa válida.'}), 400
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/tarefas"
+        # Insere em lote
+        resp = requests.post(url, headers=headers, json=tarefas)
+        if resp.status_code not in (201, 200):
+            return jsonify({'sucesso': False, 'erro': resp.text}), 500
+        return jsonify({'sucesso': True, 'quantidade': len(tarefas)})
+    except Exception as e:
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

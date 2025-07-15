@@ -163,9 +163,20 @@
                     <div id="feriados-manuais-admin" class="mt-3">
                         <h6>Feriados Manuais (Admin)</h6>
                         <ul id="lista-feriados-manuais-admin"></ul>
-                        <input type="date" id="input-feriado-manual-admin">
-                        <button class="btn btn-sm btn-primary" onclick="adicionarFeriadoManualAdmin()">Adicionar Feriado
-                            Manual</button>
+                        <div class="row g-2 align-items-end">
+                            <div class="col-auto">
+                                <input type="text" id="input-feriado-manual-data" class="form-control"
+                                    placeholder="Data (dd/mm/aaaa)">
+                            </div>
+                            <div class="col-auto">
+                                <input type="text" id="input-feriado-manual-nome" class="form-control"
+                                    placeholder="Nome do Feriado">
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-primary" onclick="adicionarFeriadoManualAdmin()">Adicionar
+                                    Feriado Manual</button>
+                            </div>
+                        </div>
                     </div>
                     <hr>
                     <div id="painel-visualizacao" style="margin-top: 1em;">
@@ -225,37 +236,56 @@
         const ul = document.getElementById('lista-feriados-manuais-admin');
         if (!ul) return;
         ul.innerHTML = '';
-        lista.forEach(data => {
+        lista.forEach(obj => {
             const li = document.createElement('li');
-            li.textContent = data;
+            li.textContent = `${obj.data} - ${obj.nome}`;
             const btn = document.createElement('button');
             btn.textContent = 'Remover';
             btn.className = 'btn btn-sm btn-danger ms-2';
             btn.onclick = function () {
-                removerFeriadoManualAdmin(data, ano);
+                removerFeriadoManualAdmin(obj.data, obj.nome, ano);
             };
             li.appendChild(btn);
             ul.appendChild(li);
         });
     }
 
+    function validarDataBR(data) {
+        // Aceita dd/mm/aaaa
+        const regex = /^\d{2}\/\d{2}\/\d{4}$/;
+        if (!regex.test(data)) return false;
+        const [dia, mes, ano] = data.split('/').map(Number);
+        const dt = new Date(ano, mes - 1, dia);
+        return dt.getDate() === dia && dt.getMonth() === mes - 1 && dt.getFullYear() === ano;
+    }
+
     function adicionarFeriadoManualAdmin() {
         const ano = new Date().getFullYear();
-        const input = document.getElementById('input-feriado-manual-admin');
-        const data = input.value;
-        if (!data) return;
+        const inputData = document.getElementById('input-feriado-manual-data');
+        const inputNome = document.getElementById('input-feriado-manual-nome');
+        const data = inputData.value.trim();
+        const nome = inputNome.value.trim();
+        if (!data || !nome) {
+            alert('Preencha a data e o nome do feriado.');
+            return;
+        }
+        if (!validarDataBR(data)) {
+            alert('Data inválida! Use o formato dd/mm/aaaa.');
+            return;
+        }
         let lista = getFeriadosManuaisStorage(ano);
-        if (!lista.includes(data)) {
-            lista.push(data);
+        if (!lista.some(obj => obj.data === data && obj.nome === nome)) {
+            lista.push({ data, nome });
             setFeriadosManuaisStorage(ano, lista);
             renderizarFeriadosManuaisAdmin(ano);
         }
-        input.value = '';
+        inputData.value = '';
+        inputNome.value = '';
     }
 
-    function removerFeriadoManualAdmin(data, ano) {
+    function removerFeriadoManualAdmin(data, nome, ano) {
         let lista = getFeriadosManuaisStorage(ano);
-        lista = lista.filter(d => d !== data);
+        lista = lista.filter(obj => !(obj.data === data && obj.nome === nome));
         setFeriadosManuaisStorage(ano, lista);
         renderizarFeriadosManuaisAdmin(ano);
     }
