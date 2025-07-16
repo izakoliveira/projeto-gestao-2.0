@@ -14,10 +14,11 @@
     <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
         <div class="card shadow-sm p-3" style="max-width: 350px; width: 100%;">
             <h4 class="mb-3 text-center">Criar Tarefa</h4>
-            <form method="POST">
+            <form method="POST" novalidate id="form-criar-tarefa">
                 <div class="mb-2">
                     <label for="nome" class="form-label">Nome:</label>
-                    <input type="text" class="form-control form-control-sm" name="nome" required>
+                    <input type="text" class="form-control form-control-sm" name="nome" id="nome" required>
+                    <div class="invalid-feedback">O nome da tarefa é obrigatório.</div>
                 </div>
                 <div class="mb-2">
                     <label for="descricao" class="form-label">Descrição:</label>
@@ -26,20 +27,23 @@
                 <div class="row mb-2">
                     <div class="col-6">
                         <label for="data_inicio" class="form-label">Início:</label>
-                        <input type="date" class="form-control form-control-sm" name="data_inicio">
+                        <input type="date" class="form-control form-control-sm" name="data_inicio" id="data_inicio" required>
+                        <div class="invalid-feedback">A data de início é obrigatória.</div>
                     </div>
                     <div class="col-6">
                         <label for="data_fim" class="form-label">Término:</label>
-                        <input type="date" class="form-control form-control-sm" name="data_fim">
+                        <input type="date" class="form-control form-control-sm" name="data_fim" id="data_fim" required>
+                        <div class="invalid-feedback">A data de término é obrigatória.</div>
                     </div>
                 </div>
                 <div class="mb-2">
                     <label for="status" class="form-label">Status:</label>
-                    <select class="form-select form-select-sm" name="status" required>
+                    <select class="form-select form-select-sm" name="status" id="status" required>
                         <option value="pendente">Pendente</option>
                         <option value="em progresso">Em Progresso</option>
                         <option value="concluída">Concluída</option>
                     </select>
+                    <div class="invalid-feedback">O status é obrigatório.</div>
                 </div>
                 <div class="mb-3">
                     <label for="usuario_id" class="form-label">Responsável:</label>
@@ -125,6 +129,50 @@
                 document.querySelector('input[name="data_fim"]').value = data;
             }
         }
+
+        // Validação visual do formulário de criação
+        const formCriar = document.getElementById('form-criar-tarefa');
+        formCriar.addEventListener('submit', function (e) {
+            let valido = true;
+            // Nome
+            const nome = document.getElementById('nome');
+            if (!nome.value.trim()) {
+                nome.classList.add('is-invalid');
+                valido = false;
+            } else {
+                nome.classList.remove('is-invalid');
+            }
+            // Status
+            const status = document.getElementById('status');
+            if (!status.value) {
+                status.classList.add('is-invalid');
+                valido = false;
+            } else {
+                status.classList.remove('is-invalid');
+            }
+            // Data início
+            const dataInicio = document.getElementById('data_inicio');
+            if (!dataInicio.value) {
+                dataInicio.classList.add('is-invalid');
+                valido = false;
+            } else {
+                dataInicio.classList.remove('is-invalid');
+            }
+            // Data fim
+            const dataFim = document.getElementById('data_fim');
+            if (!dataFim.value) {
+                dataFim.classList.add('is-invalid');
+                valido = false;
+            } else {
+                dataFim.classList.remove('is-invalid');
+            }
+            if (!valido) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return false;
+            }
+        });
     </script>
 </body>
 

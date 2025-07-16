@@ -179,7 +179,8 @@
                             <i class="fas fa-edit"></i>
                         </a>
                         <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-danger btn-sm" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')">
+                            <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto"
+                                data-projeto-id="{{ projeto.id }}" title="Excluir">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -1411,5 +1412,49 @@
             });
         }
     })();
+</script>
+<!-- Modal de confirmação de exclusão de projeto -->
+<div class="modal fade" id="modalConfirmarExclusaoProjeto" tabindex="-1"
+    aria-labelledby="modalConfirmarExclusaoProjetoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalConfirmarExclusaoProjetoLabel"><i class="fas fa-trash"></i> Confirmar
+                    Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoProjeto"><i
+                        class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Modal de confirmação de exclusão de projeto
+    let projetoIdParaExcluir = null;
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-excluir-projeto').forEach(btn => {
+            btn.addEventListener('click', function () {
+                projetoIdParaExcluir = this.getAttribute('data-projeto-id');
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmarExclusaoProjeto'));
+                modal.show();
+            });
+        });
+        document.getElementById('btnConfirmarExclusaoProjeto').addEventListener('click', function () {
+            if (!projetoIdParaExcluir) return;
+            const form = document.querySelector(`.btn-excluir-projeto[data-projeto-id='${projetoIdParaExcluir}']`).closest('form');
+            if (!form) return;
+            form.submit();
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusaoProjeto'));
+            if (modal) modal.hide();
+            projetoIdParaExcluir = null;
+        });
+    });
 </script>
 {% endblock %}

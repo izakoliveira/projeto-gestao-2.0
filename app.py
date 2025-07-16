@@ -764,6 +764,50 @@ def criar_tarefa(projeto_id):
             flash(f"Erro ao criar tarefa: {resp.text}")
         else:
             flash("Tarefa criada com sucesso!")
+            # Enviar e-mail ao responsável, se houver
+            if usuario_designado:
+                # Buscar e-mail do responsável
+                usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", usuario_designado).single().execute()
+                if hasattr(usuario_resp, 'data') and usuario_resp.data:
+                    responsavel_nome = usuario_resp.data.get('nome', '')
+                    responsavel_email = usuario_resp.data.get('email', '')
+                    # Buscar nome do projeto
+                    projeto_nome = None
+                    projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id)).single().execute()
+                    if hasattr(projeto_resp, 'data') and projeto_resp.data:
+                        projeto_nome = projeto_resp.data.get('nome', '')
+                    # Montar e enviar o e-mail
+                    assunto = f"Nova tarefa atribuída: {nome}"
+                    mensagem = f"<p>Olá, <b>{responsavel_nome}</b>!</p>"
+                    mensagem += f"<p>Você foi designado para a tarefa <b>{nome}</b> no projeto <b>{projeto_nome or projeto_id}</b>.</p>"
+                    if data_inicio:
+                        mensagem += f"<p><b>Início:</b> {data_inicio}</p>"
+                    if data_fim:
+                        mensagem += f"<p><b>Prazo:</b> {data_fim}</p>"
+                    mensagem += f"<p>Descrição: {descricao or '-'}<br>Status: {status.title()}</p>"
+                    # Função de envio adaptada
+                    smtp_server = os.getenv('SMTP_SERVER')
+                    smtp_port = int(os.getenv('SMTP_PORT', 587))
+                    smtp_user = os.getenv('SMTP_USER')
+                    smtp_pass = os.getenv('SMTP_PASS')
+                    if all([responsavel_email, smtp_server, smtp_user, smtp_pass]):
+                        from email.mime.text import MIMEText
+                        from email.mime.multipart import MIMEMultipart
+                        import smtplib
+                        msg = MIMEMultipart()
+                        msg['From'] = smtp_user
+                        msg['To'] = responsavel_email
+                        msg['Subject'] = assunto
+                        msg.attach(MIMEText(mensagem, 'html'))
+                        try:
+                            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                                server.starttls()
+                                server.login(smtp_user, smtp_pass)
+                                server.sendmail(smtp_user, responsavel_email, msg.as_string())
+                            print(f'E-mail enviado para {responsavel_email}')
+                        except Exception as e:
+                            print(f'Erro ao enviar e-mail para responsável: {e}')
+                            flash(f'Erro ao enviar e-mail para o responsável: {e}', 'danger')
         return redirect(f'/projetos/{projeto_id}')
     # Buscar o projeto, usuários e tarefas do projeto
     resp = supabase.table("projetos").select("*").eq("id", str(projeto_id)).single().execute()
@@ -800,14 +844,18 @@ def editar_tarefa(tarefa_id):
         return render_template('editar_tarefa.html', tarefa=tarefa, usuarios=usuarios)
     else:
         if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            data = request.get_json()
-            nome = data.get('nome')
-            data_inicio = data.get('data_inicio')
-            data_fim = data.get('data_fim')
-            status = data.get('status', 'pendente')
+            # Buscar responsável anterior ANTES de atualizar
+            tarefa_antiga_resp = supabase.table("tarefas").select("usuario_id, data_inicio, data_fim").eq("id", str(tarefa_id)).single().execute()
+            usuario_id_antigo = tarefa_antiga_resp.data.get('usuario_id') if hasattr(tarefa_antiga_resp, 'data') and tarefa_antiga_resp.data else None
+            data_inicio_antigo = tarefa_antiga_resp.data.get('data_inicio') if hasattr(tarefa_antiga_resp, 'data') and tarefa_antiga_resp.data else None
+            data_fim_antigo = tarefa_antiga_resp.data.get('data_fim') if hasattr(tarefa_antiga_resp, 'data') and tarefa_antiga_resp.data else None
+            nome = request.form['nome']
+            data_inicio = request.form.get('data_inicio')
+            data_fim = request.form.get('data_fim')
+            status = request.form.get('status', 'pendente')
             if status not in ['pendente', 'em progresso', 'concluída']:
                 status = 'pendente'
-            usuario_id = normaliza_opcional(data.get('usuario_id'))
+            usuario_id = normaliza_opcional(request.form.get('usuario_id'))
             dados_update = {
                 "nome": nome,
                 "data_inicio": data_inicio,
@@ -815,12 +863,12 @@ def editar_tarefa(tarefa_id):
                 "status": status,
                 "usuario_id": usuario_id
             }
-            if 'colecao' in data:
-                dados_update["colecao"] = data.get('colecao')
-            if 'predecessoras' in data:
-                dados_update["predecessoras"] = normaliza_opcional(data.get('predecessoras'))
-            if 'duracao' in data:
-                dados_update["duracao"] = normaliza_opcional(data.get('duracao'))
+            if 'colecao' in request.form:
+                dados_update["colecao"] = request.form.get('colecao')
+            if 'predecessoras' in request.form:
+                dados_update["predecessoras"] = normaliza_opcional(request.form.get('predecessoras'))
+            if 'duracao' in request.form:
+                dados_update["duracao"] = normaliza_opcional(request.form.get('duracao'))
             SUPABASE_URL = "https://zvdpuxggltqejplybzet.supabase.co"
             SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2ZHB1eGdnbHRxZWpwbHliemV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTcyOTAsImV4cCI6MjA2NTMzMzI5MH0.YaDt2gAl_FFolp8Gh5n18ZjwzkLLcQ2EuWzFZTTyEMI"
             url = f"{SUPABASE_URL}/rest/v1/tarefas?id=eq.{tarefa_id}"
@@ -833,8 +881,98 @@ def editar_tarefa(tarefa_id):
             resp = requests.patch(url, headers=headers, json=dados_update)
             if resp.status_code not in [200, 204]:
                 return jsonify({"sucesso": False, "erro": resp.text}), 400
+            # Enviar e-mail se o responsável foi alterado ou designado
+            if usuario_id and usuario_id != usuario_id_antigo:
+                usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", usuario_id).single().execute()
+                if hasattr(usuario_resp, 'data') and usuario_resp.data:
+                    responsavel_nome = usuario_resp.data.get('nome', '')
+                    responsavel_email = usuario_resp.data.get('email', '')
+                    tarefa_nome = nome
+                    # Buscar nome do projeto
+                    tarefa_info = supabase.table("tarefas").select("projeto_id").eq("id", str(tarefa_id)).single().execute()
+                    projeto_id = tarefa_info.data.get('projeto_id') if hasattr(tarefa_info, 'data') and tarefa_info.data else None
+                    projeto_nome = None
+                    if projeto_id:
+                        projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id)).single().execute()
+                        if hasattr(projeto_resp, 'data') and projeto_resp.data:
+                            projeto_nome = projeto_resp.data.get('nome', '')
+                    assunto = f"Nova tarefa atribuída: {tarefa_nome}"
+                    mensagem = f"<p>Olá, <b>{responsavel_nome}</b>!</p>"
+                    mensagem += f"<p>Você foi designado para a tarefa <b>{tarefa_nome}</b> no projeto <b>{projeto_nome or projeto_id}</b>.</p>"
+                    mensagem += f"<p>Status: {status.title()}</p>"
+                    smtp_server = os.getenv('SMTP_SERVER')
+                    smtp_port = int(os.getenv('SMTP_PORT', 587))
+                    smtp_user = os.getenv('SMTP_USER')
+                    smtp_pass = os.getenv('SMTP_PASS')
+                    if all([responsavel_email, smtp_server, smtp_user, smtp_pass]):
+                        from email.mime.text import MIMEText
+                        from email.mime.multipart import MIMEMultipart
+                        import smtplib
+                        msg = MIMEMultipart()
+                        msg['From'] = smtp_user
+                        msg['To'] = responsavel_email
+                        msg['Subject'] = assunto
+                        msg.attach(MIMEText(mensagem, 'html'))
+                        try:
+                            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                                server.starttls()
+                                server.login(smtp_user, smtp_pass)
+                                server.sendmail(smtp_user, responsavel_email, msg.as_string())
+                            print(f'E-mail enviado para {responsavel_email}')
+                        except Exception as e:
+                            print(f'Erro ao enviar e-mail para responsável: {e}')
+                            flash(f'Erro ao enviar e-mail para o responsável: {e}', 'danger')
+            # Enviar e-mail se o responsável foi removido
+            if usuario_id_antigo and not usuario_id:
+                usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", usuario_id_antigo).single().execute()
+                if hasattr(usuario_resp, 'data') and usuario_resp.data:
+                    responsavel_nome = usuario_resp.data.get('nome', '')
+                    responsavel_email = usuario_resp.data.get('email', '')
+                    tarefa_nome = nome
+                    # Buscar nome do projeto
+                    tarefa_info = supabase.table("tarefas").select("projeto_id").eq("id", str(tarefa_id)).single().execute()
+                    projeto_id = tarefa_info.data.get('projeto_id') if hasattr(tarefa_info, 'data') and tarefa_info.data else None
+                    projeto_nome = None
+                    if projeto_id:
+                        projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id)).single().execute()
+                        if hasattr(projeto_resp, 'data') and projeto_resp.data:
+                            projeto_nome = projeto_resp.data.get('nome', '')
+                    assunto = f"Você foi removido da tarefa: {tarefa_nome}"
+                    mensagem = f"<p>Olá, <b>{responsavel_nome}</b>!</p>"
+                    mensagem += f"<p>Você não é mais o responsável pela tarefa <b>{tarefa_nome}</b> no projeto <b>{projeto_nome or projeto_id}</b>.</p>"
+                    if data_inicio_antigo:
+                        mensagem += f"<p><b>Início:</b> {data_inicio_antigo}</p>"
+                    if data_fim_antigo:
+                        mensagem += f"<p><b>Prazo:</b> {data_fim_antigo}</p>"
+                    smtp_server = os.getenv('SMTP_SERVER')
+                    smtp_port = int(os.getenv('SMTP_PORT', 587))
+                    smtp_user = os.getenv('SMTP_USER')
+                    smtp_pass = os.getenv('SMTP_PASS')
+                    if all([responsavel_email, smtp_server, smtp_user, smtp_pass]):
+                        from email.mime.text import MIMEText
+                        from email.mime.multipart import MIMEMultipart
+                        import smtplib
+                        msg = MIMEMultipart()
+                        msg['From'] = smtp_user
+                        msg['To'] = responsavel_email
+                        msg['Subject'] = assunto
+                        msg.attach(MIMEText(mensagem, 'html'))
+                        try:
+                            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                                server.starttls()
+                                server.login(smtp_user, smtp_pass)
+                                server.sendmail(smtp_user, responsavel_email, msg.as_string())
+                            print(f'E-mail enviado para {responsavel_email} (removido)')
+                        except Exception as e:
+                            print(f'Erro ao enviar e-mail para responsável removido: {e}')
+                            flash(f'Erro ao enviar e-mail para o responsável removido: {e}', 'danger')
             return jsonify({"sucesso": True})
         else:
+            # Buscar responsável anterior
+            tarefa_antiga_resp = supabase.table("tarefas").select("usuario_id, data_inicio, data_fim").eq("id", str(tarefa_id)).single().execute()
+            usuario_id_antigo = tarefa_antiga_resp.data.get('usuario_id') if hasattr(tarefa_antiga_resp, 'data') and tarefa_antiga_resp.data else None
+            data_inicio_antigo = tarefa_antiga_resp.data.get('data_inicio') if hasattr(tarefa_antiga_resp, 'data') and tarefa_antiga_resp.data else None
+            data_fim_antigo = tarefa_antiga_resp.data.get('data_fim') if hasattr(tarefa_antiga_resp, 'data') and tarefa_antiga_resp.data else None
             nome = request.form['nome']
             data_inicio = request.form.get('data_inicio')
             data_fim = request.form.get('data_fim')
@@ -869,6 +1007,91 @@ def editar_tarefa(tarefa_id):
                 flash(f"Erro ao editar tarefa: {resp.text}")
             else:
                 flash("Tarefa editada com sucesso!")
+                # Enviar e-mail se o responsável foi alterado ou designado
+                if usuario_id and usuario_id != usuario_id_antigo:
+                    usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", usuario_id).single().execute()
+                    if hasattr(usuario_resp, 'data') and usuario_resp.data:
+                        responsavel_nome = usuario_resp.data.get('nome', '')
+                        responsavel_email = usuario_resp.data.get('email', '')
+                        tarefa_nome = nome
+                        # Buscar nome do projeto
+                        tarefa_info = supabase.table("tarefas").select("projeto_id").eq("id", str(tarefa_id)).single().execute()
+                        projeto_id = tarefa_info.data.get('projeto_id') if hasattr(tarefa_info, 'data') and tarefa_info.data else None
+                        projeto_nome = None
+                        if projeto_id:
+                            projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id)).single().execute()
+                            if hasattr(projeto_resp, 'data') and projeto_resp.data:
+                                projeto_nome = projeto_resp.data.get('nome', '')
+                        assunto = f"Nova tarefa atribuída: {tarefa_nome}"
+                        mensagem = f"<p>Olá, <b>{responsavel_nome}</b>!</p>"
+                        mensagem += f"<p>Você foi designado para a tarefa <b>{tarefa_nome}</b> no projeto <b>{projeto_nome or projeto_id}</b>.</p>"
+                        mensagem += f"<p>Status: {status.title()}</p>"
+                        smtp_server = os.getenv('SMTP_SERVER')
+                        smtp_port = int(os.getenv('SMTP_PORT', 587))
+                        smtp_user = os.getenv('SMTP_USER')
+                        smtp_pass = os.getenv('SMTP_PASS')
+                        if all([responsavel_email, smtp_server, smtp_user, smtp_pass]):
+                            from email.mime.text import MIMEText
+                            from email.mime.multipart import MIMEMultipart
+                            import smtplib
+                            msg = MIMEMultipart()
+                            msg['From'] = smtp_user
+                            msg['To'] = responsavel_email
+                            msg['Subject'] = assunto
+                            msg.attach(MIMEText(mensagem, 'html'))
+                            try:
+                                with smtplib.SMTP(smtp_server, smtp_port) as server:
+                                    server.starttls()
+                                    server.login(smtp_user, smtp_pass)
+                                    server.sendmail(smtp_user, responsavel_email, msg.as_string())
+                                print(f'E-mail enviado para {responsavel_email}')
+                            except Exception as e:
+                                print(f'Erro ao enviar e-mail para responsável: {e}')
+                                flash(f'Erro ao enviar e-mail para o responsável: {e}', 'danger')
+                # Enviar e-mail se o responsável foi removido
+                if usuario_id_antigo and not usuario_id:
+                    usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", usuario_id_antigo).single().execute()
+                    if hasattr(usuario_resp, 'data') and usuario_resp.data:
+                        responsavel_nome = usuario_resp.data.get('nome', '')
+                        responsavel_email = usuario_resp.data.get('email', '')
+                        tarefa_nome = nome
+                        # Buscar nome do projeto
+                        tarefa_info = supabase.table("tarefas").select("projeto_id").eq("id", str(tarefa_id)).single().execute()
+                        projeto_id = tarefa_info.data.get('projeto_id') if hasattr(tarefa_info, 'data') and tarefa_info.data else None
+                        projeto_nome = None
+                        if projeto_id:
+                            projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id)).single().execute()
+                            if hasattr(projeto_resp, 'data') and projeto_resp.data:
+                                projeto_nome = projeto_resp.data.get('nome', '')
+                        assunto = f"Você foi removido da tarefa: {tarefa_nome}"
+                        mensagem = f"<p>Olá, <b>{responsavel_nome}</b>!</p>"
+                        mensagem += f"<p>Você não é mais o responsável pela tarefa <b>{tarefa_nome}</b> no projeto <b>{projeto_nome or projeto_id}</b>.</p>"
+                        if data_inicio_antigo:
+                            mensagem += f"<p><b>Início:</b> {data_inicio_antigo}</p>"
+                        if data_fim_antigo:
+                            mensagem += f"<p><b>Prazo:</b> {data_fim_antigo}</p>"
+                        smtp_server = os.getenv('SMTP_SERVER')
+                        smtp_port = int(os.getenv('SMTP_PORT', 587))
+                        smtp_user = os.getenv('SMTP_USER')
+                        smtp_pass = os.getenv('SMTP_PASS')
+                        if all([responsavel_email, smtp_server, smtp_user, smtp_pass]):
+                            from email.mime.text import MIMEText
+                            from email.mime.multipart import MIMEMultipart
+                            import smtplib
+                            msg = MIMEMultipart()
+                            msg['From'] = smtp_user
+                            msg['To'] = responsavel_email
+                            msg['Subject'] = assunto
+                            msg.attach(MIMEText(mensagem, 'html'))
+                            try:
+                                with smtplib.SMTP(smtp_server, smtp_port) as server:
+                                    server.starttls()
+                                    server.login(smtp_user, smtp_pass)
+                                    server.sendmail(smtp_user, responsavel_email, msg.as_string())
+                                print(f'E-mail enviado para {responsavel_email} (removido)')
+                            except Exception as e:
+                                print(f'Erro ao enviar e-mail para responsável removido: {e}')
+                                flash(f'Erro ao enviar e-mail para o responsável removido: {e}', 'danger')
             return redirect(request.referrer or '/')
 
 # Rota para excluir uma tarefa
@@ -1133,9 +1356,9 @@ def enviar_email_admin(assunto, mensagem):
         return
     # Garantir que todas as variáveis são string
     admin_email = str(admin_email)
-    smtp_server = str(smtp_server)
-    smtp_user = str(smtp_user)
-    smtp_pass = str(smtp_pass)
+    smtp_server = str(smtp_server or "")
+    smtp_user = str(smtp_user or "")
+    smtp_pass = str(smtp_pass or "")
     msg = MIMEMultipart()
     msg['From'] = smtp_user
     msg['To'] = admin_email
@@ -1336,35 +1559,23 @@ def gantt_teste():
     ]
     return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data)
 
-@app.route('/projetos/<int:projeto_id>/importar_tarefas_excel', methods=['POST'])
-def importar_tarefas_excel(projeto_id):
-    if not request.is_json:
-        return jsonify({'sucesso': False, 'erro': 'Requisição inválida.'}), 400
-    data = request.get_json()
-    nomes = data.get('nomes')
-    if not nomes or not isinstance(nomes, list):
-        return jsonify({'sucesso': False, 'erro': 'Lista de nomes ausente.'}), 400
-    from supabase_client import SUPABASE_URL, SUPABASE_KEY, headers
-    tarefas = []
-    for nome in nomes:
-        if not nome.strip():
-            continue
-        tarefa = {
-            'projeto_id': projeto_id,
-            'nome': nome.strip(),
-        }
-        tarefas.append(tarefa)
-    if not tarefas:
-        return jsonify({'sucesso': False, 'erro': 'Nenhuma tarefa válida.'}), 400
-    try:
-        url = f"{SUPABASE_URL}/rest/v1/tarefas"
-        # Insere em lote
-        resp = requests.post(url, headers=headers, json=tarefas)
-        if resp.status_code not in (201, 200):
-            return jsonify({'sucesso': False, 'erro': resp.text}), 500
-        return jsonify({'sucesso': True, 'quantidade': len(tarefas)})
-    except Exception as e:
-        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+# Teste de conexão SMTP ao iniciar o Flask
+try:
+    smtp_server = os.getenv('SMTP_SERVER')
+    smtp_port = int(os.getenv('SMTP_PORT', 587))
+    smtp_user = os.getenv('SMTP_USER')
+    smtp_pass = os.getenv('SMTP_PASS')
+    if all([smtp_server, smtp_port, smtp_user, smtp_pass]):
+        import smtplib
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.quit()
+        print(f"[OK] Conexão SMTP bem-sucedida com {smtp_server}:{smtp_port} usando {smtp_user}")
+    else:
+        print("[AVISO] Variáveis SMTP não estão totalmente configuradas no .env. Teste de conexão não realizado.")
+except Exception as e:
+    print(f"[ERRO] Falha ao conectar ao servidor SMTP: {e}")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

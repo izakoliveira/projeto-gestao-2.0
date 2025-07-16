@@ -333,3 +333,54 @@ body {
     white-space: nowrap;
     pointer-events: none !important;
 }
+
+/* Responsividade para cards de projetos/tarefas */
+@media (max-width: 767.98px) {
+  .row > [class*='col-'] {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+  }
+  .card, .compact-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-bottom: 1rem !important;
+  }
+  .card-header, .compact-header {
+    font-size: 1.1em;
+    padding: 0.75rem 1rem;
+  }
+  .card-body, .compact-body {
+    padding: 1rem;
+  }
+  .card-footer, .compact-footer {
+    padding: 0.75rem 1rem;
+  }
+  .task-list, .compact-tasks {
+    font-size: 1em;
+  }
+}
+
+/* Navbar responsiva: aumenta área de toque e fonte */
+@media (max-width: 991.98px) {
+  .navbar-nav .nav-link, .navbar-nav .dropdown-item {
+    font-size: 1.1em;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  .navbar-toggler {
+    font-size: 1.5em;
+    padding: 0.75rem 1.25rem;
+  }
+}
+
+/* Ajuste para tabelas: rolagem horizontal no mobile */
+@media (max-width: 767.98px) {
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table {
+    min-width: 600px;
+  }
+}
