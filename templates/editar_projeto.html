@@ -12,6 +12,7 @@
     <div class="container my-5">
         <h1 class="mb-4">Editar Projeto</h1>
         <form method="POST" novalidate id="form-editar-projeto">
+            <input type="hidden" name="voltar_para" id="voltar_para">
             <div class="mb-3">
                 <label for="nome" class="form-label">Nome do Projeto:</label>
                 <input type="text" class="form-control" id="nome" name="nome" value="{{ projeto.nome }}" required>
@@ -21,6 +22,18 @@
                 <label for="descricao" class="form-label">Descrição:</label>
                 <textarea class="form-control" id="descricao" name="descricao" required>{{ projeto.descricao }}</textarea>
                 <div class="invalid-feedback">A descrição é obrigatória.</div>
+            </div>
+            <div class="mb-3">
+                <label for="tipo_id" class="form-label">Pasta (Tipo de Projeto)</label>
+                <div class="input-group">
+                    <select class="form-select" id="tipo_id" name="tipo_id" required>
+                        <option value="">Selecione...</option>
+                        {% for tipo in tipos %}
+                        <option value="{{ tipo.id }}" {% if projeto.tipo_id == tipo.id %}selected{% endif %}>{{ tipo.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <a href="{{ url_for('criar_pasta') }}" target="_blank" class="btn btn-outline-secondary">Nova Pasta</a>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -35,7 +48,7 @@
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">Atualizar Projeto</button>
-            <a href="/projetos/{{ projeto.id }}" class="btn btn-secondary ms-2">Cancelar</a>
+            <button type="button" class="btn btn-secondary ms-2" onclick="history.back()">Cancelar</button>
         </form>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -81,6 +94,13 @@ formEditarProjeto.addEventListener('submit', function (e) {
         e.stopPropagation();
         alert('Por favor, preencha todos os campos obrigatórios.');
         return false;
+    }
+});
+// Preencher campo hidden com a página anterior
+window.addEventListener('DOMContentLoaded', function() {
+    var voltarPara = document.getElementById('voltar_para');
+    if (voltarPara && document.referrer && !document.referrer.includes('/projetos/editar/')) {
+        voltarPara.value = document.referrer;
     }
 });
 </script>

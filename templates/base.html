@@ -47,6 +47,16 @@
                     </li>
                     {% endif %}
                 </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('projetos') }}">Projetos</a>
+                    </li>
+                    {% if session.user_email == 'izak.gomes59@gmail.com' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('listar_pastas') }}">Pastas</a>
+                    </li>
+                    {% endif %}
+                </ul>
                 <ul class="navbar-nav ms-auto align-items-center">
                     <!-- Ícone de sininho de notificações -->
                     <li class="nav-item dropdown me-3" id="notificacaoDropdownLi" style="position:relative;">

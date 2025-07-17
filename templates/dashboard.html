@@ -106,7 +106,7 @@
                         {% for projeto in projetos_recentes %}
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="mb-1">{{ projeto.nome }}</h6>
+                                <h6 class="mb-1">{{ projeto.nome }} <span class="badge bg-light text-dark border ms-2" style="font-size:0.85em;">{{ projeto.tipo_nome }}</span></h6>
                                 <small class="text-muted">
                                     {{ projeto.data_inicio }} - {{ projeto.data_fim }}
                                 </small>

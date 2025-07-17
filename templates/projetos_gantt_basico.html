@@ -6,6 +6,54 @@
         <h1 class="mb-0"><i class="fas fa-project-diagram"></i> Meus Projetos</h1>
         <a href="/logout" class="btn btn-danger">Logout</a>
     </div>
+    <!-- Card de teste absoluto para debug visual -->
+    <div style="margin-bottom: 24px;">
+        <div class="card compact-card shadow-sm" style="min-width: 260px; max-width: 260px; background: #ffe4e1; display: inline-block;">
+            <div class="card-header compact-header d-flex justify-content-between align-items-center py-2">
+                <h6 class="mb-0"><i class="fas fa-project-diagram"></i> Card Teste Absoluto</h6>
+                <span class="badge badge-warning">Teste</span>
+            </div>
+            <div class="card-body compact-body py-2">
+                <div class="mb-1"><small class="text-muted"><i class="fas fa-calendar"></i> 01/01/2024 - 31/12/2024</small></div>
+                <div class="compact-tasks"><small><strong>Tarefas (2):</strong></small>
+                    <div class="task-list">
+                        <div class="task-item d-flex justify-content-between align-items-center py-1">
+                            <span class="task-name"><i class="fas fa-tasks"></i> Tarefa Exemplo</span>
+                            <span class="badge bg-warning text-dark">Pendente</span>
+                        </div>
+                        <div class="task-item d-flex justify-content-between align-items-center py-1">
+                            <span class="task-name"><i class="fas fa-tasks"></i> Outra Tarefa</span>
+                            <span class="badge bg-success">Concluída</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2">
+                <div class="btn-group" role="group">
+                    <a href="#" class="btn btn-info btn-sm" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
+                    <a href="#" class="btn btn-warning btn-sm" title="Editar"><i class="fas fa-edit"></i></a>
+                    <button type="button" class="btn btn-danger btn-sm" title="Excluir"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de navegação visual de pastas (tipos de projeto) -->
+    <div class="row mb-4 g-2">
+        {# REMOVIDO: Card da pasta 'Todos' #}
+        {% for tipo in tipos %}
+        <div class="col-auto">
+            <a href="/projetos?tipo_id={{ tipo.id }}" class="text-decoration-none">
+                <div class="card shadow-sm folder-card {% if request.args.get('tipo_id') == tipo.id|string %}border-primary bg-light{% endif %}" style="min-width: 120px; cursor:pointer;">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
+                        <i class="fas fa-folder fa-2x mb-1 text-warning"></i>
+                        <span class="fw-bold">{{ tipo.nome }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
 
     <!-- Filtros Customizados com Campos Iguais -->
     <div class="filters-container mb-4">
@@ -18,8 +66,7 @@
                     <select class="filter-select" id="nome" name="nome">
                         <option value="">Todos os projetos</option>
                         {% for projeto in projetos %}
-                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome
-                            %}selected{% endif %}>{{ projeto.nome }}</option>
+                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome %}selected{% endif %}>{{ projeto.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -89,110 +136,142 @@
     </div>
     {% endif %}
 
-    {% if projetos %}
-    <div class="row">
-        <!-- Card para criar novo projeto -->
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card compact-card shadow-sm h-100 d-flex align-items-center justify-content-center"
-                style="min-height: 180px; border: 2px dashed #28a745; background: #f8fff8; cursor: pointer;">
-                <a href="/projetos/criar"
-                    class="d-flex flex-column align-items-center justify-content-center text-success text-decoration-none w-100 h-100"
-                    style="height: 100%;">
-                    <div style="font-size: 2.5em; margin-bottom: 0.3em;"><i class="fas fa-plus-circle"></i></div>
-                    <span style="font-size: 1.1em; font-weight: 600;">Novo Projeto</span>
-                </a>
-            </div>
-        </div>
-        {% for projeto in projetos %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card compact-card shadow-sm">
-                <div class="card-header compact-header d-flex justify-content-between align-items-center py-2">
-                    <h6 class="mb-0"><i class="fas fa-project-diagram"></i> {{ projeto.nome }}</h6>
-                    <span
-                        class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}">
-                        {{ projeto.status or 'Sem status' }}
-                    </span>
+    <!-- Carousel de projetos SEM condicional -->
+    <div class="projetos-carousel-wrapper mb-4">
+        <button class="carousel-arrow left" type="button" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+        <div class="projetos-carousel">
+            <!-- Card para criar novo projeto -->
+            <div class="carousel-item">
+                <div class="card compact-card shadow-sm h-100 d-flex align-items-center justify-content-center"
+                    style="min-height: 180px; border: 2px dashed #28a745; background: #f8fff8; cursor: pointer; min-width: 260px; max-width: 260px;">
+                    <a href="/projetos/criar"
+                        class="d-flex flex-column align-items-center justify-content-center text-success text-decoration-none w-100 h-100"
+                        style="height: 100%;">
+                        <div style="font-size: 2.5em; margin-bottom: 0.3em;"><i class="fas fa-plus-circle"></i></div>
+                        <span style="font-size: 1.1em; font-weight: 600;">Novo Projeto</span>
+                    </a>
                 </div>
-                <div class="card-body compact-body py-2">
-                    <div class="mb-1">
-                        <small class="text-muted">
-                            <i class="fas fa-calendar"></i> {{ projeto.data_inicio or 'Não definida' }} - {{
-                            projeto.data_fim or 'Não definida' }}
-                        </small>
+            </div>
+            {% for projeto in projetos %}
+            <div class="carousel-item">
+                <div class="card compact-card shadow-sm" style="min-width: 260px; max-width: 260px;">
+                    <div class="card-header compact-header d-flex justify-content-between align-items-center py-2">
+                        <h6 class="mb-0"><i class="fas fa-project-diagram"></i> {{ projeto.nome }}</h6>
+                        <span
+                            class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}">
+                            {{ projeto.status or 'Sem status' }}
+                        </span>
                     </div>
-                    <div class="compact-tasks">
-                        {% if projeto.tarefas and projeto.tarefas|length > 0 %}
-                        <small><strong>Tarefas ({{ projeto.tarefas|length }}):</strong></small>
-                        <div class="task-list">
-                            {% for tarefa in projeto.tarefas[:3] %}
-                            <div class="task-item d-flex justify-content-between align-items-center py-1">
-                                <span class="task-name">
-                                    <i class="fas fa-tasks"></i> {{ tarefa.nome[:30] }}{% if tarefa.nome|length > 30
-                                    %}...{% endif %}
-                                </span>
-                                <span class="badge 
-                                        {% if tarefa.status == 'pendente' %}bg-warning text-dark
-                                        {% elif tarefa.status == 'em progresso' %}bg-info text-dark
-                                        {% elif tarefa.status == 'concluída' %}bg-success
-                                        {% else %}bg-secondary
-                                        {% endif %}">
-                                    {{ tarefa.status|capitalize if tarefa.status else 'Sem status' }}
-                                </span>
-                            </div>
-                            {% endfor %}
-                            {% if projeto.tarefas|length > 3 %}
-                            <div class="text-muted small expand-tasks-btn" data-projeto-id="{{ projeto.id }}"
-                                style="cursor: pointer; color: #007bff;">
-                                <i class="fas fa-chevron-down"></i> +{{ projeto.tarefas|length - 3 }} tarefas
-                            </div>
-                            <div class="hidden-tasks" id="hidden-tasks-{{ projeto.id }}" style="display: none;">
-                                {% for tarefa in projeto.tarefas[3:] %}
+                    <div class="card-body compact-body py-2">
+                        <div class="mb-1">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> {{ projeto.data_inicio or 'Não definida' }} - {{
+                                projeto.data_fim or 'Não definida' }}
+                            </small>
+                        </div>
+                        <div class="compact-tasks">
+                            {% if projeto.tarefas and projeto.tarefas|length > 0 %}
+                            <small><strong>Tarefas ({{ projeto.tarefas|length }}):</strong></small>
+                            <div class="task-list">
+                                {% for tarefa in projeto.tarefas[:3] %}
                                 <div class="task-item d-flex justify-content-between align-items-center py-1">
                                     <span class="task-name">
                                         <i class="fas fa-tasks"></i> {{ tarefa.nome[:30] }}{% if tarefa.nome|length > 30
                                         %}...{% endif %}
                                     </span>
                                     <span class="badge 
-                                                {% if tarefa.status == 'pendente' %}bg-warning text-dark
-                                                {% elif tarefa.status == 'em progresso' %}bg-info text-dark
-                                                {% elif tarefa.status == 'concluída' %}bg-success
-                                                {% else %}bg-secondary
-                                                {% endif %}">
+                                            {% if tarefa.status == 'pendente' %}bg-warning text-dark
+                                            {% elif tarefa.status == 'em progresso' %}bg-info text-dark
+                                            {% elif tarefa.status == 'concluída' %}bg-success
+                                            {% else %}bg-secondary
+                                            {% endif %}">
                                         {{ tarefa.status|capitalize if tarefa.status else 'Sem status' }}
                                     </span>
                                 </div>
                                 {% endfor %}
+                                {% if projeto.tarefas|length > 3 %}
+                                <div class="text-muted small expand-tasks-btn" data-projeto-id="{{ projeto.id }}"
+                                    style="cursor: pointer; color: #007bff;">
+                                    <i class="fas fa-chevron-down"></i> +{{ projeto.tarefas|length - 3 }} tarefas
+                                </div>
+                                <div class="hidden-tasks" id="hidden-tasks-{{ projeto.id }}" style="display: none;">
+                                    {% for tarefa in projeto.tarefas[3:] %}
+                                    <div class="task-item d-flex justify-content-between align-items-center py-1">
+                                        <span class="task-name">
+                                            <i class="fas fa-tasks"></i> {{ tarefa.nome[:30] }}{% if tarefa.nome|length > 30
+                                            %}...{% endif %}
+                                        </span>
+                                        <span class="badge 
+                                                    {% if tarefa.status == 'pendente' %}bg-warning text-dark
+                                                    {% elif tarefa.status == 'em progresso' %}bg-info text-dark
+                                                    {% elif tarefa.status == 'concluída' %}bg-success
+                                                    {% else %}bg-secondary
+                                                    {% endif %}">
+                                            {{ tarefa.status|capitalize if tarefa.status else 'Sem status' }}
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
+                            {% else %}
+                            <div class="text-muted small">Nenhuma tarefa encontrada.</div>
                             {% endif %}
                         </div>
-                        {% else %}
-                        <div class="text-muted small">Nenhuma tarefa encontrada.</div>
-                        {% endif %}
+                    </div>
+                    <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2">
+                        <div class="btn-group" role="group">
+                            <a href="/projetos/{{ projeto.id }}" class="btn btn-info btn-sm" title="Ver Detalhes">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
+                                <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto"
+                                    data-projeto-id="{{ projeto.id }}" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-                <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2">
-                    <div class="btn-group" role="group">
-                        <a href="/projetos/{{ projeto.id }}" class="btn btn-info btn-sm" title="Ver Detalhes">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
-                            <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto"
-                                data-projeto-id="{{ projeto.id }}" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+            </div>
+            {% endfor %}
+            <!-- Card de teste estático para debug visual -->
+            <div class="carousel-item">
+                <div class="card compact-card shadow-sm" style="min-width: 260px; max-width: 260px; background: #ffe4e1;">
+                    <div class="card-header compact-header d-flex justify-content-between align-items-center py-2">
+                        <h6 class="mb-0"><i class="fas fa-project-diagram"></i> Card Teste</h6>
+                        <span class="badge badge-warning">Teste</span>
+                    </div>
+                    <div class="card-body compact-body py-2">
+                        <div class="mb-1"><small class="text-muted"><i class="fas fa-calendar"></i> 01/01/2024 - 31/12/2024</small></div>
+                        <div class="compact-tasks"><small><strong>Tarefas (2):</strong></small>
+                            <div class="task-list">
+                                <div class="task-item d-flex justify-content-between align-items-center py-1">
+                                    <span class="task-name"><i class="fas fa-tasks"></i> Tarefa Exemplo</span>
+                                    <span class="badge bg-warning text-dark">Pendente</span>
+                                </div>
+                                <div class="task-item d-flex justify-content-between align-items-center py-1">
+                                    <span class="task-name"><i class="fas fa-tasks"></i> Outra Tarefa</span>
+                                    <span class="badge bg-success">Concluída</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2">
+                        <div class="btn-group" role="group">
+                            <a href="#" class="btn btn-info btn-sm" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
+                            <a href="#" class="btn btn-warning btn-sm" title="Editar"><i class="fas fa-edit"></i></a>
+                            <button type="button" class="btn btn-danger btn-sm" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
+        <button class="carousel-arrow right" type="button" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
     </div>
-    {% else %}
-    {# Removido o aviso de nenhum projeto encontrado conforme solicitado #}
-    {% endif %}
 
     <!-- Gantt agrupado estilo teste_agrupamento_gantt.html -->
     <div class="card mb-4 mt-5">
@@ -312,8 +391,105 @@
     });
 </script>
 <style>
-    /* Estilos para filtros customizados idênticos e centralizados */
-    .filters-container {
+/* Containers pais nunca escondem o carousel */
+.projetos-carousel-wrapper,
+.projetos-carousel,
+.container,
+.row,
+body,
+html {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 220px !important;
+}
+
+.projetos-carousel-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    min-height: 220px;
+    margin-bottom: 24px;
+    background: none;
+}
+
+.projetos-carousel {
+    display: flex;
+    flex-direction: row;
+    gap: 18px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100vw;
+    padding: 8px 0;
+    min-height: 220px;
+    background: none;
+    scrollbar-width: none; /* Firefox */
+}
+.projetos-carousel::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.carousel-item {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    min-width: 260px;
+    max-width: 260px;
+    margin-right: 0;
+    border: none;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    display: block;
+    position: relative;
+    transition: box-shadow 0.2s;
+}
+.carousel-item:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    z-index: 2;
+}
+
+.carousel-arrow {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    transition: background 0.2s;
+}
+.carousel-arrow.left {
+    left: -18px;
+}
+.carousel-arrow.right {
+    right: -18px;
+}
+.carousel-arrow:hover {
+    background: #f0f0f0;
+}
+
+@media (max-width: 600px) {
+    .carousel-item {
+        min-width: 90vw;
+        max-width: 90vw;
+    }
+    .carousel-arrow.left, .carousel-arrow.right {
+        display: none;
+    }
+}
+
+/* Estilos para filtros customizados idênticos e centralizados */
+.filters-container {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 16px;
         padding: 24px 0;

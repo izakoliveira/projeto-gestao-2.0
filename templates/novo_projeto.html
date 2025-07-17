@@ -23,6 +23,18 @@
                             <textarea class="form-control" id="descricao" name="descricao" rows="3" required></textarea>
                             <div class="invalid-feedback">A descrição é obrigatória.</div>
                         </div>
+                        <div class="mb-3">
+                            <label for="tipo_id" class="form-label">Pasta (Tipo de Projeto)</label>
+                            <div class="input-group">
+                                <select class="form-select" id="tipo_id" name="tipo_id" required>
+                                    <option value="">Selecione...</option>
+                                    {% for tipo in tipos %}
+                                    <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{{ url_for('criar_pasta') }}" target="_blank" class="btn btn-outline-secondary">Nova Pasta</a>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="data_inicio" class="form-label">Data de Início:</label>
@@ -72,6 +84,14 @@ formNovoProjeto.addEventListener('submit', function (e) {
         valido = false;
     } else {
         descricao.classList.remove('is-invalid');
+    }
+    // Tipo de Projeto
+    const tipoProjeto = document.getElementById('tipo_id');
+    if (tipoProjeto.value === "") {
+        tipoProjeto.classList.add('is-invalid');
+        valido = false;
+    } else {
+        tipoProjeto.classList.remove('is-invalid');
     }
     // Data início
     const dataInicio = document.getElementById('data_inicio');

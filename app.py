@@ -60,10 +60,21 @@ def salvar_restricoes(restricoes):
 
 # Função para checar se uma funcionalidade está restrita para o usuário atual
 def funcionalidade_restrita(nome_restricao):
-    if session.get('user_nome') == 'izak.gomes59@gmail.com':
-        return False
-    restricoes = carregar_restricoes()
-    return restricoes.get(nome_restricao, False)
+    from functools import wraps
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if session.get('user_nome') == 'izak.gomes59@gmail.com':
+                return f(*args, **kwargs)
+            restricoes = carregar_restricoes()
+            usuario_id = session.get('user_id')
+            restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+            if restricoes_usuario.get(f'restr_{nome_restricao}', False):
+                flash('Acesso restrito para esta funcionalidade.')
+                return redirect(url_for('dashboard'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 # Função de validação de projeto
 def validar_projeto(nome, data_inicio, data_fim):
@@ -151,6 +162,7 @@ def projetos():
     status = request.args.get('status', '')  # Status da tarefa
     data_inicio = request.args.get('data_inicio', '')  # Data de início
     data_fim = request.args.get('data_fim', '')  # Data de término
+    tipo_id = request.args.get('tipo_id', '')
 
     if session.get('user_email') == 'izak.gomes59@gmail.com':
         # Admin vê todos os projetos
@@ -161,6 +173,8 @@ def projetos():
             query = query.gte('data_inicio', data_inicio)
         if data_fim:
             query = query.lte('data_fim', data_fim)
+        if tipo_id:
+            query = query.eq('tipo_id', tipo_id)
         projetos = query.execute().data
     else:
         # Usuário comum vê apenas projetos autorizados
@@ -174,6 +188,8 @@ def projetos():
                 query = query.gte('data_inicio', data_inicio)
             if data_fim:
                 query = query.lte('data_fim', data_fim)
+            if tipo_id:
+                query = query.eq('tipo_id', tipo_id)
             projetos = query.execute().data
         else:
             projetos = []
@@ -388,7 +404,12 @@ def projetos():
             for t in tarefas_filtradas
             if (str(t.get('colecao', '') or '').strip())
         ))
-    return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes)
+    # Buscar todos os tipos de projeto para exibir o nome da pasta
+    tipos = supabase.table('tipos_projeto').select('id, nome').execute().data or []
+    tipos_dict = {t['id']: t['nome'] for t in tipos}
+    for projeto in projetos:
+        projeto['tipo_nome'] = tipos_dict.get(projeto.get('tipo_id'), '-')
+    return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos)
 
 # Rota de criação de projeto
 @app.route('/projetos/criar', methods=['GET', 'POST'])
@@ -653,39 +674,56 @@ def detalhes_projeto(projeto_id):
 # Editar projeto
 @app.route('/projetos/editar/<uuid:projeto_id>', methods=['GET', 'POST'])
 @login_required
+@funcionalidade_restrita('editar_projeto')
 def editar_projeto(projeto_id):
-    if funcionalidade_restrita('restr_editar_projeto'):
-        flash('Acesso restrito para editar projetos.')
+    tipos = supabase.table('tipos_projeto').select('*').order('nome').execute().data or []
+    usuario_id = session.get('user_id')
+    usuario_email = session.get('user_email')
+    is_admin = usuario_email == 'izak.gomes59@gmail.com'
+    projeto_resp = supabase.table("projetos").select("*").eq("id", str(projeto_id)).single().execute()
+    projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+    if not projeto or (not is_admin and projeto.get('usuario_id') != usuario_id):
+        flash('Acesso restrito: apenas o dono do projeto ou admin pode editar.')
         return redirect(url_for('projetos'))
-    resp = supabase.table("projetos").select("*").eq("id", str(projeto_id)).single().execute()
-    projeto = resp.data if hasattr(resp, 'data') else None
-    if not projeto:
-        flash("Projeto não encontrado.")
-        return redirect('/projetos')
     if request.method == 'POST':
         nome = request.form['nome']
         descricao = request.form['descricao']
         data_inicio = request.form['data_inicio']
         data_fim = request.form['data_fim']
-        print('Atualizando projeto:', projeto_id)
-        print('Novos dados:', nome, descricao, data_inicio, data_fim)
-        update_resp = supabase.table("projetos").update({
+        tipo_id = request.form.get('tipo_id')
+        print('[DEBUG] tipo_id recebido no POST:', tipo_id)
+        update_data = {
             "nome": nome,
             "descricao": descricao,
             "data_inicio": data_inicio,
             "data_fim": data_fim
-        }).eq("id", str(projeto_id)).execute()
+        }
+        if tipo_id and isinstance(tipo_id, str) and len(tipo_id) == 36 and '-' in tipo_id:
+            update_data["tipo_id"] = tipo_id
+        elif tipo_id == '':
+            update_data["tipo_id"] = None
+        print('Atualizando projeto:', projeto_id)
+        print('Novos dados:', update_data)
+        update_resp = supabase.table("projetos").update(update_data).eq("id", str(projeto_id)).execute()
         print('Resposta do update:', update_resp)
         flash("Projeto atualizado com sucesso!")
+        voltar_para = request.form.get('voltar_para')
+        if voltar_para:
+            return redirect(voltar_para)
         return redirect(f'/projetos/{projeto_id}')
-    return render_template('editar_projeto.html', projeto=projeto)
+    return render_template('editar_projeto.html', projeto=projeto, tipos=tipos)
 
 # Excluir projeto
 @app.route('/projetos/excluir/<uuid:projeto_id>', methods=['POST'])
 @login_required
 def excluir_projeto(projeto_id):
-    if funcionalidade_restrita('restr_excluir_projeto'):
-        flash('Acesso restrito para excluir projetos.')
+    usuario_id = session.get('user_id')
+    usuario_email = session.get('user_email')
+    is_admin = usuario_email == 'izak.gomes59@gmail.com'
+    projeto_resp = supabase.table("projetos").select("usuario_id").eq("id", str(projeto_id)).single().execute()
+    projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+    if not projeto or (not is_admin and projeto.get('usuario_id') != usuario_id):
+        flash('Acesso restrito: apenas o dono do projeto ou admin pode excluir.')
         return redirect(url_for('projetos'))
     # Excluir todas as tarefas vinculadas ao projeto
     supabase.table("tarefas").delete().eq("projeto_id", str(projeto_id)).execute()
@@ -863,6 +901,16 @@ def criar_tarefa(projeto_id):
 @app.route('/tarefas/editar/<uuid:tarefa_id>', methods=['GET', 'POST'])
 @login_required
 def editar_tarefa(tarefa_id):
+    usuario_id = session.get('user_id')
+    usuario_email = session.get('user_email')
+    is_admin = usuario_email == 'izak.gomes59@gmail.com'
+    tarefa_resp = supabase.table("tarefas").select("usuario_id, projeto_id").eq("id", str(tarefa_id)).single().execute()
+    tarefa = tarefa_resp.data if hasattr(tarefa_resp, 'data') else None
+    projeto_resp = supabase.table("projetos").select("usuario_id").eq("id", str(tarefa['projeto_id'])).single().execute() if tarefa else None
+    projeto = projeto_resp.data if projeto_resp and hasattr(projeto_resp, 'data') else None
+    if not tarefa or not projeto or (not is_admin and tarefa.get('usuario_id') != usuario_id and projeto.get('usuario_id') != usuario_id):
+        flash('Acesso restrito: apenas o responsável, dono do projeto ou admin pode editar a tarefa.')
+        return redirect(url_for('projetos'))
     print('\n--- INÍCIO editar_tarefa ---')
     print('Método:', request.method)
     print('Headers:', dict(request.headers))
@@ -1063,24 +1111,16 @@ def editar_tarefa(tarefa_id):
 @app.route('/tarefas/excluir/<uuid:tarefa_id>', methods=['POST'])
 @login_required
 def excluir_tarefa(tarefa_id):
-    if funcionalidade_restrita('restr_excluir_tarefa'):
-        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({"sucesso": False, "erro": "Acesso restrito para excluir tarefas."}), 403
-        else:
-            flash('Acesso restrito para excluir tarefas.')
-            return redirect(url_for('projetos'))
-    
-    # Buscar a tarefa para obter o projeto_id
-    tarefa_resp = supabase.table("tarefas").select("projeto_id").eq("id", str(tarefa_id)).single().execute()
+    usuario_id = session.get('user_id')
+    usuario_email = session.get('user_email')
+    is_admin = usuario_email == 'izak.gomes59@gmail.com'
+    tarefa_resp = supabase.table("tarefas").select("usuario_id, projeto_id").eq("id", str(tarefa_id)).single().execute()
     tarefa = tarefa_resp.data if hasattr(tarefa_resp, 'data') else None
-
-    if not tarefa:
-        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({"sucesso": False, "erro": "Tarefa não encontrada."}), 404
-        else:
-            flash("Tarefa não encontrada.")
-            return redirect('/projetos')
-
+    projeto_resp = supabase.table("projetos").select("usuario_id").eq("id", str(tarefa['projeto_id'])).single().execute() if tarefa else None
+    projeto = projeto_resp.data if projeto_resp and hasattr(projeto_resp, 'data') else None
+    if not tarefa or not projeto or (not is_admin and tarefa.get('usuario_id') != usuario_id and projeto.get('usuario_id') != usuario_id):
+        flash('Acesso restrito: apenas o responsável, dono do projeto ou admin pode excluir a tarefa.')
+        return redirect(url_for('projetos'))
     # Excluir a tarefa via requests puro
     SUPABASE_URL = "https://zvdpuxggltqejplybzet.supabase.co"
     SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2ZHB1eGdnbHRxZWpwbHliemV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTcyOTAsImV4cCI6MjA2NTMzMzI5MH0.YaDt2gAl_FFolp8Gh5n18ZjwzkLLcQ2EuWzFZTTyEMI"
@@ -1151,8 +1191,16 @@ def dashboard():
         resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
         projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
         if projetos_ids_visiveis:
-            projetos_resp = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis).execute()
-            projetos = projetos_resp.data if hasattr(projetos_resp, 'data') else []
+            query = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis)
+            if nome:
+                query = query.ilike('nome', f'%{nome}%')
+            if data_inicio:
+                query = query.gte('data_inicio', data_inicio)
+            if data_fim:
+                query = query.lte('data_fim', data_fim)
+            if tipo_id:
+                query = query.eq('tipo_id', tipo_id)
+            projetos = query.execute().data
         else:
             projetos = []
     # Buscar estatísticas das tarefas
@@ -1195,6 +1243,11 @@ def dashboard():
             tarefa['data_inicio'] = datetime.strptime(tarefa['data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
         if tarefa.get('data_fim'):
             tarefa['data_fim'] = datetime.strptime(tarefa['data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
+    # Buscar todos os tipos de projeto para exibir o nome da pasta
+    tipos = supabase.table('tipos_projeto').select('id, nome').execute().data or []
+    tipos_dict = {t['id']: t['nome'] for t in tipos}
+    for projeto in projetos:
+        projeto['tipo_nome'] = tipos_dict.get(projeto.get('tipo_id'), '-')
     return render_template('dashboard.html', 
                          total_projetos=total_projetos,
                          projetos_em_andamento=projetos_em_andamento,
@@ -1623,6 +1676,128 @@ def limpar_notificacoes(usuario_id):
             return jsonify({'sucesso': True, 'removidas': 0})
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
+
+@app.route('/pastas')
+@apenas_admin_izak
+@login_required
+def listar_pastas():
+    tipos = supabase.table('tipos_projeto').select('*').order('nome').execute().data or []
+    projetos = supabase.table('projetos').select('id, nome, tipo_id, data_inicio, data_fim').execute().data or []
+    projetos_por_pasta = {}
+    for tipo in tipos:
+        projetos_por_pasta[tipo['id']] = [p for p in projetos if p.get('tipo_id') == tipo['id']]
+    # Buscar projetos sem pasta (tipo_id nulo ou vazio)
+    projetos_sem_pasta = [p for p in projetos if not p.get('tipo_id')]
+    return render_template('pastas.html', tipos=tipos, projetos_por_pasta=projetos_por_pasta, projetos_sem_pasta=projetos_sem_pasta)
+
+@app.route('/pastas/criar', methods=['GET', 'POST'])
+@apenas_admin_izak
+@login_required
+def criar_pasta():
+    if request.method == 'POST':
+        nome = request.form.get('nome', '').strip()
+        if not nome:
+            flash('O nome da pasta é obrigatório.')
+            return redirect(url_for('criar_pasta'))
+        # Verifica se já existe
+        existe = supabase.table('tipos_projeto').select('id').eq('nome', nome).execute().data
+        if existe:
+            flash('Já existe uma pasta com esse nome.')
+            return redirect(url_for('criar_pasta'))
+        supabase.table('tipos_projeto').insert({'nome': nome}).execute()
+        flash('Pasta criada com sucesso!')
+        return redirect(url_for('listar_pastas'))
+    return render_template('criar_pasta.html')
+
+@app.route('/pastas/editar/<uuid:tipo_id>', methods=['GET', 'POST'])
+@apenas_admin_izak
+@login_required
+def editar_pasta(tipo_id):
+    tipo = supabase.table('tipos_projeto').select('*').eq('id', str(tipo_id)).single().execute().data
+    if not tipo:
+        flash('Pasta não encontrada.')
+        return redirect(url_for('listar_pastas'))
+    if request.method == 'POST':
+        nome = request.form.get('nome', '').strip()
+        if not nome:
+            flash('O nome da pasta é obrigatório.')
+            return redirect(url_for('editar_pasta', tipo_id=tipo_id))
+        supabase.table('tipos_projeto').update({'nome': nome}).eq('id', str(tipo_id)).execute()
+        flash('Pasta atualizada com sucesso!')
+        return redirect(url_for('listar_pastas'))
+    return render_template('editar_pasta.html', tipo=tipo)
+
+@app.route('/pastas/excluir/<uuid:tipo_id>', methods=['POST'])
+@apenas_admin_izak
+@login_required
+def excluir_pasta(tipo_id):
+    # Verifica se há projetos usando essa pasta
+    projetos = supabase.table('projetos').select('id').eq('tipo_id', str(tipo_id)).execute().data
+    if projetos:
+        flash('Não é possível excluir: existem projetos nessa pasta.')
+        return redirect(url_for('listar_pastas'))
+    supabase.table('tipos_projeto').delete().eq('id', str(tipo_id)).execute()
+    flash('Pasta excluída com sucesso!')
+    return redirect(url_for('listar_pastas'))
+
+@app.route('/projetos/novo', methods=['GET', 'POST'])
+@login_required
+@funcionalidade_restrita('criar_projeto')
+def novo_projeto():
+    tipos = supabase.table('tipos_projeto').select('*').order('nome').execute().data or []
+    if request.method == 'POST':
+        nome = request.form['nome']
+        descricao = request.form['descricao']
+        data_inicio = request.form['data_inicio']
+        data_fim = request.form['data_fim']
+        tipo_id = request.form.get('tipo_id')
+        usuario_id = session.get('user_id')
+        projeto = {
+            'nome': nome,
+            'descricao': descricao,
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'tipo_id': tipo_id,
+            'usuario_id': usuario_id
+        }
+        resp = supabase.table('projetos').insert(projeto).execute()
+        if hasattr(resp, 'data') and resp.data:
+            flash('Projeto criado com sucesso!')
+            return redirect(url_for('projetos'))
+        else:
+            flash('Erro ao criar projeto.')
+    return render_template('novo_projeto.html', tipos=tipos)
+
+@app.route('/projetos/<uuid:projeto_id>/remover_pasta', methods=['POST'])
+@login_required
+def remover_pasta_projeto(projeto_id):
+    usuario_id = session.get('user_id')
+    usuario_email = session.get('user_email')
+    is_admin = usuario_email == 'izak.gomes59@gmail.com'
+    projeto_resp = supabase.table('projetos').select('usuario_id').eq('id', str(projeto_id)).single().execute()
+    projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+    if not projeto or (not is_admin and projeto.get('usuario_id') != usuario_id):
+        flash('Acesso restrito: apenas o dono do projeto ou admin pode remover a pasta.')
+        return redirect(url_for('projetos'))
+    supabase.table('projetos').update({'tipo_id': None}).eq('id', str(projeto_id)).execute()
+    flash('Projeto removido da pasta com sucesso!')
+    return redirect(request.referrer or url_for('projetos'))
+
+@app.route('/projetos/<uuid:projeto_id>/mover_para_pasta', methods=['POST'])
+@login_required
+def mover_projeto_para_pasta(projeto_id):
+    data = request.get_json()
+    tipo_id = data.get('tipo_id')
+    if not tipo_id:
+        return {'sucesso': False, 'erro': 'ID da pasta não informado.'}, 400
+    try:
+        resp = supabase.table('projetos').update({'tipo_id': tipo_id}).eq('id', str(projeto_id)).execute()
+        if hasattr(resp, 'data') and resp.data:
+            return {'sucesso': True}
+        else:
+            return {'sucesso': False, 'erro': 'Erro ao atualizar projeto.'}, 500
+    except Exception as e:
+        return {'sucesso': False, 'erro': str(e)}, 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
