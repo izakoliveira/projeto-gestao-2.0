@@ -48,6 +48,21 @@
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Ícone de sininho de notificações -->
+                    <li class="nav-item dropdown me-3" id="notificacaoDropdownLi" style="position:relative;">
+                        <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificacaoBadge" style="display:none;">0</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificacaoDropdown" style="min-width:350px; max-width:400px; max-height:400px; overflow-y:auto;">
+                            <li class="dropdown-header bg-light fw-bold d-flex justify-content-between align-items-center">Notificações
+                                <button id="btnLimparNotificacoes" class="btn btn-outline-danger btn-sm ms-2" style="font-size:0.8em; display:none;">Limpar</button>
+                            </li>
+                            <div id="notificacoesLista">
+                                <li class="text-center text-muted small p-2">Carregando...</li>
+                            </div>
+                        </ul>
+                    </li>
                     <!-- Removido botão de dark mode -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
@@ -131,7 +146,101 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Removido script de dark mode -->
-    {% block scripts %}{% endblock %}
+    {% block scripts %}
+    <script>
+        // Função para buscar notificações do usuário logado
+        document.addEventListener('DOMContentLoaded', function() {
+            const usuarioId = '{{ session.user_id }}';
+            const badge = document.getElementById('notificacaoBadge');
+            const lista = document.getElementById('notificacoesLista');
+            const btnLimpar = document.getElementById('btnLimparNotificacoes');
+
+            function mostrarBotaoLimpar(temNotificacoes) {
+                if (btnLimpar) btnLimpar.style.display = temNotificacoes ? 'inline-block' : 'none';
+            }
+
+            function carregarNotificacoes() {
+                fetch(`/notificacoes/${usuarioId}`)
+                    .then(resp => resp.json())
+                    .then(data => {
+                        lista.innerHTML = '';
+                        if (data.notificacoes && data.notificacoes.length > 0) {
+                            let naoLidas = 0;
+                            data.notificacoes.forEach(notif => {
+                                const lida = notif.lida;
+                                if (!lida) naoLidas++;
+                                const li = document.createElement('li');
+                                li.className = 'dropdown-item d-flex justify-content-between align-items-start' + (lida ? ' text-muted' : ' fw-bold');
+                                li.style.cursor = 'pointer';
+                                let linkProjeto = '';
+                                if (notif.projeto_id) {
+                                  linkProjeto = `<a href="/projetos/${notif.projeto_id}" class="btn btn-primary btn-sm ms-2" style="font-size:0.8em; padding:2px 8px;">Ver projeto</a>`;
+                                }
+                                li.innerHTML = `
+  <div class=\"w-100\">
+    <div class=\"d-flex justify-content-between align-items-center\" style=\"gap:4px;\">
+      <span class=\"text-truncate\" style=\"max-width: 120px; font-size: 0.95em;\" title=\"${notif.mensagem.replace(/&/g, '&amp;').replace(/\"/g, '&quot;')}\">${notif.mensagem}</span>
+      ${linkProjeto}
+    </div>
+    <div class=\"d-flex flex-column align-items-end\">
+      <span class=\"badge bg-${notif.tipo === 'conclusao' ? 'success' : notif.tipo === 'remocao' ? 'danger' : 'info'} text-uppercase mt-1\" style=\"font-size:0.70em; font-weight:400; border-radius:8px; padding:2px 6px; letter-spacing:0.5px;\">${notif.tipo || ''}</span>
+      <span class=\"text-end\" style=\"font-size:0.75em; color:#888;\">${(new Date(notif.data_criacao)).toLocaleString('pt-BR')}</span>
+    </div>
+  </div>
+`;
+                                // Inicializar tooltip Bootstrap
+                                setTimeout(() => { var t = li.querySelector('[title]'); if (t) new bootstrap.Tooltip(t); }, 10);
+                                li.onclick = function() {
+                                  if (!lida) {
+                                    fetch(`/notificacoes/${notif.id}/ler`, {method:'PATCH'})
+                                      .then(() => carregarNotificacoes());
+                                  }
+                                };
+                                lista.appendChild(li);
+                            });
+                            badge.textContent = naoLidas;
+                            badge.style.display = naoLidas > 0 ? 'inline-block' : 'none';
+                            mostrarBotaoLimpar(data.notificacoes && data.notificacoes.length > 0);
+                        } else {
+                            badge.style.display = 'none';
+                            lista.innerHTML = '<li class="text-center text-muted small p-2">Sem notificações.</li>';
+                            mostrarBotaoLimpar(false);
+                        }
+                    });
+            }
+            // Carregar ao abrir o dropdown
+            document.getElementById('notificacaoDropdown').addEventListener('click', carregarNotificacoes);
+            // Carregar periodicamente (opcional)
+            setInterval(carregarNotificacoes, 60000); // a cada 60s
+            carregarNotificacoes();
+
+            document.getElementById('btnLimparNotificacoes').onclick = function() {
+                if (!confirm('Tem certeza que deseja limpar todas as notificações?')) return;
+                fetch(`/notificacoes/${usuarioId}/limpar`, {method:'DELETE'})
+                    .then(resp => resp.json())
+                    .then(data => {
+                        carregarNotificacoes();
+                        var toast = document.createElement('div');
+                        toast.className = 'toast align-items-center text-white bg-success border-0';
+                        toast.role = 'alert';
+                        toast.innerHTML = `<div class='d-flex'><div class='toast-body'>Notificações limpas com sucesso!</div><button type='button' class='btn-close btn-close-white me-2 m-auto' data-bs-dismiss='toast'></button></div>`;
+                        document.body.appendChild(toast);
+                        new bootstrap.Toast(toast).show();
+                        setTimeout(()=>toast.remove(), 4000);
+                    })
+                    .catch(()=>{
+                        var toast = document.createElement('div');
+                        toast.className = 'toast align-items-center text-white bg-danger border-0';
+                        toast.role = 'alert';
+                        toast.innerHTML = `<div class='d-flex'><div class='toast-body'>Erro ao limpar notificações!</div><button type='button' class='btn-close btn-close-white me-2 m-auto' data-bs-dismiss='toast'></button></div>`;
+                        document.body.appendChild(toast);
+                        new bootstrap.Toast(toast).show();
+                        setTimeout(()=>toast.remove(), 4000);
+                    });
+            };
+        });
+    </script>
+    {% endblock %}
 </body>
 
 </html>
