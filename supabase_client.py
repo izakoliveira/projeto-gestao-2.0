@@ -44,3 +44,69 @@ def get_all_users():
     if resp.status_code == 200:
         return resp.json()
     return []
+
+# PROJETOS
+
+def get_all_projects():
+    url = f"{SUPABASE_URL}/rest/v1/projetos"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()
+    return []
+
+def get_project_by_id(projeto_id):
+    url = f"{SUPABASE_URL}/rest/v1/projetos?id=eq.{projeto_id}"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200 and resp.json():
+        return resp.json()[0]
+    return None
+
+def create_project(data):
+    url = f"{SUPABASE_URL}/rest/v1/projetos"
+    resp = requests.post(url, headers=headers, json=data)
+    if resp.status_code in [200, 201]:
+        return True
+    else:
+        print(f"Erro ao criar projeto: {resp.status_code} - {resp.text}")
+        return False
+
+def update_project(projeto_id, data):
+    url = f"{SUPABASE_URL}/rest/v1/projetos?id=eq.{projeto_id}"
+    resp = requests.patch(url, headers=headers, json=data)
+    return resp.status_code in [200, 204]
+
+def delete_project(projeto_id):
+    url = f"{SUPABASE_URL}/rest/v1/projetos?id=eq.{projeto_id}"
+    resp = requests.delete(url, headers=headers)
+    return resp.status_code in [200, 204]
+
+# TAREFAS
+
+def get_all_tasks():
+    url = f"{SUPABASE_URL}/rest/v1/tarefas"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()
+    return []
+
+def get_tasks_by_project(projeto_id):
+    url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=eq.{projeto_id}"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()
+    return []
+
+def create_task(data):
+    url = f"{SUPABASE_URL}/rest/v1/tarefas"
+    resp = requests.post(url, headers=headers, json=data)
+    return resp.status_code in [200, 201]
+
+def update_task(tarefa_id, data):
+    url = f"{SUPABASE_URL}/rest/v1/tarefas?id=eq.{tarefa_id}"
+    resp = requests.patch(url, headers=headers, json=data)
+    return resp.status_code in [200, 204]
+
+def delete_task(tarefa_id):
+    url = f"{SUPABASE_URL}/rest/v1/tarefas?id=eq.{tarefa_id}"
+    resp = requests.delete(url, headers=headers)
+    return resp.status_code in [200, 204]
