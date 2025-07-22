@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, session, flash, make_response, url_for, jsonify, render_template_string, abort
-from supabase import create_client, Client
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from supabase_client import get_user_by_email, create_user, get_all_users
@@ -33,8 +32,6 @@ key = os.getenv("SUPABASE_KEY")
 
 if not url or not key:
     raise Exception("SUPABASE_URL ou SUPABASE_KEY não definidas no arquivo .env")
-
-supabase: Client = create_client(url, key)
 
 # Testando a conexão com o Supabase
 try:
@@ -127,7 +124,7 @@ def login():
         else:
             email = request.form.get('email', '').strip().lower()
             senha = request.form.get('senha')
-            lembrar = 'lembrar' in request.form
+        lembrar = 'lembrar' in request.form
 
         user = get_user_by_email(email)
         print("Usuário retornado:", user)
@@ -378,34 +375,15 @@ def projetos():
                 'bar_color': cor_projetos[t.get('projeto_origem', 'Projeto não encontrado')],
                 'colecao': t.get('colecao', '')
             })
-    # Buscar todas as coleções disponíveis no banco (não apenas das tarefas filtradas)
-    try:
-        # Buscar todas as coleções distintas do banco
-        url_colecoes = f"{SUPABASE_URL}/rest/v1/tarefas?select=colecao&colecao=not.is.null"
-        resp_colecoes = requests.get(url_colecoes, headers=headers)
-        if resp_colecoes.status_code == 200:
-            todas_tarefas_colecao = resp_colecoes.json()
-            colecoes = sorted(set(
-                (str(t.get('colecao', '') or '').strip())
-                for t in todas_tarefas_colecao
-                if (str(t.get('colecao', '') or '').strip())
-            ))
-        else:
-            # Fallback: usar apenas das tarefas filtradas
+    # Buscar todas as coleções disponíveis apenas das tarefas filtradas (não do banco inteiro)
             colecoes = sorted(set(
                 (str(t.get('colecao', '') or '').strip())
                 for t in tarefas_filtradas
                 if (str(t.get('colecao', '') or '').strip())
             ))
-    except Exception:
-        # Fallback: usar apenas das tarefas filtradas
-        colecoes = sorted(set(
-            (str(t.get('colecao', '') or '').strip())
-            for t in tarefas_filtradas
-            if (str(t.get('colecao', '') or '').strip())
-        ))
     # Buscar todos os tipos de projeto para exibir o nome da pasta
     tipos = supabase.table('tipos_projeto').select('id, nome').execute().data or []
+    tipos = [t for t in tipos if t['nome'].lower() not in ['calendarios', 'tarefas diarias']]
     tipos_dict = {t['id']: t['nome'] for t in tipos}
     for projeto in projetos:
         projeto['tipo_nome'] = tipos_dict.get(projeto.get('tipo_id'), '-')
@@ -430,9 +408,9 @@ def criar_projeto():
             data_fim = data.get('data_fim')
         else:
             nome = request.form.get('nome')
-            descricao = request.form.get('descricao', '')
-            data_inicio = request.form.get('data_inicio')
-            data_fim = request.form.get('data_fim')
+        descricao = request.form.get('descricao', '')
+        data_inicio = request.form.get('data_inicio')
+        data_fim = request.form.get('data_fim')
 
         # Validação de dados
         erro = validar_projeto(nome, data_inicio, data_fim)
@@ -1030,21 +1008,25 @@ def editar_tarefa(tarefa_id):
                     except Exception as e:
                         print(f'Erro ao enviar e-mail para responsável: {e}')
                         flash(f'Erro ao enviar e-mail para o responsável: {e}', 'danger')
-                # --- Notificação interna ---
-                try:
-                    notif_msg = f'Você foi designado para a tarefa "{tarefa_nome}" no projeto "{projeto_nome or projeto_id}".'
-                    print('[DEBUG] Notificação: projeto_id =', projeto_id)
-                    notificacao = {
-                        'mensagem': notif_msg,
-                        'tipo': 'designacao'
-                    }
-                    if projeto_id:
-                        notificacao['projeto_id'] = projeto_id
-                    if usuario_id:
-                        notificacao['usuario_id'] = usuario_id
-                    supabase.table('notificacoes').insert(notificacao).execute()
-                except Exception as e:
-                    print(f'Erro ao criar notificação interna: {e}')
+        # --- Notificação interna ---
+        try:
+            notif_msg = f'Você foi designado para a tarefa "{nome}" no projeto "{projeto_nome or projeto_id}".'
+            print('[DEBUG] Notificação: projeto_id =', projeto_id)
+            # --- Validação robusta de projeto_id ---
+            if not (isinstance(projeto_id, str) and len(projeto_id) == 36 and '-' in projeto_id):
+                projeto_id = None
+            print('[DEBUG] Notificação: projeto_id =', repr(projeto_id))
+            notificacao = {
+                'mensagem': notif_msg,
+                'tipo': 'designacao'
+            }
+            if projeto_id:
+                notificacao['projeto_id'] = projeto_id
+            if usuario_id:
+                notificacao['usuario_id'] = usuario_id
+            supabase.table('notificacoes').insert(notificacao).execute()
+        except Exception as e:
+            print(f'Erro ao criar notificação interna: {e}')
         # Enviar e-mail se o responsável foi removido
         if usuario_id_antigo and not usuario_id:
             usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", usuario_id_antigo).single().execute()
@@ -1082,29 +1064,29 @@ def editar_tarefa(tarefa_id):
                             server.starttls()
                             server.login(smtp_user, smtp_pass)
                             server.sendmail(smtp_user, responsavel_email, msg.as_string())
-                        print(f'E-mail enviado para {responsavel_email} (removido)')
+                        print(f'E-mail enviado para {responsavel_email}')
                     except Exception as e:
-                        print(f'Erro ao enviar e-mail para responsável removido: {e}')
-                        flash(f'Erro ao enviar e-mail para o responsável removido: {e}', 'danger')
-                # --- Notificação interna de remoção ---
-                try:
-                    notif_msg = f'Você não é mais o responsável pela tarefa "{tarefa_nome}" no projeto "{projeto_nome or projeto_id}".'
-                    print('[DEBUG] Notificação (remoção): projeto_id =', projeto_id)
-                    notificacao = {
-                        'mensagem': notif_msg,
-                        'tipo': 'remocao'
-                    }
-                    if projeto_id:
-                        notificacao['projeto_id'] = projeto_id
-                    if usuario_id_antigo:
-                        notificacao['usuario_id'] = usuario_id_antigo
-                    print('[DEBUG] Notificação (remoção) - projeto_id:', projeto_id)
-                    print('[DEBUG] Notificação (remoção) - usuario_id_antigo:', usuario_id_antigo)
-                    print('[DEBUG] Notificação (remoção) - notificacao dict:', notificacao)
-                    resp_notif = supabase.table('notificacoes').insert(notificacao).execute()
-                    print('[DEBUG] Resposta Supabase insert notificação:', getattr(resp_notif, 'data', None), getattr(resp_notif, 'error', None))
-                except Exception as e:
-                    print(f'Erro ao criar notificação interna de remoção: {e}')
+                        print(f'Erro ao enviar e-mail para responsável: {e}')
+                        flash(f'Erro ao enviar e-mail para o responsável: {e}', 'danger')
+        # --- Notificação interna de remoção ---
+        try:
+            notif_msg = f'Você não é mais o responsável pela tarefa "{nome}" no projeto "{projeto_nome or projeto_id}".'
+            print('[DEBUG] Notificação (remoção): projeto_id =', projeto_id)
+            notificacao = {
+                'mensagem': notif_msg,
+                'tipo': 'remocao'
+            }
+            if projeto_id:
+                notificacao['projeto_id'] = projeto_id
+            if usuario_id_antigo:
+                notificacao['usuario_id'] = usuario_id_antigo
+            print('[DEBUG] Notificação (remoção) - projeto_id:', projeto_id)
+            print('[DEBUG] Notificação (remoção) - usuario_id_antigo:', usuario_id_antigo)
+            print('[DEBUG] Notificação (remoção) - notificacao dict:', notificacao)
+            resp_notif = supabase.table('notificacoes').insert(notificacao).execute()
+            print('[DEBUG] Resposta Supabase insert notificação:', getattr(resp_notif, 'data', None), getattr(resp_notif, 'error', None))
+        except Exception as e:
+            print(f'Erro ao criar notificação interna de remoção: {e}')
         return jsonify({"sucesso": True})
 
 # Rota para excluir uma tarefa
@@ -1191,16 +1173,7 @@ def dashboard():
         resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
         projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
         if projetos_ids_visiveis:
-            query = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis)
-            if nome:
-                query = query.ilike('nome', f'%{nome}%')
-            if data_inicio:
-                query = query.gte('data_inicio', data_inicio)
-            if data_fim:
-                query = query.lte('data_fim', data_fim)
-            if tipo_id:
-                query = query.eq('tipo_id', tipo_id)
-            projetos = query.execute().data
+            projetos = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis).execute().data
         else:
             projetos = []
     # Buscar estatísticas das tarefas
@@ -1245,6 +1218,7 @@ def dashboard():
             tarefa['data_fim'] = datetime.strptime(tarefa['data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
     # Buscar todos os tipos de projeto para exibir o nome da pasta
     tipos = supabase.table('tipos_projeto').select('id, nome').execute().data or []
+    tipos = [t for t in tipos if t['nome'].lower() not in ['calendarios', 'tarefas diarias']]
     tipos_dict = {t['id']: t['nome'] for t in tipos}
     for projeto in projetos:
         projeto['tipo_nome'] = tipos_dict.get(projeto.get('tipo_id'), '-')
