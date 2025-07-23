@@ -22,6 +22,44 @@
    - Commit das alterações no GitHub com mensagem descritiva.
    - Documentação do processo e dificuldades encontradas (ex: comandos no PowerShell).
 
+---
+
+## Novas Interações (junho/2024)
+
+1. **Ajustes Visuais e Funcionais do Carousel de Projetos:**
+   - Padronização dos cards de projetos e pastas para layout moderno, quadrado, compacto e responsivo.
+   - Card de “Nova Pasta” estilizado como botão flutuante.
+   - Cards de projetos sem pasta ajustados para visual limpo.
+   - CSS para truncar nomes/datas, espaçamento dos botões, proporção dos cards.
+   - Implementação e debug do carousel horizontal: cards em linha, rolagem horizontal, responsividade, setas laterais.
+   - Diversos testes e ajustes de CSS para garantir overflow-x e rolagem real, sem hacks de largura fixa.
+   - Debug visual com cards de teste, comandos no console e inspeção de containers.
+   - Commit e push no GitHub para garantir histórico e continuidade do trabalho.
+
+---
+
+## Atualização (julho/2024)
+
+### Ajustes visuais e funcionais
+- **Filtro de coleção (Select2):**
+  - Badges compactas, truncamento com reticências, visual limpo e moderno.
+  - Ícone de pasta nas opções.
+  - Campo sempre visível, mesmo sem coleções disponíveis.
+  - Lista de coleções mostra apenas as presentes nos projetos/tarefas filtrados.
+- **Carousel de projetos:**
+  - Lazy rendering dos cards para performance.
+  - Setas e bolinhas funcionais e responsivas.
+  - Visual moderno, UX aprimorada e navegação suave.
+- **Filtros inteligentes:**
+  - Filtro de coleção dinâmico, limpo corretamente com botão “Limpar”.
+  - Filtros de nome, status, data e pasta integrados.
+- **Ajuste de espaçamento e UX nos selects:**
+  - Seta dos selects afastada da borda, igual ao campo de data.
+- **Acessibilidade e responsividade:**
+  - Navegação por teclado, aria-labels, foco visual, responsividade total.
+
+---
+
 5. **Próximos Passos:**
    - Criar tabela de notificações no Supabase.
    - Implementar backend Flask para notificações.

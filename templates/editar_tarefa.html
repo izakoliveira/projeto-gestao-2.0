@@ -64,7 +64,7 @@
                                         <i class="fas fa-calendar-plus"></i> Data de Início:
                                     </label>
                                     <input type="date" class="form-control" name="data_inicio" id="data_inicio"
-                                        value="{{ tarefa.data_inicio }}" required>
+                                        value="{{ tarefa.data_inicio }}" required {% if not pode_editar_data_inicio %}disabled{% endif %}>
                                     <div class="invalid-feedback">A data de início é obrigatória.</div>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@
                                         <i class="fas fa-calendar-check"></i> Data de Término:
                                     </label>
                                     <input type="date" class="form-control" name="data_fim" id="data_fim"
-                                        value="{{ tarefa.data_fim }}" required>
+                                        value="{{ tarefa.data_fim }}" required {% if not pode_editar_data_termino %}disabled{% endif %}>
                                     <div class="invalid-feedback">A data de término é obrigatória.</div>
                                 </div>
                             </div>
