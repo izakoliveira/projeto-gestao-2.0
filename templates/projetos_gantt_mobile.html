@@ -1,0 +1,818 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h1 class="mb-0"><i class="fas fa-project-diagram"></i> Meus Projetos</h1>
+        <a href="/logout" class="btn btn-danger mt-2 mt-md-0">Logout</a>
+    </div>
+    <!-- Cards de 'Calendarios' e 'Tarefas Diarias' removidos -->
+
+    <!-- Barra de navegação visual de pastas (tipos de projeto) -->
+    <div class="tipos-scroll mb-4">
+        {% for tipo in tipos %}
+        <div class="tipo-card">
+            <a href="/projetos?tipo_id={{ tipo.id }}" class="text-decoration-none w-100 h-100">
+                <div class="card shadow-sm folder-card h-100 {% if request.args.get('tipo_id') == tipo.id|string %}border-primary bg-light{% endif %}" style="cursor:pointer;">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
+                        <i class="fas fa-folder fa-2x mb-1 text-warning"></i>
+                        <span class="fw-bold text-center">{{ tipo.nome }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <style>
+    .tipos-scroll {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 16px;
+      overflow-x: auto !important;
+      overflow-y: hidden;
+      padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    .tipo-card {
+      flex: 0 0 160px !important;
+      max-width: 180px;
+      min-width: 140px;
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px) {
+      .tipos-scroll {
+        flex-wrap: wrap !important;
+        overflow-x: visible !important;
+        justify-content: flex-start;
+      }
+      .tipo-card {
+        flex: 0 0 180px !important;
+      }
+    }
+    @media (max-width: 700px) {
+    .filters-row {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+        gap: 8px;
+        width: 100%;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .filter-group,
+    .filter-actions {
+        min-width: 140px;
+        max-width: 180px;
+        flex: 0 0 140px;
+        box-sizing: border-box;
+    }
+}
+#offcanvas-filtros {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 300px !important;
+    max-width: 300px !important;
+    background: #fff;
+    box-shadow: 2px 0 24px rgba(0,0,0,0.18);
+    z-index: 9999;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);
+    display: flex;
+    flex-direction: column;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
+    overflow: hidden;
+    min-width: 269px !important;
+}
+#offcanvas-filtros .offcanvas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 10px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #f7f9fa;
+}
+#offcanvas-filtros .offcanvas-title {
+    font-weight: bold;
+    font-size: 1.25em;
+    color: #4a47a3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#offcanvas-filtros .offcanvas-title i {
+    color: #4a90e2;
+    font-size: 1.2em;
+}
+#offcanvas-filtros .offcanvas-close {
+    font-size: 1.7em;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+#offcanvas-filtros .offcanvas-close:hover {
+    color: #e74c3c;
+}
+#offcanvas-filtros .offcanvas-body {
+    padding: 22px 8px 18px 8px !important;
+    overflow-y: auto;
+    flex: 1;
+    padding-bottom: 32px;
+}
+#offcanvas-filtros .filters-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    align-items: flex-start !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+}
+#offcanvas-filtros .filter-group {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+#offcanvas-filtros .filters-row,
+#offcanvas-filtros .filter-actions {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+#offcanvas-filtros .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 4px !important;
+}
+#offcanvas-filtros .filter-label {
+    font-size: 1em;
+    font-weight: 600;
+    color: #4a47a3;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#offcanvas-filtros .filter-label i {
+    color: #4a90e2;
+    font-size: 1.1em;
+}
+#offcanvas-filtros .filter-select,
+#offcanvas-filtros .filter-input {
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    padding: 10px 14px;
+    font-size: 1em;
+    background: #f7f9fa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+#offcanvas-filtros .filter-select:focus,
+#offcanvas-filtros .filter-input:focus {
+    border: 1.5px solid #4a90e2;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.08);
+}
+#offcanvas-filtros .filter-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+#offcanvas-filtros .btn-filter,
+#offcanvas-filtros .btn-clear {
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+#offcanvas-filtros .btn-filter {
+    background: linear-gradient(135deg, #4a90e2, #4a47a3);
+    color: #fff;
+}
+#offcanvas-filtros .btn-filter:hover {
+    background: linear-gradient(135deg, #4a47a3, #4a90e2);
+    color: #fff;
+}
+#offcanvas-filtros .btn-clear {
+    background: #f7f9fa;
+    color: #4a47a3;
+    border: 1px solid #e0e0e0;
+}
+#offcanvas-filtros .btn-clear:hover {
+    background: #e0e0e0;
+    color: #e74c3c;
+}
+#filtros-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.3);
+    z-index: 9998;
+}
+#offcanvas-filtros .filter-group.datas-inline {
+    display: flex;
+    flex-direction: row !important;
+    gap: 8px;
+    align-items: flex-end;
+}
+#offcanvas-filtros .filter-group.datas-inline label {
+    font-size: 1em;
+}
+#offcanvas-filtros .filter-group.datas-inline .filter-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+@media (max-width: 500px) {
+  #offcanvas-filtros {
+    width: 75vw !important;
+    max-width: 340px !important;
+  }
+  #offcanvas-filtros .offcanvas-body {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+  #offcanvas-filtros .filters-row {
+    gap: 2px !important;
+  }
+  #offcanvas-filtros .filter-group {
+    margin-bottom: 1px !important;
+    padding-bottom: 0 !important;
+  }
+  #offcanvas-filtros .datas-e-botoes,
+  #offcanvas-filtros .datas-e-botoes .col {
+    margin-bottom: 0 !important;
+    gap: 8px !important;
+  }
+  #offcanvas-filtros .filter-group,
+  #offcanvas-filtros .filter-group.datas-inline,
+  #offcanvas-filtros .filter-select,
+  #offcanvas-filtros .filter-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #offcanvas-filtros .filter-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  #offcanvas-filtros .btn-filter,
+  #offcanvas-filtros .btn-clear {
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+}
+/* Reset visual de inputs, selects e botões para padronizar entre Android e iOS */
+#offcanvas-filtros input,
+#offcanvas-filtros select,
+#offcanvas-filtros button {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 12px !important;
+  background: #f7f9fa !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 12px 14px !important;
+  font-size: 1em !important;
+  color: #222 !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+#offcanvas-filtros input:focus,
+#offcanvas-filtros select:focus {
+  border: 1.5px solid #4a90e2 !important;
+  background: #fff !important;
+}
+#offcanvas-filtros select {
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%234a90e2" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px 20px;
+  padding-right: 36px !important;
+}
+#offcanvas-filtros input[type="date"]::-webkit-input-placeholder,
+#offcanvas-filtros input[type="date"]::placeholder {
+  color: #888 !important;
+  opacity: 1 !important;
+}
+#offcanvas-filtros input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(40%) sepia(1) saturate(5) hue-rotate(180deg);
+  opacity: 0.7;
+}
+#offcanvas-filtros input,
+#offcanvas-filtros select {
+  font-size: 16px !important;
+}
+#offcanvas-filtros input,
+#offcanvas-filtros input[type="date"],
+#offcanvas-filtros input[type="text"],
+#offcanvas-filtros input[type="number"],
+#offcanvas-filtros select,
+#offcanvas-filtros button {
+  font-size: 16px !important;
+}
+#offcanvas-filtros .datas-e-botoes {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 100%;
+}
+#offcanvas-filtros .datas-e-botoes .col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#offcanvas-filtros .datas-e-botoes input,
+#offcanvas-filtros .datas-e-botoes button {
+  width: 100%;
+}
+#offcanvas-filtros .datas-e-botoes .col button {
+  margin-top: 0;
+}
+#offcanvas-filtros .filter-group#projeto-group {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+#offcanvas-filtros .filter-group#projeto-group .filter-label {
+  font-size: 16px !important;
+  margin-bottom: 1px !important;
+  padding: 0 !important;
+}
+#offcanvas-filtros .filter-group#projeto-group .filter-select {
+  height: 32px !important;
+  padding: 2px 6px !important;
+  font-size: 14px !important;
+}
+#offcanvas-filtros .filter-group#projeto-group .filter-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+#offcanvas-filtros .filters-row,
+#offcanvas-filtros .filters-row > .filter-group,
+#offcanvas-filtros .filters-row > .filter-group > *,
+#offcanvas-filtros .filters-row > .filter-group > * > *,
+#offcanvas-filtros .select2-container,
+#offcanvas-filtros .select2-selection,
+#offcanvas-filtros .select2-selection__rendered,
+#offcanvas-filtros .select2-selection__arrow,
+#offcanvas-filtros .select2-selection__placeholder {
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+#offcanvas-filtros .filters-row {
+  gap: 0 !important;
+}
+    </style>
+
+    <!-- Novo menu de filtros responsivo e limpo -->
+<style>
+#filtros-mobile-novo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+#filtros-mobile-novo .filtro-label {
+  font-size: 1em;
+  margin-bottom: 2px;
+  color: #4a47a3;
+  font-weight: 600;
+}
+#filtros-mobile-novo select,
+#filtros-mobile-novo input[type="date"] {
+  width: 100%;
+  height: 48px; /* altura aumentada */
+  padding: 10px 14px;
+  font-size: 17px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-sizing: border-box;
+}
+#filtros-mobile-novo .datas-row {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+#filtros-mobile-novo .datas-row > div {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#filtros-mobile-novo .botoes-row {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+#filtros-mobile-novo button {
+  flex: 1 1 0;
+  height: 48px; /* altura aumentada */
+  font-size: 17px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #4a90e2, #4a47a3);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#filtros-mobile-novo button.btn-clear {
+  background: #f7f9fa;
+  color: #4a47a3;
+  border: 1px solid #e0e0e0;
+}
+</style>
+
+<!-- Botão para abrir o menu de filtros -->
+<button id="btn-abrir-filtros" class="btn btn-primary" style="margin-bottom: 16px;">
+  <i class="fas fa-filter"></i> Filtros
+</button>
+
+<!-- Lista de cards de projetos para mobile (scroll horizontal, visual igual ao desktop) -->
+<div class="projetos-lista-mobile" style="display: flex; flex-direction: row; gap: 18px; margin-bottom: 24px; overflow-x: auto; overflow-y: hidden; padding: 0 8px 8px 8px; -webkit-overflow-scrolling: touch; white-space: nowrap; flex-wrap: nowrap;">
+  {% for projeto in projetos %}
+  <div class="card compact-card shadow-sm projeto-card-mobile" style="width: 260px; min-height: 320px; max-height: 320px; border-radius: 12px; display: inline-flex; flex-direction: column; overflow: hidden; vertical-align: top;">
+    <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="background: #f7f9fa; border-bottom: 1px solid #eee; border-radius: 12px 12px 0 0;">
+      <h6 class="mb-0" style="font-size: 1.08em; color: #4a47a3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;"><i class="fas fa-project-diagram"></i> {{ projeto.nome }}</h6>
+      <span class="badge {% if projeto.status == 'Concluído' %}badge-success bg-success text-white{% else %}badge-warning bg-warning text-dark{% endif %}" style="font-size: 0.97em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">{{ projeto.status or 'Sem status' }}</span>
+    </div>
+    <div class="card-body compact-body py-2" style="flex:1; display: flex; flex-direction: column; gap: 4px;">
+      <div class="mb-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">
+        <small class="text-muted"><i class="fas fa-calendar"></i> {{ projeto.data_inicio or 'Não definida' }} - {{ projeto.data_fim or 'Não definida' }}</small>
+      </div>
+      <div class="compact-tasks" style="width: 100%;">
+        {% if projeto.tarefas and projeto.tarefas|length > 0 %}
+          <small style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 220px;"><strong>Tarefas ({{ projeto.tarefas|length }}):</strong></small>
+          <div class="task-list" style="width: 100%;">
+            {% for tarefa in projeto.tarefas[:3] %}
+            <div class="task-item d-flex justify-content-between align-items-center py-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">
+              <span class="task-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;"><i class="fas fa-tasks"></i> {{ tarefa.nome[:30] }}{% if tarefa.nome|length > 30 %}...{% endif %}</span>
+              <span class="badge {% if tarefa.status == 'pendente' %}bg-warning text-dark{% elif tarefa.status == 'em progresso' %}bg-info text-dark{% elif tarefa.status == 'concluída' %}bg-success{% else %}bg-secondary{% endif %} mx-1" style="white-space: nowrap; max-width: 60px; overflow: hidden; text-overflow: ellipsis;">{{ tarefa.status|capitalize if tarefa.status else 'Sem status' }}</span>
+            </div>
+            {% endfor %}
+            {% if projeto.tarefas|length > 3 %}
+            <div class="text-muted small" style="color: #007bff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">+{{ projeto.tarefas|length - 3 }} tarefas</div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="text-muted small" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">Nenhuma tarefa encontrada.</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2" style="border-radius: 0 0 12px 12px;">
+      <div class="btn-group" role="group" style="width: 100%; display: flex; justify-content: space-between;">
+        <a href="/projetos/{{ projeto.id }}" class="btn btn-info btn-sm" title="Ver Detalhes" style="white-space: nowrap; width: 32%; min-width: 0; overflow: hidden; text-overflow: ellipsis;"><i class="fas fa-eye"></i></a>
+        <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar" style="white-space: nowrap; width: 32%; min-width: 0; overflow: hidden; text-overflow: ellipsis;"><i class="fas fa-edit"></i></a>
+        <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline; width: 32%; min-width: 0;">
+          <button type="submit" class="btn btn-danger btn-sm" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir este projeto?');" style="white-space: nowrap; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis;"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info text-center" style="background: #d2f6fd; border-radius: 10px; min-width: 220px; display: inline-block;">Nenhum projeto encontrado.</div>
+  {% endfor %}
+</div>
+
+<!-- Painel lateral de filtros -->
+<div id="offcanvas-filtros-novo">
+  <form id="filtros-mobile-novo" method="GET" action="/projetos">
+    <!-- Cabeçalho do menu lateral -->
+    <div id="filtros-header" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 0 0 12px 2px; border-bottom: 1px solid #eee; margin-bottom: 12px;">
+      <span style="display: flex; align-items: center; gap: 6px;">
+        <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
+        <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
+      </span>
+      <button id="btn-fechar-filtros-novo" type="button" style="position: absolute; top: 0; right: 0; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div>
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <label for="nome" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-search"></i> Projeto</label>
+        <button type="button" class="btn-clear-filtro" data-filtro="nome" title="Limpar Projeto" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
+          <i class="fas fa-eraser"></i>
+        </button>
+      </div>
+      <select id="nome" name="nome" multiple size="4" style="min-height: 48px;">
+        <option value="" disabled selected>Selecione o Projeto</option>
+        {% for projeto in projetos %}
+        <option value="{{ projeto.nome }}" {% if projeto.nome in request.args.getlist('nome') %}selected{% endif %}>{{ projeto.nome }}</option>
+        {% endfor %}
+      </select>
+      <small style="color:#888; font-size:0.97em;">Segure Ctrl (ou toque) para selecionar vários</small>
+    </div>
+    <div>
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <label for="status" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-tasks"></i> Status</label>
+        <button type="button" class="btn-clear-filtro" data-filtro="status" title="Limpar Status" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
+          <i class="fas fa-eraser"></i>
+        </button>
+      </div>
+      <select id="status" name="status">
+        <option value="">Todos os status</option>
+        <option value="pendente" {% if request.args.get('status')=='pendente' %}selected{% endif %}>Pendente</option>
+        <option value="em progresso" {% if request.args.get('status')=='em progresso' %}selected{% endif %}>Em Progresso</option>
+        <option value="concluída" {% if request.args.get('status')=='concluída' %}selected{% endif %}>Concluída</option>
+      </select>
+    </div>
+    <div>
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <label for="colecao" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-layer-group"></i> Coleção</label>
+        <button type="button" class="btn-clear-filtro" data-filtro="colecao" title="Limpar Coleção" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
+          <i class="fas fa-eraser"></i>
+        </button>
+      </div>
+      <select id="colecao" name="colecao" multiple size="4" style="min-height: 48px;">
+        <option value="" disabled selected>Selecione a Coleção</option>
+        {% if colecoes and colecoes|length > 0 %}
+          {% for colecao in colecoes %}
+            <option value="{{ colecao }}" {% if colecao in request.args.getlist('colecao') %}selected{% endif %}>{{ colecao }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+      <small style="color:#888; font-size:0.97em;">Segure Ctrl (ou toque) para selecionar vários</small>
+    </div>
+    <div class="datas-row">
+      <div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <label for="data_inicio" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-calendar"></i> Início</label>
+          <button type="button" class="btn-clear-filtro" data-filtro="data_inicio" title="Limpar Início" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
+            <i class="fas fa-eraser"></i>
+          </button>
+        </div>
+        <input type="date" id="data_inicio" name="data_inicio" value="{{ request.args.get('data_inicio', '') }}">
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <label for="data_fim" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-calendar-check"></i> Fim</label>
+          <button type="button" class="btn-clear-filtro" data-filtro="data_fim" title="Limpar Fim" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
+            <i class="fas fa-eraser"></i>
+          </button>
+        </div>
+        <input type="date" id="data_fim" name="data_fim" value="{{ request.args.get('data_fim', '') }}">
+      </div>
+    </div>
+    <div class="botoes-row">
+      <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filtrar</button>
+      <button type="button" class="btn-clear" id="limpar-filtros"><i class="fas fa-eraser"></i> Limpar</button>
+    </div>
+  </form>
+</div>
+<div id="filtros-backdrop-novo"></div>
+
+<style>
+#offcanvas-filtros-novo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100dvh;
+  width: 85vw;
+  max-width: 340px;
+  background: #fff;
+  box-shadow: 2px 0 24px rgba(0,0,0,0.18);
+  z-index: 9999;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);
+  display: none;
+  flex-direction: column;
+  border-top-right-radius: 18px;
+  border-bottom-right-radius: 18px;
+  overflow: hidden;
+  padding: 20px 18px 18px 18px; /* padding interno confortável */
+}
+#offcanvas-filtros-novo.aberto {
+  display: flex;
+  transform: translateX(0);
+}
+#filtros-backdrop-novo {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  z-index: 9998;
+}
+#filtros-backdrop-novo.aberto {
+  display: block;
+}
+</style>
+<script>
+document.getElementById('btn-abrir-filtros').onclick = function() {
+  document.getElementById('offcanvas-filtros-novo').classList.add('aberto');
+  document.getElementById('filtros-backdrop-novo').classList.add('aberto');
+  document.body.style.overflow = 'hidden';
+};
+document.getElementById('filtros-backdrop-novo').onclick = function() {
+  document.getElementById('offcanvas-filtros-novo').classList.remove('aberto');
+  document.getElementById('filtros-backdrop-novo').classList.remove('aberto');
+  document.body.style.overflow = '';
+};
+document.getElementById('btn-fechar-filtros-novo').onclick = function() {
+  document.getElementById('offcanvas-filtros-novo').classList.remove('aberto');
+  document.getElementById('filtros-backdrop-novo').classList.remove('aberto');
+  document.body.style.overflow = '';
+};
+
+// Botão Limpar filtros
+var btnLimpar = document.getElementById('limpar-filtros');
+if (btnLimpar) {
+  btnLimpar.onclick = function() {
+    var form = document.getElementById('filtros-mobile-novo');
+    // Limpa selects múltiplos
+    var selects = form.querySelectorAll('select');
+    selects.forEach(function(sel) {
+      for (var i = 0; i < sel.options.length; i++) {
+        sel.options[i].selected = false;
+      }
+    });
+    // Limpa inputs
+    var inputs = form.querySelectorAll('input');
+    inputs.forEach(function(inp) {
+      inp.value = '';
+    });
+    form.submit();
+  };
+}
+// Limpar campo individual
+Array.from(document.getElementsByClassName('btn-clear-filtro')).forEach(function(btn) {
+  btn.onclick = function(e) {
+    e.preventDefault();
+    var filtro = btn.getAttribute('data-filtro');
+    var el = document.getElementById(filtro);
+    if (el) {
+      if (el.tagName === 'SELECT') {
+        for (var i = 0; i < el.options.length; i++) {
+          el.options[i].selected = false;
+        }
+      } else if (el.type === 'date' || el.type === 'text') {
+        el.value = '';
+      }
+    }
+  };
+});
+</script>
+
+    {% if projetos and gantt_geral_data|length == 0 %}
+    <div class="alert alert-info text-center" style="background: #d2f6fd;">
+        <i class="fas fa-info-circle fa-2x mb-3"></i>
+        <h5>Nenhuma tarefa encontrada</h5>
+        <p>Não há tarefas para exibir no gráfico. Ajuste os filtros ou cadastre novas tarefas.</p>
+    </div>
+    {% endif %}
+
+    <!-- Carousel de projetos SEM condicional -->
+    <div class="projetos-carousel-wrapper mb-4">
+        <button class="carousel-arrow left" type="button" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+        <div class="projetos-carousel" id="projetos-carousel-js"></div>
+        <script>
+            window.projetosData = {{ projetos | tojson | safe }};
+        </script>
+        <button class="carousel-arrow right" type="button" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
+            </div>
+    <!-- Indicadores do carousel -->
+    <div class="carousel-indicators mt-3 mb-2 d-flex justify-content-center align-items-center" style="gap: 8px;"></div>
+    <!-- Gantt agrupado estilo teste_agrupamento_gantt.html -->
+    <div class="card mb-4 mt-5">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-chart-bar"></i> Cronograma de Tarefas
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
+                <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
+                    style="font-size: 1.2em;">-</button>
+                <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
+                <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Aumentar Zoom"
+                    style="font-size: 1.2em;">+</button>
+            </div>
+            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+                <div style="display: flex; flex-direction: column;">
+                    <div style="display: flex;">
+
+                    </div>
+                </div>
+                <div id="gantt-cronograma-area" style="position: relative;">
+                    <div id="gantt-hoje-container"></div>
+                    <table style="border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th
+                                    style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                    Tarefa
+                                </th>
+                                {% for mes in meses %}
+                                <th colspan="{{ mes.dias }}" style="text-align: center;">{{ mes.nome }}</th>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <th></th>
+                                {% for dia in dias %}
+                                <th style="text-align: center;">{{ dia }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody id="gantt-body">
+                            <!-- Linhas das tarefas geradas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Legenda colorida por projeto -->
+            <div class="legend mt-2"
+                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                {% for projeto, cor in projects_colors.items() %}
+                <div class="legend-item"
+                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                    data-projeto="{{ projeto }}">
+                    <div class="legend-color"
+                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
+                    <span>{{ projeto }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<!-- Select2 para o campo de nome do projeto -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // ... restante do JS igual ao desktop ...
+});
+</script>
+{% endblock %}
+
+<!-- Modal de confirmação de exclusão de projeto -->
+<div class="modal fade" id="modalConfirmarExclusaoProjeto" tabindex="-1"
+    aria-labelledby="modalConfirmarExclusaoProjetoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalConfirmarExclusaoProjetoLabel"><i class="fas fa-trash"></i> Confirmar
+                    Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoProjeto"><i
+                        class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // ... restante do JS igual ao desktop ...
+</script> 

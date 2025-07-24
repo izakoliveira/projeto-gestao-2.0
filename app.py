@@ -396,7 +396,15 @@ def projetos():
     restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
     is_admin = session.get('user_email') == 'izak.gomes59@gmail.com'
     pode_criar_projeto = is_admin or not restricoes_usuario.get('restr_criar_projeto', False)
-    return render_template('projetos_gantt_basico.html', projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, pode_criar_projeto=pode_criar_projeto)
+    
+    # Detectar se é dispositivo móvel
+    user_agent = request.headers.get('User-Agent', '')
+    is_mobile = is_mobile_device(user_agent)
+    
+    # Escolher template baseado no dispositivo
+    template_name = 'projetos_gantt_mobile.html' if is_mobile else 'projetos_gantt_basico.html'
+    
+    return render_template(template_name, projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, pode_criar_projeto=pode_criar_projeto)
 
 # Rota de criação de projeto
 @app.route('/projetos/criar', methods=['GET', 'POST'])
@@ -1802,6 +1810,20 @@ def mover_projeto_para_pasta(projeto_id):
             return {'sucesso': False, 'erro': 'Erro ao atualizar projeto.'}, 500
     except Exception as e:
         return {'sucesso': False, 'erro': str(e)}, 500
+
+# Função para detectar dispositivos móveis
+def is_mobile_device(user_agent):
+    """Detecta se o dispositivo é móvel baseado no User-Agent"""
+    if not user_agent:
+        return False
+    
+    user_agent = user_agent.lower()
+    mobile_keywords = [
+        'mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 
+        'windows phone', 'opera mini', 'mobile safari', 'tablet'
+    ]
+    
+    return any(keyword in user_agent for keyword in mobile_keywords)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

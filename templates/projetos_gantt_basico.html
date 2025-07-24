@@ -698,14 +698,41 @@ body, html, .container, .row {
 
     @media (max-width: 900px) {
         .filters-row {
-            flex-direction: column;
-            gap: 12px;
+            flex-direction: row;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            width: 100%;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
         }
-
         .filter-group,
         .filter-actions {
-            max-width: 100%;
-            min-width: 100%;
+            min-width: 180px;
+            max-width: 220px;
+            flex: 0 0 180px;
+            box-sizing: border-box;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .filters-row {
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            overflow-y: hidden;
+            gap: 8px;
+            width: 100%;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .filter-group,
+        .filter-actions {
+            min-width: 160px;
+            max-width: 220px;
+            flex: 0 0 160px;
+            box-sizing: border-box;
         }
     }
 
