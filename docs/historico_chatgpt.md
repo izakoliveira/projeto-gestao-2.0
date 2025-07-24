@@ -69,3 +69,14 @@
 ---
 
 *Este histórico é atualizado periodicamente para registrar as principais decisões, implementações e próximos passos do projeto.* 
+
+---
+
+## Atualização (julho/2024) — Cards Mobile
+
+- Cards de projetos no mobile agora estão idênticos ao desktop: mesmo layout, botões, tarefas, status, datas e visual quadradinho.
+- Scroll horizontal garantido, sem responsividade: largura e altura fixas, nada quebra de linha, tudo com overflow e reticências.
+- Ajustes de CSS para garantir que todos os elementos fiquem em linha única e o card mantenha o tamanho original.
+- Commit e push realizados no GitHub para registrar as alterações.
+
+--- 
