@@ -6,7 +6,6 @@
         <h1 class="mb-0"><i class="fas fa-project-diagram"></i> Meus Projetos</h1>
         <a href="/logout" class="btn btn-danger mt-2 mt-md-0">Logout</a>
     </div>
-    <!-- Cards de 'Calendarios' e 'Tarefas Diarias' removidos -->
 
     <!-- Barra de navegação visual de pastas (tipos de projeto) -->
     <div class="tipos-scroll mb-4">
@@ -23,6 +22,132 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Carousel de projetos mobile -->
+    <div class="carousel-wrapper">
+        <button class="carousel-arrow left" type="button" aria-label="Anterior" onclick="scrollCarousel('left')">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="carousel-cards" id="carousel-cards">
+            {% if projetos %}
+                {% for projeto in projetos %}
+                <div class="projeto-card-mobile" style="display:inline-flex!important;vertical-align:top!important;">
+                    <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                        <h6 class="mb-0" style="font-size: 0.9em;"><i class="fas fa-project-diagram"></i> {{ projeto.nome[:15] }}{% if projeto.nome|length > 15 %}...{% endif %}</h6>
+                        <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}" style="font-size: 0.7em;">
+                            {{ projeto.status or 'Sem status' }}
+                        </span>
+                    </div>
+                    <div class="card-body compact-body py-2" style="flex: 1; overflow: hidden;">
+                        <div class="mb-1">
+                            <small class="text-muted" style="font-size: 0.75em;">
+                                <i class="fas fa-calendar"></i> {{ projeto.data_inicio or 'Não definida' }} - {{ projeto.data_fim or 'Não definida' }}
+                            </small>
+                        </div>
+                        <div class="compact-tasks" style="font-size: 0.8em;">
+                            {% if projeto.tarefas %}
+                                {% for tarefa in projeto.tarefas[:2] %}
+                                <div class="task-item" style="margin-bottom: 4px; padding: 2px 0;">
+                                    <i class="fas fa-tasks" style="color: #6c757d; margin-right: 4px;"></i>
+                                    <span style="color: #495057;">{{ tarefa.nome[:20] }}{% if tarefa.nome|length > 20 %}...{% endif %}</span>
+                                </div>
+                                {% endfor %}
+                                {% if projeto.tarefas|length > 2 %}
+                                <div class="task-item" style="margin-top: 4px;">
+                                    <small class="text-muted">+{{ projeto.tarefas|length - 2 }} mais tarefas</small>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="task-item">
+                                    <small class="text-muted">Nenhuma tarefa</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2" style="border-top: 1px solid #e9ecef;">
+                        <div class="card-actions" style="display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%;">
+                            <a href="/projetos/{{ projeto.id }}" class="btn btn-info btn-sm" title="Ver Detalhes" style="font-size: 0.7em; padding: 2px 6px; flex: 1 1 0; min-width: 0;">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar" style="font-size: 0.7em; padding: 2px 6px; flex: 1 1 0; min-width: 0;">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline; flex: 1 1 0; min-width: 0;">
+                                <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto" data-projeto-id="{{ projeto.id }}" title="Excluir" style="font-size: 0.7em; padding: 2px 6px; width: 100%;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info" style="min-width: 120px; text-align: center;">
+                    <i class="fas fa-info-circle"></i>
+                    <br>Nenhum projeto encontrado
+                </div>
+            {% endif %}
+        </div>
+        <button class="carousel-arrow right" type="button" aria-label="Próximo" onclick="scrollCarousel('right')">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- Indicadores do carousel -->
+    <div class="carousel-indicators" id="carousel-indicators" style="display:flex;justify-content:center;align-items:center;width:100%;background:transparent;position:relative;z-index:1;margin:20px 0 24px 0;"></div>
+
+    <!-- Gantt agrupado estilo desktop -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Cronograma Geral</h5>
+            <div class="gantt-controls">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-out" title="Diminuir zoom">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span class="btn btn-outline-secondary btn-sm disabled" id="zoom-label">100%</span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-in" title="Aumentar zoom">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+                <div style="display: flex; flex-direction: column;">
+                    <div style="display: flex;">
+                    </div>
+                </div>
+                <div id="gantt-cronograma-area" style="position: relative;">
+                    <div id="gantt-hoje-container"></div>
+                    <table style="border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 180px; min-width: 180px; max-width: 180px; text-align: left; padding: 8px;">
+                                    Tarefa
+                                </th>
+                                {# Cabeçalho dos meses e dias removidos #}
+                            </tr>
+                        </thead>
+                        <tbody id="gantt-body">
+                            <!-- Linhas das tarefas geradas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Legenda colorida por projeto -->
+            <div class="legend mt-2" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                {% for projeto, cor in projects_colors.items() %}
+                <div class="legend-item" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;" data-projeto="{{ projeto }}">
+                    <div class="legend-color" style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
+                    <span>{{ projeto }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
     <style>
     .tipos-scroll {
       display: flex !important;
@@ -52,742 +177,968 @@
         flex: 0 0 180px !important;
       }
     }
-    @media (max-width: 700px) {
-    .filters-row {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        overflow-y: hidden;
-        gap: 8px;
+
+.carousel-wrapper {
+  position: relative;
         width: 100%;
-        padding-bottom: 8px;
-        -webkit-overflow-scrolling: touch;
-    }
-    .filter-group,
-    .filter-actions {
-        min-width: 140px;
-        max-width: 180px;
-        flex: 0 0 140px;
-        box-sizing: border-box;
-    }
+  margin-bottom: 24px;
 }
-#offcanvas-filtros {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100dvh;
-    width: 300px !important;
-    max-width: 300px !important;
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
     background: #fff;
-    box-shadow: 2px 0 24px rgba(0,0,0,0.18);
-    z-index: 9999;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
     display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  cursor: pointer;
+  font-size: 1.3em;
+  color: #4a47a3;
+  transition: background 0.2s;
+  opacity: 0.85;
+}
+.carousel-arrow.left { left: -8px; }
+.carousel-arrow.right { right: -8px; }
+.carousel-arrow:active { background: #e3f0ff; }
+.carousel-cards {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 8px 8px 8px;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap !important;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  margin-bottom: 12px;
+}
+.carousel-cards .projeto-card-mobile {
+  display: inline-flex !important;
+  vertical-align: top !important;
+  width: 170px !important;
+  height: 170px !important;
+  min-width: 170px !important;
+  max-width: 170px !important;
+  min-height: 170px !important;
+  max-height: 170px !important;
+  border-radius: 12px;
     flex-direction: column;
-    border-top-right-radius: 18px;
-    border-bottom-right-radius: 18px;
     overflow: hidden;
-    min-width: 269px !important;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: box-shadow 0.2s;
+  scroll-snap-align: center;
 }
-#offcanvas-filtros .offcanvas-header {
+.carousel-indicators {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 20px 10px 20px;
-    border-bottom: 1px solid #f0f0f0;
-    background: #f7f9fa;
-}
-#offcanvas-filtros .offcanvas-title {
-    font-weight: bold;
-    font-size: 1.25em;
-    color: #4a47a3;
-    display: flex;
+  justify-content: center;
     align-items: center;
     gap: 8px;
+  margin-top: 36px;
+  margin-bottom: 8px;
 }
-#offcanvas-filtros .offcanvas-title i {
-    color: #4a90e2;
-    font-size: 1.2em;
-}
-#offcanvas-filtros .offcanvas-close {
-    font-size: 1.7em;
-    color: #888;
-    background: none;
-    border: none;
+.carousel-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d0d0d0;
+  transition: background 0.2s, transform 0.2s;
     cursor: pointer;
-    transition: color 0.2s;
 }
-#offcanvas-filtros .offcanvas-close:hover {
-    color: #e74c3c;
+.carousel-indicator.active {
+  background: #4a47a3;
+  transform: scale(1.2);
 }
-#offcanvas-filtros .offcanvas-body {
-    padding: 22px 8px 18px 8px !important;
-    overflow-y: auto;
-    flex: 1;
-    padding-bottom: 32px;
+
+/* Estilos do Gantt */
+.gantt-header {
+  display: flex;
+  border-bottom: 2px solid #dee2e6;
+  background: #f8f9fa;
+  font-weight: bold;
 }
-#offcanvas-filtros .filters-row {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 2px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    align-items: flex-start !important;
-    overflow-x: auto !important;
-    flex-wrap: nowrap !important;
+
+.gantt-header-cell {
+  padding: 10px;
+  text-align: center;
+  border-right: 1px solid #dee2e6;
+  min-width: 100px;
+  transition: min-width 0.3s ease;
 }
-#offcanvas-filtros .filter-group {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+
+.gantt-day {
+  padding: 10px;
+  border-right: 1px solid #dee2e6;
+  min-width: 100px;
+  text-align: center;
+  position: relative;
+  transition: min-width 0.3s ease;
 }
-#offcanvas-filtros .filters-row,
-#offcanvas-filtros .filter-actions {
-    width: 100% !important;
-    box-sizing: border-box !important;
+
+.gantt-controls .btn-group {
+  margin-left: 5px;
 }
-#offcanvas-filtros .filter-group {
+
+.gantt-controls .btn {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.gantt-controls .btn.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.gantt-row {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 4px !important;
+  border-bottom: 1px solid #dee2e6;
+  min-height: 40px;
 }
-#offcanvas-filtros .filter-label {
-    font-size: 1em;
-    font-weight: 600;
-    color: #4a47a3;
-    margin-bottom: 2px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+
+.gantt-row:nth-child(even) {
+  background: #f8f9fa;
 }
-#offcanvas-filtros .filter-label i {
-    color: #4a90e2;
-    font-size: 1.1em;
+
+.gantt-task-name,
+td[style*='min-width: 200px'] {
+  font-size: 13px !important;
 }
-#offcanvas-filtros .filter-select,
-#offcanvas-filtros .filter-input {
-    border-radius: 12px;
-    border: 1px solid #e0e0e0;
-    padding: 10px 14px;
-    font-size: 1em;
-    background: #f7f9fa;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: border 0.2s, box-shadow 0.2s;
-    outline: none;
-    width: 100%;
-    box-sizing: border-box;
-    max-width: 100%;
+
+.gantt-task-bar {
+  position: absolute;
+  height: 20px;
+  background: #007bff;
+  border-radius: 3px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+  z-index: 10;
+  opacity: 1;
 }
-#offcanvas-filtros .filter-select:focus,
-#offcanvas-filtros .filter-input:focus {
-    border: 1.5px solid #4a90e2;
-    background: #fff;
-    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.08);
+
+.gantt-task-bar:hover {
+  background: #0056b3;
 }
-#offcanvas-filtros .filter-actions {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    margin: 0 !important;
-    padding: 0 !important;
+
+/* Tooltip personalizado */
+.gantt-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 300px;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
-#offcanvas-filtros .btn-filter,
-#offcanvas-filtros .btn-clear {
-    flex: 1 1 0 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    margin: 0 !important;
+
+.gantt-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid rgba(0, 0, 0, 0.9);
 }
-#offcanvas-filtros .btn-filter {
-    background: linear-gradient(135deg, #4a90e2, #4a47a3);
+
+.gantt-tooltip-title {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 8px;
     color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 4px;
 }
-#offcanvas-filtros .btn-filter:hover {
-    background: linear-gradient(135deg, #4a47a3, #4a90e2);
-    color: #fff;
+
+.gantt-tooltip-project {
+  color: #ffd700;
+  font-weight: 500;
+  margin-bottom: 6px;
 }
-#offcanvas-filtros .btn-clear {
-    background: #f7f9fa;
-    color: #4a47a3;
-    border: 1px solid #e0e0e0;
+
+.gantt-tooltip-info {
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
 }
-#offcanvas-filtros .btn-clear:hover {
-    background: #e0e0e0;
-    color: #e74c3c;
+
+.gantt-tooltip-label {
+  color: #ccc;
+  font-size: 11px;
 }
-#filtros-backdrop {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.3);
-    z-index: 9998;
+
+.gantt-tooltip-value {
+  color: #fff;
+  font-weight: 500;
+  text-align: right;
 }
-#offcanvas-filtros .filter-group.datas-inline {
-    display: flex;
-    flex-direction: row !important;
-    gap: 8px;
-    align-items: flex-end;
+
+.gantt-tooltip-days {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
-#offcanvas-filtros .filter-group.datas-inline label {
-    font-size: 1em;
+
+.gantt-tooltip-days .gantt-tooltip-info {
+  margin-bottom: 2px;
 }
-#offcanvas-filtros .filter-group.datas-inline .filter-input {
-    width: 100%;
-    box-sizing: border-box;
+
+.gantt-task-bar.pendente {
+  background: #ffc107;
 }
-@media (max-width: 500px) {
-  #offcanvas-filtros {
-    width: 75vw !important;
-    max-width: 340px !important;
-  }
-  #offcanvas-filtros .offcanvas-body {
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-  }
-  #offcanvas-filtros .filters-row {
-    gap: 2px !important;
-  }
-  #offcanvas-filtros .filter-group {
-    margin-bottom: 1px !important;
-    padding-bottom: 0 !important;
-  }
-  #offcanvas-filtros .datas-e-botoes,
-  #offcanvas-filtros .datas-e-botoes .col {
-    margin-bottom: 0 !important;
-    gap: 8px !important;
-  }
-  #offcanvas-filtros .filter-group,
-  #offcanvas-filtros .filter-group.datas-inline,
-  #offcanvas-filtros .filter-select,
-  #offcanvas-filtros .filter-input {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  #offcanvas-filtros .filter-actions {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  #offcanvas-filtros .btn-filter,
-  #offcanvas-filtros .btn-clear {
-    flex: 1 1 0 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-  }
+
+.gantt-task-bar.em-progresso {
+  background: #17a2b8;
 }
-/* Reset visual de inputs, selects e botões para padronizar entre Android e iOS */
-#offcanvas-filtros input,
-#offcanvas-filtros select,
-#offcanvas-filtros button {
-  -webkit-appearance: none;
-  appearance: none;
-  border-radius: 12px !important;
-  background: #f7f9fa !important;
-  border: 1px solid #e0e0e0 !important;
-  box-shadow: none !important;
-  outline: none !important;
-  padding: 12px 14px !important;
-  font-size: 1em !important;
-  color: #222 !important;
-  height: 44px !important;
-  min-height: 44px !important;
-  box-sizing: border-box !important;
-  transition: border 0.2s, box-shadow 0.2s;
+
+.gantt-task-bar.concluida {
+  background: #28a745;
 }
-#offcanvas-filtros input:focus,
-#offcanvas-filtros select:focus {
-  border: 1.5px solid #4a90e2 !important;
-  background: #fff !important;
+
+.gantt-day {
+  padding: 10px;
+  border-right: 1px solid #dee2e6;
+  min-width: 100px;
+  text-align: center;
+  position: relative;
 }
-#offcanvas-filtros select {
-  background-image: url('data:image/svg+xml;utf8,<svg fill="%234a90e2" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 20px 20px;
-  padding-right: 36px !important;
+
+.gantt-today {
+  background: rgba(255, 193, 7, 0.2);
+  font-weight: bold;
 }
-#offcanvas-filtros input[type="date"]::-webkit-input-placeholder,
-#offcanvas-filtros input[type="date"]::placeholder {
-  color: #888 !important;
+
+.gantt-weekend {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+#gantt-timeline {
+  position: relative;
+  min-width: 800px;
+  background: #fff;
+  overflow: visible;
+}
+
+.gantt-task-bar {
+  position: absolute;
+  height: 20px;
+  background: #007bff;
+  border-radius: 3px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+  z-index: 10;
+  opacity: 1;
+}
+
+.gantt-task-bar:hover {
+  background: #0056b3;
+}
+
+/* Coluna fixa para Tarefa */
+#gantt-custom th:first-child,
+#gantt-custom td:first-child {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 50;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cabeçalho de meses e dias do Gantt */
+#gantt-date-header {
+  font-family: inherit;
+}
+
+/* CSS extra para centralizar e aumentar altura do cabeçalho */
+.gantt-dia-cell {
+  font-size: 11px;
+  color: #888;
+  background: #f8f9fa;
+  border-right: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+}
+
+.gantt-hoje-linha {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(to bottom,
+          #e74c3c 0px, #e74c3c 8px,
+          transparent 8px, transparent 16px);
+  z-index: 5;
+  pointer-events: none;
+}
+
+#gantt-hoje-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+#gantt-cronograma-area {
+  position: relative;
+}
+
+.gantt-row-compact {
+  height: 16px !important;
+}
+
+.gantt-bar-compact {
+  height: 18px !important;
+  line-height: 18px !important;
+  font-size: 11px !important;
+  top: 2px !important;
+}
+
+.gantt-tooltip-detalhado {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 300px;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gantt-tooltip-detalhado .gantt-tooltip-title {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 4px;
+}
+
+.gantt-tooltip-detalhado .gantt-tooltip-info {
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.gantt-tooltip-detalhado .gantt-tooltip-label {
+  color: #ccc;
+  font-size: 11px;
+}
+
+.gantt-tooltip-detalhado .gantt-tooltip-value {
+  color: #fff;
+  font-weight: 500;
+  text-align: right;
+}
+
+.gantt-row-compact td,
+.gantt-row-compact th {
+  height: 16px !important;
+  min-height: 16px !important;
+  max-height: 24px !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  font-size: 13px !important;
+}
+
+.gantt-h-linha {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #dee2e6;
+  z-index: 0;
+}
+
+.gantt-bar-compact.evidencia {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 20;
   opacity: 1 !important;
+  border: none !important;
 }
-#offcanvas-filtros input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(40%) sepia(1) saturate(5) hue-rotate(180deg);
-  opacity: 0.7;
+
+.gantt-bar-compact.apagada {
+  opacity: 0.25 !important;
+  filter: grayscale(0.5);
 }
-#offcanvas-filtros input,
-#offcanvas-filtros select {
-  font-size: 16px !important;
+
+.legend-item.selecionada {
+  outline: 2px solid #222;
+  outline-offset: 2px;
+  background: #f3f3f3;
+  border-radius: 5px;
 }
-#offcanvas-filtros input,
-#offcanvas-filtros input[type="date"],
-#offcanvas-filtros input[type="text"],
-#offcanvas-filtros input[type="number"],
-#offcanvas-filtros select,
-#offcanvas-filtros button {
-  font-size: 16px !important;
+
+#gantt-custom.dragging {
+  cursor: grabbing !important;
+  user-select: none !important;
 }
-#offcanvas-filtros .datas-e-botoes {
+
+/* Estilo para linha evidenciada no Gantt */
+.gantt-row-evidenciada {
+  background: #e3f0ff !important;
+  box-shadow: inset 0 0 0 2px #007bff !important;
+}
+
+.gantt-row-evidenciada td {
+  background: #e3f0ff !important;
+  font-weight: bold !important;
+}
+.card-footer.compact-footer .card-actions {
   display: flex;
-  flex-direction: row;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
   width: 100%;
+  padding: 0;
 }
-#offcanvas-filtros .datas-e-botoes .col {
+.card-footer.compact-footer .btn,
+.card-footer.compact-footer form {
   flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  height: 48px;
+  padding: 0;
+  margin: 0;
+  border-radius: 0 !important;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  justify-content: center;
 }
-#offcanvas-filtros .datas-e-botoes input,
-#offcanvas-filtros .datas-e-botoes button {
+.card-footer.compact-footer .btn {
   width: 100%;
-}
-#offcanvas-filtros .datas-e-botoes .col button {
-  margin-top: 0;
-}
-#offcanvas-filtros .filter-group#projeto-group {
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-#offcanvas-filtros .filter-group#projeto-group .filter-label {
-  font-size: 16px !important;
-  margin-bottom: 1px !important;
+  height: 48px;
+  font-size: 1.2em;
   padding: 0 !important;
-}
-#offcanvas-filtros .filter-group#projeto-group .filter-select {
-  height: 32px !important;
-  padding: 2px 6px !important;
-  font-size: 14px !important;
-}
-#offcanvas-filtros .filter-group#projeto-group .filter-select {
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-#offcanvas-filtros .filters-row,
-#offcanvas-filtros .filters-row > .filter-group,
-#offcanvas-filtros .filters-row > .filter-group > *,
-#offcanvas-filtros .filters-row > .filter-group > * > *,
-#offcanvas-filtros .select2-container,
-#offcanvas-filtros .select2-selection,
-#offcanvas-filtros .select2-selection__rendered,
-#offcanvas-filtros .select2-selection__arrow,
-#offcanvas-filtros .select2-selection__placeholder {
   margin: 0 !important;
-  padding: 0 !important;
-  gap: 0 !important;
+  border-radius: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-#offcanvas-filtros .filters-row {
-  gap: 0 !important;
+.card-footer.compact-footer .btn i {
+  margin: 0;
+  font-size: 1.2em;
 }
     </style>
-
-    <!-- Novo menu de filtros responsivo e limpo -->
-<style>
-#filtros-mobile-novo {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-#filtros-mobile-novo .filtro-label {
-  font-size: 1em;
-  margin-bottom: 2px;
-  color: #4a47a3;
-  font-weight: 600;
-}
-#filtros-mobile-novo select,
-#filtros-mobile-novo input[type="date"] {
-  width: 100%;
-  height: 48px; /* altura aumentada */
-  padding: 10px 14px;
-  font-size: 17px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  box-sizing: border-box;
-}
-#filtros-mobile-novo .datas-row {
-  display: flex;
-  flex-direction: row;
-  gap: 4px;
-}
-#filtros-mobile-novo .datas-row > div {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-#filtros-mobile-novo .botoes-row {
-  display: flex;
-  flex-direction: row;
-  gap: 4px;
-}
-#filtros-mobile-novo button {
-  flex: 1 1 0;
-  height: 48px; /* altura aumentada */
-  font-size: 17px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #4a90e2, #4a47a3);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-#filtros-mobile-novo button.btn-clear {
-  background: #f7f9fa;
-  color: #4a47a3;
-  border: 1px solid #e0e0e0;
-}
-</style>
-
-<!-- Botão para abrir o menu de filtros -->
-<button id="btn-abrir-filtros" class="btn btn-primary" style="margin-bottom: 16px;">
-  <i class="fas fa-filter"></i> Filtros
-</button>
-
-<!-- Lista de cards de projetos para mobile (scroll horizontal, visual igual ao desktop) -->
-<div class="projetos-lista-mobile" style="display: flex; flex-direction: row; gap: 18px; margin-bottom: 24px; overflow-x: auto; overflow-y: hidden; padding: 0 8px 8px 8px; -webkit-overflow-scrolling: touch; white-space: nowrap; flex-wrap: nowrap;">
-  {% for projeto in projetos %}
-  <div class="card compact-card shadow-sm projeto-card-mobile" style="width: 260px; min-height: 320px; max-height: 320px; border-radius: 12px; display: inline-flex; flex-direction: column; overflow: hidden; vertical-align: top;">
-    <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="background: #f7f9fa; border-bottom: 1px solid #eee; border-radius: 12px 12px 0 0;">
-      <h6 class="mb-0" style="font-size: 1.08em; color: #4a47a3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;"><i class="fas fa-project-diagram"></i> {{ projeto.nome }}</h6>
-      <span class="badge {% if projeto.status == 'Concluído' %}badge-success bg-success text-white{% else %}badge-warning bg-warning text-dark{% endif %}" style="font-size: 0.97em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">{{ projeto.status or 'Sem status' }}</span>
-    </div>
-    <div class="card-body compact-body py-2" style="flex:1; display: flex; flex-direction: column; gap: 4px;">
-      <div class="mb-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">
-        <small class="text-muted"><i class="fas fa-calendar"></i> {{ projeto.data_inicio or 'Não definida' }} - {{ projeto.data_fim or 'Não definida' }}</small>
-      </div>
-      <div class="compact-tasks" style="width: 100%;">
-        {% if projeto.tarefas and projeto.tarefas|length > 0 %}
-          <small style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 220px;"><strong>Tarefas ({{ projeto.tarefas|length }}):</strong></small>
-          <div class="task-list" style="width: 100%;">
-            {% for tarefa in projeto.tarefas[:3] %}
-            <div class="task-item d-flex justify-content-between align-items-center py-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">
-              <span class="task-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;"><i class="fas fa-tasks"></i> {{ tarefa.nome[:30] }}{% if tarefa.nome|length > 30 %}...{% endif %}</span>
-              <span class="badge {% if tarefa.status == 'pendente' %}bg-warning text-dark{% elif tarefa.status == 'em progresso' %}bg-info text-dark{% elif tarefa.status == 'concluída' %}bg-success{% else %}bg-secondary{% endif %} mx-1" style="white-space: nowrap; max-width: 60px; overflow: hidden; text-overflow: ellipsis;">{{ tarefa.status|capitalize if tarefa.status else 'Sem status' }}</span>
-            </div>
-            {% endfor %}
-            {% if projeto.tarefas|length > 3 %}
-            <div class="text-muted small" style="color: #007bff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">+{{ projeto.tarefas|length - 3 }} tarefas</div>
-            {% endif %}
-          </div>
-        {% else %}
-          <div class="text-muted small" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">Nenhuma tarefa encontrada.</div>
-        {% endif %}
-      </div>
-    </div>
-    <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2" style="border-radius: 0 0 12px 12px;">
-      <div class="btn-group" role="group" style="width: 100%; display: flex; justify-content: space-between;">
-        <a href="/projetos/{{ projeto.id }}" class="btn btn-info btn-sm" title="Ver Detalhes" style="white-space: nowrap; width: 32%; min-width: 0; overflow: hidden; text-overflow: ellipsis;"><i class="fas fa-eye"></i></a>
-        <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar" style="white-space: nowrap; width: 32%; min-width: 0; overflow: hidden; text-overflow: ellipsis;"><i class="fas fa-edit"></i></a>
-        <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline; width: 32%; min-width: 0;">
-          <button type="submit" class="btn btn-danger btn-sm" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir este projeto?');" style="white-space: nowrap; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis;"><i class="fas fa-trash"></i></button>
-        </form>
-      </div>
-    </div>
-  </div>
-  {% else %}
-  <div class="alert alert-info text-center" style="background: #d2f6fd; border-radius: 10px; min-width: 220px; display: inline-block;">Nenhum projeto encontrado.</div>
-  {% endfor %}
-</div>
-
-<!-- Painel lateral de filtros -->
-<div id="offcanvas-filtros-novo">
-  <form id="filtros-mobile-novo" method="GET" action="/projetos">
-    <!-- Cabeçalho do menu lateral -->
-    <div id="filtros-header" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 0 0 12px 2px; border-bottom: 1px solid #eee; margin-bottom: 12px;">
-      <span style="display: flex; align-items: center; gap: 6px;">
-        <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
-        <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
-      </span>
-      <button id="btn-fechar-filtros-novo" type="button" style="position: absolute; top: 0; right: 0; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div>
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <label for="nome" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-search"></i> Projeto</label>
-        <button type="button" class="btn-clear-filtro" data-filtro="nome" title="Limpar Projeto" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
-          <i class="fas fa-eraser"></i>
-        </button>
-      </div>
-      <select id="nome" name="nome" multiple size="4" style="min-height: 48px;">
-        <option value="" disabled selected>Selecione o Projeto</option>
-        {% for projeto in projetos %}
-        <option value="{{ projeto.nome }}" {% if projeto.nome in request.args.getlist('nome') %}selected{% endif %}>{{ projeto.nome }}</option>
-        {% endfor %}
-      </select>
-      <small style="color:#888; font-size:0.97em;">Segure Ctrl (ou toque) para selecionar vários</small>
-    </div>
-    <div>
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <label for="status" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-tasks"></i> Status</label>
-        <button type="button" class="btn-clear-filtro" data-filtro="status" title="Limpar Status" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
-          <i class="fas fa-eraser"></i>
-        </button>
-      </div>
-      <select id="status" name="status">
-        <option value="">Todos os status</option>
-        <option value="pendente" {% if request.args.get('status')=='pendente' %}selected{% endif %}>Pendente</option>
-        <option value="em progresso" {% if request.args.get('status')=='em progresso' %}selected{% endif %}>Em Progresso</option>
-        <option value="concluída" {% if request.args.get('status')=='concluída' %}selected{% endif %}>Concluída</option>
-      </select>
-    </div>
-    <div>
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <label for="colecao" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-layer-group"></i> Coleção</label>
-        <button type="button" class="btn-clear-filtro" data-filtro="colecao" title="Limpar Coleção" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
-          <i class="fas fa-eraser"></i>
-        </button>
-      </div>
-      <select id="colecao" name="colecao" multiple size="4" style="min-height: 48px;">
-        <option value="" disabled selected>Selecione a Coleção</option>
-        {% if colecoes and colecoes|length > 0 %}
-          {% for colecao in colecoes %}
-            <option value="{{ colecao }}" {% if colecao in request.args.getlist('colecao') %}selected{% endif %}>{{ colecao }}</option>
-          {% endfor %}
-        {% endif %}
-      </select>
-      <small style="color:#888; font-size:0.97em;">Segure Ctrl (ou toque) para selecionar vários</small>
-    </div>
-    <div class="datas-row">
-      <div>
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <label for="data_inicio" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-calendar"></i> Início</label>
-          <button type="button" class="btn-clear-filtro" data-filtro="data_inicio" title="Limpar Início" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
-            <i class="fas fa-eraser"></i>
-          </button>
-        </div>
-        <input type="date" id="data_inicio" name="data_inicio" value="{{ request.args.get('data_inicio', '') }}">
-      </div>
-      <div>
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <label for="data_fim" class="filtro-label" style="margin-bottom: 0;"><i class="fas fa-calendar-check"></i> Fim</label>
-          <button type="button" class="btn-clear-filtro" data-filtro="data_fim" title="Limpar Fim" style="background: none; border: none; font-size: 1.2em; color: #b0b0b0; cursor: pointer; padding: 2px; display: flex; align-items: center; flex-shrink: 0; max-width: 32px;">
-            <i class="fas fa-eraser"></i>
-          </button>
-        </div>
-        <input type="date" id="data_fim" name="data_fim" value="{{ request.args.get('data_fim', '') }}">
-      </div>
-    </div>
-    <div class="botoes-row">
-      <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filtrar</button>
-      <button type="button" class="btn-clear" id="limpar-filtros"><i class="fas fa-eraser"></i> Limpar</button>
-    </div>
-  </form>
-</div>
-<div id="filtros-backdrop-novo"></div>
-
-<style>
-#offcanvas-filtros-novo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100dvh;
-  width: 85vw;
-  max-width: 340px;
-  background: #fff;
-  box-shadow: 2px 0 24px rgba(0,0,0,0.18);
-  z-index: 9999;
-  transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);
-  display: none;
-  flex-direction: column;
-  border-top-right-radius: 18px;
-  border-bottom-right-radius: 18px;
-  overflow: hidden;
-  padding: 20px 18px 18px 18px; /* padding interno confortável */
-}
-#offcanvas-filtros-novo.aberto {
-  display: flex;
-  transform: translateX(0);
-}
-#filtros-backdrop-novo {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.3);
-  z-index: 9998;
-}
-#filtros-backdrop-novo.aberto {
-  display: block;
-}
-</style>
-<script>
-document.getElementById('btn-abrir-filtros').onclick = function() {
-  document.getElementById('offcanvas-filtros-novo').classList.add('aberto');
-  document.getElementById('filtros-backdrop-novo').classList.add('aberto');
-  document.body.style.overflow = 'hidden';
-};
-document.getElementById('filtros-backdrop-novo').onclick = function() {
-  document.getElementById('offcanvas-filtros-novo').classList.remove('aberto');
-  document.getElementById('filtros-backdrop-novo').classList.remove('aberto');
-  document.body.style.overflow = '';
-};
-document.getElementById('btn-fechar-filtros-novo').onclick = function() {
-  document.getElementById('offcanvas-filtros-novo').classList.remove('aberto');
-  document.getElementById('filtros-backdrop-novo').classList.remove('aberto');
-  document.body.style.overflow = '';
-};
-
-// Botão Limpar filtros
-var btnLimpar = document.getElementById('limpar-filtros');
-if (btnLimpar) {
-  btnLimpar.onclick = function() {
-    var form = document.getElementById('filtros-mobile-novo');
-    // Limpa selects múltiplos
-    var selects = form.querySelectorAll('select');
-    selects.forEach(function(sel) {
-      for (var i = 0; i < sel.options.length; i++) {
-        sel.options[i].selected = false;
-      }
-    });
-    // Limpa inputs
-    var inputs = form.querySelectorAll('input');
-    inputs.forEach(function(inp) {
-      inp.value = '';
-    });
-    form.submit();
-  };
-}
-// Limpar campo individual
-Array.from(document.getElementsByClassName('btn-clear-filtro')).forEach(function(btn) {
-  btn.onclick = function(e) {
-    e.preventDefault();
-    var filtro = btn.getAttribute('data-filtro');
-    var el = document.getElementById(filtro);
-    if (el) {
-      if (el.tagName === 'SELECT') {
-        for (var i = 0; i < el.options.length; i++) {
-          el.options[i].selected = false;
-        }
-      } else if (el.type === 'date' || el.type === 'text') {
-        el.value = '';
-      }
-    }
-  };
-});
-</script>
-
-    {% if projetos and gantt_geral_data|length == 0 %}
-    <div class="alert alert-info text-center" style="background: #d2f6fd;">
-        <i class="fas fa-info-circle fa-2x mb-3"></i>
-        <h5>Nenhuma tarefa encontrada</h5>
-        <p>Não há tarefas para exibir no gráfico. Ajuste os filtros ou cadastre novas tarefas.</p>
-    </div>
-    {% endif %}
-
-    <!-- Carousel de projetos SEM condicional -->
-    <div class="projetos-carousel-wrapper mb-4">
-        <button class="carousel-arrow left" type="button" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
-        <div class="projetos-carousel" id="projetos-carousel-js"></div>
-        <script>
-            window.projetosData = {{ projetos | tojson | safe }};
-        </script>
-        <button class="carousel-arrow right" type="button" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
-            </div>
-    <!-- Indicadores do carousel -->
-    <div class="carousel-indicators mt-3 mb-2 d-flex justify-content-center align-items-center" style="gap: 8px;"></div>
-    <!-- Gantt agrupado estilo teste_agrupamento_gantt.html -->
-    <div class="card mb-4 mt-5">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <div>
-                <i class="fas fa-chart-bar"></i> Cronograma de Tarefas
-            </div>
-        </div>
-        <div class="card-body">
-            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
-                <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
-                    style="font-size: 1.2em;">-</button>
-                <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
-                <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Aumentar Zoom"
-                    style="font-size: 1.2em;">+</button>
-            </div>
-            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
-                <div style="display: flex; flex-direction: column;">
-                    <div style="display: flex;">
-
-                    </div>
-                </div>
-                <div id="gantt-cronograma-area" style="position: relative;">
-                    <div id="gantt-hoje-container"></div>
-                    <table style="border-collapse: collapse; width: 100%;">
-                        <thead>
-                            <tr>
-                                <th
-                                    style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
-                                    Tarefa
-                                </th>
-                                {% for mes in meses %}
-                                <th colspan="{{ mes.dias }}" style="text-align: center;">{{ mes.nome }}</th>
-                                {% endfor %}
-                            </tr>
-                            <tr>
-                                <th></th>
-                                {% for dia in dias %}
-                                <th style="text-align: center;">{{ dia }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody id="gantt-body">
-                            <!-- Linhas das tarefas geradas via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- Legenda colorida por projeto -->
-            <div class="legend mt-2"
-                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
-                {% for projeto, cor in projects_colors.items() %}
-                <div class="legend-item"
-                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
-                    data-projeto="{{ projeto }}">
-                    <div class="legend-color"
-                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
-                    <span>{{ projeto }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<!-- Select2 para o campo de nome do projeto -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
-    rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
-$(document).ready(function() {
-    // ... restante do JS igual ao desktop ...
+window.ganttData = {{ gantt_geral_data | tojson | safe }};
+</script>
+
+<script>
+// Carousel functionality
+let currentIndex = 0;
+const AUTO_SCROLL_INTERVAL = 1500;
+let autoScrollInterval;
+
+function scrollCarousel(direction) {
+    const carousel = document.getElementById('carousel-cards');
+    const cards = Array.from(document.querySelectorAll('.projeto-card-mobile'));
+    const uniqueCards = cards.filter(card => {
+        const link = card.querySelector('a[href^="/projetos/"]');
+        return link && link.href.includes('/projetos/');
+    });
+    
+    if (uniqueCards.length === 0) return;
+    const cardWidth = 170 + 12; // largura do card + gap
+    if (direction === 'left') {
+        currentIndex = (currentIndex - 1 + uniqueCards.length) % uniqueCards.length;
+    } else {
+        currentIndex = (currentIndex + 1) % uniqueCards.length;
+    }
+    carousel.scrollTo({
+        left: currentIndex * cardWidth,
+        behavior: 'smooth'
+    });
+    updateIndicators();
+}
+
+function updateIndicators() {
+    const indicators = document.getElementById('carousel-indicators');
+    const carousel = document.getElementById('carousel-cards');
+    const cards = Array.from(document.querySelectorAll('.projeto-card-mobile'));
+    const uniqueCards = cards.filter(card => {
+        const link = card.querySelector('a[href^="/projetos/"]');
+        return link && link.href.includes('/projetos/');
+    });
+    
+    if (uniqueCards.length === 0) return;
+    
+    // Calcular quantos cards cabem na tela
+    const cardWidth = 170 + 12; // largura do card + gap
+    const cardsPerView = Math.floor(carousel.clientWidth / cardWidth);
+    const totalSlides = Math.ceil(uniqueCards.length / cardsPerView);
+    
+    indicators.innerHTML = '';
+    for (let i = 0; i < totalSlides; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = `carousel-indicator ${i === Math.floor(currentIndex / cardsPerView) ? 'active' : ''}`;
+        indicator.onclick = () => {
+            currentIndex = i * cardsPerView;
+            carousel.scrollTo({
+                left: currentIndex * cardWidth,
+                behavior: 'smooth'
+            });
+            updateIndicators();
+        };
+        indicators.appendChild(indicator);
+    }
+}
+
+function startAutoScroll() {
+    if (autoScrollInterval) return;
+    
+    autoScrollInterval = setInterval(() => {
+        scrollCarousel('right');
+    }, AUTO_SCROLL_INTERVAL);
+}
+
+function stopAutoScroll() {
+    if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+        
+        // Reiniciar auto-scroll após 5 segundos de inatividade
+        setTimeout(() => {
+            startAutoScroll();
+        }, 5000);
+    }
+}
+
+// Event listeners para parar auto-scroll
+document.addEventListener('DOMContentLoaded', function() {
+    const carousel = document.getElementById('carousel-cards');
+    
+    carousel.addEventListener('scroll', stopAutoScroll);
+    carousel.addEventListener('mousedown', stopAutoScroll);
+    carousel.addEventListener('touchstart', stopAutoScroll);
+    
+    // Inicializar
+    updateIndicators();
+    startAutoScroll();
+    
+    console.log('Carousel mobile inicializado');
+});
+
+// Gantt functionality (igual ao desktop)
+const larguraBase = 4;
+let larguraDia = larguraBase;
+const larguraMin = 1;
+const larguraMax = 32;
+const ROW_HEIGHT = 32;
+const VISIBLE_ROWS = 18;
+let tarefas = [];
+let nomesOrdenados = [];
+let grupos = {};
+let periodo = { min: null, max: null };
+let diasTotais = 0;
+
+function agruparTarefasPorNome(tarefas) {
+    const grupos = {};
+    tarefas.forEach(tarefa => {
+        if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+        grupos[tarefa.name].push(tarefa);
+    });
+    return grupos;
+}
+
+function obterPeriodo(tarefas) {
+    let min = null, max = null;
+    tarefas.forEach(t => {
+        const ini = new Date(t.start);
+        const fim = new Date(t.end);
+        if (!min || ini < min) min = ini;
+        if (!max || fim > max) max = fim;
+    });
+    return { min, max };
+}
+
+function diasEntre(a, b) {
+    return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
+}
+
+function corStatus(tarefa) {
+    if (tarefa.bar_color) return tarefa.bar_color;
+    if (tarefa.status === 'concluida') return '#28a745';
+    if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+    return '#ffc107';
+}
+
+function calcularDiasUteis(dataInicio, dataFim) {
+    let diasUteis = 0;
+    const dataAtual = new Date(dataInicio);
+    while (dataAtual <= dataFim) {
+        if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+            diasUteis++;
+        }
+        dataAtual.setDate(dataAtual.getDate() + 1);
+    }
+    return diasUteis;
+}
+
+function mostrarTooltipDetalhado(event, barra) {
+    esconderTooltipDetalhado();
+    const startDate = new Date(barra.start);
+    const endDate = new Date(barra.end);
+    const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    const diasUteis = calcularDiasUteis(startDate, endDate);
+    const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+    const tooltip = document.createElement('div');
+    tooltip.className = 'gantt-tooltip-detalhado';
+    tooltip.id = 'gantt-tooltip-detalhado';
+    const dataInicio = startDate.toLocaleDateString('pt-BR');
+    const dataFim = endDate.toLocaleDateString('pt-BR');
+    const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+    tooltip.innerHTML = `
+        <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
+        <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
+        <div style="color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;"><b>Coleção:</b> ${barra.colecao || '-'} </div>
+        <div class="gantt-tooltip-info" style="gap: 12px;">
+            <span class="gantt-tooltip-label">🏁 Início:</span>
+            <span class="gantt-tooltip-value">${dataInicio}</span>
+            <span class="gantt-tooltip-label">🎯 Fim:</span>
+            <span class="gantt-tooltip-value">${dataFim}</span>
+    </div>
+        <div class="gantt-tooltip-info">
+            <span class="gantt-tooltip-label">📆 Dias Corridos:</span>
+            <span class="gantt-tooltip-value">${diasCorridos} dias</span>
+      </div>
+        <div class="gantt-tooltip-info">
+            <span class="gantt-tooltip-label">📆 Dias Úteis:</span>
+            <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
+    </div>
+    `;
+    document.body.appendChild(tooltip);
+    atualizarPosicaoTooltipDetalhado(event);
+}
+
+function esconderTooltipDetalhado() {
+    const tooltip = document.getElementById('gantt-tooltip-detalhado');
+    if (tooltip) tooltip.remove();
+}
+
+function atualizarPosicaoTooltipDetalhado(event) {
+    const tooltip = document.getElementById('gantt-tooltip-detalhado');
+    if (tooltip) {
+        const tooltipRect = tooltip.getBoundingClientRect();
+        let left = event.clientX + 12;
+        let top = event.clientY + 12;
+        if (left + tooltipRect.width > window.innerWidth) {
+            left = window.innerWidth - tooltipRect.width - 8;
+        }
+        if (top + tooltipRect.height > window.innerHeight) {
+            top = window.innerHeight - tooltipRect.height - 8;
+        }
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+    }
+}
+
+function montarGanttAgrupado() {
+    const dados = window.ganttData || [];
+    const body = document.getElementById('gantt-body');
+    if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+    if (!dados.length) {
+        if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+        return;
+    }
+    const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+    tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+    const grupos = agruparTarefasPorNome(tarefas);
+    const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+        const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+        const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+        return ordemA - ordemB;
+    });
+    const periodo = obterPeriodo(tarefas);
+    if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+        if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+        return;
+    }
+    const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+    
+    // Linha de hoje
+    const hojeContainer = document.getElementById('gantt-hoje-container');
+    if (hojeContainer) {
+        hojeContainer.innerHTML = '';
+        hojeContainer.style.position = 'absolute';
+        hojeContainer.style.top = '0';
+        hojeContainer.style.left = '0';
+        hojeContainer.style.bottom = '0';
+        hojeContainer.style.right = '0';
+        hojeContainer.style.zIndex = '10';
+        hojeContainer.style.pointerEvents = 'none';
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        if (hoje >= periodo.min && hoje <= periodo.max) {
+            const offset = diasEntre(periodo.min, hoje);
+            const left = 320 + (offset * larguraDia);
+            const linhaHoje = document.createElement('div');
+            linhaHoje.className = 'gantt-hoje-linha';
+            linhaHoje.style.left = left + 'px';
+            linhaHoje.style.height = '100%';
+            hojeContainer.appendChild(linhaHoje);
+            
+            const hojeLabel = document.createElement('div');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+            hojeLabel.style.position = 'absolute';
+            hojeLabel.style.top = '0px';
+            hojeLabel.style.left = (left + 6) + 'px';
+            hojeLabel.style.transform = 'none';
+            hojeLabel.style.fontSize = '12px';
+            hojeLabel.style.color = '#e74c3c';
+            hojeLabel.style.fontWeight = 'bold';
+            hojeLabel.style.background = 'rgba(255,255,255,0.9)';
+            hojeLabel.style.padding = '2px 6px';
+            hojeLabel.style.borderRadius = '4px';
+            hojeLabel.style.zIndex = '20';
+            hojeContainer.appendChild(hojeLabel);
+        }
+    }
+    
+    // Renderizar todas as linhas
+    body.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    nomesOrdenados.forEach((nome, idx) => {
+        const barras = grupos[nome];
+        const tr = document.createElement('tr');
+        tr.className = 'gantt-row-compact';
+        
+        const tdNome = document.createElement('td');
+        tdNome.textContent = nome;
+        tdNome.title = nome;
+        tdNome.style.padding = "2px 8px";
+        tdNome.style.whiteSpace = "nowrap";
+        tdNome.style.overflow = "hidden";
+        tdNome.style.textOverflow = "ellipsis";
+        tdNome.style.height = "16px";
+        tdNome.style.fontSize = "13px";
+        // Evento de clique para evidenciar a linha
+        tdNome.onclick = function() {
+            document.querySelectorAll('#gantt-body tr').forEach(tr => tr.classList.remove('gantt-row-evidenciada'));
+            tr.classList.add('gantt-row-evidenciada');
+        };
+        tr.appendChild(tdNome);
+        
+        const tdCrono = document.createElement('td');
+        tdCrono.style.position = "relative";
+        tdCrono.style.height = "16px";
+        tdCrono.style.background = "#f8f9fa";
+        tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+        
+        const linhaH = document.createElement('div');
+        linhaH.className = 'gantt-h-linha';
+        linhaH.style.position = 'absolute';
+        linhaH.style.left = '0';
+        linhaH.style.right = '0';
+        linhaH.style.bottom = '0';
+        linhaH.style.height = '1px';
+        linhaH.style.background = '#dee2e6';
+        linhaH.style.zIndex = '1';
+        tdCrono.appendChild(linhaH);
+        
+        barras.forEach((barra, idx) => {
+            const inicio = new Date(barra.start);
+            const fim = new Date(barra.end);
+            const offset = diasEntre(periodo.min, inicio);
+            const largura = diasEntre(inicio, fim) + 1;
+            const div = document.createElement('div');
+            div.className = 'gantt-bar-compact';
+            div.style.position = "absolute";
+            div.style.left = (offset * larguraDia) + "px";
+            div.style.top = "2px";
+            div.style.height = "8px";
+            div.style.width = (largura * larguraDia) + "px";
+            div.style.background = corStatus(barra);
+            div.style.borderRadius = "4px";
+            div.style.textAlign = "center";
+            div.style.color = "#fff";
+            div.style.fontSize = "11px";
+            div.style.lineHeight = "14px";
+            div.style.cursor = "pointer";
+            div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+            tdCrono.appendChild(div);
+            
+            div.onmouseenter = function (e) {
+                mostrarTooltipDetalhado(e, barra);
+                this._mousemoveHandler = function (ev) {
+                    atualizarPosicaoTooltipDetalhado(ev);
+                };
+                this.addEventListener('mousemove', this._mousemoveHandler);
+            };
+            div.onmouseleave = function () {
+                esconderTooltipDetalhado();
+                if (this._mousemoveHandler) {
+                    this.removeEventListener('mousemove', this._mousemoveHandler);
+                    this._mousemoveHandler = null;
+                }
+            };
+        });
+        tr.appendChild(tdCrono);
+        fragment.appendChild(tr);
+    });
+    body.appendChild(fragment);
+}
+
+// Inicializar Gantt
+document.addEventListener('DOMContentLoaded', function() {
+    montarGanttAgrupado();
+    
+    function atualizarZoomLabel() {
+        const zoomLabel = document.getElementById('zoom-label');
+        if (zoomLabel) {
+            const percent = Math.round((larguraDia / larguraBase) * 100);
+            zoomLabel.textContent = percent + '%';
+        }
+    }
+    
+    atualizarZoomLabel();
+    
+    document.getElementById('zoom-in').onclick = function () {
+        if (larguraDia < larguraMax) {
+            larguraDia += larguraBase * 0.1;
+            if (larguraDia > larguraMax) larguraDia = larguraMax;
+            montarGanttAgrupado();
+            atualizarZoomLabel();
+        }
+    };
+    
+    document.getElementById('zoom-out').onclick = function () {
+        if (larguraDia > larguraMin) {
+            larguraDia -= larguraBase * 0.1;
+            if (larguraDia < larguraMin) larguraDia = larguraMin;
+            montarGanttAgrupado();
+            atualizarZoomLabel();
+        }
+    };
+
+    // Evidenciar barras ao clicar na legenda
+    let projetosSelecionados = [];
+    
+    document.querySelectorAll('.legend-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            const projeto = this.getAttribute('data-projeto');
+            
+            if (e.ctrlKey || e.metaKey) {
+                // Seleção múltipla
+                const index = projetosSelecionados.indexOf(projeto);
+                if (index > -1) {
+                    projetosSelecionados.splice(index, 1);
+                } else {
+                    projetosSelecionados.push(projeto);
+                }
+            } else {
+                // Seleção única
+                if (projetosSelecionados.length === 1 && projetosSelecionados[0] === projeto) {
+                    projetosSelecionados = [];
+                } else {
+                    projetosSelecionados = [projeto];
+                }
+            }
+            
+            if (projetosSelecionados.length === 0) {
+                // Mostrar todas as barras
+                document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                    bar.classList.remove('evidencia', 'apagada');
+                });
+                document.querySelectorAll('.legend-item').forEach(l => {
+                    l.classList.remove('selecionada');
+                });
+            } else {
+                // Evidenciar apenas as barras selecionadas
+                document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                    if (projetosSelecionados.includes(bar.getAttribute('data-projeto'))) {
+                        bar.classList.add('evidencia');
+                        bar.classList.remove('apagada');
+                    } else {
+                        bar.classList.remove('evidencia');
+                        bar.classList.add('apagada');
+                    }
+                });
+                document.querySelectorAll('.legend-item').forEach(l => {
+                    const p = l.getAttribute('data-projeto');
+                    if (projetosSelecionados.includes(p)) {
+                        l.classList.add('selecionada');
+                    } else {
+                        l.classList.remove('selecionada');
+                    }
+                });
+            }
+        });
+    });
+
+    // Pan/drag horizontal no Gantt
+    const ganttCustom = document.getElementById('gantt-custom');
+    let isDown = false;
+    let startX, scrollLeft;
+    
+    if (ganttCustom) {
+        ganttCustom.addEventListener('mousedown', function (e) {
+            if (e.button !== 0) return;
+            isDown = true;
+            ganttCustom.classList.add('dragging');
+            startX = e.pageX - ganttCustom.offsetLeft;
+            scrollLeft = ganttCustom.scrollLeft;
+            document.body.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function (e) {
+            if (!isDown) return;
+            const x = e.pageX - ganttCustom.offsetLeft;
+            const walk = (x - startX) * -1;
+            ganttCustom.scrollLeft = scrollLeft + walk;
+        });
+        
+        document.addEventListener('mouseup', function () {
+            isDown = false;
+            ganttCustom.classList.remove('dragging');
+            document.body.style.cursor = '';
+        });
+        
+        ganttCustom.addEventListener('mouseleave', function () {
+            isDown = false;
+            ganttCustom.classList.remove('dragging');
+            document.body.style.cursor = '';
+        });
+    }
+    
+    console.log('Gantt mobile inicializado');
 });
 </script>
 {% endblock %}
