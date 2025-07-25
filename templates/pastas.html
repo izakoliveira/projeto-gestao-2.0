@@ -48,10 +48,10 @@
       <div class="card compact-card shadow-sm h-100 d-flex flex-column" style="min-height: 140px;"
         ondragover="allowDrop(event)" ondrop="dropProjetoNaPasta(event, '{{ tipo.id }}')" id="pasta-{{ tipo.id }}">
         <div class="card-body compact-body py-2 mt-3 pt-2 d-flex flex-column align-items-center justify-content-center flex-grow-1">
-          <a href="{{ url_for('projetos') }}?tipo_id={{ tipo.id }}" class="text-warning text-decoration-none" style="font-size: 3.5em; margin-bottom: 0.3em;">
+                          <a href="{{ url_for('projetos') }}?ambiente={{ tipo.id }}" class="text-warning text-decoration-none" style="font-size: 3.5em; margin-bottom: 0.3em;">
             <i class="fas fa-folder"></i>
           </a>
-          <a href="{{ url_for('projetos') }}?tipo_id={{ tipo.id }}" class="text-dark text-decoration-none" style="font-size: 1.1em; font-weight: 600; margin-bottom:0;">
+                          <a href="{{ url_for('projetos') }}?ambiente={{ tipo.id }}" class="text-dark text-decoration-none" style="font-size: 1.1em; font-weight: 600; margin-bottom:0;">
             {{ tipo.nome }}
           </a>
           <span class="badge bg-secondary mb-2">{{ projetos_por_pasta[tipo.id]|length }} projeto{{ 's' if projetos_por_pasta[tipo.id]|length != 1 else '' }}</span>

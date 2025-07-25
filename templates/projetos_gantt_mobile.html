@@ -1,18 +1,215 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+.projeto-card-mobile {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 320px !important;
+    max-height: 320px !important;
+    height: 320px !important;
+}
+.projeto-card-mobile .card-body.compact-body {
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+}
+.projeto-card-mobile .card-footer.compact-footer {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-top: auto !important;
+    padding: 0 0 12px 0 !important;
+    background: #fff !important;
+    border-top: 1px solid #e9ecef !important;
+    text-align: center !important;
+}
+.projeto-card-mobile .card-footer .card-actions {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    float: none !important;
+}
+.projeto-card-mobile .card-footer .btn {
+    font-size: 0.7em !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 7px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px !important;
+    box-sizing: border-box;
+}
+.projeto-card-mobile .card-footer .btn i {
+    font-size: 1.1em !important;
+    margin: 0 !important;
+}
+#offcanvas-filtros-novo {
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);
+}
+#offcanvas-filtros-novo.aberto {
+    transform: translateX(0) !important;
+}
+#filtros-backdrop-novo.aberto {
+    display: block !important;
+}
+#offcanvas-filtros-novo input,
+#offcanvas-filtros-novo select {
+    border-radius: 10px !important;
+}
+#offcanvas-filtros-novo .btn,
+#btn-abrir-filtros,
+#offcanvas-filtros-novo .btn-primary,
+#offcanvas-filtros-novo .btn-secondary,
+#offcanvas-filtros-novo .btn-danger {
+    border-radius: 10px !important;
+}
+</style>
+<!-- Painel lateral de filtros FORA do container -->
+<div id="offcanvas-filtros-novo" style="position: fixed; top: 0; left: 0; height: 100dvh; width: 85vw; max-width: 340px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden; padding: 20px 18px 18px 18px;">
+    <form id="filtros-mobile-novo" method="GET" action="/projetos" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+        <!-- Cabeçalho do menu lateral -->
+        <div id="filtros-header" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 0 0 12px 2px; border-bottom: 1px solid #eee; margin-bottom: 12px;">
+            <span style="display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
+                <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
+            </span>
+            <button id="btn-fechar-filtros-novo" type="button" style="position: absolute; top: 0; right: 0; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <!-- Botão de logout dentro do menu -->
+        <!-- Removido botão de logout do menu lateral -->
+        <!-- Filtro Projeto (select múltiplo) -->
+        <div style="position: relative;">
+            <label for="nome" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fas fa-search"></i> Projeto</span>
+                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('nome').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                    <i class="fas fa-eraser"></i>
+                </button>
+            </label>
+            <select id="nome" name="nome" multiple class="form-control" style="min-height: 48px;">
+                <option value="" disabled>Selecione o Projeto</option>
+                {% for projeto in todos_projetos %}
+                <option value="{{ projeto.nome }}">{{ projeto.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Filtro Status -->
+        <div style="position: relative;">
+            <label for="status" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fas fa-tasks"></i> Status</span>
+                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('status').selectedIndex = 0; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                    <i class="fas fa-eraser"></i>
+                </button>
+            </label>
+            <select id="status" name="status" class="form-control" style="min-height: 48px;">
+                <option value="">Selecione o Status</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Em andamento">Em andamento</option>
+                <option value="Pendente">Pendente</option>
+            </select>
+        </div>
+        <!-- Filtro Responsável (select múltiplo) -->
+        <div style="position: relative;">
+            <label for="responsavel" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fas fa-user"></i> Responsável</span>
+                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('responsavel').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                    <i class="fas fa-eraser"></i>
+                </button>
+            </label>
+            <select id="responsavel" name="responsavel" multiple class="form-control" style="min-height: 48px;">
+                <option value="" disabled>Selecione o Responsável</option>
+                {% for responsavel in todos_responsaveis %}
+                <option value="{{ responsavel }}">{{ responsavel }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Filtro Tarefa (select múltiplo) -->
+        <div style="position: relative;">
+            <label for="tarefa" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fas fa-tasks"></i> Tarefa</span>
+                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('tarefa').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                    <i class="fas fa-eraser"></i>
+                </button>
+            </label>
+            <select id="tarefa" name="tarefa" multiple class="form-control" style="min-height: 48px;">
+                <option value="" disabled>Selecione a Tarefa</option>
+                {% for tarefa in todas_tarefas %}
+                <option value="{{ tarefa }}">{{ tarefa }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Filtro Coleção (select múltiplo) -->
+        <div style="position: relative;">
+            <label for="colecao" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fas fa-layer-group"></i> Coleção</span>
+                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('colecao').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                    <i class="fas fa-eraser"></i>
+                </button>
+            </label>
+            <select id="colecao" name="colecao" multiple class="form-control" style="min-height: 48px;">
+                <option value="" disabled>Selecione a Coleção</option>
+                {% for colecao in colecoes %}
+                <option value="{{ colecao.id if colecao.id is defined else colecao }}">{{ colecao.nome if colecao.nome is defined else colecao }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Filtros de datas na mesma linha -->
+        <div style="display: flex; gap: 8px;">
+            <div style="flex: 1; position: relative;">
+                <label for="data_inicio" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-calendar"></i> Início</span>
+                    <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_inicio').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </label>
+                <input type="date" id="data_inicio" name="data_inicio" class="form-control" style="height: 48px;">
+            </div>
+            <div style="flex: 1; position: relative;">
+                <label for="data_fim" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-calendar-check"></i> Fim</span>
+                    <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_fim').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </label>
+                <input type="date" id="data_fim" name="data_fim" class="form-control" style="height: 48px;">
+            </div>
+        </div>
+        <!-- Botões -->
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrar</button>
+            <button type="button" class="btn btn-secondary" id="limpar-filtros" style="flex: 1;">Limpar</button>
+        </div>
+    </form>
+</div>
+<div id="filtros-backdrop-novo" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9998;"></div>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-        <h1 class="mb-0"><i class="fas fa-project-diagram"></i> Meus Projetos</h1>
-        <a href="/logout" class="btn btn-danger mt-2 mt-md-0">Logout</a>
+        <h1 class="mb-0">
+            {% if nome_pasta.lower() == 'calendarios' %}
+                <i class="fas fa-calendar-alt"></i>
+            {% else %}
+                <i class="fas fa-project-diagram"></i>
+            {% endif %}
+            {{ nome_pasta }}
+            <!-- DEBUG: URL atual = {{ request.url }}, ambiente={{ request.args.get('ambiente') }}, tipo_id={{ request.args.get('tipo_id') }}, nome_pasta={{ nome_pasta }} -->
+        </h1>
+        <button id="btn-abrir-filtros" class="btn btn-primary mt-2 mt-md-0"><i class="fas fa-filter"></i> Filtros</button>
     </div>
 
     <!-- Barra de navegação visual de pastas (tipos de projeto) -->
     <div class="tipos-scroll mb-4">
         {% for tipo in tipos %}
         <div class="tipo-card">
-            <a href="/projetos?tipo_id={{ tipo.id }}" class="text-decoration-none w-100 h-100">
-                <div class="card shadow-sm folder-card h-100 {% if request.args.get('tipo_id') == tipo.id|string %}border-primary bg-light{% endif %}" style="cursor:pointer;">
+            <a href="/projetos?ambiente={{ tipo.id }}" class="text-decoration-none w-100 h-100">
+                <div class="card shadow-sm folder-card h-100 {% if request.args.get('ambiente') == tipo.id|string %}border-primary bg-light{% endif %}" style="cursor:pointer;">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
                         <i class="fas fa-folder fa-2x mb-1 text-warning"></i>
                         <span class="fw-bold text-center">{{ tipo.nome }}</span>
@@ -25,55 +222,41 @@
 
     <!-- Carousel de projetos mobile -->
     <div class="carousel-wrapper">
-        <button class="carousel-arrow left" type="button" aria-label="Anterior" onclick="scrollCarousel('left')">
-            <i class="fas fa-chevron-left"></i>
-        </button>
         <div class="carousel-cards" id="carousel-cards">
             {% if projetos %}
                 {% for projeto in projetos %}
-                <div class="projeto-card-mobile" style="display:inline-flex!important;vertical-align:top!important;">
-                    <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
-                        <h6 class="mb-0" style="font-size: 0.9em;"><i class="fas fa-project-diagram"></i> {{ projeto.nome[:15] }}{% if projeto.nome|length > 15 %}...{% endif %}</h6>
-                        <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}" style="font-size: 0.7em;">
-                            {{ projeto.status or 'Sem status' }}
-                        </span>
+                <div class="projeto-card-mobile" style="display: flex !important; flex-direction: column !important; min-height: 320px; max-height: 320px; height: 320px; vertical-align:top!important;">
+                    <div class="card-header compact-header" style="background: #e6eaff; border-bottom: 1px solid #bfc6e0; position: relative; height: 65px; display: flex; justify-content: center; align-items: center; padding: 0 36px;">
+                        <h6 class="mb-0" style="font-size: 0.78em; font-weight: bold; text-align: center; margin: 0 auto; display: flex; align-items: center; height: 100%; padding-top: 2px;">{{ projeto.nome[:25] }}{% if projeto.nome|length > 25 %}...{% endif %}</h6>
+                        {% if projeto.status %}
+                        <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;">{{ projeto.status }}</span>
+                        {% endif %}
                     </div>
-                    <div class="card-body compact-body py-2" style="flex: 1; overflow: hidden;">
-                        <div class="mb-1">
-                            <small class="text-muted" style="font-size: 0.75em;">
-                                <i class="fas fa-calendar"></i> {{ projeto.data_inicio or 'Não definida' }} - {{ projeto.data_fim or 'Não definida' }}
+                    <div class="card-body compact-body py-2" style="flex: 1 1 auto; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;">
+                            <i class="fas fa-calendar-alt" style="color: #4a47a3; font-size: 3.2em; opacity: 0.8; margin: 0 auto;"></i>
+                        </div>
+                        <div class="mb-4" style="text-align: center;">
+                            <small style="font-size: 0.65em; font-weight: 900; color: #2c3e50;">
+                                {{ projeto.data_inicio or 'Não definida' }} - {{ projeto.data_fim or 'Não definida' }}
                             </small>
                         </div>
-                        <div class="compact-tasks" style="font-size: 0.8em;">
-                            {% if projeto.tarefas %}
-                                {% for tarefa in projeto.tarefas[:2] %}
-                                <div class="task-item" style="margin-bottom: 4px; padding: 2px 0;">
-                                    <i class="fas fa-tasks" style="color: #6c757d; margin-right: 4px;"></i>
-                                    <span style="color: #495057;">{{ tarefa.nome[:20] }}{% if tarefa.nome|length > 20 %}...{% endif %}</span>
-                                </div>
-                                {% endfor %}
-                                {% if projeto.tarefas|length > 2 %}
-                                <div class="task-item" style="margin-top: 4px;">
-                                    <small class="text-muted">+{{ projeto.tarefas|length - 2 }} mais tarefas</small>
-                                </div>
-                                {% endif %}
-                            {% else %}
-                                <div class="task-item">
-                                    <small class="text-muted">Nenhuma tarefa</small>
-                                </div>
-                            {% endif %}
-                        </div>
+
                     </div>
-                    <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2" style="border-top: 1px solid #e9ecef;">
+                    <div class="card-footer compact-footer bg-white border-0" style="border-top: 1px solid #e9ecef; width: 100%; text-align: center; margin-top: auto; padding-bottom: 16px; padding-top: 8px;">
                         <div class="card-actions" style="display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%;">
-                            <a href="/projetos/{{ projeto.id }}" class="btn btn-info btn-sm" title="Ver Detalhes" style="font-size: 0.7em; padding: 2px 6px; flex: 1 1 0; min-width: 0;">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="/projetos/editar/{{ projeto.id }}" class="btn btn-warning btn-sm" title="Editar" style="font-size: 0.7em; padding: 2px 6px; flex: 1 1 0; min-width: 0;">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline; flex: 1 1 0; min-width: 0;">
-                                <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto" data-projeto-id="{{ projeto.id }}" title="Excluir" style="font-size: 0.7em; padding: 2px 6px; width: 100%;">
+                            <form action="/projetos/{{ projeto.id }}" method="get" style="display:inline;">
+                                <button type="submit" class="btn btn-info btn-sm" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </form>
+                            <form action="/projetos/editar/{{ projeto.id }}" method="get" style="display:inline;">
+                                <button type="submit" class="btn btn-warning btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </form>
+                            <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
+                                <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto" data-projeto-id="{{ projeto.id }}" title="Excluir">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -88,9 +271,6 @@
                 </div>
             {% endif %}
         </div>
-        <button class="carousel-arrow right" type="button" aria-label="Próximo" onclick="scrollCarousel('right')">
-            <i class="fas fa-chevron-right"></i>
-        </button>
     </div>
 
     <!-- Indicadores do carousel -->
@@ -113,37 +293,41 @@
             </div>
         </div>
         <div class="card-body p-0">
-            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
-                <div style="display: flex; flex-direction: column;">
-                    <div style="display: flex;">
-                    </div>
-                </div>
-                <div id="gantt-cronograma-area" style="position: relative;">
-                    <div id="gantt-hoje-container"></div>
-                    <table style="border-collapse: collapse; width: 100%;">
-                        <thead>
-                            <tr>
-                                <th style="width: 180px; min-width: 180px; max-width: 180px; text-align: left; padding: 8px;">
-                                    Tarefa
-                                </th>
-                                {# Cabeçalho dos meses e dias removidos #}
-                            </tr>
-                        </thead>
-                        <tbody id="gantt-body">
-                            <!-- Linhas das tarefas geradas via JS -->
-                        </tbody>
-                    </table>
+            <!-- Bloco para dados do Gantt -->
+        </div>
+        <script>
+        window.ganttData = {{ gantt_geral_data | tojson | safe }};
+        </script>
+        <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+            <div style="display: flex; flex-direction: column;">
+                <div style="display: flex;">
                 </div>
             </div>
-            <!-- Legenda colorida por projeto -->
-            <div class="legend mt-2" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
-                {% for projeto, cor in projects_colors.items() %}
-                <div class="legend-item" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;" data-projeto="{{ projeto }}">
-                    <div class="legend-color" style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
-                    <span>{{ projeto }}</span>
-                </div>
-                {% endfor %}
+            <div id="gantt-cronograma-area" style="position: relative;">
+                <div id="gantt-hoje-container"></div>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px; min-width: 180px; max-width: 180px; text-align: left; padding: 8px;">
+                                Tarefa
+                            </th>
+                            {# Cabeçalho dos meses e dias removidos #}
+                        </tr>
+                    </thead>
+                    <tbody id="gantt-body">
+                        <!-- Linhas das tarefas geradas via JS -->
+                    </tbody>
+                </table>
             </div>
+        </div>
+        <!-- Legenda colorida por projeto -->
+        <div class="legend mt-2" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+            {% for projeto, cor in projects_colors.items() %}
+            <div class="legend-item" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;" data-projeto="{{ projeto }}">
+                <div class="legend-color" style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
+                <span>{{ projeto }}</span>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -183,29 +367,7 @@
         width: 100%;
   margin-bottom: 24px;
 }
-.carousel-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-    background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-    display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  cursor: pointer;
-  font-size: 1.3em;
-  color: #4a47a3;
-  transition: background 0.2s;
-  opacity: 0.85;
-}
-.carousel-arrow.left { left: -8px; }
-.carousel-arrow.right { right: -8px; }
-.carousel-arrow:active { background: #e3f0ff; }
+
 .carousel-cards {
   display: flex !important;
   flex-direction: row !important;
@@ -216,7 +378,7 @@
   -webkit-overflow-scrolling: touch;
   white-space: nowrap !important;
   scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: none;
   margin-bottom: 12px;
 }
 .carousel-cards .projeto-card-mobile {
@@ -234,7 +396,7 @@
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   transition: box-shadow 0.2s;
-  scroll-snap-align: center;
+  /* scroll-snap-align: center; */
 }
 .carousel-indicators {
     display: flex;
@@ -255,6 +417,26 @@
 .carousel-indicator.active {
   background: #4a47a3;
   transform: scale(1.2);
+}
+
+.carousel-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: #bbb;
+  margin: 0 3px;
+  outline: none;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.carousel-dot:hover {
+  background: #999;
+}
+
+.carousel-dot.active {
+  background: #007bff;
 }
 
 /* Estilos do Gantt */
@@ -611,43 +793,7 @@ td[style*='min-width: 200px'] {
   background: #e3f0ff !important;
   font-weight: bold !important;
 }
-.card-footer.compact-footer .card-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
-  width: 100%;
-  padding: 0;
-}
-.card-footer.compact-footer .btn,
-.card-footer.compact-footer form {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 100%;
-  height: 48px;
-  padding: 0;
-  margin: 0;
-  border-radius: 0 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.card-footer.compact-footer .btn {
-  width: 100%;
-  height: 48px;
-  font-size: 1.2em;
-  padding: 0 !important;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.card-footer.compact-footer .btn i {
-  margin: 0;
-  font-size: 1.2em;
-}
-    </style>
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -655,370 +801,505 @@ td[style*='min-width: 200px'] {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <script>
-window.ganttData = {{ gantt_geral_data | tojson | safe }};
-</script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- OFFCANVAS FILTROS ---
+    var btnAbrir = document.getElementById('btn-abrir-filtros');
+    var offcanvas = document.getElementById('offcanvas-filtros-novo');
+    var backdrop = document.getElementById('filtros-backdrop-novo');
+    var btnFechar = document.getElementById('btn-fechar-filtros-novo');
+    var btnLimpar = document.getElementById('limpar-filtros');
+    var formFiltros = document.getElementById('filtros-mobile-novo');
 
-<script>
-// Carousel functionality
-let currentIndex = 0;
-const AUTO_SCROLL_INTERVAL = 1500;
-let autoScrollInterval;
-
-function scrollCarousel(direction) {
-    const carousel = document.getElementById('carousel-cards');
-    const cards = Array.from(document.querySelectorAll('.projeto-card-mobile'));
-    const uniqueCards = cards.filter(card => {
-        const link = card.querySelector('a[href^="/projetos/"]');
-        return link && link.href.includes('/projetos/');
-    });
-    
-    if (uniqueCards.length === 0) return;
-    const cardWidth = 170 + 12; // largura do card + gap
-    if (direction === 'left') {
-        currentIndex = (currentIndex - 1 + uniqueCards.length) % uniqueCards.length;
-    } else {
-        currentIndex = (currentIndex + 1) % uniqueCards.length;
-    }
-    carousel.scrollTo({
-        left: currentIndex * cardWidth,
-        behavior: 'smooth'
-    });
-    updateIndicators();
-}
-
-function updateIndicators() {
-    const indicators = document.getElementById('carousel-indicators');
-    const carousel = document.getElementById('carousel-cards');
-    const cards = Array.from(document.querySelectorAll('.projeto-card-mobile'));
-    const uniqueCards = cards.filter(card => {
-        const link = card.querySelector('a[href^="/projetos/"]');
-        return link && link.href.includes('/projetos/');
-    });
-    
-    if (uniqueCards.length === 0) return;
-    
-    // Calcular quantos cards cabem na tela
-    const cardWidth = 170 + 12; // largura do card + gap
-    const cardsPerView = Math.floor(carousel.clientWidth / cardWidth);
-    const totalSlides = Math.ceil(uniqueCards.length / cardsPerView);
-    
-    indicators.innerHTML = '';
-    for (let i = 0; i < totalSlides; i++) {
-        const indicator = document.createElement('div');
-        indicator.className = `carousel-indicator ${i === Math.floor(currentIndex / cardsPerView) ? 'active' : ''}`;
-        indicator.onclick = () => {
-            currentIndex = i * cardsPerView;
-            carousel.scrollTo({
-                left: currentIndex * cardWidth,
-                behavior: 'smooth'
-            });
-            updateIndicators();
-        };
-        indicators.appendChild(indicator);
-    }
-}
-
-function startAutoScroll() {
-    if (autoScrollInterval) return;
-    
-    autoScrollInterval = setInterval(() => {
-        scrollCarousel('right');
-    }, AUTO_SCROLL_INTERVAL);
-}
-
-function stopAutoScroll() {
-    if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
-        autoScrollInterval = null;
+    if (btnAbrir && offcanvas && backdrop && btnFechar) {
+        btnAbrir.addEventListener('click', function() {
+            offcanvas.classList.add('aberto');
+            backdrop.classList.add('aberto');
+        });
         
-        // Reiniciar auto-scroll após 5 segundos de inatividade
-        setTimeout(() => {
-            startAutoScroll();
-        }, 5000);
+        btnFechar.addEventListener('click', function() {
+            offcanvas.classList.remove('aberto');
+            backdrop.classList.remove('aberto');
+        });
+        
+        backdrop.addEventListener('click', function() {
+            offcanvas.classList.remove('aberto');
+            backdrop.classList.remove('aberto');
+        });
     }
-}
 
-// Event listeners para parar auto-scroll
-document.addEventListener('DOMContentLoaded', function() {
-    const carousel = document.getElementById('carousel-cards');
-    
-    carousel.addEventListener('scroll', stopAutoScroll);
-    carousel.addEventListener('mousedown', stopAutoScroll);
-    carousel.addEventListener('touchstart', stopAutoScroll);
-    
-    // Inicializar
-    updateIndicators();
-    startAutoScroll();
-    
-    console.log('Carousel mobile inicializado');
-});
-
-// Gantt functionality (igual ao desktop)
-const larguraBase = 4;
-let larguraDia = larguraBase;
-const larguraMin = 1;
-const larguraMax = 32;
-const ROW_HEIGHT = 32;
-const VISIBLE_ROWS = 18;
-let tarefas = [];
-let nomesOrdenados = [];
-let grupos = {};
-let periodo = { min: null, max: null };
-let diasTotais = 0;
-
-function agruparTarefasPorNome(tarefas) {
-    const grupos = {};
-    tarefas.forEach(tarefa => {
-        if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
-        grupos[tarefa.name].push(tarefa);
-    });
-    return grupos;
-}
-
-function obterPeriodo(tarefas) {
-    let min = null, max = null;
-    tarefas.forEach(t => {
-        const ini = new Date(t.start);
-        const fim = new Date(t.end);
-        if (!min || ini < min) min = ini;
-        if (!max || fim > max) max = fim;
-    });
-    return { min, max };
-}
-
-function diasEntre(a, b) {
-    return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
-}
-
-function corStatus(tarefa) {
-    if (tarefa.bar_color) return tarefa.bar_color;
-    if (tarefa.status === 'concluida') return '#28a745';
-    if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
-    return '#ffc107';
-}
-
-function calcularDiasUteis(dataInicio, dataFim) {
-    let diasUteis = 0;
-    const dataAtual = new Date(dataInicio);
-    while (dataAtual <= dataFim) {
-        if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
-            diasUteis++;
-        }
-        dataAtual.setDate(dataAtual.getDate() + 1);
+    if (btnLimpar && formFiltros) {
+        btnLimpar.addEventListener('click', function() {
+            // Limpar todos os campos do formulário
+            var inputs = formFiltros.querySelectorAll('input');
+            inputs.forEach(function(input) {
+                input.value = '';
+            });
+            
+            var selects = formFiltros.querySelectorAll('select');
+            selects.forEach(function(select) {
+                if (select.multiple) {
+                    // Para selects múltiplos, desmarcar todas as opções
+                    for (var i = 0; i < select.options.length; i++) {
+                        select.options[i].selected = false;
+                    }
+                } else {
+                    // Para selects simples, voltar para a primeira opção
+                    select.selectedIndex = 0;
+                }
+            });
+            
+            // Submeter o formulário
+            formFiltros.submit();
+        });
     }
-    return diasUteis;
-}
 
-function mostrarTooltipDetalhado(event, barra) {
-    esconderTooltipDetalhado();
-    const startDate = new Date(barra.start);
-    const endDate = new Date(barra.end);
-    const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-    const diasUteis = calcularDiasUteis(startDate, endDate);
-    const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
-    const tooltip = document.createElement('div');
-    tooltip.className = 'gantt-tooltip-detalhado';
-    tooltip.id = 'gantt-tooltip-detalhado';
-    const dataInicio = startDate.toLocaleDateString('pt-BR');
-    const dataFim = endDate.toLocaleDateString('pt-BR');
-    const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
-    tooltip.innerHTML = `
-        <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
-        <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
-        <div style="color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;"><b>Coleção:</b> ${barra.colecao || '-'} </div>
-        <div class="gantt-tooltip-info" style="gap: 12px;">
-            <span class="gantt-tooltip-label">🏁 Início:</span>
-            <span class="gantt-tooltip-value">${dataInicio}</span>
-            <span class="gantt-tooltip-label">🎯 Fim:</span>
-            <span class="gantt-tooltip-value">${dataFim}</span>
-    </div>
-        <div class="gantt-tooltip-info">
-            <span class="gantt-tooltip-label">📆 Dias Corridos:</span>
-            <span class="gantt-tooltip-value">${diasCorridos} dias</span>
-      </div>
-        <div class="gantt-tooltip-info">
-            <span class="gantt-tooltip-label">📆 Dias Úteis:</span>
-            <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
-    </div>
-    `;
-    document.body.appendChild(tooltip);
-    atualizarPosicaoTooltipDetalhado(event);
-}
-
-function esconderTooltipDetalhado() {
-    const tooltip = document.getElementById('gantt-tooltip-detalhado');
-    if (tooltip) tooltip.remove();
-}
-
-function atualizarPosicaoTooltipDetalhado(event) {
-    const tooltip = document.getElementById('gantt-tooltip-detalhado');
-    if (tooltip) {
-        const tooltipRect = tooltip.getBoundingClientRect();
-        let left = event.clientX + 12;
-        let top = event.clientY + 12;
-        if (left + tooltipRect.width > window.innerWidth) {
-            left = window.innerWidth - tooltipRect.width - 8;
+    // Definir valores selecionados baseado nos parâmetros da URL
+    function definirValoresFiltros() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Definir valores para select múltiplo de projetos
+        const nomesSelecionados = urlParams.getAll('nome');
+        const selectNome = document.getElementById('nome');
+        if (selectNome && nomesSelecionados.length > 0) {
+            Array.from(selectNome.options).forEach(option => {
+                if (nomesSelecionados.includes(option.value)) {
+                    option.selected = true;
+                }
+            });
         }
-        if (top + tooltipRect.height > window.innerHeight) {
-            top = window.innerHeight - tooltipRect.height - 8;
+        
+        // Definir valor para select de status
+        const statusSelecionado = urlParams.get('status');
+        const selectStatus = document.getElementById('status');
+        if (selectStatus && statusSelecionado) {
+            Array.from(selectStatus.options).forEach(option => {
+                if (option.value === statusSelecionado) {
+                    option.selected = true;
+                }
+            });
         }
-        tooltip.style.left = left + 'px';
-        tooltip.style.top = top + 'px';
+        
+        // Definir valores para select múltiplo de responsáveis
+        const responsaveisSelecionados = urlParams.getAll('responsavel');
+        const selectResponsavel = document.getElementById('responsavel');
+        if (selectResponsavel && responsaveisSelecionados.length > 0) {
+            Array.from(selectResponsavel.options).forEach(option => {
+                if (responsaveisSelecionados.includes(option.value)) {
+                    option.selected = true;
+                }
+            });
+        }
+        
+        // Definir valores para select múltiplo de tarefas
+        const tarefasSelecionadas = urlParams.getAll('tarefa');
+        const selectTarefa = document.getElementById('tarefa');
+        if (selectTarefa && tarefasSelecionadas.length > 0) {
+            Array.from(selectTarefa.options).forEach(option => {
+                if (tarefasSelecionadas.includes(option.value)) {
+                    option.selected = true;
+                }
+            });
+        }
+        
+        // Definir valores para select múltiplo de coleções
+        const colecoesSelecionadas = urlParams.getAll('colecao');
+        const selectColecao = document.getElementById('colecao');
+        if (selectColecao && colecoesSelecionadas.length > 0) {
+            Array.from(selectColecao.options).forEach(option => {
+                if (colecoesSelecionadas.includes(option.value)) {
+                    option.selected = true;
+                }
+            });
+        }
+        
+        // Definir valores para campos de data
+        const dataInicio = urlParams.get('data_inicio');
+        const dataFim = urlParams.get('data_fim');
+        const inputDataInicio = document.getElementById('data_inicio');
+        const inputDataFim = document.getElementById('data_fim');
+        
+        if (inputDataInicio && dataInicio) {
+            inputDataInicio.value = dataInicio;
+        }
+        if (inputDataFim && dataFim) {
+            inputDataFim.value = dataFim;
+        }
     }
-}
+    
+    // Executar quando a página carregar
+    definirValoresFiltros();
+    
+    // Atualizar dinamicamente os filtros baseado nas seleções
+    function atualizarFiltros() {
+        const selectNome = document.getElementById('nome');
+        const selectResponsavel = document.getElementById('responsavel');
+        const selectTarefa = document.getElementById('tarefa');
+        const selectColecao = document.getElementById('colecao');
+        
+        // Obter valores selecionados
+        const projetosSelecionados = Array.from(selectNome.selectedOptions).map(option => option.value);
+        const responsaveisSelecionados = Array.from(selectResponsavel.selectedOptions).map(option => option.value);
+        const tarefasSelecionadas = Array.from(selectTarefa.selectedOptions).map(option => option.value);
+        const colecoesSelecionadas = Array.from(selectColecao.selectedOptions).map(option => option.value);
+        
+        // Atualizar projetos baseado nas coleções selecionadas
+        if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
+            fetch(`/api/projetos_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectNome.innerHTML = '<option value="" disabled>Selecione o Projeto</option>';
+                    
+                    // Adicionar novas opções
+                    data.forEach(projeto => {
+                        const option = document.createElement('option');
+                        option.value = projeto.nome;
+                        option.textContent = projeto.nome;
+                        selectNome.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    projetosSelecionados.forEach(projeto => {
+                        const option = selectNome.querySelector(`option[value="${projeto}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        } else {
+            // Se não há coleções selecionadas, mostrar todos os projetos
+            fetch('/api/todos_projetos')
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectNome.innerHTML = '<option value="" disabled>Selecione o Projeto</option>';
+                    
+                    // Adicionar todas as opções
+                    data.forEach(projeto => {
+                        const option = document.createElement('option');
+                        option.value = projeto.nome;
+                        option.textContent = projeto.nome;
+                        selectNome.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    projetosSelecionados.forEach(projeto => {
+                        const option = selectNome.querySelector(`option[value="${projeto}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        }
+        
+        // Atualizar coleções baseado nos projetos selecionados
+        if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
+            fetch(`/api/colecoes_por_projetos?projetos=${projetosSelecionados.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectColecao.innerHTML = '<option value="" disabled>Selecione a Coleção</option>';
+                    
+                    // Adicionar novas opções
+                    data.forEach(colecao => {
+                        const option = document.createElement('option');
+                        option.value = colecao;
+                        option.textContent = colecao;
+                        selectColecao.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    colecoesSelecionadas.forEach(colecao => {
+                        const option = selectColecao.querySelector(`option[value="${colecao}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        } else {
+            // Se não há projetos selecionados, mostrar todas as coleções
+            fetch('/api/todas_colecoes')
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectColecao.innerHTML = '<option value="" disabled>Selecione a Coleção</option>';
+                    
+                    // Adicionar todas as opções
+                    data.forEach(colecao => {
+                        const option = document.createElement('option');
+                        option.value = colecao;
+                        option.textContent = colecao;
+                        selectColecao.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    colecoesSelecionadas.forEach(colecao => {
+                        const option = selectColecao.querySelector(`option[value="${colecao}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        }
+        
+        // Atualizar responsáveis baseado nos projetos, tarefas e coleções selecionados
+        if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
+            fetch(`/api/responsaveis_por_projetos?projetos=${projetosSelecionados.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+                    
+                    // Adicionar novas opções
+                    data.forEach(responsavel => {
+                        const option = document.createElement('option');
+                        option.value = responsavel;
+                        option.textContent = responsavel;
+                        selectResponsavel.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    responsaveisSelecionados.forEach(responsavel => {
+                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        } else if (tarefasSelecionadas.length > 0 && tarefasSelecionadas[0] !== '') {
+            fetch(`/api/responsaveis_por_tarefas?tarefas=${tarefasSelecionadas.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+                    
+                    // Adicionar novas opções
+                    data.forEach(responsavel => {
+                        const option = document.createElement('option');
+                        option.value = responsavel;
+                        option.textContent = responsavel;
+                        selectResponsavel.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    responsaveisSelecionados.forEach(responsavel => {
+                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        } else if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
+            fetch(`/api/responsaveis_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+                    
+                    // Adicionar novas opções
+                    data.forEach(responsavel => {
+                        const option = document.createElement('option');
+                        option.value = responsavel;
+                        option.textContent = responsavel;
+                        selectResponsavel.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    responsaveisSelecionados.forEach(responsavel => {
+                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        } else {
+            // Se não há filtros, mostrar todos os responsáveis
+            fetch('/api/todos_responsaveis')
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+                    
+                    // Adicionar todas as opções
+                    data.forEach(responsavel => {
+                        const option = document.createElement('option');
+                        option.value = responsavel;
+                        option.textContent = responsavel;
+                        selectResponsavel.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    responsaveisSelecionados.forEach(responsavel => {
+                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        }
+        
+        // Atualizar tarefas baseado nos projetos e coleções selecionados
+        if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
+            fetch(`/api/tarefas_por_projetos?projetos=${projetosSelecionados.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
+                    
+                    // Adicionar novas opções
+                    data.forEach(tarefa => {
+                        const option = document.createElement('option');
+                        option.value = tarefa;
+                        option.textContent = tarefa;
+                        selectTarefa.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    tarefasSelecionadas.forEach(tarefa => {
+                        const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        } else if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
+            fetch(`/api/tarefas_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
+                    
+                    // Adicionar novas opções
+                    data.forEach(tarefa => {
+                        const option = document.createElement('option');
+                        option.value = tarefa;
+                        option.textContent = tarefa;
+                        selectTarefa.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    tarefasSelecionadas.forEach(tarefa => {
+                        const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        } else {
+            // Se não há filtros, mostrar todas as tarefas
+            fetch('/api/todas_tarefas')
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar opções atuais
+                    selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
+                    
+                    // Adicionar todas as opções
+                    data.forEach(tarefa => {
+                        const option = document.createElement('option');
+                        option.value = tarefa;
+                        option.textContent = tarefa;
+                        selectTarefa.appendChild(option);
+                    });
+                    
+                    // Restaurar seleções anteriores se possível
+                    tarefasSelecionadas.forEach(tarefa => {
+                        const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                });
+        }
+    }
+    
+    // Adicionar event listeners para mudanças nos selects
+    const selectNome = document.getElementById('nome');
+    const selectResponsavel = document.getElementById('responsavel');
+    const selectTarefa = document.getElementById('tarefa');
+    const selectColecao = document.getElementById('colecao');
+    
+    if (selectNome) {
+        selectNome.addEventListener('change', atualizarFiltros);
+    }
+    
+    if (selectResponsavel) {
+        selectResponsavel.addEventListener('change', atualizarFiltros);
+    }
+    
+    if (selectTarefa) {
+        selectTarefa.addEventListener('change', atualizarFiltros);
+    }
+    
+    if (selectColecao) {
+        selectColecao.addEventListener('change', atualizarFiltros);
+    }
+    
+    // Adicionar event listeners para os botões de borracha
+    const btnLimparNome = document.querySelector('button[onclick*="document.getElementById(\'nome\')"]');
+    const btnLimparResponsavel = document.querySelector('button[onclick*="document.getElementById(\'responsavel\')"]');
+    const btnLimparTarefa = document.querySelector('button[onclick*="document.getElementById(\'tarefa\')"]');
+    const btnLimparColecao = document.querySelector('button[onclick*="document.getElementById(\'colecao\')"]');
+    
+    if (btnLimparNome) {
+        btnLimparNome.addEventListener('click', function() {
+            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+        });
+    }
+    
+    if (btnLimparResponsavel) {
+        btnLimparResponsavel.addEventListener('click', function() {
+            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+        });
+    }
+    
+    if (btnLimparTarefa) {
+        btnLimparTarefa.addEventListener('click', function() {
+            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+        });
+    }
+    
+    if (btnLimparColecao) {
+        btnLimparColecao.addEventListener('click', function() {
+            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+        });
+    }
+    
 
-function montarGanttAgrupado() {
+
+    // --- GANTT MOBILE ---
+    const larguraBase = 4;
+    let larguraDia = larguraBase;
+    const larguraMin = 1;
+    const larguraMax = 32;
     const dados = window.ganttData || [];
     const body = document.getElementById('gantt-body');
-    if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
-    if (!dados.length) {
-        if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
-        return;
+    function diasEntre(a, b) {
+        return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
     }
-    const tarefas = dados.filter(t => !t.type || t.type !== 'project');
-    tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
-    const grupos = agruparTarefasPorNome(tarefas);
-    const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
-        const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
-        const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
-        return ordemA - ordemB;
-    });
-    const periodo = obterPeriodo(tarefas);
-    if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
-        if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
-        return;
+    function corStatus(tarefa) {
+        if (tarefa.bar_color) return tarefa.bar_color;
+        if (tarefa.status === 'concluida') return '#28a745';
+        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+        return '#ffc107';
     }
-    const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
-    
-    // Linha de hoje
-    const hojeContainer = document.getElementById('gantt-hoje-container');
-    if (hojeContainer) {
-        hojeContainer.innerHTML = '';
-        hojeContainer.style.position = 'absolute';
-        hojeContainer.style.top = '0';
-        hojeContainer.style.left = '0';
-        hojeContainer.style.bottom = '0';
-        hojeContainer.style.right = '0';
-        hojeContainer.style.zIndex = '10';
-        hojeContainer.style.pointerEvents = 'none';
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        if (hoje >= periodo.min && hoje <= periodo.max) {
-            const offset = diasEntre(periodo.min, hoje);
-            const left = 320 + (offset * larguraDia);
-            const linhaHoje = document.createElement('div');
-            linhaHoje.className = 'gantt-hoje-linha';
-            linhaHoje.style.left = left + 'px';
-            linhaHoje.style.height = '100%';
-            hojeContainer.appendChild(linhaHoje);
-            
-            const hojeLabel = document.createElement('div');
-            const dia = String(hoje.getDate()).padStart(2, '0');
-            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-            hojeLabel.textContent = `Hoje ${dia}/${mes}`;
-            hojeLabel.style.position = 'absolute';
-            hojeLabel.style.top = '0px';
-            hojeLabel.style.left = (left + 6) + 'px';
-            hojeLabel.style.transform = 'none';
-            hojeLabel.style.fontSize = '12px';
-            hojeLabel.style.color = '#e74c3c';
-            hojeLabel.style.fontWeight = 'bold';
-            hojeLabel.style.background = 'rgba(255,255,255,0.9)';
-            hojeLabel.style.padding = '2px 6px';
-            hojeLabel.style.borderRadius = '4px';
-            hojeLabel.style.zIndex = '20';
-            hojeContainer.appendChild(hojeLabel);
-        }
-    }
-    
-    // Renderizar todas as linhas
-    body.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    nomesOrdenados.forEach((nome, idx) => {
-        const barras = grupos[nome];
-        const tr = document.createElement('tr');
-        tr.className = 'gantt-row-compact';
-        
-        const tdNome = document.createElement('td');
-        tdNome.textContent = nome;
-        tdNome.title = nome;
-        tdNome.style.padding = "2px 8px";
-        tdNome.style.whiteSpace = "nowrap";
-        tdNome.style.overflow = "hidden";
-        tdNome.style.textOverflow = "ellipsis";
-        tdNome.style.height = "16px";
-        tdNome.style.fontSize = "13px";
-        // Evento de clique para evidenciar a linha
-        tdNome.onclick = function() {
-            document.querySelectorAll('#gantt-body tr').forEach(tr => tr.classList.remove('gantt-row-evidenciada'));
-            tr.classList.add('gantt-row-evidenciada');
-        };
-        tr.appendChild(tdNome);
-        
-        const tdCrono = document.createElement('td');
-        tdCrono.style.position = "relative";
-        tdCrono.style.height = "16px";
-        tdCrono.style.background = "#f8f9fa";
-        tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
-        
-        const linhaH = document.createElement('div');
-        linhaH.className = 'gantt-h-linha';
-        linhaH.style.position = 'absolute';
-        linhaH.style.left = '0';
-        linhaH.style.right = '0';
-        linhaH.style.bottom = '0';
-        linhaH.style.height = '1px';
-        linhaH.style.background = '#dee2e6';
-        linhaH.style.zIndex = '1';
-        tdCrono.appendChild(linhaH);
-        
-        barras.forEach((barra, idx) => {
-            const inicio = new Date(barra.start);
-            const fim = new Date(barra.end);
-            const offset = diasEntre(periodo.min, inicio);
-            const largura = diasEntre(inicio, fim) + 1;
-            const div = document.createElement('div');
-            div.className = 'gantt-bar-compact';
-            div.style.position = "absolute";
-            div.style.left = (offset * larguraDia) + "px";
-            div.style.top = "2px";
-            div.style.height = "8px";
-            div.style.width = (largura * larguraDia) + "px";
-            div.style.background = corStatus(barra);
-            div.style.borderRadius = "4px";
-            div.style.textAlign = "center";
-            div.style.color = "#fff";
-            div.style.fontSize = "11px";
-            div.style.lineHeight = "14px";
-            div.style.cursor = "pointer";
-            div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
-            tdCrono.appendChild(div);
-            
-            div.onmouseenter = function (e) {
-                mostrarTooltipDetalhado(e, barra);
-                this._mousemoveHandler = function (ev) {
-                    atualizarPosicaoTooltipDetalhado(ev);
-                };
-                this.addEventListener('mousemove', this._mousemoveHandler);
-            };
-            div.onmouseleave = function () {
-                esconderTooltipDetalhado();
-                if (this._mousemoveHandler) {
-                    this.removeEventListener('mousemove', this._mousemoveHandler);
-                    this._mousemoveHandler = null;
-                }
-            };
+    function agruparTarefasPorNome(tarefas) {
+        const grupos = {};
+        tarefas.forEach(tarefa => {
+            if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+            grupos[tarefa.name].push(tarefa);
         });
-        tr.appendChild(tdCrono);
-        fragment.appendChild(tr);
-    });
-    body.appendChild(fragment);
-}
-
-// Inicializar Gantt
-document.addEventListener('DOMContentLoaded', function() {
-    montarGanttAgrupado();
-    
+        return grupos;
+    }
+    function obterPeriodo(tarefas) {
+        let min = null, max = null;
+        tarefas.forEach(t => {
+            const ini = new Date(t.start);
+            const fim = new Date(t.end);
+            if (!min || ini < min) min = ini;
+            if (!max || fim > max) max = fim;
+        });
+        return { min, max };
+    }
     function atualizarZoomLabel() {
         const zoomLabel = document.getElementById('zoom-label');
         if (zoomLabel) {
@@ -1026,51 +1307,246 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomLabel.textContent = percent + '%';
         }
     }
-    
-    atualizarZoomLabel();
-    
-    document.getElementById('zoom-in').onclick = function () {
-        if (larguraDia < larguraMax) {
-            larguraDia += larguraBase * 0.1;
-            if (larguraDia > larguraMax) larguraDia = larguraMax;
-            montarGanttAgrupado();
-            atualizarZoomLabel();
-        }
-    };
-    
-    document.getElementById('zoom-out').onclick = function () {
-        if (larguraDia > larguraMin) {
-            larguraDia -= larguraBase * 0.1;
-            if (larguraDia < larguraMin) larguraDia = larguraMin;
-            montarGanttAgrupado();
-            atualizarZoomLabel();
-        }
-    };
-
-    // Evidenciar barras ao clicar na legenda
-    let projetosSelecionados = [];
-    
-    document.querySelectorAll('.legend-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            const projeto = this.getAttribute('data-projeto');
-            
-            if (e.ctrlKey || e.metaKey) {
-                // Seleção múltipla
-                const index = projetosSelecionados.indexOf(projeto);
-                if (index > -1) {
-                    projetosSelecionados.splice(index, 1);
-                } else {
-                    projetosSelecionados.push(projeto);
+    function mostrarTooltipDetalhado(event, barra) {
+        esconderTooltipDetalhado();
+        const startDate = new Date(barra.start);
+        const endDate = new Date(barra.end);
+        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        function calcularDiasUteis(dataInicio, dataFim) {
+            let diasUteis = 0;
+            const dataAtual = new Date(dataInicio);
+            while (dataAtual <= dataFim) {
+                if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+                    diasUteis++;
                 }
-            } else {
-                // Seleção única
-                if (projetosSelecionados.length === 1 && projetosSelecionados[0] === projeto) {
-                    projetosSelecionados = [];
-                } else {
-                    projetosSelecionados = [projeto];
-                }
+                dataAtual.setDate(dataAtual.getDate() + 1);
             }
-            
+            return diasUteis;
+        }
+        const diasUteis = calcularDiasUteis(startDate, endDate);
+        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+        const tooltip = document.createElement('div');
+        tooltip.className = 'gantt-tooltip-detalhado';
+        tooltip.id = 'gantt-tooltip-detalhado';
+        const dataInicio = startDate.toLocaleDateString('pt-BR');
+        const dataFim = endDate.toLocaleDateString('pt-BR');
+        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+        tooltip.innerHTML = `
+            <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
+            <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
+            <div style="color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;"><b>Coleção:</b> ${barra.colecao || '-'}</div>
+            <div class="gantt-tooltip-info" style="gap: 12px;">
+                <span class="gantt-tooltip-label">🏁 Início:</span>
+                <span class="gantt-tooltip-value">${dataInicio}</span>
+                <span class="gantt-tooltip-label">🎯 Fim:</span>
+                <span class="gantt-tooltip-value">${dataFim}</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Corridos:</span>
+                <span class="gantt-tooltip-value">${diasCorridos} dias</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Úteis:</span>
+                <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
+        atualizarPosicaoTooltipDetalhado(event);
+    }
+    function esconderTooltipDetalhado() {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) tooltip.remove();
+    }
+    function atualizarPosicaoTooltipDetalhado(event) {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = event.clientX + 12;
+            let top = event.clientY + 12;
+            if (left + tooltipRect.width > window.innerWidth) {
+                left = window.innerWidth - tooltipRect.width - 8;
+            }
+            if (top + tooltipRect.height > window.innerHeight) {
+                top = window.innerHeight - tooltipRect.height - 8;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+    }
+    function montarGanttAgrupado() {
+        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+        if (!dados.length) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+            return;
+        }
+        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        const grupos = agruparTarefasPorNome(tarefas);
+        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+            return ordemA - ordemB;
+        });
+        const periodo = obterPeriodo(tarefas);
+        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+            return;
+        }
+        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+        // Adicionar barra tracejada do dia de hoje
+        const hojeContainer = document.getElementById('gantt-hoje-container');
+        if (hojeContainer) {
+            hojeContainer.innerHTML = '';
+            hojeContainer.style.position = 'absolute';
+            hojeContainer.style.top = '0';
+            hojeContainer.style.left = '0';
+            hojeContainer.style.bottom = '0';
+            hojeContainer.style.right = '0';
+            hojeContainer.style.zIndex = '10';
+            hojeContainer.style.pointerEvents = 'none';
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            if (hoje >= periodo.min && hoje <= periodo.max) {
+                const offset = diasEntre(periodo.min, hoje);
+                const left = 180 + (offset * larguraDia); // 180px da coluna tarefa
+                const linhaHoje = document.createElement('div');
+                linhaHoje.className = 'gantt-hoje-linha';
+                linhaHoje.style.left = left + 'px';
+                linhaHoje.style.height = '100%';
+                hojeContainer.appendChild(linhaHoje);
+                // Adicionar label com a data
+                const hojeLabel = document.createElement('div');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+                hojeLabel.style.position = 'absolute';
+                hojeLabel.style.top = '0px';
+                hojeLabel.style.left = (left + 6) + 'px';
+                hojeLabel.style.transform = 'none';
+                hojeLabel.style.fontSize = '12px';
+                hojeLabel.style.color = '#e74c3c';
+                hojeLabel.style.fontWeight = 'bold';
+                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
+                hojeLabel.style.padding = '2px 6px';
+                hojeLabel.style.borderRadius = '4px';
+                hojeLabel.style.zIndex = '20';
+                hojeContainer.appendChild(hojeLabel);
+            }
+        }
+        body.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        nomesOrdenados.forEach((nome, idx) => {
+            const barras = grupos[nome];
+            const tr = document.createElement('tr');
+            tr.className = 'gantt-row-compact';
+            // Nome da tarefa
+            const tdNome = document.createElement('td');
+            tdNome.textContent = nome;
+            tdNome.title = nome;
+            tdNome.style.padding = "2px 8px";
+            tdNome.style.whiteSpace = "nowrap";
+            tdNome.style.overflow = "hidden";
+            tdNome.style.textOverflow = "ellipsis";
+            tdNome.style.height = "16px";
+            tdNome.style.fontSize = "13px";
+            // Evidenciar linha ao clicar
+            tdNome.onclick = function() {
+                document.querySelectorAll('#gantt-body tr').forEach(tr => tr.classList.remove('gantt-row-evidenciada'));
+                tr.classList.add('gantt-row-evidenciada');
+            };
+            tr.appendChild(tdNome);
+            const tdCrono = document.createElement('td');
+            tdCrono.style.position = "relative";
+            tdCrono.style.height = "16px";
+            tdCrono.style.background = "#f8f9fa";
+            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+            const linhaH = document.createElement('div');
+            linhaH.className = 'gantt-h-linha';
+            linhaH.style.position = 'absolute';
+            linhaH.style.left = '0';
+            linhaH.style.right = '0';
+            linhaH.style.bottom = '0';
+            linhaH.style.height = '1px';
+            linhaH.style.background = '#dee2e6';
+            linhaH.style.zIndex = '1';
+            tdCrono.appendChild(linhaH);
+            barras.forEach((barra, idx) => {
+                const inicio = new Date(barra.start);
+                const fim = new Date(barra.end);
+                const offset = diasEntre(periodo.min, inicio);
+                const largura = diasEntre(inicio, fim) + 1;
+                const div = document.createElement('div');
+                div.className = 'gantt-bar-compact';
+                div.style.position = "absolute";
+                div.style.left = (offset * larguraDia) + "px";
+                div.style.top = "2px";
+                div.style.height = "8px";
+                div.style.width = (largura * larguraDia) + "px";
+                div.style.background = corStatus(barra);
+                div.style.borderRadius = "4px";
+                div.style.textAlign = "center";
+                div.style.color = "#fff";
+                div.style.fontSize = "11px";
+                div.style.lineHeight = "14px";
+                div.style.cursor = "pointer";
+                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                // Tooltip detalhado
+                div.onmouseenter = function (e) {
+                    mostrarTooltipDetalhado(e, barra);
+                    this._mousemoveHandler = function (ev) {
+                        atualizarPosicaoTooltipDetalhado(ev);
+                    };
+                    this.addEventListener('mousemove', this._mousemoveHandler);
+                };
+                div.onmouseleave = function () {
+                    esconderTooltipDetalhado();
+                    if (this._mousemoveHandler) {
+                        this.removeEventListener('mousemove', this._mousemoveHandler);
+                        this._mousemoveHandler = null;
+                    }
+                };
+                tdCrono.appendChild(div);
+            });
+            tr.appendChild(tdCrono);
+            fragment.appendChild(tr);
+        });
+        body.appendChild(fragment);
+    }
+    montarGanttAgrupado();
+    atualizarZoomLabel();
+    const zoomIn = document.getElementById('zoom-in');
+    const zoomOut = document.getElementById('zoom-out');
+    if (zoomIn) {
+        zoomIn.onclick = function () {
+            if (larguraDia < larguraMax) {
+                larguraDia += larguraBase * 0.1;
+                if (larguraDia > larguraMax) larguraDia = larguraMax;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+    }
+    if (zoomOut) {
+        zoomOut.onclick = function () {
+            if (larguraDia > larguraMin) {
+                larguraDia -= larguraBase * 0.1;
+                if (larguraDia < larguraMin) larguraDia = larguraMin;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+    }
+    // Evidenciar barras ao clicar na legenda (seleção múltipla só por clique)
+    let projetosSelecionados = [];
+    document.querySelectorAll('.legend-item[data-projeto]').forEach(item => {
+        item.addEventListener('click', function (e) {
+            const projeto = this.getAttribute('data-projeto');
+            // Seleção múltipla só por clique
+            if (projetosSelecionados.includes(projeto)) {
+                projetosSelecionados = projetosSelecionados.filter(p => p !== projeto);
+            } else {
+                projetosSelecionados.push(projeto);
+            }
             if (projetosSelecionados.length === 0) {
                 // Mostrar todas as barras
                 document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
@@ -1101,44 +1577,139 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // --- CAROUSEL MOBILE ---
+    const carousel = document.getElementById('carousel-cards');
+    const indicators = document.getElementById('carousel-indicators');
+    
+    if (carousel && indicators) {
+        const CARD_WIDTH = 170; // Largura real dos cards no CSS
+        const CARD_GAP = 12; // Gap real no CSS
+        
 
-    // Pan/drag horizontal no Gantt
-    const ganttCustom = document.getElementById('gantt-custom');
-    let isDown = false;
-    let startX, scrollLeft;
-    
-    if (ganttCustom) {
-        ganttCustom.addEventListener('mousedown', function (e) {
-            if (e.button !== 0) return;
-            isDown = true;
-            ganttCustom.classList.add('dragging');
-            startX = e.pageX - ganttCustom.offsetLeft;
-            scrollLeft = ganttCustom.scrollLeft;
-            document.body.style.cursor = 'grabbing';
-            e.preventDefault();
+        
+        // Função para atualizar indicadores
+        function atualizarIndicadoresCarousel() {
+            const cards = carousel.querySelectorAll('.projeto-card-mobile');
+            const visibleWidth = carousel.clientWidth;
+            const cardWidth = CARD_WIDTH + CARD_GAP;
+            // Calcular quantos cards cabem na tela
+            const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
+            // Calcular quantas páginas são necessárias
+            const totalPages = Math.ceil(cards.length / itemsPerPage);
+            
+            console.log('Cards:', cards.length, 'Items por página:', itemsPerPage, 'Total páginas:', totalPages, 'Card width:', cardWidth, 'Visible width:', visibleWidth);
+            
+            indicators.innerHTML = '';
+            
+            // Só criar bolinhas se houver mais de uma página
+            if (totalPages > 1) {
+                for (let i = 0; i < totalPages; i++) {
+                    const dot = document.createElement('button');
+                    dot.type = 'button';
+                    dot.className = 'carousel-dot';
+                    dot.setAttribute('aria-label', 'Ir para página ' + (i + 1));
+                    dot.style.cssText = `
+                        width: 12px;
+                        height: 12px;
+                        border-radius: 50%;
+                        border: none;
+                        background: #bbb;
+                        margin: 0 3px;
+                        outline: none;
+                        transition: background 0.2s;
+                        cursor: pointer;
+                    `;
+                    
+                    dot.addEventListener('click', function () {
+                        currentPage = i; // Atualizar a página atual
+                        scrollToPage(i);
+                        // Parar e reiniciar o auto-scroll para continuar da nova página
+                        stopAutoScroll();
+                        setTimeout(startAutoScroll, 2000);
+                    });
+                    
+                    indicators.appendChild(dot);
+                }
+            }
+            
+            atualizarBolinhasAtivas();
+        }
+        
+        // Função para atualizar bolinhas ativas
+        function atualizarBolinhasAtivas() {
+            const dots = indicators.querySelectorAll('.carousel-dot');
+            const scrollLeft = carousel.scrollLeft;
+            const cardWidth = CARD_WIDTH + CARD_GAP;
+            const visibleWidth = carousel.clientWidth;
+            const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
+            const page = Math.floor(scrollLeft / (itemsPerPage * cardWidth));
+            
+            dots.forEach((dot, idx) => {
+                dot.style.background = (idx === page) ? '#007bff' : '#bbb';
+            });
+        }
+        
+        // Função para scroll preciso baseado nos cards
+        function scrollToPage(pageIndex) {
+            const cardWidth = CARD_WIDTH + CARD_GAP;
+            const visibleWidth = carousel.clientWidth;
+            const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
+            // Calcular a posição exata para mostrar o primeiro card da página
+            const scrollAmount = pageIndex * itemsPerPage * cardWidth;
+            carousel.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+        }
+        
+        // Variáveis para auto-scroll
+        let autoScrollInterval;
+        let currentPage = 0;
+        let totalPages = 0;
+        
+        // Função para mover para a próxima página
+        function nextPage() {
+            const dots = indicators.querySelectorAll('.carousel-dot');
+            if (dots.length > 1) {
+                currentPage = (currentPage + 1) % dots.length;
+                scrollToPage(currentPage);
+            }
+        }
+        
+        // Função para iniciar auto-scroll
+        function startAutoScroll() {
+            const dots = indicators.querySelectorAll('.carousel-dot');
+            if (dots.length > 1) {
+                autoScrollInterval = setInterval(nextPage, 2500); // 2.5 segundos
+            }
+        }
+        
+        // Função para parar auto-scroll
+        function stopAutoScroll() {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+            }
+        }
+        
+        // Event listeners
+        carousel.addEventListener('scroll', atualizarBolinhasAtivas);
+        
+        // Pausar auto-scroll quando o usuário interage
+        carousel.addEventListener('mouseenter', stopAutoScroll);
+        carousel.addEventListener('mouseleave', startAutoScroll);
+        carousel.addEventListener('touchstart', stopAutoScroll);
+        carousel.addEventListener('touchend', () => {
+            setTimeout(startAutoScroll, 2000); // Retomar após 2 segundos
         });
         
-        document.addEventListener('mousemove', function (e) {
-            if (!isDown) return;
-            const x = e.pageX - ganttCustom.offsetLeft;
-            const walk = (x - startX) * -1;
-            ganttCustom.scrollLeft = scrollLeft + walk;
-        });
-        
-        document.addEventListener('mouseup', function () {
-            isDown = false;
-            ganttCustom.classList.remove('dragging');
-            document.body.style.cursor = '';
-        });
-        
-        ganttCustom.addEventListener('mouseleave', function () {
-            isDown = false;
-            ganttCustom.classList.remove('dragging');
-            document.body.style.cursor = '';
-        });
+        // Inicializar indicadores
+        setTimeout(() => {
+            atualizarIndicadoresCarousel();
+            // Iniciar auto-scroll após criar os indicadores
+            setTimeout(() => {
+                startAutoScroll();
+            }, 1500);
+        }, 100);
     }
-    
-    console.log('Gantt mobile inicializado');
 });
 </script>
 {% endblock %}
@@ -1163,7 +1734,4 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
     </div>
-</div>
-<script>
-    // ... restante do JS igual ao desktop ...
-</script> 
+</div> 

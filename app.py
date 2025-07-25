@@ -159,39 +159,60 @@ def logout():
 @login_required
 def projetos():
     usuario_id = session['user_id']
-    nome = request.args.get('nome', '')  # Nome do projeto
+    nome_list = request.args.getlist('nome')  # Lista de nomes de projetos (múltiplo)
+    tarefa_list = request.args.getlist('tarefa')  # Lista de nomes de tarefas (múltiplo)
+    responsavel_list = request.args.getlist('responsavel')  # Lista de responsáveis (múltiplo)
     status = request.args.get('status', '')  # Status da tarefa
     data_inicio = request.args.get('data_inicio', '')  # Data de início
     data_fim = request.args.get('data_fim', '')  # Data de término
     tipo_id = request.args.get('tipo_id', '')
+    ambiente = request.args.get('ambiente', '')
 
     if session.get('user_email') == 'izak.gomes59@gmail.com':
         # Admin vê todos os projetos
         query = supabase.table("projetos").select("*")
-        if nome:
-            query = query.ilike('nome', f'%{nome}%')
+        if nome_list:
+            # Filtro múltiplo para nomes de projetos
+            projetos_temp = query.execute().data
+            projetos = []
+            for projeto in projetos_temp:
+                if any(nome.lower() in projeto['nome'].lower() for nome in nome_list):
+                    projetos.append(projeto)
+        else:
+            projetos = query.execute().data
+        # Aplicar outros filtros
         if data_inicio:
-            query = query.gte('data_inicio', data_inicio)
+            projetos = [p for p in projetos if p.get('data_inicio', '') >= data_inicio]
         if data_fim:
-            query = query.lte('data_fim', data_fim)
+            projetos = [p for p in projetos if p.get('data_fim', '') <= data_fim]
         if tipo_id:
-            query = query.eq('tipo_id', tipo_id)
-        projetos = query.execute().data
+            projetos = [p for p in projetos if p.get('tipo_id') == tipo_id]
+        if ambiente:
+            projetos = [p for p in projetos if p.get('tipo_id') == ambiente]
     else:
         # Usuário comum vê apenas projetos autorizados
         resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
         projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
         if projetos_ids_visiveis:
             query = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis)
-            if nome:
-                query = query.ilike('nome', f'%{nome}%')
+            projetos_temp = query.execute().data
+            if nome_list:
+                # Filtro múltiplo para nomes de projetos
+                projetos = []
+                for projeto in projetos_temp:
+                    if any(nome.lower() in projeto['nome'].lower() for nome in nome_list):
+                        projetos.append(projeto)
+            else:
+                projetos = projetos_temp
+            # Aplicar outros filtros
             if data_inicio:
-                query = query.gte('data_inicio', data_inicio)
+                projetos = [p for p in projetos if p.get('data_inicio', '') >= data_inicio]
             if data_fim:
-                query = query.lte('data_fim', data_fim)
+                projetos = [p for p in projetos if p.get('data_fim', '') <= data_fim]
             if tipo_id:
-                query = query.eq('tipo_id', tipo_id)
-            projetos = query.execute().data
+                projetos = [p for p in projetos if p.get('tipo_id') == tipo_id]
+            if ambiente:
+                projetos = [p for p in projetos if p.get('tipo_id') == ambiente]
         else:
             projetos = []
 
@@ -379,15 +400,150 @@ def projetos():
                 'bar_color': cor_projetos[t.get('projeto_origem', 'Projeto não encontrado')],
                 'colecao': t.get('colecao', '')
             })
-    # Buscar todas as coleções disponíveis apenas das tarefas filtradas (não do banco inteiro)
-    colecoes = sorted(set(
+    # Buscar todas as coleções disponíveis das tarefas
+    # Primeiro buscar todas as tarefas para obter todas as coleções
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Buscar todas as tarefas para obter todas as coleções disponíveis
+    resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=colecao", headers=headers)
+    todas_tarefas_colecoes = resp.json() if resp.status_code == 200 else []
+    
+    # Extrair todas as coleções únicas
+    todas_colecoes = sorted(set(
         (str(t.get('colecao', '') or '').strip())
-        for t in tarefas_filtradas
+        for t in todas_tarefas_colecoes
         if (str(t.get('colecao', '') or '').strip())
     ))
+    
+    colecoes = todas_colecoes
+    
+    # Buscar todas as tarefas disponíveis para o filtro
+    resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=nome", headers=headers)
+    todas_tarefas_raw = resp.json() if resp.status_code == 200 else []
+    todas_tarefas = sorted(set([t.get('nome', '') for t in todas_tarefas_raw if t.get('nome')]))
+    
+    # Buscar todas as tarefas completas para o Gantt (com datas)
+    resp_gantt = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=*", headers=headers)
+    todas_tarefas_gantt = resp_gantt.json() if resp_gantt.status_code == 200 else []
+    
+    # Buscar todos os responsáveis disponíveis para o filtro
+    resp_responsaveis = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=responsavel", headers=headers)
+    todos_responsaveis_raw = resp_responsaveis.json() if resp_responsaveis.status_code == 200 else []
+    todos_responsaveis = sorted(set([t.get('responsavel', '') for t in todos_responsaveis_raw if t.get('responsavel')]))
+    
+    # Buscar projetos disponíveis baseado nos filtros aplicados
+    colecao_list = request.args.getlist('colecao')
+    
+    # Aplicar filtros dinâmicos
+    if responsavel_list:
+        # Se há responsáveis filtrados, buscar apenas projetos que têm tarefas com esses responsáveis
+        tarefas_responsaveis = []
+        for responsavel in responsavel_list:
+            resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?responsavel=eq.{quote(responsavel)}&select=projeto_id", headers=headers)
+            if resp.status_code == 200:
+                tarefas_responsaveis.extend(resp.json())
+        
+        projetos_ids_responsaveis = list(set([t['projeto_id'] for t in tarefas_responsaveis if t.get('projeto_id')]))
+        
+        if projetos_ids_responsaveis:
+            if session.get('user_email') == 'izak.gomes59@gmail.com':
+                todos_projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_responsaveis).order("nome").execute().data
+            else:
+                resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+                projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+                projetos_ids_filtrados = list(set(projetos_ids_responsaveis) & set(projetos_ids_visiveis))
+                if projetos_ids_filtrados:
+                    todos_projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_filtrados).order("nome").execute().data
+                else:
+                    todos_projetos = []
+        else:
+            todos_projetos = []
+    elif tarefa_list:
+        # Se há tarefas filtradas, buscar apenas projetos que têm essas tarefas
+        tarefas_filtradas = []
+        for tarefa in tarefa_list:
+            resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?nome=eq.{quote(tarefa)}&select=projeto_id", headers=headers)
+            if resp.status_code == 200:
+                tarefas_filtradas.extend(resp.json())
+        
+        projetos_ids_tarefas = list(set([t['projeto_id'] for t in tarefas_filtradas if t.get('projeto_id')]))
+        
+        if projetos_ids_tarefas:
+            if session.get('user_email') == 'izak.gomes59@gmail.com':
+                todos_projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_tarefas).order("nome").execute().data
+            else:
+                resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+                projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+                projetos_ids_filtrados = list(set(projetos_ids_tarefas) & set(projetos_ids_visiveis))
+                if projetos_ids_filtrados:
+                    todos_projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_filtrados).order("nome").execute().data
+                else:
+                    todos_projetos = []
+        else:
+            todos_projetos = []
+    elif colecao_list:
+        # Se há coleções filtradas, buscar apenas projetos que têm tarefas com essas coleções
+        tarefas_colecoes = []
+        for colecao in colecao_list:
+            resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?colecao=eq.{quote(colecao)}&select=projeto_id", headers=headers)
+            if resp.status_code == 200:
+                tarefas_colecoes.extend(resp.json())
+        
+        projetos_ids_colecoes = list(set([t['projeto_id'] for t in tarefas_colecoes if t.get('projeto_id')]))
+        
+        if projetos_ids_colecoes:
+            if session.get('user_email') == 'izak.gomes59@gmail.com':
+                todos_projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_colecoes).order("nome").execute().data
+            else:
+                resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+                projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+                projetos_ids_filtrados = list(set(projetos_ids_colecoes) & set(projetos_ids_visiveis))
+                if projetos_ids_filtrados:
+                    todos_projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_filtrados).order("nome").execute().data
+                else:
+                    todos_projetos = []
+        else:
+            todos_projetos = []
+    else:
+        # Se não há filtros, mostrar todos os projetos disponíveis
+        if session.get('user_email') == 'izak.gomes59@gmail.com':
+            todos_projetos = supabase.table("projetos").select("id, nome").order("nome").execute().data
+        else:
+            resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+            projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+            if projetos_ids_visiveis:
+                todos_projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_visiveis).order("nome").execute().data
+            else:
+                todos_projetos = []
     # Buscar todos os tipos de projeto para exibir o nome da pasta
-    tipos = supabase.table('tipos_projeto').select('id, nome').execute().data or []
+    print("DEBUG BACKEND: Fazendo consulta ao Supabase para tipos_projeto...")
+    try:
+        tipos_response = supabase.table('tipos_projeto').select('id, nome').execute()
+        print(f"DEBUG BACKEND: Resposta do Supabase: {tipos_response}")
+        tipos = tipos_response.data or []
+        print(f"DEBUG BACKEND: Tipos brutos do Supabase: {tipos}")
+    except Exception as e:
+        print(f"DEBUG BACKEND: Erro ao consultar tipos_projeto: {e}")
+        tipos = []
+    # Resolver o nome da pasta baseado no ambiente ANTES do filtro
+    nome_pasta = "Meus Projetos"  # Valor padrão
+    if ambiente and tipos:
+        for tipo in tipos:
+            if str(tipo['id']) == str(ambiente):
+                nome_pasta = tipo['nome']
+                print(f"DEBUG BACKEND: Nome da pasta encontrado: {nome_pasta}")
+                break
+        else:
+            print(f"DEBUG BACKEND: Nome da pasta NÃO encontrado para ambiente {ambiente}")
+    # Agora aplicar o filtro para os tipos (sem afetar o nome da pasta)
     tipos = [t for t in tipos if t['nome'].lower() not in ['calendarios', 'tarefas diarias']]
+    print(f"DEBUG BACKEND: Tipos após filtro: {tipos}")
     tipos_dict = {t['id']: t['nome'] for t in tipos}
     for projeto in projetos:
         projeto['tipo_nome'] = tipos_dict.get(projeto.get('tipo_id'), '-')
@@ -402,13 +558,342 @@ def projetos():
     user_agent = request.headers.get('User-Agent', '')
     is_mobile = is_mobile_device(user_agent)
     
+    # Debug: verificar ambiente e tipos
+    print(f"DEBUG BACKEND: ambiente = {ambiente}")
+    print(f"DEBUG BACKEND: tipos = {tipos}")
+    if tipos:
+        for tipo in tipos:
+            print(f"DEBUG BACKEND: tipo['id'] = {tipo['id']}, tipo['nome'] = {tipo['nome']}")
+    
     # Escolher template baseado no dispositivo
-    template_name = 'projetos_gantt_mobile.html' if is_mobile else 'projetos_gantt_basico.html'
+    if is_mobile:
+        template_name = 'projetos_gantt_mobile.html'
+    else:
+        template_name = 'projetos_gantt_basico.html'
     
     # Cálculo de meses e dias para o Gantt
-    meses, dias = calcular_meses_dias(todas_tarefas)
+    meses, dias = calcular_meses_dias(todas_tarefas_gantt)
     
-    return render_template(template_name, projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, pode_criar_projeto=pode_criar_projeto, meses=meses, dias=dias)
+    return render_template(template_name, projetos=projetos, todos_projetos=todos_projetos, todas_tarefas=todas_tarefas, todos_responsaveis=todos_responsaveis, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, nome_pasta=nome_pasta, pode_criar_projeto=pode_criar_projeto, meses=meses, dias=dias)
+
+# API para buscar coleções por projetos
+@app.route('/api/colecoes_por_projetos')
+@login_required
+def api_colecoes_por_projetos():
+    projetos_nomes = request.args.get('projetos', '').split(',')
+    if not projetos_nomes or projetos_nomes[0] == '':
+        return jsonify([])
+    
+    # Buscar IDs dos projetos pelos nomes
+    projetos_resp = supabase.table("projetos").select("id, nome").execute().data
+    projetos_dict = {p['nome']: p['id'] for p in projetos_resp}
+    projetos_ids = [projetos_dict.get(nome) for nome in projetos_nomes if projetos_dict.get(nome)]
+    
+    if not projetos_ids:
+        return jsonify([])
+    
+    # Buscar tarefas desses projetos
+    ids_str = ','.join([f'"{pid}"' for pid in projetos_ids])
+    url = f"{os.getenv('SUPABASE_URL')}/rest/v1/tarefas?projeto_id=in.({ids_str})"
+    headers = {
+        "apikey": os.getenv('SUPABASE_KEY'),
+        "Authorization": f"Bearer {os.getenv('SUPABASE_KEY')}",
+        "Content-Type": "application/json"
+    }
+    resp = requests.get(url, headers=headers)
+    tarefas = resp.json() if resp.status_code == 200 else []
+    
+    # Extrair coleções únicas
+    colecoes = sorted(set(
+        (str(t.get('colecao', '') or '').strip())
+        for t in tarefas
+        if (str(t.get('colecao', '') or '').strip())
+    ))
+    
+    return jsonify(colecoes)
+
+# API para buscar todas as coleções
+@app.route('/api/todas_colecoes')
+@login_required
+def api_todas_colecoes():
+    # Buscar todas as coleções das tarefas
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=colecao", headers=headers)
+    todas_tarefas = resp.json() if resp.status_code == 200 else []
+    
+    # Extrair todas as coleções únicas
+    todas_colecoes = sorted(set(
+        (str(t.get('colecao', '') or '').strip())
+        for t in todas_tarefas
+        if (str(t.get('colecao', '') or '').strip())
+    ))
+    
+    return jsonify(todas_colecoes)
+
+# API para buscar projetos por coleções
+@app.route('/api/projetos_por_colecoes')
+@login_required
+def api_projetos_por_colecoes():
+    colecoes = request.args.get('colecoes', '').split(',')
+    if not colecoes or colecoes[0] == '':
+        return jsonify([])
+    
+    usuario_id = session['user_id']
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Buscar tarefas com as coleções selecionadas
+    tarefas_colecoes = []
+    for colecao in colecoes:
+        resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?colecao=eq.{quote(colecao)}&select=projeto_id", headers=headers)
+        if resp.status_code == 200:
+            tarefas_colecoes.extend(resp.json())
+    
+    # Extrair IDs únicos dos projetos
+    projetos_ids = list(set([t['projeto_id'] for t in tarefas_colecoes if t.get('projeto_id')]))
+    
+    if not projetos_ids:
+        return jsonify([])
+    
+    # Buscar projetos baseado nas permissões do usuário
+    if session.get('user_email') == 'izak.gomes59@gmail.com':
+        # Admin vê todos os projetos
+        projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids).order("nome").execute().data
+    else:
+        # Usuário comum vê apenas projetos autorizados
+        resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+        projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+        projetos_ids_filtrados = list(set(projetos_ids) & set(projetos_ids_visiveis))
+        if projetos_ids_filtrados:
+            projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_filtrados).order("nome").execute().data
+        else:
+            projetos = []
+    
+    return jsonify(projetos)
+
+# API para buscar todos os projetos
+@app.route('/api/todos_projetos')
+@login_required
+def api_todos_projetos():
+    usuario_id = session['user_id']
+    
+    if session.get('user_email') == 'izak.gomes59@gmail.com':
+        # Admin vê todos os projetos
+        projetos = supabase.table("projetos").select("id, nome").order("nome").execute().data
+    else:
+        # Usuário comum vê apenas projetos autorizados
+        resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+        projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+        if projetos_ids_visiveis:
+            projetos = supabase.table("projetos").select("id, nome").in_("id", projetos_ids_visiveis).order("nome").execute().data
+        else:
+            projetos = []
+    
+    return jsonify(projetos)
+
+# API para buscar tarefas por projetos
+@app.route('/api/tarefas_por_projetos')
+@login_required
+def api_tarefas_por_projetos():
+    projetos = request.args.get('projetos', '').split(',')
+    if not projetos or projetos[0] == '':
+        return jsonify([])
+    
+    usuario_id = session['user_id']
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Buscar IDs dos projetos pelos nomes
+    projetos_resp = supabase.table("projetos").select("id, nome").execute().data
+    projetos_dict = {p['nome']: p['id'] for p in projetos_resp}
+    projetos_ids = [projetos_dict.get(nome) for nome in projetos if projetos_dict.get(nome)]
+    
+    if not projetos_ids:
+        return jsonify([])
+    
+    # Buscar tarefas desses projetos
+    ids_str = ','.join([f'"{pid}"' for pid in projetos_ids])
+    url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})&select=nome"
+    resp = requests.get(url, headers=headers)
+    tarefas = resp.json() if resp.status_code == 200 else []
+    
+    # Extrair nomes únicos das tarefas
+    tarefas_unicas = sorted(set([t.get('nome', '') for t in tarefas if t.get('nome')]))
+    
+    return jsonify(tarefas_unicas)
+
+# API para buscar tarefas por coleções
+@app.route('/api/tarefas_por_colecoes')
+@login_required
+def api_tarefas_por_colecoes():
+    colecoes = request.args.get('colecoes', '').split(',')
+    if not colecoes or colecoes[0] == '':
+        return jsonify([])
+    
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Buscar tarefas com as coleções selecionadas
+    tarefas_colecoes = []
+    for colecao in colecoes:
+        resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?colecao=eq.{quote(colecao)}&select=nome", headers=headers)
+        if resp.status_code == 200:
+            tarefas_colecoes.extend(resp.json())
+    
+    # Extrair nomes únicos das tarefas
+    tarefas_unicas = sorted(set([t.get('nome', '') for t in tarefas_colecoes if t.get('nome')]))
+    
+    return jsonify(tarefas_unicas)
+
+# API para buscar todas as tarefas
+@app.route('/api/todas_tarefas')
+@login_required
+def api_todas_tarefas():
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=nome", headers=headers)
+    todas_tarefas_raw = resp.json() if resp.status_code == 200 else []
+    todas_tarefas = sorted(set([t.get('nome', '') for t in todas_tarefas_raw if t.get('nome')]))
+    
+    return jsonify(todas_tarefas)
+
+# API para buscar responsáveis por projetos
+@app.route('/api/responsaveis_por_projetos')
+@login_required
+def api_responsaveis_por_projetos():
+    projetos = request.args.get('projetos', '').split(',')
+    if not projetos or projetos[0] == '':
+        return jsonify([])
+    
+    usuario_id = session['user_id']
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Buscar IDs dos projetos pelos nomes
+    projetos_resp = supabase.table("projetos").select("id, nome").execute().data
+    projetos_dict = {p['nome']: p['id'] for p in projetos_resp}
+    projetos_ids = [projetos_dict.get(nome) for nome in projetos if projetos_dict.get(nome)]
+    
+    if not projetos_ids:
+        return jsonify([])
+    
+    # Buscar responsáveis desses projetos
+    ids_str = ','.join([f'"{pid}"' for pid in projetos_ids])
+    url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})&select=responsavel"
+    resp = requests.get(url, headers=headers)
+    responsaveis = resp.json() if resp.status_code == 200 else []
+    
+    # Extrair responsáveis únicos
+    responsaveis_unicos = sorted(set([r.get('responsavel', '') for r in responsaveis if r.get('responsavel')]))
+    
+    return jsonify(responsaveis_unicos)
+
+# API para buscar responsáveis por coleções
+@app.route('/api/responsaveis_por_colecoes')
+@login_required
+def api_responsaveis_por_colecoes():
+    colecoes = request.args.get('colecoes', '').split(',')
+    if not colecoes or colecoes[0] == '':
+        return jsonify([])
+    
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Buscar responsáveis com as coleções selecionadas
+    responsaveis_colecoes = []
+    for colecao in colecoes:
+        resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?colecao=eq.{quote(colecao)}&select=responsavel", headers=headers)
+        if resp.status_code == 200:
+            responsaveis_colecoes.extend(resp.json())
+    
+    # Extrair responsáveis únicos
+    responsaveis_unicos = sorted(set([r.get('responsavel', '') for r in responsaveis_colecoes if r.get('responsavel')]))
+    
+    return jsonify(responsaveis_unicos)
+
+# API para buscar responsáveis por tarefas
+@app.route('/api/responsaveis_por_tarefas')
+@login_required
+def api_responsaveis_por_tarefas():
+    tarefas = request.args.get('tarefas', '').split(',')
+    if not tarefas or tarefas[0] == '':
+        return jsonify([])
+    
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Buscar responsáveis das tarefas selecionadas
+    responsaveis_tarefas = []
+    for tarefa in tarefas:
+        resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?nome=eq.{quote(tarefa)}&select=responsavel", headers=headers)
+        if resp.status_code == 200:
+            responsaveis_tarefas.extend(resp.json())
+    
+    # Extrair responsáveis únicos
+    responsaveis_unicos = sorted(set([r.get('responsavel', '') for r in responsaveis_tarefas if r.get('responsavel')]))
+    
+    return jsonify(responsaveis_unicos)
+
+# API para buscar todos os responsáveis
+@app.route('/api/todos_responsaveis')
+@login_required
+def api_todos_responsaveis():
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    resp = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=responsavel", headers=headers)
+    todos_responsaveis_raw = resp.json() if resp.status_code == 200 else []
+    todos_responsaveis = sorted(set([r.get('responsavel', '') for r in todos_responsaveis_raw if r.get('responsavel')]))
+    
+    return jsonify(todos_responsaveis)
 
 # Rota de criação de projeto
 @app.route('/projetos/criar', methods=['GET', 'POST'])
@@ -1704,7 +2189,19 @@ def listar_pastas():
         projetos_por_pasta[tipo['id']] = [p for p in projetos if p.get('tipo_id') == tipo['id']]
     # Buscar projetos sem pasta (tipo_id nulo ou vazio)
     projetos_sem_pasta = [p for p in projetos if not p.get('tipo_id')]
-    return render_template('pastas.html', tipos=tipos, projetos_por_pasta=projetos_por_pasta, projetos_sem_pasta=projetos_sem_pasta)
+    
+    # Detectar se é dispositivo móvel
+    user_agent = request.headers.get('User-Agent', '')
+    is_mobile = is_mobile_device(user_agent)
+    
+    # Escolher template baseado no dispositivo
+    template_name = 'pastas_mobile.html'  # Forçar template mobile para teste
+    # if is_mobile:
+    #     template_name = 'pastas_mobile.html'
+    # else:
+    #     template_name = 'pastas.html'
+    
+    return render_template(template_name, tipos=tipos, projetos_por_pasta=projetos_por_pasta, projetos_sem_pasta=projetos_sem_pasta)
 
 @app.route('/pastas/criar', methods=['GET', 'POST'])
 @apenas_admin_izak

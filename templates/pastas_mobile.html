@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid px-2 py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0" style="font-size: 1.5rem; font-weight: 600;">
+      <i class="fas fa-folder-open"></i> Pastas
+    </h1>
+    <a href="{{ url_for('criar_pasta') }}" class="btn btn-success btn-sm" style="border-radius: 10px;">
+      <i class="fas fa-plus"></i> Nova
+    </a>
+  </div>
+
+  <!-- Seção: Nova Pasta -->
+  <div class="mb-4">
+    <div class="card shadow-sm" style="border-radius: 15px; border: none; background: transparent;">
+      <div class="card-body text-center py-4">
+        <a href="{{ url_for('criar_pasta') }}" class="text-decoration-none">
+          <div style="font-size: 3em; color: #28a745; margin-bottom: 0.5em;">
+            <i class="fas fa-folder-plus"></i>
+          </div>
+          <div style="font-size: 1.1em; font-weight: 600; color: #495057;">
+            Criar Nova Pasta
+          </div>
+          <div style="font-size: 0.9em; color: #6c757d; margin-top: 0.3em;">
+            Organize seus projetos
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção: Projetos Sem Pasta -->
+  {% if projetos_sem_pasta %}
+  <div class="mb-4">
+    <h5 class="mb-3" style="color: #495057; font-weight: 600;">
+      <i class="fas fa-box-open"></i> Projetos Sem Pasta
+    </h5>
+    <div class="row g-0">
+      {% for projeto in projetos_sem_pasta %}
+      <div class="col-3">
+        <div class="card shadow-sm h-100" style="border-radius: 12px; border: none; background: transparent;" 
+             draggable="true" ondragstart="dragProjeto(event, '{{ projeto.id }}')" id="projeto-{{ projeto.id }}">
+          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1" style="background: transparent;">
+            <a href="{{ url_for('detalhes_projeto', projeto_id=projeto.id) }}" class="text-decoration-none text-center">
+              <div style="font-size: 1.5em; color: #6c757d; margin-bottom: 0.2em;">
+                <i class="fas fa-box-open"></i>
+              </div>
+              <div style="font-size: 0.7em; font-weight: 600; color: #495057; line-height: 1.1;">
+                {{ projeto.nome[:12] }}{% if projeto.nome|length > 12 %}...{% endif %}
+              </div>
+            </a>
+          </div>
+          <div class="card-footer bg-white border-0 pt-0">
+            <div class="d-flex justify-content-center gap-2">
+              <a href="{{ url_for('editar_projeto', projeto_id=projeto.id) }}" 
+                 class="btn btn-warning btn-sm" style="border-radius: 8px; padding: 0.25rem 0.5rem;">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm" 
+                        style="border-radius: 8px; padding: 0.25rem 0.5rem;"
+                        onclick="return confirm('Excluir este projeto?');">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Seção: Pastas -->
+  {% if tipos %}
+  <div class="mb-4">
+    <h5 class="mb-3" style="color: #495057; font-weight: 600;">
+      <i class="fas fa-folder"></i> Suas Pastas
+    </h5>
+    <div class="row g-0">
+      {% for tipo in tipos %}
+      <div class="col-3">
+        <div class="card shadow-sm h-100" style="border-radius: 12px; border: none; background: transparent;"
+             ondragover="allowDrop(event)" ondrop="dropProjetoNaPasta(event, '{{ tipo.id }}')" id="pasta-{{ tipo.id }}">
+          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1" style="background: transparent;">
+            <a href="{{ url_for('projetos') }}?ambiente={{ tipo.id }}" class="text-decoration-none text-center">
+              <div style="font-size: 2em; color: #ffc107; margin-bottom: 0.2em;">
+                <i class="fas fa-folder"></i>
+              </div>
+              <div style="font-size: 0.8em; font-weight: 600; color: #495057; line-height: 1.1; margin-bottom: 0.2em;">
+                {{ tipo.nome[:12] }}{% if tipo.nome|length > 12 %}...{% endif %}
+              </div>
+              <div class="badge bg-secondary" style="font-size: 0.6em; padding: 0.2em 0.4em;">
+                {{ projetos_por_pasta[tipo.id]|length }} projeto{{ 's' if projetos_por_pasta[tipo.id]|length != 1 else '' }}
+              </div>
+            </a>
+          </div>
+          <div class="card-footer bg-white border-0 pt-0">
+            <div class="d-flex justify-content-center gap-2">
+              <a href="{{ url_for('editar_pasta', tipo_id=tipo.id) }}" 
+                 class="btn btn-warning btn-sm" style="border-radius: 8px; padding: 0.25rem 0.5rem;">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form action="/pastas/excluir/{{ tipo.id }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm" 
+                        style="border-radius: 8px; padding: 0.25rem 0.5rem;"
+                        onclick="return confirm('Excluir esta pasta?');">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Mensagem quando não há pastas -->
+  {% if not tipos and not projetos_sem_pasta %}
+  <div class="text-center py-5">
+    <div style="font-size: 4em; color: #dee2e6; margin-bottom: 1rem;">
+      <i class="fas fa-folder-open"></i>
+    </div>
+    <h5 style="color: #6c757d; font-weight: 500;">Nenhuma pasta criada</h5>
+    <p style="color: #adb5bd; font-size: 0.9em;">Crie sua primeira pasta para organizar os projetos</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Estilos específicos para mobile -->
+<style>
+/* Reset para garantir layout correto */
+* {
+  box-sizing: border-box;
+}
+
+.container-fluid {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+.card {
+  background: transparent !important;
+}
+
+.card-body {
+  background: transparent !important;
+}
+
+.card-footer {
+  background: transparent !important;
+}
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.card:active {
+  transform: translateY(0);
+}
+
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+/* Melhorar espaçamento em telas muito pequenas */
+@media (max-width: 576px) {
+  .col-3 {
+    padding: 0 0.05rem;
+    flex: 0 0 25% !important;
+    max-width: 25% !important;
+    width: 25% !important;
+  }
+  
+  .card-body {
+    padding: 0.5rem 0.2rem;
+  }
+  
+  .card-footer {
+    padding: 0.3rem;
+  }
+  
+  .card {
+    min-height: 120px;
+    height: 100%;
+  }
+  
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -0.1rem;
+  }
+}
+
+/* Feedback visual para drag and drop */
+.card[draggable="true"]:active {
+  opacity: 0.7;
+}
+
+.card[ondragover] {
+  border: none !important;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+let projetoArrastado = null;
+
+function dragProjeto(ev, projetoId) {
+  projetoArrastado = projetoId;
+  ev.dataTransfer.setData("text", projetoId);
+  
+  // Feedback visual
+  ev.target.style.opacity = "0.7";
+}
+
+function dropProjetoNaPasta(ev, tipoId) {
+  ev.preventDefault();
+  const projetoId = projetoArrastado || ev.dataTransfer.getData("text");
+  if (!projetoId || !tipoId) return;
+  
+  // Feedback visual
+  ev.target.style.border = "1px solid #e9ecef";
+  ev.target.style.backgroundColor = "white";
+  
+  // Mostrar loading
+  const loadingDiv = document.createElement('div');
+  loadingDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Movendo...</div>';
+  loadingDiv.style.position = 'fixed';
+  loadingDiv.style.top = '50%';
+  loadingDiv.style.left = '50%';
+  loadingDiv.style.transform = 'translate(-50%, -50%)';
+  loadingDiv.style.background = 'rgba(0,0,0,0.8)';
+  loadingDiv.style.color = 'white';
+  loadingDiv.style.padding = '1rem 2rem';
+  loadingDiv.style.borderRadius = '10px';
+  loadingDiv.style.zIndex = '9999';
+  document.body.appendChild(loadingDiv);
+  
+  // AJAX para mover projeto
+  fetch(`/projetos/${projetoId}/mover_para_pasta`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tipo_id: tipoId })
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    document.body.removeChild(loadingDiv);
+    if (data.sucesso) {
+      // Remove o card do projeto da lista sem pasta
+      const card = document.getElementById('projeto-' + projetoId);
+      if (card) {
+        card.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+          card.parentNode.removeChild(card);
+        }, 300);
+      }
+      
+      // Mostrar sucesso
+      const successDiv = document.createElement('div');
+      successDiv.innerHTML = '<div class="text-center"><i class="fas fa-check"></i> Projeto movido!</div>';
+      successDiv.style.position = 'fixed';
+      successDiv.style.top = '20px';
+      successDiv.style.left = '50%';
+      successDiv.style.transform = 'translateX(-50%)';
+      successDiv.style.background = '#28a745';
+      successDiv.style.color = 'white';
+      successDiv.style.padding = '0.75rem 1.5rem';
+      successDiv.style.borderRadius = '10px';
+      successDiv.style.zIndex = '9999';
+      document.body.appendChild(successDiv);
+      
+      setTimeout(() => {
+        document.body.removeChild(successDiv);
+        location.reload();
+      }, 1500);
+    } else {
+      alert('Erro ao mover projeto: ' + (data.erro || ''));
+    }
+  })
+  .catch(() => {
+    document.body.removeChild(loadingDiv);
+    alert('Erro ao mover projeto.');
+  });
+}
+
+// Animação de fade out
+const style = document.createElement('style');
+style.textContent = `
+@keyframes fadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.8); }
+}
+`;
+document.head.appendChild(style);
+
+// Melhorar experiência touch
+document.addEventListener('DOMContentLoaded', function() {
+  // Adicionar feedback tátil para botões
+  const buttons = document.querySelectorAll('.btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('touchstart', function() {
+      this.style.transform = 'scale(0.95)';
+    });
+    
+    btn.addEventListener('touchend', function() {
+      this.style.transform = 'scale(1)';
+    });
+  });
+});
+</script>
+{% endblock %} 
