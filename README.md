@@ -52,6 +52,33 @@ projeto-gestao/
    ```
    Acesse [http://localhost:5000](http://localhost:5000)
 
+## Expor o projeto na internet (Cloudflare Tunnel)
+
+Para tornar seu projeto acessível de qualquer lugar através da internet:
+
+### Configuração Inicial (uma vez só)
+```bash
+# Opção 1: Script Python interativo
+python cloudflared_setup.py
+
+# Opção 2: Script batch (Windows)
+setup_cloudflared.bat
+```
+
+### Uso Diário
+```bash
+# 1. Inicie sua aplicação Flask
+python app.py
+
+# 2. Em outro terminal, inicie o túnel
+python cloudflared_setup.py start projeto-gestao
+
+# Ou use o script batch
+start_cloudflared.bat
+```
+
+**📖 Guia completo:** Veja `docs/cloudflared_guide.md` para instruções detalhadas.
+
 ## Personalização do Gráfico de Gantt
 - O template principal do Gantt está em `templates/projetos_gantt_basico.html`.
 - Para customizar cores, estilos ou tooltips, edite esse arquivo e o CSS em `static/style.css`.

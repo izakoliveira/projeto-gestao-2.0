@@ -13,6 +13,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from collections import defaultdict
 from urllib.parse import quote
+from calendar import monthrange
 
 # Carrega as variáveis do .env
 load_dotenv()
@@ -404,7 +405,10 @@ def projetos():
     # Escolher template baseado no dispositivo
     template_name = 'projetos_gantt_mobile.html' if is_mobile else 'projetos_gantt_basico.html'
     
-    return render_template(template_name, projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, pode_criar_projeto=pode_criar_projeto)
+    # Cálculo de meses e dias para o Gantt
+    meses, dias = calcular_meses_dias(todas_tarefas)
+    
+    return render_template(template_name, projetos=projetos, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, pode_criar_projeto=pode_criar_projeto, meses=meses, dias=dias)
 
 # Rota de criação de projeto
 @app.route('/projetos/criar', methods=['GET', 'POST'])
@@ -1824,6 +1828,35 @@ def is_mobile_device(user_agent):
     ]
     
     return any(keyword in user_agent for keyword in mobile_keywords)
+
+# Cálculo de meses e dias para o Gantt
+def calcular_meses_dias(tarefas):
+    datas = [t.get('data_inicio_iso') for t in tarefas if t.get('data_inicio_iso')] + [t.get('data_fim_iso') for t in tarefas if t.get('data_fim_iso')]
+    datas = [d for d in datas if d]
+    if not datas:
+        return [], []
+    data_min = min(datas)
+    data_max = max(datas)
+    dt_min = datetime.strptime(data_min, '%Y-%m-%d')
+    dt_max = datetime.strptime(data_max, '%Y-%m-%d')
+    dias = []
+    meses = []
+    atual = dt_min
+    while atual <= dt_max:
+        dias.append(atual.strftime('%d/%m'))
+        atual += timedelta(days=1)
+    atual = dt_min
+    while atual <= dt_max:
+        mes_nome = atual.strftime('%b/%Y')
+        dias_mes = monthrange(atual.year, atual.month)[1]
+        dias_no_mes = len([d for d in dias if d.startswith(atual.strftime('%d/%m')[:2]) and atual.month == datetime.strptime(d, '%d/%m').month])
+        meses.append({'nome': mes_nome, 'dias': dias_no_mes})
+        # Avança para o próximo mês
+        if atual.month == 12:
+            atual = atual.replace(year=atual.year+1, month=1, day=1)
+        else:
+            atual = atual.replace(month=atual.month+1, day=1)
+    return meses, dias
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
