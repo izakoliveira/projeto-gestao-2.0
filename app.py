@@ -260,51 +260,41 @@ def projetos():
         if projeto.get('data_inicio'):
             try:
                 data_inicio = projeto['data_inicio']
-                print(f"DEBUG: Data início original: {data_inicio}")
                 # Forçar conversão para dd/mm/aaaa
                 if '-' in data_inicio:
                     dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     projeto['data_inicio'] = dt.strftime('%d/%m/%Y')
-                    print(f"DEBUG: Data início convertida: {projeto['data_inicio']}")
                 else:
                     # Se não tem hífen, tentar outros formatos
                     dt = datetime.strptime(data_inicio, '%Y/%m/%d')
                     projeto['data_inicio'] = dt.strftime('%d/%m/%Y')
-                    print(f"DEBUG: Data início convertida (outro): {projeto['data_inicio']}")
             except Exception as e:
-                print(f"DEBUG: Erro ao formatar data início: {e}")
                 # Se não conseguir formatar, tentar converter de aaaa/mm/dd para dd/mm/aaaa
                 try:
                     if '/' in data_inicio and len(data_inicio.split('/')[0]) == 4:
                         # Formato aaaa/mm/dd
                         partes = data_inicio.split('/')
                         projeto['data_inicio'] = f"{partes[2]}/{partes[1]}/{partes[0]}"
-                        print(f"DEBUG: Data início convertida de aaaa/mm/dd: {projeto['data_inicio']}")
                 except:
                     pass
         if projeto.get('data_fim'):
             try:
                 data_fim = projeto['data_fim']
-                print(f"DEBUG: Data fim original: {data_fim}")
                 # Forçar conversão para dd/mm/aaaa
                 if '-' in data_fim:
                     dt = datetime.strptime(data_fim, '%Y-%m-%d')
                     projeto['data_fim'] = dt.strftime('%d/%m/%Y')
-                    print(f"DEBUG: Data fim convertida: {projeto['data_fim']}")
                 else:
                     # Se não tem hífen, tentar outros formatos
                     dt = datetime.strptime(data_fim, '%Y/%m/%d')
                     projeto['data_fim'] = dt.strftime('%d/%m/%Y')
-                    print(f"DEBUG: Data fim convertida (outro): {projeto['data_fim']}")
             except Exception as e:
-                print(f"DEBUG: Erro ao formatar data fim: {e}")
                 # Se não conseguir formatar, tentar converter de aaaa/mm/dd para dd/mm/aaaa
                 try:
                     if '/' in data_fim and len(data_fim.split('/')[0]) == 4:
                         # Formato aaaa/mm/dd
                         partes = data_fim.split('/')
                         projeto['data_fim'] = f"{partes[2]}/{partes[1]}/{partes[0]}"
-                        print(f"DEBUG: Data fim convertida de aaaa/mm/dd: {projeto['data_fim']}")
                 except:
                     pass
     for tarefa in tarefas_filtradas:
