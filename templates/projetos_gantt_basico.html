@@ -367,7 +367,7 @@ $(document).ready(function() {
                 <div class="card-body compact-body py-2" style="position: relative; z-index: 2;">
                     <div class="mb-1">
                         <small class="text-muted">
-                            <i class="fas fa-calendar"></i> ${projeto.data_inicio || 'Não definida'} - ${projeto.data_fim || 'Não definida'}
+                            <i class="fas fa-calendar"></i> ${projeto.data_inicio ? (projeto.data_inicio.includes('-') ? projeto.data_inicio.split('-').reverse().join('/') : projeto.data_inicio) : 'Não definida'} - ${projeto.data_fim ? (projeto.data_fim.includes('-') ? projeto.data_fim.split('-').reverse().join('/') : projeto.data_fim) : 'Não definida'}
                         </small>
                     </div>
                     <div class="compact-tasks">${tarefasHtml}</div>
