@@ -312,8 +312,29 @@
                         </div>
                         <div class="mb-4" style="text-align: center;">
                             <small style="font-size: 0.65em; font-weight: 900; color: #2c3e50;">
-                                {{ projeto.data_inicio or 'Não definida' }} - {{ projeto.data_fim or 'Não definida' }}
-                                <!-- DEBUG: {{ projeto.data_inicio }} - {{ projeto.data_fim }} -->
+                                {% if projeto.data_inicio %}
+                                    {% set data_inicio = projeto.data_inicio %}
+                                    {% if '-' in data_inicio %}
+                                        {% set partes = data_inicio.split('-') %}
+                                        {{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}
+                                    {% else %}
+                                        {{ data_inicio }}
+                                    {% endif %}
+                                {% else %}
+                                    Não definida
+                                {% endif %}
+                                - 
+                                {% if projeto.data_fim %}
+                                    {% set data_fim = projeto.data_fim %}
+                                    {% if '-' in data_fim %}
+                                        {% set partes = data_fim.split('-') %}
+                                        {{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}
+                                    {% else %}
+                                        {{ data_fim }}
+                                    {% endif %}
+                                {% else %}
+                                    Não definida
+                                {% endif %}
                             </small>
                         </div>
 
