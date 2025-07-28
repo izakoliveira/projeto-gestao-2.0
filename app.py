@@ -258,13 +258,33 @@ def projetos():
     for projeto in projetos:
         if projeto.get('data_inicio'):
             try:
-                projeto['data_inicio'] = datetime.strptime(projeto['data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
+                # Tentar diferentes formatos de data
+                data_inicio = projeto['data_inicio']
+                if '-' in data_inicio:
+                    projeto['data_inicio'] = datetime.strptime(data_inicio, '%Y-%m-%d').strftime('%d/%m/%Y')
+                elif '/' in data_inicio:
+                    # Se já está no formato dd/mm/aaaa, manter
+                    projeto['data_inicio'] = data_inicio
+                else:
+                    # Tentar outros formatos
+                    projeto['data_inicio'] = datetime.strptime(data_inicio, '%Y-%m-%d').strftime('%d/%m/%Y')
             except Exception:
+                # Se não conseguir formatar, manter original
                 pass
         if projeto.get('data_fim'):
             try:
-                projeto['data_fim'] = datetime.strptime(projeto['data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
+                # Tentar diferentes formatos de data
+                data_fim = projeto['data_fim']
+                if '-' in data_fim:
+                    projeto['data_fim'] = datetime.strptime(data_fim, '%Y-%m-%d').strftime('%d/%m/%Y')
+                elif '/' in data_fim:
+                    # Se já está no formato dd/mm/aaaa, manter
+                    projeto['data_fim'] = data_fim
+                else:
+                    # Tentar outros formatos
+                    projeto['data_fim'] = datetime.strptime(data_fim, '%Y-%m-%d').strftime('%d/%m/%Y')
             except Exception:
+                # Se não conseguir formatar, manter original
                 pass
     for tarefa in tarefas_filtradas:
         data_inicio_raw = tarefa.get('data_inicio')
