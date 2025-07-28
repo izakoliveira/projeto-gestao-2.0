@@ -261,12 +261,10 @@
                 {% if alerta %}
                     {% if alerta.tipo == 'atrasado' %}
                         {% set card_style = 'border-left: 4px solid #dc3545;' %}
-                        {% set alerta_badge = '<span class="badge bg-danger" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;" title="' + alerta.quantidade|string + ' tarefa(s) atrasada(s)"><i class="fas fa-exclamation-triangle"></i></span>' %}
-                        {% set alerta_icon = '<i class="fas fa-exclamation-triangle text-danger me-1"></i>' %}
+                        {% set alerta_icon = '<i class="fas fa-exclamation-triangle text-danger me-1" title="' + alerta.quantidade|string + ' tarefa(s) atrasada(s)"></i>' %}
                     {% elif alerta.tipo == 'pendente' %}
-                        {% set card_style = 'border-left: 4px solid #ffc107;' %}
-                        {% set alerta_badge = '<span class="badge bg-warning text-dark" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;" title="' + alerta.quantidade|string + ' tarefa(s) pendente(s)"><i class="fas fa-clock"></i></span>' %}
-                        {% set alerta_icon = '<i class="fas fa-clock text-warning me-1"></i>' %}
+                        {% set card_style = 'border-left: 4px solid #e0a800;' %}
+                        {% set alerta_icon = '<i class="fas fa-clock text-warning me-1" title="' + alerta.quantidade|string + ' tarefa(s) pendente(s)"></i>' %}
                     {% endif %}
                 {% endif %}
                 
@@ -275,7 +273,7 @@
                         <h6 class="mb-0" style="font-size: 0.78em; font-weight: bold; text-align: center; margin: 0 auto; display: flex; align-items: center; height: 100%; padding-top: 2px;">
                             {% if alerta %}{{ alerta_icon|safe }}{% endif %}{{ projeto.nome[:25] }}{% if projeto.nome|length > 25 %}...{% endif %}
                         </h6>
-                        {% if alerta_badge %}{{ alerta_badge|safe }}{% elif projeto.status %}
+                        {% if projeto.status %}
                         <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;">{{ projeto.status }}</span>
                         {% endif %}
                     </div>
