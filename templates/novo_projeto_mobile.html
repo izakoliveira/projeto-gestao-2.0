@@ -1,15 +1,12 @@
-<!-- novo_projeto.html -->
 {% extends "base.html" %}
 
-{% block title %}Criar Novo Projeto - Gestão de Projetos{% endblock %}
-
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid px-3 py-2">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
+        <div class="col-12">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-plus"></i> Criar Novo Projeto</h4>
+                    <h5 class="mb-0"><i class="fas fa-plus"></i> Criar Novo Projeto</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/projetos/novo" novalidate id="form-novo-projeto">
@@ -36,12 +33,12 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-6 mb-3">
                                 <label for="data_inicio" class="form-label">Data de Início:</label>
                                 <input type="date" class="form-control" id="data_inicio" name="data_inicio" required>
                                 <div class="invalid-feedback">A data de início é obrigatória.</div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-6 mb-3">
                                 <label for="data_fim" class="form-label">Data de Término:</label>
                                 <input type="date" class="form-control" id="data_fim" name="data_fim" required>
                                 <div class="invalid-feedback">A data de término é obrigatória.</div>
@@ -65,7 +62,7 @@
                                 {% for tarefa in tarefas_unicas %}
                                 <div class="tarefa-item mb-1 p-2 border rounded">
                                     <div class="row align-items-center">
-                                        <div class="col-8 col-md-9">
+                                        <div class="col-8">
                                             <div class="mb-0">
                                                 <label class="form-label mb-1">
                                                     <strong class="text-sm">{{ tarefa.nome }}</strong>
@@ -78,7 +75,7 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="col-4 col-md-3">
+                                        <div class="col-4">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text">Qtd</span>
                                                 <input type="number" class="form-control quantidade-input" 
@@ -97,7 +94,7 @@
                                 <i class="fas fa-check"></i> Criar Projeto
                             </button>
                             <a href="/projetos" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Voltar para a Lista de Projetos
+                                <i class="fas fa-arrow-left"></i> Voltar
                             </a>
                         </div>
                     </form>
@@ -187,57 +184,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-// Validação visual do formulário de novo projeto
-const formNovoProjeto = document.getElementById('form-novo-projeto');
-formNovoProjeto.addEventListener('submit', function (e) {
-    let valido = true;
-    // Nome
-    const nome = document.getElementById('nome');
-    if (!nome.value.trim()) {
-        nome.classList.add('is-invalid');
-        valido = false;
-    } else {
-        nome.classList.remove('is-invalid');
-    }
-    // Descrição
-    const descricao = document.getElementById('descricao');
-    if (!descricao.value.trim()) {
-        descricao.classList.add('is-invalid');
-        valido = false;
-    } else {
-        descricao.classList.remove('is-invalid');
-    }
-    // Tipo de Projeto
-    const tipoProjeto = document.getElementById('tipo_id');
-    if (tipoProjeto.value === "") {
-        tipoProjeto.classList.add('is-invalid');
-        valido = false;
-    } else {
-        tipoProjeto.classList.remove('is-invalid');
-    }
-    // Data início
-    const dataInicio = document.getElementById('data_inicio');
-    if (!dataInicio.value) {
-        dataInicio.classList.add('is-invalid');
-        valido = false;
-    } else {
-        dataInicio.classList.remove('is-invalid');
-    }
-    // Data fim
-    const dataFim = document.getElementById('data_fim');
-    if (!dataFim.value) {
-        dataFim.classList.add('is-invalid');
-        valido = false;
-    } else {
-        dataFim.classList.remove('is-invalid');
-    }
-    if (!valido) {
-        e.preventDefault();
-        e.stopPropagation();
-        alert('Por favor, preencha todos os campos obrigatórios.');
-        return false;
-    }
-});
 </script>
-{% endblock %}
+{% endblock %} 

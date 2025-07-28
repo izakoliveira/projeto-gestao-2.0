@@ -999,6 +999,18 @@ def api_todos_responsaveis():
 @login_required
 @funcionalidade_restrita('restr_criar_projeto')
 def criar_projeto():
+    tipos = supabase.table('tipos_projeto').select('*').order('nome').execute().data or []
+    tarefas_unicas = []
+    
+    # Buscar tarefas únicas de forma simples
+    try:
+        print("DEBUG: Buscando tarefas únicas...")
+        tarefas_unicas = supabase.table('tarefas_unicas').select('*').order('ordem').execute().data or []
+        print(f"DEBUG: Tarefas encontradas: {len(tarefas_unicas)}")
+    except Exception as e:
+        print(f"DEBUG: Erro ao buscar tarefas: {e}")
+        tarefas_unicas = []
+    
     usuario_id = session['user_id']
     usuario_email = session.get('user_nome', '')
 
@@ -1011,15 +1023,15 @@ def criar_projeto():
             data_fim = data.get('data_fim')
         else:
             nome = request.form.get('nome')
-        descricao = request.form.get('descricao', '')
-        data_inicio = request.form.get('data_inicio')
-        data_fim = request.form.get('data_fim')
+            descricao = request.form.get('descricao', '')
+            data_inicio = request.form.get('data_inicio')
+            data_fim = request.form.get('data_fim')
 
         # Validação de dados
         erro = validar_projeto(nome, data_inicio, data_fim)
         if erro:
             flash(erro)
-            return render_template('novo_projeto.html')  # Exibe o formulário novamente com o erro
+            return render_template('novo_projeto.html', tipos=tipos, tarefas_unicas=tarefas_unicas)
 
         try:
             # Inserindo o projeto no banco de dados
@@ -1034,6 +1046,34 @@ def criar_projeto():
             resp = supabase.table("projetos").insert(data).execute()
             print('Resposta do Supabase:', resp)
             if hasattr(resp, 'data') and resp.data:
+                projeto_id = resp.data[0]['id']
+                
+                # Processar tarefas baseado apenas nas quantidades
+                # Buscar todas as tarefas únicas para verificar quantidades
+                todas_tarefas_unicas = supabase.table('tarefas_unicas').select('*').order('ordem').execute().data or []
+                
+                for tarefa_unica in todas_tarefas_unicas:
+                    tarefa_id = tarefa_unica['id']
+                    # Buscar quantidade para esta tarefa
+                    quantidade = request.form.get(f'quantidades_{tarefa_id}', 0)
+                    quantidade = int(quantidade) if quantidade else 0
+                    
+                    if quantidade > 0:
+                        # Criar múltiplas instâncias da tarefa
+                        for j in range(quantidade):
+                            nova_tarefa = {
+                                'nome': tarefa_unica['nome'],
+                                'descricao': tarefa_unica.get('descricao', ''),
+                                'data_inicio': data_inicio,
+                                'data_fim': data_fim,
+                                'status': 'pendente',
+                                'projeto_id': projeto_id,
+                                'usuario_id': usuario_id,
+                                'duracao': tarefa_unica.get('duracao', 1),
+                                'ordem': j + 1
+                            }
+                            supabase.table('tarefas').insert(nova_tarefa).execute()
+                
                 flash("Projeto criado com sucesso!")
                 return redirect('/projetos')
             else:
@@ -1041,9 +1081,9 @@ def criar_projeto():
         except Exception as e:
             flash(f"Erro ao criar o projeto: {str(e)}")
             print(f"Erro ao criar o projeto: {e}")
-            return render_template('novo_projeto.html')  # Exibe o formulário em caso de erro
+            return render_template('novo_projeto.html', tipos=tipos, tarefas_unicas=tarefas_unicas)
 
-    return render_template('novo_projeto.html')  # Exibe o formulário de criação de projeto
+    return render_template('novo_projeto.html', tipos=tipos, tarefas_unicas=tarefas_unicas)
 
 # Rota de cadastro
 @app.route('/cadastro', methods=['GET', 'POST'])
@@ -2364,6 +2404,17 @@ def excluir_pasta(tipo_id):
 @funcionalidade_restrita('criar_projeto')
 def novo_projeto():
     tipos = supabase.table('tipos_projeto').select('*').order('nome').execute().data or []
+    tarefas_unicas = []
+    
+    # Buscar tarefas únicas de forma simples
+    try:
+        print("DEBUG: Buscando tarefas únicas...")
+        tarefas_unicas = supabase.table('tarefas_unicas').select('*').order('ordem').execute().data or []
+        print(f"DEBUG: Tarefas encontradas: {len(tarefas_unicas)}")
+    except Exception as e:
+        print(f"DEBUG: Erro ao buscar tarefas: {e}")
+        tarefas_unicas = []
+    
     if request.method == 'POST':
         nome = request.form['nome']
         descricao = request.form['descricao']
@@ -2371,6 +2422,8 @@ def novo_projeto():
         data_fim = request.form['data_fim']
         tipo_id = request.form.get('tipo_id')
         usuario_id = session.get('user_id')
+        
+        # Criar o projeto
         projeto = {
             'nome': nome,
             'descricao': descricao,
@@ -2380,12 +2433,80 @@ def novo_projeto():
             'usuario_id': usuario_id
         }
         resp = supabase.table('projetos').insert(projeto).execute()
+        
         if hasattr(resp, 'data') and resp.data:
+            projeto_id = resp.data[0]['id']
+            
+            # Processar tarefas baseado apenas nas quantidades
+            # Buscar todas as tarefas únicas para verificar quantidades
+            todas_tarefas_unicas = supabase.table('tarefas_unicas').select('*').order('ordem').execute().data or []
+            
+            for tarefa_unica in todas_tarefas_unicas:
+                tarefa_id = tarefa_unica['id']
+                # Buscar quantidade para esta tarefa
+                quantidade = request.form.get(f'quantidades_{tarefa_id}', 0)
+                quantidade = int(quantidade) if quantidade else 0
+                
+                if quantidade > 0:
+                    # Criar múltiplas instâncias da tarefa
+                    for j in range(quantidade):
+                        nova_tarefa = {
+                            'nome': tarefa_unica['nome'],
+                            'descricao': tarefa_unica.get('descricao', ''),
+                            'data_inicio': data_inicio,
+                            'data_fim': data_fim,
+                            'status': 'pendente',
+                            'projeto_id': projeto_id,
+                            'usuario_id': usuario_id,
+                            'duracao': tarefa_unica.get('duracao', 1),
+                            'ordem': j + 1
+                        }
+                        supabase.table('tarefas').insert(nova_tarefa).execute()
+            
             flash('Projeto criado com sucesso!')
             return redirect(url_for('projetos'))
         else:
             flash('Erro ao criar projeto.')
-    return render_template('novo_projeto.html', tipos=tipos)
+    
+    # Detectar se é dispositivo móvel
+    user_agent = request.headers.get('User-Agent', '')
+    is_mobile = is_mobile_device(user_agent)
+    
+    if is_mobile:
+        return render_template('novo_projeto_mobile.html', tipos=tipos, tarefas_unicas=tarefas_unicas)
+    else:
+        return render_template('novo_projeto.html', tipos=tipos, tarefas_unicas=tarefas_unicas)
+
+@app.route('/tarefas-unicas/criar-exemplo', methods=['POST'])
+@apenas_admin_izak
+@login_required
+def criar_tarefas_unicas_exemplo():
+    tarefas_exemplo = [
+        {'nome': 'Costura Externa', 'descricao': 'Costura externa do produto', 'duracao': 2},
+        {'nome': 'Modelagem', 'descricao': 'Criação da modelagem do produto', 'duracao': 3},
+        {'nome': 'Pilota', 'descricao': 'Confecção da pilota', 'duracao': 1},
+        {'nome': 'Ajuste de Modelagem', 'descricao': 'Ajustes na modelagem', 'duracao': 1},
+        {'nome': 'Produção', 'descricao': 'Produção em larga escala', 'duracao': 5},
+        {'nome': 'Controle de Qualidade', 'descricao': 'Verificação da qualidade', 'duracao': 1},
+        {'nome': 'Embalagem', 'descricao': 'Embalagem do produto final', 'duracao': 1}
+    ]
+    
+    for tarefa in tarefas_exemplo:
+        try:
+            supabase.table('tarefas_unicas').insert(tarefa).execute()
+        except Exception as e:
+            print(f"Erro ao criar tarefa {tarefa['nome']}: {e}")
+    
+    flash('Tarefas únicas de exemplo criadas com sucesso!')
+    return redirect(url_for('novo_projeto'))
+
+@app.route('/teste-simples')
+def teste_simples():
+    return "Servidor funcionando!"
+
+
+
+
 
 @app.route('/projetos/<uuid:projeto_id>/remover_pasta', methods=['POST'])
 @login_required
