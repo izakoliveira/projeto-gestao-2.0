@@ -70,20 +70,47 @@
 #offcanvas-filtros-novo .btn-danger {
     border-radius: 10px !important;
 }
+
+/* Estilos para o scroll dos filtros */
+#offcanvas-filtros-novo .filtros-scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
 </style>
 <!-- Painel lateral de filtros FORA do container -->
-<div id="offcanvas-filtros-novo" style="position: fixed; top: 0; left: 0; height: 100dvh; width: 85vw; max-width: 340px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden; padding: 20px 18px 18px 18px;">
-    <form id="filtros-mobile-novo" method="GET" action="/projetos" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
-        <!-- Cabeçalho do menu lateral -->
-        <div id="filtros-header" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 0 0 12px 2px; border-bottom: 1px solid #eee; margin-bottom: 12px;">
-            <span style="display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
-                <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
-            </span>
-            <button id="btn-fechar-filtros-novo" type="button" style="position: absolute; top: 0; right: 0; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
+<div id="offcanvas-filtros-novo" style="position: fixed; top: 0; left: 0; height: 100dvh; width: 85vw; max-width: 340px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden;">
+    <!-- Cabeçalho fixo -->
+    <div id="filtros-header" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
+        <span style="display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
+            <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
+        </span>
+        <button id="btn-fechar-filtros-novo" type="button" style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <!-- Área de scroll para os filtros -->
+    <div class="filtros-scroll-area" style="flex: 1; overflow-y: auto; padding: 18px;">
+        <form id="filtros-mobile-novo" method="GET" action="/projetos" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
         <!-- Botão de logout dentro do menu -->
         <!-- Removido botão de logout do menu lateral -->
         <!-- Filtro Projeto (select múltiplo) -->
@@ -188,6 +215,7 @@
             <button type="button" class="btn btn-secondary" id="limpar-filtros" style="flex: 1;">Limpar</button>
         </div>
     </form>
+    </div>
 </div>
 <div id="filtros-backdrop-novo" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9998;"></div>
 <div class="container mt-4">
