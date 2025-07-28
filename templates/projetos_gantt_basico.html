@@ -244,8 +244,11 @@ $(document).ready(function() {
     const CARD_GAP = 18;
     const BUFFER = 2; // Quantos cards extras renderizar antes/depois
 
-    // --- NOVO: variável de permissão ---
+    // --- NOVO: variáveis de permissão ---
     const podeCriarProjeto = {{ pode_criar_projeto|tojson }};
+    const podeEditarProjeto = {{ pode_editar_projeto|tojson }};
+    const podeExcluirProjeto = {{ pode_excluir_projeto|tojson }};
+    const alertasProjetos = {{ alertas_projetos|tojson }};
 
     // Renderiza o card de "Novo Projeto" somente se permitido
     function renderNovoProjetoCard() {
@@ -295,13 +298,29 @@ $(document).ready(function() {
         } else {
             tarefasHtml = '<div class="text-muted small">Nenhuma tarefa encontrada.</div>';
         }
+        // Verificar se há alertas para este projeto
+        const alerta = alertasProjetos[projeto.id];
+        let alertaHtml = '';
+        let cardStyle = '';
+        
+        if (alerta) {
+            if (alerta.tipo === 'atrasado') {
+                alertaHtml = `<span class="badge bg-danger" title="${alerta.quantidade} tarefa(s) atrasada(s)"><i class="fas fa-exclamation-triangle"></i> Atrasado</span>`;
+                cardStyle = 'border-left: 4px solid #dc3545;';
+            } else if (alerta.tipo === 'pendente') {
+                alertaHtml = `<span class="badge bg-warning text-dark" title="${alerta.quantidade} tarefa(s) pendente(s)"><i class="fas fa-clock"></i> Pendente</span>`;
+                cardStyle = 'border-left: 4px solid #ffc107;';
+            }
+        }
+        
         return `<div class="carousel-item">
-            <div class="card compact-card shadow-sm" style="min-width: 260px; max-width: 260px;">
+            <div class="card compact-card shadow-sm" style="min-width: 260px; max-width: 260px; ${cardStyle}">
                 <div class="card-header compact-header d-flex justify-content-between align-items-center py-2">
-                    <h6 class="mb-0"><i class="fas fa-project-diagram"></i> ${projeto.nome}</h6>
-                    <span class="badge ${projeto.status === 'Concluído' ? 'badge-success' : 'badge-warning'}">
-                        ${projeto.status || 'Sem status'}
-                    </span>
+                    <h6 class="mb-0">
+                        ${alerta ? '<i class="fas fa-exclamation-triangle text-warning me-1"></i>' : '<i class="fas fa-project-diagram"></i>'} 
+                        ${projeto.nome}
+                    </h6>
+                    ${alertaHtml}
                 </div>
                 <div class="card-body compact-body py-2">
                     <div class="mb-1">
@@ -311,13 +330,13 @@ $(document).ready(function() {
                     </div>
                     <div class="compact-tasks">${tarefasHtml}</div>
                 </div>
-                <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2">
+                <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-center py-2">
                     <div class="btn-group" role="group">
                         <a href="/projetos/${projeto.id}" class="btn btn-info btn-sm" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
-                        <a href="/projetos/editar/${projeto.id}" class="btn btn-warning btn-sm" title="Editar"><i class="fas fa-edit"></i></a>
-                        <form action="/projetos/excluir/${projeto.id}" method="POST" style="display:inline;">
+                        ${podeEditarProjeto ? `<a href="/projetos/editar/${projeto.id}" class="btn btn-warning btn-sm" title="Editar"><i class="fas fa-edit"></i></a>` : ''}
+                        ${podeExcluirProjeto ? `<form action="/projetos/excluir/${projeto.id}" method="POST" style="display:inline;">
                             <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto" data-projeto-id="${projeto.id}" title="Excluir"><i class="fas fa-trash"></i></button>
-                        </form>
+                        </form>` : ''}
                     </div>
                 </div>
             </div>

@@ -78,23 +78,11 @@
                             <i class="fas fa-sign-out-alt"></i> Sair
                         </a>
                     </li>
-                    <!-- Removido botão de dark mode -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                            data-bs-toggle="dropdown">
+                    <!-- Nome do usuário -->
+                    <li class="nav-item">
+                        <span class="nav-link">
                             <i class="fas fa-user"></i> {{ session.user_nome }}
-                            <span class="text-warning small">({{ session.user_email }})</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            {% if session.user_email == 'izak.gomes59@gmail.com' %}
-                            <li><a class="dropdown-item" href="{{ url_for('admin_restricoes') }}">
-                                    <i class="fas fa-user-shield"></i> Administração
-                                </a></li>
-                            {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
-                                    <i class="fas fa-sign-out-alt"></i> Sair
-                                </a></li>
-                        </ul>
+                        </span>
                     </li>
                 </ul>
             </div>

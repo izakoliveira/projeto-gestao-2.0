@@ -225,10 +225,29 @@
         <div class="carousel-cards" id="carousel-cards">
             {% if projetos %}
                 {% for projeto in projetos %}
-                <div class="projeto-card-mobile" style="display: flex !important; flex-direction: column !important; min-height: 320px; max-height: 320px; height: 320px; vertical-align:top!important;">
+                {% set alerta = alertas_projetos.get(projeto.id) %}
+                {% set card_style = '' %}
+                {% set alerta_badge = '' %}
+                {% set alerta_icon = '' %}
+                
+                {% if alerta %}
+                    {% if alerta.tipo == 'atrasado' %}
+                        {% set card_style = 'border-left: 4px solid #dc3545;' %}
+                        {% set alerta_badge = '<span class="badge bg-danger" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;" title="' + alerta.quantidade|string + ' tarefa(s) atrasada(s)"><i class="fas fa-exclamation-triangle"></i></span>' %}
+                        {% set alerta_icon = '<i class="fas fa-exclamation-triangle text-danger me-1"></i>' %}
+                    {% elif alerta.tipo == 'pendente' %}
+                        {% set card_style = 'border-left: 4px solid #ffc107;' %}
+                        {% set alerta_badge = '<span class="badge bg-warning text-dark" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;" title="' + alerta.quantidade|string + ' tarefa(s) pendente(s)"><i class="fas fa-clock"></i></span>' %}
+                        {% set alerta_icon = '<i class="fas fa-clock text-warning me-1"></i>' %}
+                    {% endif %}
+                {% endif %}
+                
+                <div class="projeto-card-mobile" style="display: flex !important; flex-direction: column !important; min-height: 320px; max-height: 320px; height: 320px; vertical-align:top!important; {{ card_style }}">
                     <div class="card-header compact-header" style="background: #e6eaff; border-bottom: 1px solid #bfc6e0; position: relative; height: 65px; display: flex; justify-content: center; align-items: center; padding: 0 36px;">
-                        <h6 class="mb-0" style="font-size: 0.78em; font-weight: bold; text-align: center; margin: 0 auto; display: flex; align-items: center; height: 100%; padding-top: 2px;">{{ projeto.nome[:25] }}{% if projeto.nome|length > 25 %}...{% endif %}</h6>
-                        {% if projeto.status %}
+                        <h6 class="mb-0" style="font-size: 0.78em; font-weight: bold; text-align: center; margin: 0 auto; display: flex; align-items: center; height: 100%; padding-top: 2px;">
+                            {% if alerta %}{{ alerta_icon|safe }}{% endif %}{{ projeto.nome[:25] }}{% if projeto.nome|length > 25 %}...{% endif %}
+                        </h6>
+                        {% if alerta_badge %}{{ alerta_badge|safe }}{% elif projeto.status %}
                         <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;">{{ projeto.status }}</span>
                         {% endif %}
                     </div>
@@ -250,16 +269,20 @@
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </form>
+                            {% if pode_editar_projeto %}
                             <form action="/projetos/editar/{{ projeto.id }}" method="get" style="display:inline;">
                                 <button type="submit" class="btn btn-warning btn-sm" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </form>
+                            {% endif %}
+                            {% if pode_excluir_projeto %}
                             <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
                                 <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto" data-projeto-id="{{ projeto.id }}" title="Excluir">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

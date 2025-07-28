@@ -327,15 +327,19 @@ def projetos():
                         return 2000 <= ano <= 2100
                     except Exception:
                         return False
+                # Adicionar tarefa mesmo sem datas válidas para o Gantt
+                projeto['tarefas'].append(t_copia)
+                # Se tem datas válidas, calcular duration para o Gantt
                 if data_valida(di) and data_valida(df):
                     try:
                         dt_inicio = datetime.strptime(di, '%Y-%m-%d')
                         dt_fim = datetime.strptime(df, '%Y-%m-%d')
                         duration = (dt_fim - dt_inicio).days + 1
                         t_copia['duration'] = duration
-                        projeto['tarefas'].append(t_copia)
                     except Exception:
-                        pass
+                        t_copia['duration'] = 1
+                else:
+                    t_copia['duration'] = 1
         gantt_data = []
         gantt_links = []
         for t in projeto['tarefas']:
@@ -428,9 +432,13 @@ def projetos():
     todas_tarefas_raw = resp.json() if resp.status_code == 200 else []
     todas_tarefas = sorted(set([t.get('nome', '') for t in todas_tarefas_raw if t.get('nome')]))
     
-    # Buscar todas as tarefas completas para o Gantt (com datas)
-    resp_gantt = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=*", headers=headers)
-    todas_tarefas_gantt = resp_gantt.json() if resp_gantt.status_code == 200 else []
+    # Buscar todas as tarefas completas para o Gantt (com datas) - MOVER PARA DEPOIS DOS FILTROS
+    # resp_gantt = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=*", headers=headers)
+    # todas_tarefas_gantt = resp_gantt.json() if resp_gantt.status_code == 200 else []
+    # print(f"DEBUG: Status da resposta do Gantt: {resp_gantt.status_code}")
+    # print(f"DEBUG: Tarefas carregadas para Gantt: {len(todas_tarefas_gantt)}")
+    # if todas_tarefas_gantt:
+    #     print(f"DEBUG: Exemplo de tarefa: {todas_tarefas_gantt[0]}")
     
     # Buscar todos os responsáveis disponíveis para o filtro
     resp_responsaveis = requests.get(f"{SUPABASE_URL}/rest/v1/tarefas?select=responsavel", headers=headers)
@@ -553,6 +561,8 @@ def projetos():
     restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
     is_admin = session.get('user_email') == 'izak.gomes59@gmail.com'
     pode_criar_projeto = is_admin or not restricoes_usuario.get('restr_criar_projeto', False)
+    pode_editar_projeto = is_admin or not restricoes_usuario.get('restr_editar_projeto', False)
+    pode_excluir_projeto = is_admin or not restricoes_usuario.get('restr_excluir_projeto', False)
     
     # Detectar se é dispositivo móvel
     user_agent = request.headers.get('User-Agent', '')
@@ -571,10 +581,68 @@ def projetos():
     else:
         template_name = 'projetos_gantt_basico.html'
     
+    # Buscar todas as tarefas completas para o Gantt (com datas) - DEPOIS DOS FILTROS
+    projeto_ids_final = [projeto['id'] for projeto in projetos]
+    todas_tarefas_gantt = []
+    if projeto_ids_final:
+        ids_str = ','.join([f'"{pid}"' for pid in projeto_ids_final])
+        url_gantt = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})&select=*"
+        resp_gantt = requests.get(url_gantt, headers=headers)
+        todas_tarefas_gantt = resp_gantt.json() if resp_gantt.status_code == 200 else []
+        print(f"DEBUG: Status da resposta do Gantt: {resp_gantt.status_code}")
+        print(f"DEBUG: Tarefas carregadas para Gantt: {len(todas_tarefas_gantt)}")
+        if todas_tarefas_gantt:
+            print(f"DEBUG: Exemplo de tarefa: {todas_tarefas_gantt[0]}")
+    
     # Cálculo de meses e dias para o Gantt
     meses, dias = calcular_meses_dias(todas_tarefas_gantt)
     
-    return render_template(template_name, projetos=projetos, todos_projetos=todos_projetos, todas_tarefas=todas_tarefas, todos_responsaveis=todos_responsaveis, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, nome_pasta=nome_pasta, pode_criar_projeto=pode_criar_projeto, meses=meses, dias=dias)
+    # --- NOVO: Detectar tarefas pendentes atrasadas ---
+    from datetime import datetime, date
+    hoje = date.today()
+    
+    # Função para verificar se uma tarefa está atrasada
+    def tarefa_atrasada(tarefa):
+        if tarefa.get('status') != 'pendente':
+            return False
+        if not tarefa.get('data_inicio'):
+            return False
+        try:
+            data_inicio = datetime.strptime(tarefa['data_inicio'], '%Y-%m-%d').date()
+            return data_inicio < hoje
+        except:
+            return False
+    
+    # Agrupar tarefas por projeto e verificar atrasos
+    alertas_projetos = {}
+    print(f"DEBUG: Total de tarefas em todas_tarefas_gantt: {len(todas_tarefas_gantt)}")
+    print(f"DEBUG: Total de projetos: {len(projetos)}")
+    
+    for projeto in projetos:
+        projeto_id = projeto['id']
+        # Usar todas_tarefas_gantt que contém os dados completos das tarefas
+        tarefas_projeto = [t for t in todas_tarefas_gantt if t.get('projeto_id') == projeto_id]
+        print(f"DEBUG: Projeto {projeto['nome']} ({projeto_id}) tem {len(tarefas_projeto)} tarefas")
+        
+        tarefas_atrasadas = [t for t in tarefas_projeto if tarefa_atrasada(t)]
+        tarefas_pendentes = [t for t in tarefas_projeto if t.get('status') == 'pendente']
+        
+        print(f"DEBUG: Tarefas atrasadas: {len(tarefas_atrasadas)}, Tarefas pendentes: {len(tarefas_pendentes)}")
+        
+        if tarefas_atrasadas:
+            alertas_projetos[projeto_id] = {
+                'tipo': 'atrasado',
+                'quantidade': len(tarefas_atrasadas),
+                'tarefas': tarefas_atrasadas
+            }
+        elif tarefas_pendentes:
+            alertas_projetos[projeto_id] = {
+                'tipo': 'pendente',
+                'quantidade': len(tarefas_pendentes),
+                'tarefas': tarefas_pendentes
+            }
+    
+    return render_template(template_name, projetos=projetos, todos_projetos=todos_projetos, todas_tarefas=todas_tarefas, todos_responsaveis=todos_responsaveis, gantt_geral_data=gantt_geral_data, projects_colors=cor_projetos, colecoes=colecoes, tipos=tipos, nome_pasta=nome_pasta, pode_criar_projeto=pode_criar_projeto, pode_editar_projeto=pode_editar_projeto, pode_excluir_projeto=pode_excluir_projeto, meses=meses, dias=dias, alertas_projetos=alertas_projetos)
 
 # API para buscar coleções por projetos
 @app.route('/api/colecoes_por_projetos')
@@ -2190,18 +2258,25 @@ def listar_pastas():
     # Buscar projetos sem pasta (tipo_id nulo ou vazio)
     projetos_sem_pasta = [p for p in projetos if not p.get('tipo_id')]
     
+    # --- NOVO BLOCO: checagem de permissão para projetos ---
+    restricoes = carregar_restricoes()
+    usuario_id = session.get('user_id')
+    restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+    is_admin = session.get('user_email') == 'izak.gomes59@gmail.com'
+    pode_editar_projeto = is_admin or not restricoes_usuario.get('restr_editar_projeto', False)
+    pode_excluir_projeto = is_admin or not restricoes_usuario.get('restr_excluir_projeto', False)
+    
     # Detectar se é dispositivo móvel
     user_agent = request.headers.get('User-Agent', '')
     is_mobile = is_mobile_device(user_agent)
     
     # Escolher template baseado no dispositivo
-    template_name = 'pastas_mobile.html'  # Forçar template mobile para teste
-    # if is_mobile:
-    #     template_name = 'pastas_mobile.html'
-    # else:
-    #     template_name = 'pastas.html'
+    if is_mobile:
+        template_name = 'pastas_mobile.html'
+    else:
+        template_name = 'pastas.html'
     
-    return render_template(template_name, tipos=tipos, projetos_por_pasta=projetos_por_pasta, projetos_sem_pasta=projetos_sem_pasta)
+    return render_template(template_name, tipos=tipos, projetos_por_pasta=projetos_por_pasta, projetos_sem_pasta=projetos_sem_pasta, pode_editar_projeto=pode_editar_projeto, pode_excluir_projeto=pode_excluir_projeto)
 
 @app.route('/pastas/criar', methods=['GET', 'POST'])
 @apenas_admin_izak
