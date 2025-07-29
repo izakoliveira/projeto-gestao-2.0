@@ -228,14 +228,13 @@ def projetos():
     if projeto_ids:
         ids_str = ','.join([f'"{pid}"' for pid in projeto_ids])
         url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})"
-        if status_list:
-            # Codificar o status para URL (tratar espaços e caracteres especiais)
-            status_encoded = quote(status_list[0])
-            for status in status_list[1:]:
-                status_encoded += f",{quote(status)}"
-            url += f"&status=in.({status_encoded})"
         resp = requests.get(url, headers=headers)
         tarefas_filtradas = resp.json() if resp.status_code == 200 else []
+        
+        # Filtro de status (múltiplo) - igual ao coleção
+        if status_list:
+            tarefas_filtradas = [t for t in tarefas_filtradas if t.get('status') in status_list]
+        
         # Filtro de colecao (múltiplo)
         colecao_list = request.args.getlist('colecao')
         if colecao_list:

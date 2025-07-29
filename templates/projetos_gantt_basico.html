@@ -563,6 +563,28 @@ $(document).ready(function() {
     } else {
         console.log('Campo coleção não encontrado');
     }
+    
+    if ($('#status').length) {
+        console.log('Inicializando Select2 para status...');
+        try {
+            if ($.fn.select2 && $('#status').data('select2')) {
+                $('#status').select2('destroy');
+            }
+            $('#status').select2({
+                placeholder: 'Filtrar por status',
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5',
+                closeOnSelect: false,
+                dropdownAutoWidth: true
+            });
+            console.log('Select2 inicializado com sucesso');
+        } catch (error) {
+            console.error('Erro ao inicializar Select2:', error);
+        }
+    } else {
+        console.log('Campo status não encontrado');
+    }
     });
 </script>
 <style>
@@ -2054,6 +2076,8 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
             $(this).closest('form')[0].reset();
             // Limpa o select2 do nome
             $('#nome').val('').trigger('change');
+            // Limpa o select2 do status
+            $('#status').val(null).trigger('change');
             // Limpa o select2 do colecao, mesmo se não houver opções
             $('#colecao').val(null).trigger('change');
             // Redireciona para a URL base, removendo filtros
