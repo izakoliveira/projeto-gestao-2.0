@@ -1945,16 +1945,17 @@
             return;
         }
 
-        // Verificar se a ordem já existe
+        // Verificar se a ordem já existe (permitir com aviso)
         const todasOrdens = Array.from(document.querySelectorAll('.numero-tarefa'))
             .filter(td => td !== element)
             .map(td => parseInt(td.textContent.trim()))
             .filter(ordem => !isNaN(ordem));
 
         if (todasOrdens.includes(novaOrdem)) {
-            alert('Esta ordem já existe. Escolha outro número.');
-            element.textContent = element.getAttribute('data-original-value') || '';
-            return;
+            if (!confirm(`A ordem ${novaOrdem} já existe. Deseja continuar mesmo assim?`)) {
+                element.textContent = element.getAttribute('data-original-value') || '';
+                return;
+            }
         }
 
         // Atualizar no backend
@@ -1974,9 +1975,6 @@
             if (data.sucesso) {
                 // Atualizar o valor original
                 element.setAttribute('data-original-value', novaOrdem.toString());
-                
-                // Reordenar visualmente se necessário
-                reordenarTarefasVisualmente();
                 
                 // Feedback visual
                 element.style.backgroundColor = '#d4edda';
@@ -1998,6 +1996,15 @@
 
     function reordenarTarefasVisualmente() {
         const tbody = document.querySelector('#tabela-tarefas-inline tbody');
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        
+        // Remover temporariamente a linha de nova tarefa
+        let novaLinhaRemovida = null;
+        if (novaLinha) {
+            novaLinhaRemovida = novaLinha.parentNode.removeChild(novaLinha);
+        }
+        
+        // Pegar apenas as linhas de tarefas existentes (excluir linha de nova tarefa)
         const linhas = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
         
         // Ordenar linhas por ordem
@@ -2011,6 +2018,11 @@
         linhas.forEach(linha => {
             tbody.appendChild(linha);
         });
+        
+        // Reinserir a linha de nova tarefa no final
+        if (novaLinhaRemovida) {
+            tbody.appendChild(novaLinhaRemovida);
+        }
     }
 
     // Adicionar eventos para edição da ordem
