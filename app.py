@@ -2227,6 +2227,38 @@ def atualizar_ordem_tarefas():
     else:
         return jsonify({'sucesso': False, 'erros': erros}), 500
 
+@app.route('/tarefas/atualizar_ordem_individual', methods=['POST'])
+@login_required
+def atualizar_ordem_individual():
+    data = request.get_json()
+    tarefa_id = data.get('tarefa_id')
+    nova_ordem = data.get('nova_ordem')
+    
+    if not tarefa_id or not nova_ordem:
+        return jsonify({'sucesso': False, 'erro': 'ID da tarefa e nova ordem são obrigatórios.'}), 400
+    
+    try:
+        # Validar se a tarefa existe e pertence ao usuário
+        resp = supabase.table('tarefas').select('*').eq('id', tarefa_id).execute()
+        if not hasattr(resp, 'data') or not resp.data:
+            return jsonify({'sucesso': False, 'erro': 'Tarefa não encontrada.'}), 404
+        
+        tarefa = resp.data[0]
+        
+        # Verificar se o usuário tem permissão para editar esta tarefa
+        # (implementar lógica de permissão conforme necessário)
+        
+        # Atualizar a ordem da tarefa
+        resp = supabase.table('tarefas').update({'ordem': nova_ordem}).eq('id', tarefa_id).execute()
+        
+        if hasattr(resp, 'data') and resp.data:
+            return jsonify({'sucesso': True, 'ordem': nova_ordem})
+        else:
+            return jsonify({'sucesso': False, 'erro': 'Erro ao atualizar ordem.'}), 500
+            
+    except Exception as e:
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
 @app.route('/gantt-teste')
 def gantt_teste():
     # Dados de exemplo para projetos e tarefas
