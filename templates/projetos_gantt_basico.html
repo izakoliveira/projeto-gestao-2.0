@@ -11,6 +11,10 @@
             {% endif %}
             {{ nome_pasta }}
         </h1>
+        <!-- Botão de menu para filtros -->
+        <button id="btn-abrir-filtros-desktop" type="button" class="btn btn-primary" style="border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+            <i class="fas fa-filter"></i> Filtros
+        </button>
     </div>
     <!-- Cards de 'Calendarios' e 'Tarefas Diarias' removidos -->
 
@@ -60,80 +64,8 @@
     }
     </style>
 
-    <!-- Filtros Customizados com Campos Iguais -->
-    <div class="filters-container mb-4">
-        <form method="GET" action="/projetos" class="filters-form">
-            <div class="filters-row">
-                <div class="filter-group">
-                    <label for="nome" class="filter-label">
-                        <i class="fas fa-search"></i> Projeto
-                    </label>
-                    <select class="filter-select" id="nome" name="nome">
-                        <option value="">Todos os projetos</option>
-                        {% for projeto in projetos %}
-                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome %}selected{% endif %}>{{ projeto.nome }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="status" class="filter-label">
-                        <i class="fas fa-tasks"></i> Status
-                    </label>
-                    <select class="filter-select" id="status" name="status" multiple="multiple">
-                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif %}>
-                            Pendente</option>
-                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{% endif %}>
-                            Em Progresso</option>
-                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif %}>
-                            Concluída</option>
-                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif %}>
-                            Atrasado</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="colecao" class="filter-label">
-                        <i class="fas fa-layer-group"></i> Coleção
-                    </label>
-                    <select class="filter-select" id="colecao" name="colecao" multiple="multiple">
-                        {% if colecoes and colecoes|length > 0 %}
-                        {% for colecao in colecoes %}
-                            <option value="{{ colecao }}">{{ colecao }}</option>
-                        {% endfor %}
-                        {% else %}
-                            <option disabled selected>Nenhuma coleção disponível</option>
-                        {% endif %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="data_inicio" class="filter-label">
-                        <i class="fas fa-calendar"></i> Início
-                    </label>
-                    <input type="date" class="filter-input" id="data_inicio" name="data_inicio"
-                        value="{{ request.args.get('data_inicio', '') }}">
-                </div>
-
-                <div class="filter-group">
-                    <label for="data_fim" class="filter-label">
-                        <i class="fas fa-calendar-check"></i> Fim
-                    </label>
-                    <input type="date" class="filter-input" id="data_fim" name="data_fim"
-                        value="{{ request.args.get('data_fim', '') }}">
-                </div>
-
-                <div class="filter-actions">
-                    <button type="submit" class="btn-filter">
-                        <i class="fas fa-filter"></i> Filtrar
-                    </button>
-                    <button type="button" class="btn-clear" id="limpar-filtros">
-                        <i class="fas fa-eraser"></i> Limpar
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+    <!-- Filtros removidos - agora usando painel lateral -->
+    <!-- Os filtros estão no painel lateral que abre com o botão "Filtros" -->
 
     {% if projetos and gantt_geral_data|length == 0 %}
     <div class="alert alert-info text-center" style="background: #d2f6fd;">
@@ -155,6 +87,126 @@
     </div>
     <!-- Indicadores do carousel -->
     <div class="carousel-indicators mt-3 mb-2 d-flex justify-content-center align-items-center" style="gap: 8px;"></div>
+    
+    <!-- Painel lateral de filtros para Desktop -->
+    <div id="offcanvas-filtros-desktop" style="position: fixed; top: 0; left: 0; height: 100vh; width: 400px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);">
+        <!-- Cabeçalho fixo -->
+        <div id="filtros-header-desktop" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
+            <span style="display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
+                <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
+            </span>
+            <button id="btn-fechar-filtros-desktop" type="button" style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Área de scroll para os filtros -->
+        <div class="filtros-scroll-area" style="flex: 1; overflow-y: auto; padding: 18px;">
+            <form id="filtros-desktop" method="GET" action="/projetos" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+                <!-- Filtro Projeto -->
+                <div style="position: relative;">
+                    <label for="nome-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-search"></i> Projeto</span>
+                        <button type="button" class="btn btn-link p-0 m-0" onclick="limparSelect('nome-desktop'); event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <select id="nome-desktop" name="nome" multiple class="form-control" style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;" onchange="mostrarSelecoes('nome-desktop', 'nome-display')" onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('nome-display').style.display = 'flex'; }, 200);">
+                        <option value="">Selecione o Projeto</option>
+                        {% for projeto in projetos %}
+                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome %}selected{% endif %}>{{ projeto.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="nome-display" class="form-control" style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSelect('nome-desktop')">
+                        <span id="nome-text">Selecione o Projeto</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                
+                <!-- Filtro Status -->
+                <div style="position: relative;">
+                    <label for="status-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-tasks"></i> Status</span>
+                        <button type="button" class="btn btn-link p-0 m-0" onclick="limparSelect('status-desktop'); event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <select id="status-desktop" name="status" multiple class="form-control" style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;" onchange="mostrarSelecoes('status-desktop', 'status-display')" onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('status-display').style.display = 'flex'; }, 200);">
+                        <option value="">Selecione o Status</option>
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif %}>Pendente</option>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{% endif %}>Em Progresso</option>
+                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif %}>Concluída</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif %}>Atrasado</option>
+                    </select>
+                    <div id="status-display" class="form-control" style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSelect('status-desktop')">
+                        <span id="status-text">Selecione o Status</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                
+                <!-- Filtro Coleção -->
+                <div style="position: relative;">
+                    <label for="colecao-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-layer-group"></i> Coleção</span>
+                        <button type="button" class="btn btn-link p-0 m-0" onclick="limparSelect('colecao-desktop'); event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <select id="colecao-desktop" name="colecao" multiple class="form-control" style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;" onchange="mostrarSelecoes('colecao-desktop', 'colecao-display')" onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('colecao-display').style.display = 'flex'; }, 200);">
+                        <option value="">Selecione a Coleção</option>
+                        {% if colecoes and colecoes|length > 0 %}
+                        {% for colecao in colecoes %}
+                            <option value="{{ colecao }}">{{ colecao }}</option>
+                        {% endfor %}
+                        {% else %}
+                            <option disabled>Nenhuma coleção disponível</option>
+                        {% endif %}
+                    </select>
+                    <div id="colecao-display" class="form-control" style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSelect('colecao-desktop')">
+                        <span id="colecao-text">Selecione a Coleção</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                
+                <!-- Filtros de datas na mesma linha -->
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex: 1; position: relative;">
+                        <label for="data_inicio-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-calendar"></i> Início</span>
+                            <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_inicio-desktop').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </label>
+                        <input type="date" id="data_inicio-desktop" name="data_inicio" class="form-control" style="min-height: 48px; border-radius: 10px;" value="{{ request.args.get('data_inicio', '') }}">
+                    </div>
+                    <div style="flex: 1; position: relative;">
+                        <label for="data_fim-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-calendar-check"></i> Fim</span>
+                            <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_fim-desktop').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </label>
+                        <input type="date" id="data_fim-desktop" name="data_fim" class="form-control" style="min-height: 48px; border-radius: 10px;" value="{{ request.args.get('data_fim', '') }}">
+                    </div>
+                </div>
+                
+                <!-- Botões de ação -->
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; min-height: 48px; border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="limpar-filtros-desktop" style="flex: 1; min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; color: #6c757d;">
+                        <i class="fas fa-eraser"></i> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Backdrop para fechar o painel -->
+    <div id="filtros-backdrop-desktop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9998; display: none;"></div>
+
     <!-- Gantt agrupado estilo teste_agrupamento_gantt.html -->
     <div class="card mb-4 mt-5">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -270,42 +322,77 @@ $(document).ready(function() {
     // Renderiza um card de projeto
     function renderProjetoCard(projeto) {
         try {
+            console.log('Renderizando projeto:', projeto);
             if (!projeto) {
                 console.error('Projeto inválido:', projeto);
                 return '';
             }
+            
+            // Verificar se há alertas para este projeto
+            const alerta = alertasProjetos[projeto.id];
+            console.log('Alerta para projeto', projeto.id, ':', alerta);
+        
         let tarefasHtml = '';
         if (projeto.tarefas && projeto.tarefas.length > 0) {
-            tarefasHtml += `<small><strong>Tarefas (${projeto.tarefas.length}):</strong></small><div class="task-list">`;
-            projeto.tarefas.slice(0, 3).forEach(tarefa => {
-                tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
-                    <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
-                    <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : 'bg-secondary'}">
-                        ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
-                    </span>
-                </div>`;
-            });
-            if (projeto.tarefas.length > 3) {
-                tarefasHtml += `<div class="text-muted small expand-tasks-btn" data-projeto-id="${projeto.id}" style="cursor: pointer; color: #007bff;">
-                    <i class="fas fa-chevron-down"></i> +${projeto.tarefas.length - 3} tarefas
-                </div>`;
-                tarefasHtml += `<div class="hidden-tasks" id="hidden-tasks-${projeto.id}" style="display: none;">`;
-                projeto.tarefas.slice(3).forEach(tarefa => {
+            // Filtrar tarefas baseado no status do projeto
+            let tarefasFiltradas = [];
+            if (alerta) {
+                if (alerta.tipo === 'atrasado') {
+                    // Mostrar apenas tarefas atrasadas
+                    tarefasFiltradas = projeto.tarefas.filter(tarefa => 
+                        tarefa.status === 'atrasado' || 
+                        (tarefa.data_fim && new Date(tarefa.data_fim) < new Date())
+                    );
+                } else if (alerta.tipo === 'pendente') {
+                    // Mostrar apenas tarefas pendentes
+                    tarefasFiltradas = projeto.tarefas.filter(tarefa => 
+                        tarefa.status === 'pendente' || 
+                        tarefa.status === 'em progresso'
+                    );
+                } else {
+                    // Para projetos normais, mostrar todas as tarefas
+                    tarefasFiltradas = projeto.tarefas;
+                }
+            } else {
+                // Para projetos sem alerta, mostrar todas as tarefas
+                tarefasFiltradas = projeto.tarefas;
+            }
+            
+            console.log('Tarefas filtradas:', tarefasFiltradas.length);
+            
+            if (tarefasFiltradas.length > 0) {
+                tarefasHtml += `<small><strong>Tarefas ${alerta ? `(${alerta.tipo})` : ''} (${tarefasFiltradas.length}):</strong></small><div class="task-list">`;
+                tarefasFiltradas.slice(0, 3).forEach(tarefa => {
                     tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
                         <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
-                        <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : 'bg-secondary'}">
+                        <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
                             ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
                         </span>
                     </div>`;
                 });
+                if (tarefasFiltradas.length > 3) {
+                    tarefasHtml += `<div class="text-muted small expand-tasks-btn" data-projeto-id="${projeto.id}" style="cursor: pointer; color: #007bff;">
+                        <i class="fas fa-chevron-down"></i> +${tarefasFiltradas.length - 3} tarefas
+                    </div>`;
+                    tarefasHtml += `<div class="hidden-tasks" id="hidden-tasks-${projeto.id}" style="display: none;">`;
+                    tarefasFiltradas.slice(3).forEach(tarefa => {
+                        tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
+                            <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
+                            <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
+                                ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
+                            </span>
+                        </div>`;
+                    });
+                    tarefasHtml += `</div>`;
+                }
                 tarefasHtml += `</div>`;
+            } else {
+                tarefasHtml = `<div class="text-muted small">Nenhuma tarefa ${alerta ? alerta.tipo : ''} encontrada.</div>`;
             }
-            tarefasHtml += `</div>`;
         } else {
             tarefasHtml = '<div class="text-muted small">Nenhuma tarefa encontrada.</div>';
         }
-        // Verificar se há alertas para este projeto
-        const alerta = alertasProjetos[projeto.id];
+        
         let alertaHtml = '';
         let cardStyle = '';
         
@@ -328,6 +415,7 @@ $(document).ready(function() {
             }
         }
         
+        console.log('HTML do card gerado com sucesso');
         return `<div class="carousel-item">
             <div class="card compact-card shadow-sm projeto-card-with-watermark" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; overflow: hidden;">
                 <!-- Marca d'água diagonal - estilo carimbo -->
@@ -389,21 +477,28 @@ $(document).ready(function() {
         }
     }
 
-    // Renderiza os cards visíveis
+    // Renderiza todos os cards
     function renderCards() {
         try {
-            const visibleWidth = carousel.clientWidth;
-            const itemsPerPage = Math.max(1, Math.floor(visibleWidth / (CARD_WIDTH + CARD_GAP)));
-            const scrollLeft = carousel.scrollLeft;
-            const firstIndex = Math.max(0, Math.floor(scrollLeft / (CARD_WIDTH + CARD_GAP)) - BUFFER);
-            const lastIndex = Math.min(projetos.length - 1, firstIndex + itemsPerPage + 2 * BUFFER - 1);
+            console.log('Iniciando renderCards...');
+            console.log('Projetos disponíveis:', projetos.length);
+            console.log('Carousel:', carousel);
+            
             let html = renderNovoProjetoCard();
-            for (let i = firstIndex; i <= lastIndex; i++) {
+            console.log('Card novo projeto gerado');
+            
+            // Renderizar todos os projetos
+            for (let i = 0; i < projetos.length; i++) {
                 if (projetos[i]) {
+                    console.log('Renderizando projeto', i, ':', projetos[i].nome);
                     html += renderProjetoCard(projetos[i]);
                 }
             }
+            
+            console.log('HTML final gerado, aplicando ao carousel...');
             carousel.innerHTML = html;
+            console.log('HTML aplicado com sucesso');
+            
         // Reaplicar eventos de expandir tarefas
         document.querySelectorAll('.expand-tasks-btn').forEach(btn => {
             btn.addEventListener('click', function () {
@@ -555,7 +650,8 @@ $(document).ready(function() {
                 theme: 'bootstrap-5',
                 closeOnSelect: false,
                 dropdownAutoWidth: true,
-                minimumResultsForSearch: -1
+                minimumResultsForSearch: -1,
+                dropdownParent: $('body')
             });
             console.log('Select2 inicializado com sucesso');
         } catch (error) {
@@ -578,7 +674,8 @@ $(document).ready(function() {
                 theme: 'bootstrap-5',
                 closeOnSelect: false,
                 dropdownAutoWidth: true,
-                minimumResultsForSearch: -1
+                minimumResultsForSearch: -1,
+                dropdownParent: $('body')
             });
             console.log('Select2 inicializado com sucesso');
         } catch (error) {
@@ -924,12 +1021,13 @@ body, html, .container, .row {
     }
 
     .filter-label {
-        display: block;
-        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #4a47a3;
         font-size: 0.95rem;
         font-weight: 600;
         margin-bottom: 7px;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         width: 100%;
         text-align: left;
     }
@@ -946,14 +1044,14 @@ body, html, .container, .row {
         width: 100% !important;
         min-width: 100% !important;
         max-width: 100% !important;
-        height: 44px !important;
+        min-height: 48px !important;
         padding: 8px 16px !important;
-        border: none !important;
-        border-radius: 12px !important;
-        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid #e9ecef !important;
+        border-radius: 10px !important;
+        background: #fff !important;
         font-size: 1rem !important;
         color: #333 !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
         box-sizing: border-box;
         transition: all 0.3s;
     }
@@ -969,8 +1067,8 @@ body, html, .container, .row {
     .select2-container--default .select2-selection--multiple:focus {
         outline: none !important;
         background: #fff !important;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
-        transform: translateY(-1px);
+        border-color: #4a47a3 !important;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25) !important;
     }
 
     .filter-actions {
@@ -986,10 +1084,10 @@ body, html, .container, .row {
     .btn-filter,
     .btn-clear {
         width: 100%;
-        height: 44px;
+        height: 48px;
         padding: 0;
         border: none;
-        border-radius: 12px;
+        border-radius: 10px;
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
@@ -999,33 +1097,35 @@ body, html, .container, .row {
         justify-content: center;
         gap: 6px;
         text-decoration: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        background: #fff;
         color: #333;
+        border: 1px solid #e9ecef;
     }
 
     .btn-filter {
-        background: linear-gradient(135deg, #4CAF50, #45a049);
+        background: #4a47a3;
         color: white;
+        border: 1px solid #4a47a3;
     }
 
     .btn-filter:hover {
-        background: linear-gradient(135deg, #45a049, #3d8b40);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+        background: #3d3a8a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(74, 71, 163, 0.3);
     }
 
     .btn-clear {
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.7);
-        color: #764ba2;
+        border: 1px solid #e9ecef;
+        background: #fff;
+        color: #6c757d;
     }
 
     .btn-clear:hover {
-        background: rgba(255, 255, 255, 0.95);
-        color: #333;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
+        background: #f8f9fa;
+        color: #495057;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
     /* Responsividade */
@@ -1709,6 +1809,56 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
     max-width: 160px !important;
     vertical-align: middle !important;
     }
+
+    /* Estilos para o scroll dos filtros */
+    #offcanvas-filtros-novo .filtros-scroll-area {
+        scrollbar-width: thin;
+        scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Estilos para o carimbo no mobile */
+    .projeto-watermark {
+        transition: all 0.3s ease;
+    }
+
+    /* Estilos para os selects nativos - não abrir automaticamente */
+    #offcanvas-filtros-desktop select,
+    #offcanvas-filtros-novo select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 16px;
+        padding-right: 32px;
+    }
+
+    /* Prevenir que o select abra automaticamente */
+    #offcanvas-filtros-desktop select:focus,
+    #offcanvas-filtros-novo select:focus {
+        outline: none;
+        border-color: #4a47a3;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25);
+    }
 </style>
 
 <script>
@@ -2084,6 +2234,159 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
             $('#colecao').val(null).trigger('change');
             // Redireciona para a URL base, removendo filtros
             window.location = window.location.pathname;
+        });
+        
+        // Controle do painel lateral de filtros para Desktop
+        const btnAbrirFiltrosDesktop = document.getElementById('btn-abrir-filtros-desktop');
+        const btnFecharFiltrosDesktop = document.getElementById('btn-fechar-filtros-desktop');
+        const offcanvasFiltrosDesktop = document.getElementById('offcanvas-filtros-desktop');
+        const backdropFiltrosDesktop = document.getElementById('filtros-backdrop-desktop');
+        
+        if (btnAbrirFiltrosDesktop && offcanvasFiltrosDesktop) {
+            btnAbrirFiltrosDesktop.addEventListener('click', function() {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(0)';
+                backdropFiltrosDesktop.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+        }
+        
+        if (btnFecharFiltrosDesktop && offcanvasFiltrosDesktop) {
+            btnFecharFiltrosDesktop.addEventListener('click', function() {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
+                backdropFiltrosDesktop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+        
+        if (backdropFiltrosDesktop && offcanvasFiltrosDesktop) {
+            backdropFiltrosDesktop.addEventListener('click', function() {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
+                backdropFiltrosDesktop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+        
+        // Limpar filtros do painel lateral
+        const btnLimparFiltrosDesktop = document.getElementById('limpar-filtros-desktop');
+        if (btnLimparFiltrosDesktop) {
+            btnLimparFiltrosDesktop.addEventListener('click', function() {
+                // Limpa todos os campos do formulário do painel lateral
+                document.getElementById('filtros-desktop').reset();
+                // Limpa os selects múltiplos - desmarca todas as opções
+                const selects = document.querySelectorAll('#offcanvas-filtros-desktop select[multiple]');
+                selects.forEach(select => {
+                    for (let i = 0; i < select.options.length; i++) {
+                        select.options[i].selected = false;
+                    }
+                });
+                // Resetar os displays
+                document.getElementById('nome-text').textContent = 'Selecione o Projeto';
+                document.getElementById('status-text').textContent = 'Selecione o Status';
+                document.getElementById('colecao-text').textContent = 'Selecione a Coleção';
+                // Limpa os campos de data
+                document.getElementById('data_inicio-desktop').value = '';
+                document.getElementById('data_fim-desktop').value = '';
+                // Redireciona para a URL base, removendo filtros
+                window.location = window.location.pathname;
+            });
+        }
+        
+        // Função para limpar selects individuais
+        window.limparSelect = function(selectId) {
+            const select = document.getElementById(selectId);
+            if (select) {
+                for (let i = 0; i < select.options.length; i++) {
+                    select.options[i].selected = false;
+                }
+                // Atualizar o display
+                const displayId = selectId.replace('-desktop', '-display');
+                const textId = selectId.replace('-desktop', '-text');
+                document.getElementById(displayId).style.display = 'flex';
+                document.getElementById(textId).textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
+            }
+        };
+        
+        // Função para alternar a visibilidade do select
+        window.toggleSelect = function(selectId) {
+            const select = document.getElementById(selectId);
+            const displayId = selectId.replace('-desktop', '-display');
+            const display = document.getElementById(displayId);
+            
+            if (select.style.display === 'none' || select.style.display === '') {
+                select.style.display = 'block';
+                select.style.position = 'absolute';
+                select.style.zIndex = '1000';
+                select.style.width = '100%';
+                select.style.maxHeight = '120px';
+                select.style.overflow = 'auto';
+                select.style.backgroundColor = '#fff';
+                select.style.border = '1px solid #e9ecef';
+                select.style.borderRadius = '10px';
+                select.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                display.style.display = 'none';
+                select.focus();
+            } else {
+                select.style.display = 'none';
+                display.style.display = 'flex';
+            }
+        };
+        
+        // Função para mostrar as seleções no display
+        window.mostrarSelecoes = function(selectId, displayId) {
+            const select = document.getElementById(selectId);
+            const textId = selectId.replace('-desktop', '-text');
+            const textElement = document.getElementById(textId);
+            
+            const selecoes = [];
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].selected && select.options[i].value !== '') {
+                    selecoes.push(select.options[i].text);
+                }
+            }
+            
+            if (selecoes.length > 0) {
+                textElement.textContent = selecoes.join(', ');
+            } else {
+                textElement.textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
+            }
+            
+            // Não fechar automaticamente - deixar o usuário selecionar múltiplas opções
+            // O select só fecha quando perder o foco (onblur)
+        };
+        
+        // Controlar comportamento dos selects para não abrir automaticamente
+        const selectsDesktop = document.querySelectorAll('#offcanvas-filtros-desktop select');
+        selectsDesktop.forEach(select => {
+            // Prevenir que o select abra automaticamente ao focar
+            select.addEventListener('focus', function(e) {
+                // Não fazer nada - deixar o usuário clicar para abrir
+            });
+            
+            // Garantir que o select só abra quando clicado
+            select.addEventListener('click', function(e) {
+                // Permitir que o select abra apenas quando clicado
+            });
+            
+            // Prevenir que o select abra ao pressionar Tab
+            select.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    // Permitir navegação com Tab
+                    return;
+                }
+                // Para outras teclas, não abrir automaticamente
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                }
+            });
+            
+            // Permitir múltipla seleção com Ctrl+clique
+            select.addEventListener('mousedown', function(e) {
+                // Permitir seleção múltipla
+                if (e.ctrlKey || e.metaKey) {
+                    // Permitir seleção múltipla com Ctrl/Cmd
+                    return;
+                }
+            });
         });
     });
 

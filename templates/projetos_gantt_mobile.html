@@ -346,6 +346,59 @@
                             </small>
                         </div>
 
+                        <!-- Tarefas filtradas por status -->
+                        {% if projeto.tarefas %}
+                            {% set tarefas_filtradas = [] %}
+                            {% if alerta %}
+                                {% if alerta.tipo == 'atrasado' %}
+                                    {% for tarefa in projeto.tarefas %}
+                                        {% if tarefa.status == 'atrasado' or (tarefa.data_fim and tarefa.data_fim < now().strftime('%Y-%m-%d')) %}
+                                            {% set _ = tarefas_filtradas.append(tarefa) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% elif alerta.tipo == 'pendente' %}
+                                    {% for tarefa in projeto.tarefas %}
+                                        {% if tarefa.status == 'pendente' or tarefa.status == 'em progresso' %}
+                                            {% set _ = tarefas_filtradas.append(tarefa) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% set tarefas_filtradas = projeto.tarefas %}
+                                {% endif %}
+                            {% else %}
+                                {% set tarefas_filtradas = projeto.tarefas %}
+                            {% endif %}
+                            
+                            {% if tarefas_filtradas %}
+                                <div class="mt-2" style="text-align: center; max-height: 80px; overflow-y: auto;">
+                                    <small style="font-size: 0.6em; font-weight: bold; color: #495057;">
+                                        Tarefas {{ alerta.tipo if alerta else '' }} ({{ tarefas_filtradas|length }}):
+                                    </small>
+                                    <div style="font-size: 0.55em; color: #6c757d; margin-top: 2px;">
+                                        {% for tarefa in tarefas_filtradas[:3] %}
+                                            <div style="margin: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                <i class="fas fa-tasks" style="font-size: 0.8em;"></i> 
+                                                {{ tarefa.nome[:20] }}{% if tarefa.nome|length > 20 %}...{% endif %}
+                                                <span class="badge badge-sm {% if tarefa.status == 'pendente' %}badge-warning{% elif tarefa.status == 'em progresso' %}badge-info{% elif tarefa.status == 'concluída' %}badge-success{% elif tarefa.status == 'atrasado' %}badge-danger{% else %}badge-secondary{% endif %}" style="font-size: 0.5em;">
+                                                    {{ tarefa.status|title if tarefa.status else 'Sem status' }}
+                                                </span>
+                                            </div>
+                                        {% endfor %}
+                                        {% if tarefas_filtradas|length > 3 %}
+                                            <div style="color: #007bff; font-size: 0.5em; margin-top: 2px;">
+                                                +{{ tarefas_filtradas|length - 3 }} mais
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="mt-2" style="text-align: center;">
+                                    <small style="font-size: 0.6em; color: #6c757d;">
+                                        Nenhuma tarefa {{ alerta.tipo if alerta else '' }} encontrada
+                                    </small>
+                                </div>
+                            {% endif %}
+                        {% endif %}
                     </div>
                     <div class="card-footer compact-footer bg-white border-0" style="border-top: 1px solid #e9ecef; width: 100%; text-align: center; margin-top: auto; padding-bottom: 16px; padding-top: 8px;">
                         <div class="card-actions" style="display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%;">

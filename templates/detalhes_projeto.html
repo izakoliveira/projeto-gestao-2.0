@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" />
+
 {% set numero_para_id = {} %}
 {% for t in tarefas %}
 {% set _ = numero_para_id.update({loop.index|string: t.id}) %}
@@ -332,44 +337,94 @@
 <!-- Modal avançado de seleção de predecessoras -->
 <div class="modal fade" id="modalPredecessora" tabindex="-1" aria-labelledby="modalPredecessoraLabel"
     aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalPredecessoraLabel">Selecionar Predecessoras</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Tarefa</th>
-                            <th>Tipo</th>
-                            <th>Deslocamento</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for tarefa in tarefas %}
-                        <tr>
-                            <td><input type="checkbox" class="chk-pred" data-id="{{ tarefa.id }}"></td>
-                            <td>{{ tarefa.nome }}</td>
-                            <td>
-                                <select class="form-select form-select-sm tipo-pred" data-id="{{ tarefa.id }}">
-                                    <option value="FS">FS</option>
-                                    <option value="SS">SS</option>
-                                    <option value="FF">FF</option>
-                                    <option value="SF">SF</option>
-                                </select>
-                            </td>
-                            <td><input type="text" class="form-control form-control-sm desloc-pred"
-                                    data-id="{{ tarefa.id }}" placeholder="Ex: +2d, -1d"></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="selectTarefa" class="form-label">
+                                <i class="fas fa-tasks"></i> Selecione a Tarefa:
+                            </label>
+                            <select id="selectTarefa" class="form-select">
+                                <option value="">Escolha uma tarefa...</option>
+                                {% for tarefa in tarefas %}
+                                <option value="{{ tarefa.id }}" data-ordem="{{ tarefa.ordem }}">{{ tarefa.ordem }} - {{ tarefa.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="selectTipo" class="form-label">
+                                <i class="fas fa-link"></i> Tipo de Relação:
+                            </label>
+                            <select id="selectTipo" class="form-select">
+                                <option value="">Escolha o tipo...</option>
+                                <option value="FS">FS (Fim / Início)</option>
+                                <option value="SS">SS (Início / Início)</option>
+                                <option value="FF">FF (Fim / Fim)</option>
+                                <option value="SF">SF (Início / Fim)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="inputDeslocamento" class="form-label">
+                                <i class="fas fa-calendar-plus"></i> Deslocamento (dias):
+                            </label>
+                            <input type="number" id="inputDeslocamento" class="form-control" 
+                                   placeholder="Ex: 2 (positivo = atraso, negativo = adiantamento)" 
+                                   value="0" min="-30" max="30">
+                            <div class="form-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Positivo = atraso, Negativo = adiantamento
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-eye"></i> Prévia do Código:
+                            </label>
+                            <div id="previewCodigo" class="form-control" style="background-color: #f8f9fa; font-family: monospace; font-weight: bold; color: #495057;">
+                                Código será gerado automaticamente...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Significado dos Tipos de Relação:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>FS (Fim / Início):</strong> A tarefa atual só pode começar quando a predecessora terminar</li>
+                                <li><strong>SS (Início / Início):</strong> A tarefa atual deve começar junto com a predecessora</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>FF (Fim / Fim):</strong> A tarefa atual deve terminar junto com a predecessora</li>
+                                <li><strong>SF (Início / Fim):</strong> A tarefa atual deve terminar quando a predecessora começar</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="btnSalvarPredecessoras">Salvar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarPredecessoras">
+                    <i class="fas fa-save"></i> Salvar Predecessora
+                </button>
             </div>
         </div>
     </div>
@@ -1453,52 +1508,193 @@
     function abrirModalPredecessora(btn) {
         const tr = btn.closest('tr');
         const input = tr.querySelector('input[name="predecessoras"]');
-        // Limpa seleção
-        document.querySelectorAll('.chk-pred').forEach(chk => chk.checked = false);
-        document.querySelectorAll('.tipo-pred').forEach(sel => sel.value = 'FS');
-        document.querySelectorAll('.desloc-pred').forEach(inp => inp.value = '');
-        // Preenche com valores atuais
-        const val = input.value.trim();
-        if (val) {
-            val.split(';').forEach(pred => {
-                if (!pred) return;
-                // Regex para extrair id, tipo e deslocamento
-                const m = pred.match(/^([^FS|SS|FF|SF]+)(FS|SS|FF|SF)?([+-]\d+d)?$/);
-                if (m) {
-                    const id = m[1];
-                    const tipo = m[2] || 'FS';
-                    const desloc = m[3] || '';
-                    const chk = document.querySelector('.chk-pred[data-id="' + id + '"]');
-                    const sel = document.querySelector('.tipo-pred[data-id="' + id + '"]');
-                    const inp = document.querySelector('.desloc-pred[data-id="' + id + '"]');
-                    if (chk) chk.checked = true;
-                    if (sel) sel.value = tipo;
-                    if (inp) inp.value = desloc;
-                }
-            });
-        }
+        
+        // Limpar campos do modal
+        document.getElementById('selectTarefa').value = '';
+        document.getElementById('selectTipo').value = '';
+        document.getElementById('inputDeslocamento').value = '0';
+        document.getElementById('previewCodigo').textContent = 'Código será gerado automaticamente...';
+        
+        // Armazenar input ativo
         window._inputPredecessorasAtivo = input;
+        
+        // Mostrar modal
         var modal = new bootstrap.Modal(document.getElementById('modalPredecessora'));
         modal.show();
+        
+        // Inicializar Select2 após o modal estar visível
+        setTimeout(function() {
+            try {
+                // Destruir instâncias existentes
+                if ($('#selectTarefa').data('select2')) {
+                    $('#selectTarefa').select2('destroy');
+                }
+                if ($('#selectTipo').data('select2')) {
+                    $('#selectTipo').select2('destroy');
+                }
+                
+                // Inicializar Select2
+                $('#selectTarefa').select2({
+                    placeholder: 'Escolha uma tarefa...',
+                    allowClear: true,
+                    width: '100%',
+                    theme: 'bootstrap-5'
+                });
+                
+                $('#selectTipo').select2({
+                    placeholder: 'Escolha o tipo...',
+                    allowClear: true,
+                    width: '100%',
+                    theme: 'bootstrap-5'
+                });
+                
+                console.log('Select2 inicializado no modal');
+                
+                // Adicionar eventos para preview
+                $('#selectTarefa, #selectTipo').on('change', function() {
+                    atualizarPreviewCodigo();
+                });
+                $('#inputDeslocamento').on('input', function() {
+                    atualizarPreviewCodigo();
+                });
+                
+                // Inicializar evento do botão salvar AQUI
+                console.log('Inicializando evento do botão salvar...');
+                const btnSalvar = document.getElementById('btnSalvarPredecessoras');
+                console.log('Botão salvar encontrado:', btnSalvar);
+                
+                if (btnSalvar) {
+                    // Remover eventos anteriores
+                    $('#btnSalvarPredecessoras').off('click');
+                    btnSalvar.removeEventListener('click', window._salvarPredecessorasHandler);
+                    
+                    // Adicionar novo evento
+                    window._salvarPredecessorasHandler = function(e) {
+                        console.log('=== EVENTO CLICK DISPARADO ===');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        console.log('Botão salvar clicado');
+                        
+                        const tarefaId = $('#selectTarefa').val();
+                        const tipo = $('#selectTipo').val();
+                        const deslocamento = $('#inputDeslocamento').val();
+                        
+                        console.log('Valores:', { tarefaId, tipo, deslocamento });
+                        
+                        if (!tarefaId || !tipo) {
+                            alert('Por favor, selecione uma tarefa e um tipo de relação.');
+                            return;
+                        }
+                        
+                        const tarefaOption = $('#selectTarefa option:selected');
+                        const ordem = tarefaOption.data('ordem');
+                        
+                        console.log('Ordem da tarefa:', ordem);
+                        
+                        // Gerar código no formato: ordem + tipo + deslocamento
+                        let codigo = `${ordem}${tipo}`;
+                        if (deslocamento && deslocamento !== '0') {
+                            const sinal = parseInt(deslocamento) > 0 ? '+' : '';
+                            codigo += `${sinal}${deslocamento}d`;
+                        }
+                        
+                        console.log('Código final:', codigo);
+                        
+                        // Adicionar ao campo de predecessoras
+                        if (window._inputPredecessorasAtivo) {
+                            const valorAtual = window._inputPredecessorasAtivo.value.trim();
+                            let novasPredecessoras = valorAtual ? valorAtual.split(';') : [];
+                            
+                            console.log('Predecessoras atuais:', novasPredecessoras);
+                            
+                            // Verificar se já existe uma predecessora para esta tarefa
+                            const indexExistente = novasPredecessoras.findIndex(pred => {
+                                const match = pred.match(/^(\d+)/);
+                                return match && match[1] === ordem;
+                            });
+                            
+                            if (indexExistente >= 0) {
+                                // Substituir predecessora existente
+                                novasPredecessoras[indexExistente] = codigo;
+                                console.log('Substituindo predecessora existente');
+                            } else {
+                                // Adicionar nova predecessora
+                                novasPredecessoras.push(codigo);
+                                console.log('Adicionando nova predecessora');
+                            }
+                            
+                            const novoValor = novasPredecessoras.join(';');
+                            console.log('Novo valor:', novoValor);
+                            
+                            window._inputPredecessorasAtivo.value = novoValor;
+                            window._inputPredecessorasAtivo.dispatchEvent(new Event('change'));
+                            
+                            console.log('Campo atualizado com sucesso');
+                        } else {
+                            console.error('Input ativo não encontrado');
+                        }
+                        
+                        // Fechar modal
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalPredecessora'));
+                        modal.hide();
+                        
+                        // Mostrar feedback
+                        const btn = document.getElementById('btnSalvarPredecessoras');
+                        const textoOriginal = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i> Salvo!';
+                        btn.classList.add('btn-success');
+                        setTimeout(() => {
+                            btn.innerHTML = textoOriginal;
+                            btn.classList.remove('btn-success');
+                        }, 1500);
+                    };
+                    
+                    btnSalvar.addEventListener('click', window._salvarPredecessorasHandler);
+                    console.log('Evento do botão salvar adicionado com sucesso');
+                } else {
+                    console.error('Botão salvar não encontrado!');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao inicializar Select2 no modal:', error);
+            }
+        }, 300);
+    }
+    
+    // Função para atualizar preview do código
+    function atualizarPreviewCodigo() {
+        const tarefaId = $('#selectTarefa').val();
+        const tipo = $('#selectTipo').val();
+        const deslocamento = $('#inputDeslocamento').val();
+        
+        console.log('Atualizando preview:', { tarefaId, tipo, deslocamento });
+        
+        if (tarefaId && tipo) {
+            const tarefaOption = $('#selectTarefa option:selected');
+            const ordem = tarefaOption.data('ordem');
+            
+            let codigo = `${ordem}${tipo}`;
+            if (deslocamento && deslocamento !== '0') {
+                const sinal = parseInt(deslocamento) > 0 ? '+' : '';
+                codigo += `${sinal}${deslocamento}d`;
+            }
+            
+            console.log('Código gerado:', codigo);
+            document.getElementById('previewCodigo').textContent = codigo;
+            document.getElementById('previewCodigo').style.color = '#28a745';
+        } else {
+            document.getElementById('previewCodigo').textContent = 'Código será gerado automaticamente...';
+            document.getElementById('previewCodigo').style.color = '#495057';
+        }
     }
 
-    document.getElementById('btnSalvarPredecessoras').onclick = function () {
-        const preds = [];
-        document.querySelectorAll('.chk-pred:checked').forEach(chk => {
-            const id = chk.getAttribute('data-id');
-            const tipo = document.querySelector('.tipo-pred[data-id="' + id + '"]').value;
-            const desloc = document.querySelector('.desloc-pred[data-id="' + id + '"]').value.trim();
-            const ordem = window.idParaOrdem[id] || id;
-            let pred = ordem + (tipo ? tipo : 'FS') + (desloc ? desloc : '');
-            preds.push(pred);
-        });
-        if (window._inputPredecessorasAtivo) {
-            window._inputPredecessorasAtivo.value = preds.join(';');
-            window._inputPredecessorasAtivo.dispatchEvent(new Event('change'));
-        }
-        var modal = bootstrap.Modal.getInstance(document.getElementById('modalPredecessora'));
-        modal.hide();
-    };
+    // Inicializar Select2 para os campos do modal
+    $(document).ready(function() {
+        // Teste para verificar se jQuery está carregado
+        console.log('jQuery version:', $.fn.jquery);
+        console.log('Document ready - modal de predecessoras pronto');
+    });
 
     function calcularDuracao(dataInicio, dataFim) {
         if (!dataInicio || !dataFim) return '';
@@ -2051,5 +2247,9 @@
         });
     });
 </script>
+
+<!-- jQuery e Select2 JS (carregados no final para garantir ordem) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 {% endblock %}
