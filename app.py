@@ -162,7 +162,7 @@ def projetos():
     nome_list = request.args.getlist('nome')  # Lista de nomes de projetos (múltiplo)
     tarefa_list = request.args.getlist('tarefa')  # Lista de nomes de tarefas (múltiplo)
     responsavel_list = request.args.getlist('responsavel')  # Lista de responsáveis (múltiplo)
-    status = request.args.get('status', '')  # Status da tarefa
+    status_list = request.args.getlist('status')  # Lista de status (múltiplo)
     data_inicio = request.args.get('data_inicio', '')  # Data de início
     data_fim = request.args.get('data_fim', '')  # Data de término
     tipo_id = request.args.get('tipo_id', '')
@@ -228,10 +228,12 @@ def projetos():
     if projeto_ids:
         ids_str = ','.join([f'"{pid}"' for pid in projeto_ids])
         url = f"{SUPABASE_URL}/rest/v1/tarefas?projeto_id=in.({ids_str})"
-        if status:
+        if status_list:
             # Codificar o status para URL (tratar espaços e caracteres especiais)
-            status_encoded = quote(status)
-            url += f"&status=eq.{status_encoded}"
+            status_encoded = quote(status_list[0])
+            for status in status_list[1:]:
+                status_encoded += f",{quote(status)}"
+            url += f"&status=in.({status_encoded})"
         resp = requests.get(url, headers=headers)
         tarefas_filtradas = resp.json() if resp.status_code == 200 else []
         # Filtro de colecao (múltiplo)
@@ -240,7 +242,7 @@ def projetos():
             tarefas_filtradas = [t for t in tarefas_filtradas if t.get('colecao') in colecao_list]
         
         # Filtrar projetos que têm tarefas com os filtros aplicados (status e/ou coleção)
-        if status or colecao_list:
+        if status_list or colecao_list:
             projetos_com_tarefa = set([t['projeto_id'] for t in tarefas_filtradas])
             projetos = [p for p in projetos if p['id'] in projetos_com_tarefa]
     else:

@@ -80,14 +80,15 @@
                     <label for="status" class="filter-label">
                         <i class="fas fa-tasks"></i> Status
                     </label>
-                    <select class="filter-select" id="status" name="status">
-                        <option value="">Todos os status</option>
-                        <option value="pendente" {% if request.args.get('status')=='pendente' %}selected{% endif %}>
+                    <select class="filter-select" id="status" name="status" multiple="multiple">
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif %}>
                             Pendente</option>
-                        <option value="em progresso" {% if request.args.get('status')=='em progresso' %}selected{% endif
-                            %}>Em Progresso</option>
-                        <option value="concluída" {% if request.args.get('status')=='concluída' %}selected{% endif %}>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{% endif %}>
+                            Em Progresso</option>
+                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif %}>
                             Concluída</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif %}>
+                            Atrasado</option>
                     </select>
                 </div>
 

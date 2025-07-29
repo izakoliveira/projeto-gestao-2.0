@@ -155,15 +155,16 @@
         <div style="position: relative;">
             <label for="status" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                 <span><i class="fas fa-tasks"></i> Status</span>
-                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('status').selectedIndex = 0; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('status').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
                     <i class="fas fa-eraser"></i>
                 </button>
             </label>
-            <select id="status" name="status" class="form-control" style="min-height: 48px;">
-                <option value="">Selecione o Status</option>
+            <select id="status" name="status" multiple class="form-control" style="min-height: 48px;">
+                <option value="" disabled>Selecione o Status</option>
                 <option value="Concluído">Concluído</option>
                 <option value="Em andamento">Em andamento</option>
                 <option value="Pendente">Pendente</option>
+                <option value="Atrasado">Atrasado</option>
             </select>
         </div>
         <!-- Filtro Responsável (select múltiplo) -->
