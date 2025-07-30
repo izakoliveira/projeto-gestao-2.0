@@ -5,14 +5,15 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <h1 class="mb-0">
             {% if nome_pasta.lower() == 'calendarios' %}
-                <i class="fas fa-calendar-alt"></i>
+            <i class="fas fa-calendar-alt"></i>
             {% else %}
-                <i class="fas fa-project-diagram"></i>
+            <i class="fas fa-project-diagram"></i>
             {% endif %}
             {{ nome_pasta }}
         </h1>
         <!-- Botão de menu para filtros -->
-        <button id="btn-abrir-filtros-desktop" type="button" class="btn btn-primary" style="border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+        <button id="btn-abrir-filtros-desktop" type="button" class="btn btn-primary"
+            style="border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
             <i class="fas fa-filter"></i> Filtros
         </button>
     </div>
@@ -23,7 +24,8 @@
         {% for tipo in tipos %}
         <div class="tipo-card">
             <a href="/projetos?tipo_id={{ tipo.id }}" class="text-decoration-none w-100 h-100">
-                <div class="card shadow-sm folder-card h-100 {% if request.args.get('tipo_id') == tipo.id|string %}border-primary bg-light{% endif %}" style="cursor:pointer;">
+                <div class="card shadow-sm folder-card h-100 {% if request.args.get('tipo_id') == tipo.id|string %}border-primary bg-light{% endif %}"
+                    style="cursor:pointer;">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
                         <i class="fas fa-folder fa-2x mb-1 text-warning"></i>
                         <span class="fw-bold text-center">{{ tipo.nome }}</span>
@@ -34,34 +36,37 @@
         {% endfor %}
     </div>
     <style>
-    .tipos-scroll {
-      display: flex !important;
-      flex-direction: row !important;
-      gap: 16px;
-      overflow-x: auto !important;
-      overflow-y: hidden;
-      padding-bottom: 8px;
-      -webkit-overflow-scrolling: touch;
-      width: 100%;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
-    .tipo-card {
-      flex: 0 0 160px !important;
-      max-width: 180px;
-      min-width: 140px;
-      margin-bottom: 0 !important;
-    }
-    @media (min-width: 992px) {
-      .tipos-scroll {
-        flex-wrap: wrap !important;
-        overflow-x: visible !important;
-        justify-content: flex-start;
-      }
-      .tipo-card {
-        flex: 0 0 180px !important;
-      }
-    }
+        .tipos-scroll {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 16px;
+            overflow-x: auto !important;
+            overflow-y: hidden;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .tipo-card {
+            flex: 0 0 160px !important;
+            max-width: 180px;
+            min-width: 140px;
+            margin-bottom: 0 !important;
+        }
+
+        @media (min-width: 992px) {
+            .tipos-scroll {
+                flex-wrap: wrap !important;
+                overflow-x: visible !important;
+                justify-content: flex-start;
+            }
+
+            .tipo-card {
+                flex: 0 0 180px !important;
+            }
+        }
     </style>
 
     <!-- Filtros removidos - agora usando painel lateral -->
@@ -77,135 +82,184 @@
 
     <!-- Carousel de projetos SEM condicional -->
     <div class="projetos-carousel-wrapper mb-4">
-        <button class="carousel-arrow left" type="button" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+        <button class="carousel-arrow left" type="button" aria-label="Anterior"><i
+                class="fas fa-chevron-left"></i></button>
         <div class="projetos-carousel" id="projetos-carousel-js"></div>
         <script>
             window.projetosData = {{ projetos | tojson | safe }};
         </script>
-        <button class="carousel-arrow right" type="button" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
+        <button class="carousel-arrow right" type="button" aria-label="Próximo"><i
+                class="fas fa-chevron-right"></i></button>
 
     </div>
     <!-- Indicadores do carousel -->
     <div class="carousel-indicators mt-3 mb-2 d-flex justify-content-center align-items-center" style="gap: 8px;"></div>
-    
+
     <!-- Painel lateral de filtros para Desktop -->
-    <div id="offcanvas-filtros-desktop" style="position: fixed; top: 0; left: 0; height: 100vh; width: 400px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);">
+    <div id="offcanvas-filtros-desktop"
+        style="position: fixed; top: 0; left: 0; height: 100vh; width: 400px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);">
         <!-- Cabeçalho fixo -->
-        <div id="filtros-header-desktop" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
+        <div id="filtros-header-desktop"
+            style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
             <span style="display: flex; align-items: center; gap: 6px;">
                 <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
                 <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
             </span>
-            <button id="btn-fechar-filtros-desktop" type="button" style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+            <button id="btn-fechar-filtros-desktop" type="button"
+                style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        
+
         <!-- Área de scroll para os filtros -->
         <div class="filtros-scroll-area" style="flex: 1; overflow-y: auto; padding: 18px;">
-            <form id="filtros-desktop" method="GET" action="/projetos" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <form id="filtros-desktop" method="GET" action="/projetos"
+                style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
                 <!-- Filtro Projeto -->
                 <div style="position: relative;">
-                    <label for="nome-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <label for="nome-desktop"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                         <span><i class="fas fa-search"></i> Projeto</span>
-                        <button type="button" class="btn btn-link p-0 m-0" onclick="limparSelect('nome-desktop'); event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="limparSelect('nome-desktop'); event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </label>
-                    <select id="nome-desktop" name="nome" multiple class="form-control" style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;" onchange="mostrarSelecoes('nome-desktop', 'nome-display')" onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('nome-display').style.display = 'flex'; }, 200);">
+                    <select id="nome-desktop" name="nome" multiple class="form-control"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        onchange="mostrarSelecoes('nome-desktop', 'nome-display')"
+                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('nome-display').style.display = 'flex'; }, 200);">
                         <option value="">Selecione o Projeto</option>
                         {% for projeto in projetos %}
-                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome %}selected{% endif %}>{{ projeto.nome }}</option>
+                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome
+                            %}selected{% endif %}>{{ projeto.nome }}</option>
                         {% endfor %}
                     </select>
-                    <div id="nome-display" class="form-control" style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSelect('nome-desktop')">
+                    <div id="nome-display" class="form-control"
+                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                        onclick="toggleSelect('nome-desktop')">
                         <span id="nome-text">Selecione o Projeto</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
                 </div>
-                
+
                 <!-- Filtro Status -->
                 <div style="position: relative;">
-                    <label for="status-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <label for="status-desktop"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                         <span><i class="fas fa-tasks"></i> Status</span>
-                        <button type="button" class="btn btn-link p-0 m-0" onclick="limparSelect('status-desktop'); event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="limparSelect('status-desktop'); event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </label>
-                    <select id="status-desktop" name="status" multiple class="form-control" style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;" onchange="mostrarSelecoes('status-desktop', 'status-display')" onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('status-display').style.display = 'flex'; }, 200);">
+                    <select id="status-desktop" name="status" multiple class="form-control"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        onchange="mostrarSelecoes('status-desktop', 'status-display')"
+                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('status-display').style.display = 'flex'; }, 200);">
                         <option value="">Selecione o Status</option>
-                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif %}>Pendente</option>
-                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{% endif %}>Em Progresso</option>
-                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif %}>Concluída</option>
-                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif %}>Atrasado</option>
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif
+                            %}>Pendente</option>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{%
+                            endif %}>Em Progresso</option>
+                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif
+                            %}>Concluída</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif
+                            %}>Atrasado</option>
                     </select>
-                    <div id="status-display" class="form-control" style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSelect('status-desktop')">
+                    <div id="status-display" class="form-control"
+                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                        onclick="toggleSelect('status-desktop')">
                         <span id="status-text">Selecione o Status</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
                 </div>
-                
+
                 <!-- Filtro Coleção -->
                 <div style="position: relative;">
-                    <label for="colecao-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <label for="colecao-desktop"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                         <span><i class="fas fa-layer-group"></i> Coleção</span>
-                        <button type="button" class="btn btn-link p-0 m-0" onclick="limparSelect('colecao-desktop'); event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="limparSelect('colecao-desktop'); event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </label>
-                    <select id="colecao-desktop" name="colecao" multiple class="form-control" style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;" onchange="mostrarSelecoes('colecao-desktop', 'colecao-display')" onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('colecao-display').style.display = 'flex'; }, 200);">
+                    <select id="colecao-desktop" name="colecao" multiple class="form-control"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        onchange="mostrarSelecoes('colecao-desktop', 'colecao-display')"
+                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('colecao-display').style.display = 'flex'; }, 200);">
                         <option value="">Selecione a Coleção</option>
                         {% if colecoes and colecoes|length > 0 %}
                         {% for colecao in colecoes %}
-                            <option value="{{ colecao }}">{{ colecao }}</option>
+                        <option value="{{ colecao }}">{{ colecao }}</option>
                         {% endfor %}
                         {% else %}
-                            <option disabled>Nenhuma coleção disponível</option>
+                        <option disabled>Nenhuma coleção disponível</option>
                         {% endif %}
                     </select>
-                    <div id="colecao-display" class="form-control" style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSelect('colecao-desktop')">
+                    <div id="colecao-display" class="form-control"
+                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                        onclick="toggleSelect('colecao-desktop')">
                         <span id="colecao-text">Selecione a Coleção</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
                 </div>
-                
+
                 <!-- Filtros de datas na mesma linha -->
                 <div style="display: flex; gap: 8px;">
                     <div style="flex: 1; position: relative;">
-                        <label for="data_inicio-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <label for="data_inicio-desktop"
+                            style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                             <span><i class="fas fa-calendar"></i> Início</span>
-                            <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_inicio-desktop').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                            <button type="button" class="btn btn-link p-0 m-0"
+                                onclick="document.getElementById('data_inicio-desktop').value = ''; event.preventDefault();"
+                                style="color: #b0b0b0; font-size: 1.1em;">
                                 <i class="fas fa-eraser"></i>
                             </button>
                         </label>
-                        <input type="date" id="data_inicio-desktop" name="data_inicio" class="form-control" style="min-height: 48px; border-radius: 10px;" value="{{ request.args.get('data_inicio', '') }}">
+                        <input type="date" id="data_inicio-desktop" name="data_inicio" class="form-control"
+                            style="min-height: 48px; border-radius: 10px;"
+                            value="{{ request.args.get('data_inicio', '') }}">
                     </div>
                     <div style="flex: 1; position: relative;">
-                        <label for="data_fim-desktop" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <label for="data_fim-desktop"
+                            style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                             <span><i class="fas fa-calendar-check"></i> Fim</span>
-                            <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_fim-desktop').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+                            <button type="button" class="btn btn-link p-0 m-0"
+                                onclick="document.getElementById('data_fim-desktop').value = ''; event.preventDefault();"
+                                style="color: #b0b0b0; font-size: 1.1em;">
                                 <i class="fas fa-eraser"></i>
                             </button>
                         </label>
-                        <input type="date" id="data_fim-desktop" name="data_fim" class="form-control" style="min-height: 48px; border-radius: 10px;" value="{{ request.args.get('data_fim', '') }}">
+                        <input type="date" id="data_fim-desktop" name="data_fim" class="form-control"
+                            style="min-height: 48px; border-radius: 10px;"
+                            value="{{ request.args.get('data_fim', '') }}">
                     </div>
                 </div>
-                
+
                 <!-- Botões de ação -->
                 <div style="display: flex; gap: 8px; margin-top: 12px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1; min-height: 48px; border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+                    <button type="submit" class="btn btn-primary"
+                        style="flex: 1; min-height: 48px; border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
                         <i class="fas fa-filter"></i> Filtrar
                     </button>
-                    <button type="button" class="btn btn-secondary" id="limpar-filtros-desktop" style="flex: 1; min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; color: #6c757d;">
+                    <button type="button" class="btn btn-secondary" id="limpar-filtros-desktop"
+                        style="flex: 1; min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; color: #6c757d;">
                         <i class="fas fa-eraser"></i> Limpar
                     </button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <!-- Backdrop para fechar o painel -->
-    <div id="filtros-backdrop-desktop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9998; display: none;"></div>
+    <div id="filtros-backdrop-desktop"
+        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9998; display: none;">
+    </div>
 
     <!-- Gantt agrupado estilo teste_agrupamento_gantt.html -->
     <div class="card mb-4 mt-5">
@@ -282,26 +336,27 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-$(document).ready(function() {
-    console.log('Lazy rendering iniciado');
-    const projetos = window.projetosData || [];
-    const carousel = document.getElementById('projetos-carousel-js');
-    const leftArrow = document.querySelector('.carousel-arrow.left');
-    const rightArrow = document.querySelector('.carousel-arrow.right');
-    const indicators = document.querySelector('.carousel-indicators');
-    if (!carousel) { console.log('Container do carousel não encontrado'); return; }
-    if (!projetos.length) { console.log('Nenhum projeto encontrado em window.projetosData'); }
+    $(document).ready(function () {
+        console.log('Lazy rendering iniciado');
+        const projetos = window.projetosData || [];
+        const carousel = document.getElementById('projetos-carousel-js');
+        const leftArrow = document.querySelector('.carousel-arrow.left');
+        const rightArrow = document.querySelector('.carousel-arrow.right');
+        const indicators = document.querySelector('.carousel-indicators');
+        if (!carousel) { console.log('Container do carousel não encontrado'); return; }
+        if (!projetos.length) { console.log('Nenhum projeto encontrado em window.projetosData'); }
 
-    // Configurações
-    const CARD_WIDTH = 260;
-    const CARD_GAP = 18;
-    const BUFFER = 2; // Quantos cards extras renderizar antes/depois
+        // Configurações
+        const CARD_WIDTH = 260;
+        const CARD_GAP = 18;
+        const BUFFER = 2; // Quantos cards extras renderizar antes/depois
 
-    // --- NOVO: variáveis de permissão ---
-    const podeCriarProjeto = {{ pode_criar_projeto|tojson }};
-    const podeEditarProjeto = {{ pode_editar_projeto|tojson }};
-    const podeExcluirProjeto = {{ pode_excluir_projeto|tojson }};
-    const alertasProjetos = {{ alertas_projetos|tojson }};
+        // --- NOVO: variáveis de permissão ---
+        const podeCriarProjeto = {{ pode_criar_projeto| tojson
+    }};
+    const podeEditarProjeto = {{ pode_editar_projeto| tojson }};
+    const podeExcluirProjeto = {{ pode_excluir_projeto| tojson }};
+    const alertasProjetos = {{ alertas_projetos| tojson }};
 
     // Renderiza o card de "Novo Projeto" somente se permitido
     function renderNovoProjetoCard() {
@@ -327,96 +382,96 @@ $(document).ready(function() {
                 console.error('Projeto inválido:', projeto);
                 return '';
             }
-            
+
             // Verificar se há alertas para este projeto
             const alerta = alertasProjetos[projeto.id];
             console.log('Alerta para projeto', projeto.id, ':', alerta);
-        
-        let tarefasHtml = '';
-        if (projeto.tarefas && projeto.tarefas.length > 0) {
-            // Filtrar tarefas baseado no status do projeto
-            let tarefasFiltradas = [];
-            if (alerta) {
-                if (alerta.tipo === 'atrasado') {
-                    // Mostrar apenas tarefas atrasadas
-                    tarefasFiltradas = projeto.tarefas.filter(tarefa => 
-                        tarefa.status === 'atrasado' || 
-                        (tarefa.data_fim && new Date(tarefa.data_fim) < new Date())
-                    );
-                } else if (alerta.tipo === 'pendente') {
-                    // Mostrar apenas tarefas pendentes
-                    tarefasFiltradas = projeto.tarefas.filter(tarefa => 
-                        tarefa.status === 'pendente' || 
-                        tarefa.status === 'em progresso'
-                    );
+
+            let tarefasHtml = '';
+            if (projeto.tarefas && projeto.tarefas.length > 0) {
+                // Filtrar tarefas baseado no status do projeto
+                let tarefasFiltradas = [];
+                if (alerta) {
+                    if (alerta.tipo === 'atrasado') {
+                        // Mostrar apenas tarefas atrasadas
+                        tarefasFiltradas = projeto.tarefas.filter(tarefa =>
+                            tarefa.status === 'atrasado' ||
+                            (tarefa.data_fim && new Date(tarefa.data_fim) < new Date())
+                        );
+                    } else if (alerta.tipo === 'pendente') {
+                        // Mostrar apenas tarefas pendentes
+                        tarefasFiltradas = projeto.tarefas.filter(tarefa =>
+                            tarefa.status === 'pendente' ||
+                            tarefa.status === 'em progresso'
+                        );
+                    } else {
+                        // Para projetos normais, mostrar todas as tarefas
+                        tarefasFiltradas = projeto.tarefas;
+                    }
                 } else {
-                    // Para projetos normais, mostrar todas as tarefas
+                    // Para projetos sem alerta, mostrar todas as tarefas
                     tarefasFiltradas = projeto.tarefas;
                 }
-            } else {
-                // Para projetos sem alerta, mostrar todas as tarefas
-                tarefasFiltradas = projeto.tarefas;
-            }
-            
-            console.log('Tarefas filtradas:', tarefasFiltradas.length);
-            
-            if (tarefasFiltradas.length > 0) {
-                tarefasHtml += `<small><strong>Tarefas ${alerta ? `(${alerta.tipo})` : ''} (${tarefasFiltradas.length}):</strong></small><div class="task-list">`;
-                tarefasFiltradas.slice(0, 3).forEach(tarefa => {
-                    tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
+
+                console.log('Tarefas filtradas:', tarefasFiltradas.length);
+
+                if (tarefasFiltradas.length > 0) {
+                    tarefasHtml += `<small><strong>Tarefas ${alerta ? `(${alerta.tipo})` : ''} (${tarefasFiltradas.length}):</strong></small><div class="task-list">`;
+                    tarefasFiltradas.slice(0, 3).forEach(tarefa => {
+                        tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
                         <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
                         <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
                             ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
                         </span>
                     </div>`;
-                });
-                if (tarefasFiltradas.length > 3) {
-                    tarefasHtml += `<div class="text-muted small expand-tasks-btn" data-projeto-id="${projeto.id}" style="cursor: pointer; color: #007bff;">
+                    });
+                    if (tarefasFiltradas.length > 3) {
+                        tarefasHtml += `<div class="text-muted small expand-tasks-btn" data-projeto-id="${projeto.id}" style="cursor: pointer; color: #007bff;">
                         <i class="fas fa-chevron-down"></i> +${tarefasFiltradas.length - 3} tarefas
                     </div>`;
-                    tarefasHtml += `<div class="hidden-tasks" id="hidden-tasks-${projeto.id}" style="display: none;">`;
-                    tarefasFiltradas.slice(3).forEach(tarefa => {
-                        tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
+                        tarefasHtml += `<div class="hidden-tasks" id="hidden-tasks-${projeto.id}" style="display: none;">`;
+                        tarefasFiltradas.slice(3).forEach(tarefa => {
+                            tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
                             <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
                             <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
                                 ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
                             </span>
                         </div>`;
-                    });
+                        });
+                        tarefasHtml += `</div>`;
+                    }
                     tarefasHtml += `</div>`;
+                } else {
+                    tarefasHtml = `<div class="text-muted small">Nenhuma tarefa ${alerta ? alerta.tipo : ''} encontrada.</div>`;
                 }
-                tarefasHtml += `</div>`;
             } else {
-                tarefasHtml = `<div class="text-muted small">Nenhuma tarefa ${alerta ? alerta.tipo : ''} encontrada.</div>`;
+                tarefasHtml = '<div class="text-muted small">Nenhuma tarefa encontrada.</div>';
             }
-        } else {
-            tarefasHtml = '<div class="text-muted small">Nenhuma tarefa encontrada.</div>';
-        }
-        
-        let alertaHtml = '';
-        let cardStyle = '';
-        
-        // Determinar status do projeto baseado nos alertas (igual ao sistema de bordas)
-        let statusProjeto = 'normal';
-        let statusText = 'NORMAL';
-        let statusColor = '#6c757d';
-        
-        if (alerta) {
-            if (alerta.tipo === 'atrasado') {
-                cardStyle = 'border-left: 4px solid #dc3545;';
-                statusProjeto = 'atrasado';
-                statusText = 'ATRASADO';
-                statusColor = '#dc3545';
-            } else if (alerta.tipo === 'pendente') {
-                cardStyle = 'border-left: 4px solid #e0a800;';
-                statusProjeto = 'pendente';
-                statusText = 'PENDENTE';
-                statusColor = '#e0a800';
+
+            let alertaHtml = '';
+            let cardStyle = '';
+
+            // Determinar status do projeto baseado nos alertas (igual ao sistema de bordas)
+            let statusProjeto = 'normal';
+            let statusText = 'NORMAL';
+            let statusColor = '#6c757d';
+
+            if (alerta) {
+                if (alerta.tipo === 'atrasado') {
+                    cardStyle = 'border-left: 4px solid #dc3545;';
+                    statusProjeto = 'atrasado';
+                    statusText = 'ATRASADO';
+                    statusColor = '#dc3545';
+                } else if (alerta.tipo === 'pendente') {
+                    cardStyle = 'border-left: 4px solid #e0a800;';
+                    statusProjeto = 'pendente';
+                    statusText = 'PENDENTE';
+                    statusColor = '#e0a800';
+                }
             }
-        }
-        
-        console.log('HTML do card gerado com sucesso');
-        return `<div class="carousel-item">
+
+            console.log('HTML do card gerado com sucesso');
+            return `<div class="carousel-item">
             <div class="card compact-card shadow-sm projeto-card-with-watermark" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; overflow: hidden;">
                 <!-- Marca d'água diagonal - estilo carimbo -->
                 <div class="projeto-watermark status-${statusProjeto}" style="
@@ -444,11 +499,11 @@ $(document).ready(function() {
                 
                 <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="position: relative; z-index: 2;">
                     <h6 class="mb-0">
-                        ${alerta && alerta.tipo === 'atrasado' ? 
-                            `<i class="fas fa-exclamation-triangle text-danger me-1" title="${alerta.quantidade} tarefa(s) atrasada(s)"></i>` : 
-                            alerta && alerta.tipo === 'pendente' ? 
-                                `<i class="fas fa-clock text-warning me-1" title="${alerta.quantidade} tarefa(s) pendente(s)"></i>` : 
-                                '<i class="fas fa-project-diagram"></i>'} 
+                        ${alerta && alerta.tipo === 'atrasado' ?
+                    `<i class="fas fa-exclamation-triangle text-danger me-1" title="${alerta.quantidade} tarefa(s) atrasada(s)"></i>` :
+                    alerta && alerta.tipo === 'pendente' ?
+                        `<i class="fas fa-clock text-warning me-1" title="${alerta.quantidade} tarefa(s) pendente(s)"></i>` :
+                        '<i class="fas fa-project-diagram"></i>'} 
                         ${projeto.nome}
                     </h6>
                 </div>
@@ -483,10 +538,10 @@ $(document).ready(function() {
             console.log('Iniciando renderCards...');
             console.log('Projetos disponíveis:', projetos.length);
             console.log('Carousel:', carousel);
-            
+
             let html = renderNovoProjetoCard();
             console.log('Card novo projeto gerado');
-            
+
             // Renderizar todos os projetos
             for (let i = 0; i < projetos.length; i++) {
                 if (projetos[i]) {
@@ -494,31 +549,31 @@ $(document).ready(function() {
                     html += renderProjetoCard(projetos[i]);
                 }
             }
-            
+
             console.log('HTML final gerado, aplicando ao carousel...');
             carousel.innerHTML = html;
             console.log('HTML aplicado com sucesso');
-            
-        // Reaplicar eventos de expandir tarefas
-        document.querySelectorAll('.expand-tasks-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const projetoId = btn.getAttribute('data-projeto-id');
-                const hiddenTasks = document.getElementById('hidden-tasks-' + projetoId);
-                const icon = btn.querySelector('i');
-                if (hiddenTasks.style.display === 'none') {
-                    hiddenTasks.style.display = 'block';
-                    icon.classList.remove('fa-chevron-down');
-                    icon.classList.add('fa-chevron-up');
-                    btn.style.color = '#dc3545';
-                } else {
-                    hiddenTasks.style.display = 'none';
-                    icon.classList.remove('fa-chevron-up');
-                    icon.classList.add('fa-chevron-down');
-                    btn.style.color = '#007bff';
-                }
+
+            // Reaplicar eventos de expandir tarefas
+            document.querySelectorAll('.expand-tasks-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const projetoId = btn.getAttribute('data-projeto-id');
+                    const hiddenTasks = document.getElementById('hidden-tasks-' + projetoId);
+                    const icon = btn.querySelector('i');
+                    if (hiddenTasks.style.display === 'none') {
+                        hiddenTasks.style.display = 'block';
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                        btn.style.color = '#dc3545';
+                    } else {
+                        hiddenTasks.style.display = 'none';
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                        btn.style.color = '#007bff';
+                    }
+                });
             });
-        });
-        atualizarIndicadoresCarousel();
+            atualizarIndicadoresCarousel();
         } catch (error) {
             console.error('Erro ao renderizar cards:', error);
             carousel.innerHTML = '<div class="alert alert-danger">Erro ao carregar projetos</div>';
@@ -575,7 +630,7 @@ $(document).ready(function() {
         });
     }
     carousel.addEventListener('scroll', atualizarBolinhasAtivas);
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         renderCards();
         atualizarIndicadoresCarousel();
     });
@@ -584,7 +639,7 @@ $(document).ready(function() {
     console.log('Iniciando renderização dos cards...');
     console.log('Projetos disponíveis:', projetos.length);
     renderCards();
-    
+
     // Garantir que o carousel funcione corretamente
     function garantirCarouselFuncional() {
         const carousel = document.getElementById('projetos-carousel-js');
@@ -593,11 +648,11 @@ $(document).ready(function() {
             carousel.style.display = 'none';
             carousel.offsetHeight; // Trigger reflow
             carousel.style.display = 'flex';
-            
+
             // Verificar se há scroll horizontal
             const temScroll = carousel.scrollWidth > carousel.clientWidth;
             console.log('Carousel scrollWidth:', carousel.scrollWidth, 'clientWidth:', carousel.clientWidth, 'Tem scroll:', temScroll);
-            
+
             // Debug: mostrar informações do carousel
             console.log('Carousel CSS:', {
                 display: getComputedStyle(carousel).display,
@@ -606,7 +661,7 @@ $(document).ready(function() {
                 width: getComputedStyle(carousel).width,
                 maxWidth: getComputedStyle(carousel).maxWidth
             });
-            
+
             // Mostrar/ocultar setas baseado no scroll
             const leftArrow = document.querySelector('.carousel-arrow.left');
             const rightArrow = document.querySelector('.carousel-arrow.right');
@@ -619,24 +674,24 @@ $(document).ready(function() {
                     rightArrow.style.display = 'none';
                 }
             }
-            
+
             // Forçar scroll se necessário
             if (temScroll && carousel.scrollLeft === 0) {
                 carousel.scrollLeft = 0;
             }
         }
     }
-    
+
     // Executar após renderização
     setTimeout(garantirCarouselFuncional, 100);
-    
+
     // Re-executar em resize
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         setTimeout(garantirCarouselFuncional, 100);
     });
-    
 
-    
+
+
     if ($('#colecao').length) {
         console.log('Inicializando Select2 para coleção...');
         try {
@@ -660,7 +715,7 @@ $(document).ready(function() {
     } else {
         console.log('Campo coleção não encontrado');
     }
-    
+
     if ($('#status').length) {
         console.log('Inicializando Select2 para status...');
         try {
@@ -687,302 +742,315 @@ $(document).ready(function() {
     });
 </script>
 <style>
-.projetos-carousel-wrapper {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    position: relative;
-    min-height: 220px;
-    margin-bottom: 24px;
-    background: none;
-    overflow: hidden !important;
-}
-
-.projetos-carousel {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 18px;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scroll-behavior: smooth;
-    width: 100% !important;
-    max-width: 100vw !important;
-    padding: 8px 0;
-    min-height: 220px;
-    background: none;
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap !important;
-    white-space: nowrap !important;
-    word-wrap: normal !important;
-    word-break: normal !important;
-    position: relative;
-}
-
-/* Remover overflow global que atrapalha o scroll do carousel */
-body, html, .container, .row {
-    overflow: unset !important;
-}
-
-/* Garantir que o carousel funcione corretamente */
-.projetos-carousel-wrapper {
-    overflow: visible !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-.projetos-carousel {
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Forçar que os cards não quebrem linha */
-.carousel-item {
-    flex: 0 0 auto !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-    min-width: 260px !important;
-    max-width: 260px !important;
-    width: 260px !important;
-    display: block !important;
-}
-
-/* Garantir compatibilidade com Safari e outros navegadores */
-.projetos-carousel {
-    -webkit-overflow-scrolling: touch !important;
-    -ms-overflow-style: -ms-autohiding-scrollbar;
-    scrollbar-width: thin;
-    scrollbar-color: #ccc #f8f9fa;
-}
-
-.projetos-carousel::-webkit-scrollbar {
-    height: 8px;
-    background: #f8f9fa;
-}
-
-.projetos-carousel::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-
-.projetos-carousel::-webkit-scrollbar-track {
-    background: #f8f9fa;
-    border-radius: 4px;
-}
-
-/* Forçar que o container pai não interfira */
-.projetos-carousel-wrapper {
-    overflow: visible !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    position: relative !important;
-}
-
-/* Garantir que não há quebra de linha */
-.projetos-carousel > * {
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-}
-
-/* Forçar comportamento de scroll horizontal */
-#projetos-carousel-js {
-    display: flex !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scroll-behavior: smooth !important;
-    -webkit-overflow-scrolling: touch !important;
-    flex-wrap: nowrap !important;
-    white-space: nowrap !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-/* Garantir que os cards não quebrem */
-#projetos-carousel-js .carousel-item {
-    flex: 0 0 auto !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-    min-width: 260px !important;
-    max-width: 260px !important;
-    width: 260px !important;
-    display: block !important;
-}
-
-/* Estilos para marca d'água dos projetos */
-.projeto-card-with-watermark {
-    position: relative;
-    overflow: hidden;
-}
-
-.projeto-watermark {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-45deg);
-    font-size: 24px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    white-space: nowrap;
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.25;
-    transition: all 0.3s ease;
-    animation: watermark-fade-in 0.5s ease-in-out;
-    
-    /* Estilo de carimbo */
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 5px solid;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 
-        0 4px 8px rgba(0, 0, 0, 0.2),
-        inset 0 2px 4px rgba(255, 255, 255, 0.8),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-    
-    /* Textura desgastada */
-    background-image: 
-        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.8) 1px, transparent 1px),
-        radial-gradient(circle at 80% 80%, rgba(0,0,0,0.1) 1px, transparent 1px);
-    background-size: 4px 4px, 6px 6px;
-    
-    /* Efeito de desgaste */
-    filter: contrast(1.2) brightness(1.1);
-    
-    /* Fonte mais grossa */
-    font-stretch: condensed;
-    text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
-}
-
-@keyframes watermark-fade-in {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) rotate(-45deg) scale(0.8);
+    .projetos-carousel-wrapper {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        position: relative;
+        min-height: 220px;
+        margin-bottom: 24px;
+        background: none;
+        overflow: hidden !important;
     }
-    to {
-        opacity: 0.2;
-        transform: translate(-50%, -50%) rotate(-45deg) scale(1);
-    }
-}
 
-.projeto-card-with-watermark:hover .projeto-watermark {
-    opacity: 0.4;
-    transform: translate(-50%, -50%) rotate(-45deg) scale(1.05);
-    box-shadow: 
-        0 6px 12px rgba(0, 0, 0, 0.3),
-        inset 0 2px 4px rgba(255, 255, 255, 0.9),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
-}
-
-/* Cores específicas para cada status - estilo carimbo */
-.projeto-watermark.status-normal {
-    color: #6c757d !important;
-    border-color: #6c757d !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-}
-
-.projeto-watermark.status-pendente {
-    color: #e0a800 !important;
-    border-color: #e0a800 !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-}
-
-.projeto-watermark.status-atrasado {
-    color: #dc3545 !important;
-    border-color: #dc3545 !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-}
-
-.carousel-item {
-    flex: 0 0 auto;
-    flex-shrink: 0;
-    min-width: 260px;
-    max-width: 260px;
-    margin-right: 0;
-    border: none;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border-radius: 12px;
-    display: block;
-    position: relative;
-    transition: box-shadow 0.2s;
-}
-.carousel-item:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
-    z-index: 2;
-}
-
-.carousel-arrow {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 50%;
-    width: 38px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3em;
-    color: #333;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    cursor: pointer;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 20;
-    transition: background 0.2s, opacity 0.2s;
-    opacity: 0;
-    pointer-events: none;
-}
-.carousel-arrow.left {
-    left: 8px;
-}
-.carousel-arrow.right {
-    right: 8px;
-}
-.projetos-carousel-wrapper:hover .carousel-arrow {
-    opacity: 1;
-    pointer-events: auto;
-}
-.carousel-arrow:hover {
-    background: #f0f0f0;
-}
-
-.carousel-arrow i {
-    width: 90%;
-    height: 90%;
-    font-size: 0.8em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    padding: 0;
-    line-height: 1;
-    transform: translateY(2%);
-}
-
-@media (max-width: 900px) {
-    .carousel-item {
-        min-width: 48vw;
-        max-width: 48vw;
-    }
-}
-@media (max-width: 600px) {
-    .carousel-item {
-        min-width: 90vw;
-        max-width: 90vw;
-    }
-    .carousel-arrow.left, .carousel-arrow.right {
-        display: none;
-    }
     .projetos-carousel {
-        gap: 8px;
-        padding-left: 2vw;
-        padding-right: 2vw;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 18px;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-behavior: smooth;
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px 0;
+        min-height: 220px;
+        background: none;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        word-wrap: normal !important;
+        word-break: normal !important;
+        position: relative;
     }
-}
+
+    /* Remover overflow global que atrapalha o scroll do carousel */
+    body,
+    html,
+    .container,
+    .row {
+        overflow: unset !important;
+    }
+
+    /* Garantir que o carousel funcione corretamente */
+    .projetos-carousel-wrapper {
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .projetos-carousel {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Forçar que os cards não quebrem linha */
+    .carousel-item {
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        display: block !important;
+    }
+
+    /* Garantir compatibilidade com Safari e outros navegadores */
+    .projetos-carousel {
+        -webkit-overflow-scrolling: touch !important;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+        scrollbar-width: thin;
+        scrollbar-color: #ccc #f8f9fa;
+    }
+
+    .projetos-carousel::-webkit-scrollbar {
+        height: 8px;
+        background: #f8f9fa;
+    }
+
+    .projetos-carousel::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+    .projetos-carousel::-webkit-scrollbar-track {
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+
+    /* Forçar que o container pai não interfira */
+    .projetos-carousel-wrapper {
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        position: relative !important;
+    }
+
+    /* Garantir que não há quebra de linha */
+    .projetos-carousel>* {
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+    }
+
+    /* Forçar comportamento de scroll horizontal */
+    #projetos-carousel-js {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-behavior: smooth !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Garantir que os cards não quebrem */
+    #projetos-carousel-js .carousel-item {
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        display: block !important;
+    }
+
+    /* Estilos para marca d'água dos projetos */
+    .projeto-card-with-watermark {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .projeto-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 24px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.25;
+        transition: all 0.3s ease;
+        animation: watermark-fade-in 0.5s ease-in-out;
+
+        /* Estilo de carimbo */
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 5px solid;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow:
+            0 4px 8px rgba(0, 0, 0, 0.2),
+            inset 0 2px 4px rgba(255, 255, 255, 0.8),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+
+        /* Textura desgastada */
+        background-image:
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+            radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+        background-size: 4px 4px, 6px 6px;
+
+        /* Efeito de desgaste */
+        filter: contrast(1.2) brightness(1.1);
+
+        /* Fonte mais grossa */
+        font-stretch: condensed;
+        text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes watermark-fade-in {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(0.8);
+        }
+
+        to {
+            opacity: 0.2;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+        }
+    }
+
+    .projeto-card-with-watermark:hover .projeto-watermark {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) rotate(-45deg) scale(1.05);
+        box-shadow:
+            0 6px 12px rgba(0, 0, 0, 0.3),
+            inset 0 2px 4px rgba(255, 255, 255, 0.9),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Cores específicas para cada status - estilo carimbo */
+    .projeto-watermark.status-normal {
+        color: #6c757d !important;
+        border-color: #6c757d !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-pendente {
+        color: #e0a800 !important;
+        border-color: #e0a800 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-atrasado {
+        color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .carousel-item {
+        flex: 0 0 auto;
+        flex-shrink: 0;
+        min-width: 260px;
+        max-width: 260px;
+        margin-right: 0;
+        border: none;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        display: block;
+        position: relative;
+        transition: box-shadow 0.2s;
+    }
+
+    .carousel-item:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+        z-index: 2;
+    }
+
+    .carousel-arrow {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3em;
+        color: #333;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 20;
+        transition: background 0.2s, opacity 0.2s;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .carousel-arrow.left {
+        left: 8px;
+    }
+
+    .carousel-arrow.right {
+        right: 8px;
+    }
+
+    .projetos-carousel-wrapper:hover .carousel-arrow {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .carousel-arrow:hover {
+        background: #f0f0f0;
+    }
+
+    .carousel-arrow i {
+        width: 90%;
+        height: 90%;
+        font-size: 0.8em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        line-height: 1;
+        transform: translateY(2%);
+    }
+
+    @media (max-width: 900px) {
+        .carousel-item {
+            min-width: 48vw;
+            max-width: 48vw;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .carousel-item {
+            min-width: 90vw;
+            max-width: 90vw;
+        }
+
+        .carousel-arrow.left,
+        .carousel-arrow.right {
+            display: none;
+        }
+
+        .projetos-carousel {
+            gap: 8px;
+            padding-left: 2vw;
+            padding-right: 2vw;
+        }
+    }
 
     /* Estilos para filtros customizados idênticos e centralizados */
     .filters-container {
@@ -1152,6 +1220,7 @@ body, html, .container, .row {
             padding-bottom: 8px;
             -webkit-overflow-scrolling: touch;
         }
+
         .filter-group,
         .filter-actions {
             min-width: 180px;
@@ -1172,6 +1241,7 @@ body, html, .container, .row {
             padding-bottom: 8px;
             -webkit-overflow-scrolling: touch;
         }
+
         .filter-group,
         .filter-actions {
             min-width: 160px;
@@ -1716,98 +1786,101 @@ body, html, .container, .row {
         height: 22px !important;
     }
 
-.carousel-indicators {
-    min-height: 20px;
-    position: static !important;
-    z-index: 1;
-    margin-top: 32px;
-    margin-bottom: 24px;
-}
+    .carousel-indicators {
+        min-height: 20px;
+        position: static !important;
+        z-index: 1;
+        margin-top: 32px;
+        margin-bottom: 24px;
+    }
 
-/* Opções do dropdown */
-.select2-container--bootstrap-5 .select2-results__option {
-    padding: 10px 18px;
-    font-size: 1.08em;
-    border-radius: 8px;
-    margin: 2px 0;
-    transition: background 0.2s;
-    display: flex;
-    align-items: center;
-}
-.select2-container--bootstrap-5 .select2-results__option--highlighted {
-    background: #e9f5ff;
-    color: #007bff;
-}
+    /* Opções do dropdown */
+    .select2-container--bootstrap-5 .select2-results__option {
+        padding: 10px 18px;
+        font-size: 1.08em;
+        border-radius: 8px;
+        margin: 2px 0;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+    }
 
-/* Ícone de pasta nas opções */
-.select2-container--bootstrap-5 .select2-results__option:before {
-    content: '\f07b';
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    margin-right: 8px;
-    color: #ffc107;
-    font-size: 1.1em;
-}
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background: #e9f5ff;
+        color: #007bff;
+    }
 
-/* Coleções selecionadas como badges */
-.select2-container--bootstrap-5 .select2-selection__choice {
-    color: #007bff !important;
-    font-size: 0.85em !important;
-    font-weight: 500 !important;
-    background: #e9f5ff !important;
-    border-radius: 10px !important;
-    padding: 1px 8px 1px 6px !important;
-    margin: 2px 3px 2px 0 !important;
-    border: 1px solid #b6e0fe !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
-    display: flex !important;
-    align-items: center !important;
-    max-width: 100% !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    min-height: 20px !important;
-    line-height: 18px !important;
-    height: 22px !important;
-}
-.select2-container--bootstrap-5 .select2-selection__choice__remove {
-    color: #dc3545 !important;
-    margin-left: 4px !important;
-    font-size: 1em !important;
-    font-weight: bold !important;
-    cursor: pointer !important;
-}
+    /* Ícone de pasta nas opções */
+    .select2-container--bootstrap-5 .select2-results__option:before {
+        content: '\f07b';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        margin-right: 8px;
+        color: #ffc107;
+        font-size: 1.1em;
+    }
 
-/* Placeholder */
-.select2-container--bootstrap-5 .select2-selection__placeholder {
-    color: #888;
-    font-size: 1.05em;
-    font-style: italic;
-}
+    /* Coleções selecionadas como badges */
+    .select2-container--bootstrap-5 .select2-selection__choice {
+        color: #007bff !important;
+        font-size: 0.85em !important;
+        font-weight: 500 !important;
+        background: #e9f5ff !important;
+        border-radius: 10px !important;
+        padding: 1px 8px 1px 6px !important;
+        margin: 2px 3px 2px 0 !important;
+        border: 1px solid #b6e0fe !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        display: flex !important;
+        align-items: center !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        min-height: 20px !important;
+        line-height: 18px !important;
+        height: 22px !important;
+    }
 
-body .select2-container--bootstrap-5 .select2-selection__rendered {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    overflow-x: auto !important;
-    max-width: 100% !important;
-    min-height: 28px !important;
-}
+    .select2-container--bootstrap-5 .select2-selection__choice__remove {
+        color: #dc3545 !important;
+        margin-left: 4px !important;
+        font-size: 1em !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+    }
 
-body .select2-container--bootstrap-5 .select2-selection__choice {
-    max-width: 200px !important;
-    min-width: 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    display: block !important;
-}
-body .select2-container--bootstrap-5 .select2-selection__choice__display {
+    /* Placeholder */
+    .select2-container--bootstrap-5 .select2-selection__placeholder {
+        color: #888;
+        font-size: 1.05em;
+        font-style: italic;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__rendered {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        min-height: 28px !important;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__choice {
+        max-width: 200px !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__choice__display {
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
-    display: inline-block !important;
-    max-width: 160px !important;
-    vertical-align: middle !important;
+        display: inline-block !important;
+        max-width: 160px !important;
+        vertical-align: middle !important;
     }
 
     /* Estilos para o scroll dos filtros */
@@ -1892,8 +1965,9 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
     function obterPeriodo(tarefas) {
         let min = null, max = null;
         tarefas.forEach(t => {
-            const ini = new Date(t.start);
-            const fim = new Date(t.end);
+            // Criar datas no fuso horário local para evitar problemas de UTC
+            const ini = new Date(t.start + 'T00:00:00');
+            const fim = new Date(t.end + 'T00:00:00');
             if (!min || ini < min) min = ini;
             if (!max || fim > max) max = fim;
         });
@@ -1902,7 +1976,10 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
 
     // Função para calcular dias entre datas
     function diasEntre(a, b) {
-        return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
+        // Usar datas no fuso horário local para cálculo preciso
+        const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+        const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
     }
 
     // Função para cor de status
@@ -1913,10 +1990,21 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
         return '#ffc107';
     }
 
+    // Função para cor da borda baseada no status
+    function corBordaStatus(tarefa) {
+        console.log('Status da tarefa:', tarefa.status, 'Nome:', tarefa.name);
+        if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
+        if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
+        if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
+        if (tarefa.status === 'atrasada') return '#dc3545'; // Vermelho
+        return '#6c757d'; // Cinza padrão
+    }
+
     // Função para tooltip
     function tooltipBarra(tarefa) {
-        const ini = new Date(tarefa.start).toLocaleDateString('pt-BR');
-        const fim = new Date(tarefa.end).toLocaleDateString('pt-BR');
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const ini = new Date(tarefa.start + 'T00:00:00').toLocaleDateString('pt-BR');
+        const fim = new Date(tarefa.end + 'T00:00:00').toLocaleDateString('pt-BR');
         return `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
     }
 
@@ -1934,8 +2022,9 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
 
     function mostrarTooltipDetalhado(event, barra) {
         esconderTooltipDetalhado();
-        const startDate = new Date(barra.start);
-        const endDate = new Date(barra.end);
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const startDate = new Date(barra.start + 'T00:00:00');
+        const endDate = new Date(barra.end + 'T00:00:00');
         const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
         const diasUteis = calcularDiasUteis(startDate, endDate);
         const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
@@ -2104,8 +2193,9 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
             linhaH.style.zIndex = '1';
             tdCrono.appendChild(linhaH);
             barras.forEach((barra, idx) => {
-                const inicio = new Date(barra.start);
-                const fim = new Date(barra.end);
+                // Criar datas no fuso horário local para evitar problemas de UTC
+                const inicio = new Date(barra.start + 'T00:00:00');
+                const fim = new Date(barra.end + 'T00:00:00');
                 const offset = diasEntre(periodo.min, inicio);
                 const largura = diasEntre(inicio, fim) + 1;
                 const div = document.createElement('div');
@@ -2235,41 +2325,41 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
             // Redireciona para a URL base, removendo filtros
             window.location = window.location.pathname;
         });
-        
+
         // Controle do painel lateral de filtros para Desktop
         const btnAbrirFiltrosDesktop = document.getElementById('btn-abrir-filtros-desktop');
         const btnFecharFiltrosDesktop = document.getElementById('btn-fechar-filtros-desktop');
         const offcanvasFiltrosDesktop = document.getElementById('offcanvas-filtros-desktop');
         const backdropFiltrosDesktop = document.getElementById('filtros-backdrop-desktop');
-        
+
         if (btnAbrirFiltrosDesktop && offcanvasFiltrosDesktop) {
-            btnAbrirFiltrosDesktop.addEventListener('click', function() {
+            btnAbrirFiltrosDesktop.addEventListener('click', function () {
                 offcanvasFiltrosDesktop.style.transform = 'translateX(0)';
                 backdropFiltrosDesktop.style.display = 'block';
                 document.body.style.overflow = 'hidden';
             });
         }
-        
+
         if (btnFecharFiltrosDesktop && offcanvasFiltrosDesktop) {
-            btnFecharFiltrosDesktop.addEventListener('click', function() {
+            btnFecharFiltrosDesktop.addEventListener('click', function () {
                 offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
                 backdropFiltrosDesktop.style.display = 'none';
                 document.body.style.overflow = '';
             });
         }
-        
+
         if (backdropFiltrosDesktop && offcanvasFiltrosDesktop) {
-            backdropFiltrosDesktop.addEventListener('click', function() {
+            backdropFiltrosDesktop.addEventListener('click', function () {
                 offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
                 backdropFiltrosDesktop.style.display = 'none';
                 document.body.style.overflow = '';
             });
         }
-        
+
         // Limpar filtros do painel lateral
         const btnLimparFiltrosDesktop = document.getElementById('limpar-filtros-desktop');
         if (btnLimparFiltrosDesktop) {
-            btnLimparFiltrosDesktop.addEventListener('click', function() {
+            btnLimparFiltrosDesktop.addEventListener('click', function () {
                 // Limpa todos os campos do formulário do painel lateral
                 document.getElementById('filtros-desktop').reset();
                 // Limpa os selects múltiplos - desmarca todas as opções
@@ -2290,9 +2380,9 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
                 window.location = window.location.pathname;
             });
         }
-        
+
         // Função para limpar selects individuais
-        window.limparSelect = function(selectId) {
+        window.limparSelect = function (selectId) {
             const select = document.getElementById(selectId);
             if (select) {
                 for (let i = 0; i < select.options.length; i++) {
@@ -2305,13 +2395,13 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
                 document.getElementById(textId).textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
             }
         };
-        
+
         // Função para alternar a visibilidade do select
-        window.toggleSelect = function(selectId) {
+        window.toggleSelect = function (selectId) {
             const select = document.getElementById(selectId);
             const displayId = selectId.replace('-desktop', '-display');
             const display = document.getElementById(displayId);
-            
+
             if (select.style.display === 'none' || select.style.display === '') {
                 select.style.display = 'block';
                 select.style.position = 'absolute';
@@ -2330,45 +2420,45 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
                 display.style.display = 'flex';
             }
         };
-        
+
         // Função para mostrar as seleções no display
-        window.mostrarSelecoes = function(selectId, displayId) {
+        window.mostrarSelecoes = function (selectId, displayId) {
             const select = document.getElementById(selectId);
             const textId = selectId.replace('-desktop', '-text');
             const textElement = document.getElementById(textId);
-            
+
             const selecoes = [];
             for (let i = 0; i < select.options.length; i++) {
                 if (select.options[i].selected && select.options[i].value !== '') {
                     selecoes.push(select.options[i].text);
                 }
             }
-            
+
             if (selecoes.length > 0) {
                 textElement.textContent = selecoes.join(', ');
             } else {
                 textElement.textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
             }
-            
+
             // Não fechar automaticamente - deixar o usuário selecionar múltiplas opções
             // O select só fecha quando perder o foco (onblur)
         };
-        
+
         // Controlar comportamento dos selects para não abrir automaticamente
         const selectsDesktop = document.querySelectorAll('#offcanvas-filtros-desktop select');
         selectsDesktop.forEach(select => {
             // Prevenir que o select abra automaticamente ao focar
-            select.addEventListener('focus', function(e) {
+            select.addEventListener('focus', function (e) {
                 // Não fazer nada - deixar o usuário clicar para abrir
             });
-            
+
             // Garantir que o select só abra quando clicado
-            select.addEventListener('click', function(e) {
+            select.addEventListener('click', function (e) {
                 // Permitir que o select abra apenas quando clicado
             });
-            
+
             // Prevenir que o select abra ao pressionar Tab
-            select.addEventListener('keydown', function(e) {
+            select.addEventListener('keydown', function (e) {
                 if (e.key === 'Tab') {
                     // Permitir navegação com Tab
                     return;
@@ -2378,9 +2468,9 @@ body .select2-container--bootstrap-5 .select2-selection__choice__display {
                     e.preventDefault();
                 }
             });
-            
+
             // Permitir múltipla seleção com Ctrl+clique
-            select.addEventListener('mousedown', function(e) {
+            select.addEventListener('mousedown', function (e) {
                 // Permitir seleção múltipla
                 if (e.ctrlKey || e.metaKey) {
                     // Permitir seleção múltipla com Ctrl/Cmd

@@ -2,253 +2,292 @@
 
 {% block content %}
 <style>
-.projeto-card-mobile {
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 320px !important;
-    max-height: 320px !important;
-    height: 320px !important;
-}
-.projeto-card-mobile .card-body.compact-body {
-    flex: 1 1 auto !important;
-    overflow: hidden !important;
-}
-.projeto-card-mobile .card-footer.compact-footer {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    margin-top: auto !important;
-    padding: 0 0 12px 0 !important;
-    background: #fff !important;
-    border-top: 1px solid #e9ecef !important;
-    text-align: center !important;
-}
-.projeto-card-mobile .card-footer .card-actions {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 6px !important;
-    width: 100% !important;
-    margin: 0 !important;
-    float: none !important;
-}
-.projeto-card-mobile .card-footer .btn {
-    font-size: 0.7em !important;
-    padding: 0 !important;
-    min-width: 0 !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 7px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 2px !important;
-    box-sizing: border-box;
-}
-.projeto-card-mobile .card-footer .btn i {
-    font-size: 1.1em !important;
-    margin: 0 !important;
-}
-#offcanvas-filtros-novo {
-    transform: translateX(-100%) !important;
-    transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);
-}
-#offcanvas-filtros-novo.aberto {
-    transform: translateX(0) !important;
-}
-#filtros-backdrop-novo.aberto {
-    display: block !important;
-}
-#offcanvas-filtros-novo input,
-#offcanvas-filtros-novo select {
-    border-radius: 10px !important;
-}
-#offcanvas-filtros-novo .btn,
-#btn-abrir-filtros,
-#offcanvas-filtros-novo .btn-primary,
-#offcanvas-filtros-novo .btn-secondary,
-#offcanvas-filtros-novo .btn-danger {
-    border-radius: 10px !important;
-}
-
-/* Estilos para o scroll dos filtros */
-#offcanvas-filtros-novo .filtros-scroll-area {
-    scrollbar-width: thin;
-    scrollbar-color: #c1c1c1 #f1f1f1;
-}
-
-#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar {
-    width: 6px;
-}
-
-#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-#offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* Estilos para o carimbo no mobile */
-.projeto-watermark {
-    transition: all 0.3s ease;
-    animation: watermark-fade-in 0.5s ease-in-out;
-}
-
-.projeto-watermark:hover {
-    opacity: 0.4 !important;
-    transform: translate(-50%, -50%) rotate(-45deg) scale(1.05) !important;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8) !important;
-}
-
-@keyframes watermark-fade-in {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) rotate(-45deg) scale(0.8);
+    .projeto-card-mobile {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 320px !important;
+        max-height: 320px !important;
+        height: 320px !important;
     }
-    100% {
-        opacity: 0.25;
-        transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+
+    .projeto-card-mobile .card-body.compact-body {
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
     }
-}
+
+    .projeto-card-mobile .card-footer.compact-footer {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin-top: auto !important;
+        padding: 0 0 12px 0 !important;
+        background: #fff !important;
+        border-top: 1px solid #e9ecef !important;
+        text-align: center !important;
+    }
+
+    .projeto-card-mobile .card-footer .card-actions {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        float: none !important;
+    }
+
+    .projeto-card-mobile .card-footer .btn {
+        font-size: 0.7em !important;
+        padding: 0 !important;
+        min-width: 0 !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 7px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 2px !important;
+        box-sizing: border-box;
+    }
+
+    .projeto-card-mobile .card-footer .btn i {
+        font-size: 1.1em !important;
+        margin: 0 !important;
+    }
+
+    #offcanvas-filtros-novo {
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s cubic-bezier(.4, 1.4, .6, 1);
+    }
+
+    #offcanvas-filtros-novo.aberto {
+        transform: translateX(0) !important;
+    }
+
+    #filtros-backdrop-novo.aberto {
+        display: block !important;
+    }
+
+    #offcanvas-filtros-novo input,
+    #offcanvas-filtros-novo select {
+        border-radius: 10px !important;
+    }
+
+    #offcanvas-filtros-novo .btn,
+    #btn-abrir-filtros,
+    #offcanvas-filtros-novo .btn-primary,
+    #offcanvas-filtros-novo .btn-secondary,
+    #offcanvas-filtros-novo .btn-danger {
+        border-radius: 10px !important;
+    }
+
+    /* Estilos para o scroll dos filtros */
+    #offcanvas-filtros-novo .filtros-scroll-area {
+        scrollbar-width: thin;
+        scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Estilos para o carimbo no mobile */
+    .projeto-watermark {
+        transition: all 0.3s ease;
+        animation: watermark-fade-in 0.5s ease-in-out;
+    }
+
+    .projeto-watermark:hover {
+        opacity: 0.4 !important;
+        transform: translate(-50%, -50%) rotate(-45deg) scale(1.05) !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    }
+
+    @keyframes watermark-fade-in {
+        0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(0.8);
+        }
+
+        100% {
+            opacity: 0.25;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+        }
+    }
 </style>
 <!-- Painel lateral de filtros FORA do container -->
-<div id="offcanvas-filtros-novo" style="position: fixed; top: 0; left: 0; height: 100dvh; width: 85vw; max-width: 340px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden;">
+<div id="offcanvas-filtros-novo"
+    style="position: fixed; top: 0; left: 0; height: 100dvh; width: 85vw; max-width: 340px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden;">
     <!-- Cabeçalho fixo -->
-    <div id="filtros-header" style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
+    <div id="filtros-header"
+        style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
         <span style="display: flex; align-items: center; gap: 6px;">
             <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
             <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
         </span>
-        <button id="btn-fechar-filtros-novo" type="button" style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+        <button id="btn-fechar-filtros-novo" type="button"
+            style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
             <i class="fas fa-times"></i>
         </button>
     </div>
-    
+
     <!-- Área de scroll para os filtros -->
     <div class="filtros-scroll-area" style="flex: 1; overflow-y: auto; padding: 18px;">
-        <form id="filtros-mobile-novo" method="GET" action="/projetos" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
-        <!-- Botão de logout dentro do menu -->
-        <!-- Removido botão de logout do menu lateral -->
-        <!-- Filtro Projeto (select múltiplo) -->
-        <div style="position: relative;">
-            <label for="nome" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                <span><i class="fas fa-search"></i> Projeto</span>
-                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('nome').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
-                    <i class="fas fa-eraser"></i>
-                </button>
-            </label>
-            <select id="nome" name="nome" multiple class="form-control" style="min-height: 48px;">
-                <option value="" disabled>Selecione o Projeto</option>
-                {% for projeto in todos_projetos %}
-                <option value="{{ projeto.nome }}">{{ projeto.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <!-- Filtro Status -->
-        <div style="position: relative;">
-            <label for="status" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                <span><i class="fas fa-tasks"></i> Status</span>
-                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('status').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
-                    <i class="fas fa-eraser"></i>
-                </button>
-            </label>
-            <select id="status" name="status" multiple class="form-control" style="min-height: 48px;">
-                <option value="" disabled>Selecione o Status</option>
-                <option value="Concluído">Concluído</option>
-                <option value="Em andamento">Em andamento</option>
-                <option value="Pendente">Pendente</option>
-                <option value="Atrasado">Atrasado</option>
-            </select>
-        </div>
-        <!-- Filtro Responsável (select múltiplo) -->
-        <div style="position: relative;">
-            <label for="responsavel" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                <span><i class="fas fa-user"></i> Responsável</span>
-                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('responsavel').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
-                    <i class="fas fa-eraser"></i>
-                </button>
-            </label>
-            <select id="responsavel" name="responsavel" multiple class="form-control" style="min-height: 48px;">
-                <option value="" disabled>Selecione o Responsável</option>
-                {% for responsavel in todos_responsaveis %}
-                <option value="{{ responsavel }}">{{ responsavel }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <!-- Filtro Tarefa (select múltiplo) -->
-        <div style="position: relative;">
-            <label for="tarefa" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                <span><i class="fas fa-tasks"></i> Tarefa</span>
-                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('tarefa').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
-                    <i class="fas fa-eraser"></i>
-                </button>
-            </label>
-            <select id="tarefa" name="tarefa" multiple class="form-control" style="min-height: 48px;">
-                <option value="" disabled>Selecione a Tarefa</option>
-                {% for tarefa in todas_tarefas %}
-                <option value="{{ tarefa }}">{{ tarefa }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <!-- Filtro Coleção (select múltiplo) -->
-        <div style="position: relative;">
-            <label for="colecao" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                <span><i class="fas fa-layer-group"></i> Coleção</span>
-                <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('colecao').selectedIndex = -1; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
-                    <i class="fas fa-eraser"></i>
-                </button>
-            </label>
-            <select id="colecao" name="colecao" multiple class="form-control" style="min-height: 48px;">
-                <option value="" disabled>Selecione a Coleção</option>
-                {% for colecao in colecoes %}
-                <option value="{{ colecao.id if colecao.id is defined else colecao }}">{{ colecao.nome if colecao.nome is defined else colecao }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <!-- Filtros de datas na mesma linha -->
-        <div style="display: flex; gap: 8px;">
-            <div style="flex: 1; position: relative;">
-                <label for="data_inicio" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="fas fa-calendar"></i> Início</span>
-                    <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_inicio').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+        <form id="filtros-mobile-novo" method="GET" action="/projetos"
+            style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <!-- Botão de logout dentro do menu -->
+            <!-- Removido botão de logout do menu lateral -->
+            <!-- Filtro Projeto (select múltiplo) -->
+            <div style="position: relative;">
+                <label for="nome"
+                    style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-search"></i> Projeto</span>
+                    <button type="button" class="btn btn-link p-0 m-0"
+                        onclick="document.getElementById('nome').selectedIndex = -1; event.preventDefault();"
+                        style="color: #b0b0b0; font-size: 1.1em;">
                         <i class="fas fa-eraser"></i>
                     </button>
                 </label>
-                <input type="date" id="data_inicio" name="data_inicio" class="form-control" style="height: 48px;">
+                <select id="nome" name="nome" multiple class="form-control" style="min-height: 48px;">
+                    <option value="" disabled>Selecione o Projeto</option>
+                    {% for projeto in todos_projetos %}
+                    <option value="{{ projeto.nome }}">{{ projeto.nome }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div style="flex: 1; position: relative;">
-                <label for="data_fim" style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="fas fa-calendar-check"></i> Fim</span>
-                    <button type="button" class="btn btn-link p-0 m-0" onclick="document.getElementById('data_fim').value = ''; event.preventDefault();" style="color: #b0b0b0; font-size: 1.1em;">
+            <!-- Filtro Status -->
+            <div style="position: relative;">
+                <label for="status"
+                    style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-tasks"></i> Status</span>
+                    <button type="button" class="btn btn-link p-0 m-0"
+                        onclick="document.getElementById('status').selectedIndex = -1; event.preventDefault();"
+                        style="color: #b0b0b0; font-size: 1.1em;">
                         <i class="fas fa-eraser"></i>
                     </button>
                 </label>
-                <input type="date" id="data_fim" name="data_fim" class="form-control" style="height: 48px;">
+                <select id="status" name="status" multiple class="form-control" style="min-height: 48px;">
+                    <option value="" disabled>Selecione o Status</option>
+                    <option value="Concluído">Concluído</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Atrasado">Atrasado</option>
+                </select>
             </div>
-        </div>
-        <!-- Botões -->
-        <div style="display: flex; gap: 8px;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrar</button>
-            <button type="button" class="btn btn-secondary" id="limpar-filtros" style="flex: 1;">Limpar</button>
-        </div>
-    </form>
+            <!-- Filtro Responsável (select múltiplo) -->
+            <div style="position: relative;">
+                <label for="responsavel"
+                    style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-user"></i> Responsável</span>
+                    <button type="button" class="btn btn-link p-0 m-0"
+                        onclick="document.getElementById('responsavel').selectedIndex = -1; event.preventDefault();"
+                        style="color: #b0b0b0; font-size: 1.1em;">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </label>
+                <select id="responsavel" name="responsavel" multiple class="form-control" style="min-height: 48px;">
+                    <option value="" disabled>Selecione o Responsável</option>
+                    {% for responsavel in todos_responsaveis %}
+                    <option value="{{ responsavel }}">{{ responsavel }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Filtro Tarefa (select múltiplo) -->
+            <div style="position: relative;">
+                <label for="tarefa"
+                    style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-tasks"></i> Tarefa</span>
+                    <button type="button" class="btn btn-link p-0 m-0"
+                        onclick="document.getElementById('tarefa').selectedIndex = -1; event.preventDefault();"
+                        style="color: #b0b0b0; font-size: 1.1em;">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </label>
+                <select id="tarefa" name="tarefa" multiple class="form-control" style="min-height: 48px;">
+                    <option value="" disabled>Selecione a Tarefa</option>
+                    {% for tarefa in todas_tarefas %}
+                    <option value="{{ tarefa }}">{{ tarefa }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Filtro Coleção (select múltiplo) -->
+            <div style="position: relative;">
+                <label for="colecao"
+                    style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-layer-group"></i> Coleção</span>
+                    <button type="button" class="btn btn-link p-0 m-0"
+                        onclick="document.getElementById('colecao').selectedIndex = -1; event.preventDefault();"
+                        style="color: #b0b0b0; font-size: 1.1em;">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </label>
+                <select id="colecao" name="colecao" multiple class="form-control" style="min-height: 48px;">
+                    <option value="" disabled>Selecione a Coleção</option>
+                    {% for colecao in colecoes %}
+                    <option value="{{ colecao.id if colecao.id is defined else colecao }}">{{ colecao.nome if
+                        colecao.nome is defined else colecao }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Filtros de datas na mesma linha -->
+            <div style="display: flex; gap: 8px;">
+                <div style="flex: 1; position: relative;">
+                    <label for="data_inicio"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-calendar"></i> Início</span>
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="document.getElementById('data_inicio').value = ''; event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <input type="date" id="data_inicio" name="data_inicio" class="form-control" style="height: 48px;">
+                </div>
+                <div style="flex: 1; position: relative;">
+                    <label for="data_fim"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-calendar-check"></i> Fim</span>
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="document.getElementById('data_fim').value = ''; event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <input type="date" id="data_fim" name="data_fim" class="form-control" style="height: 48px;">
+                </div>
+            </div>
+            <!-- Botões -->
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrar</button>
+                <button type="button" class="btn btn-secondary" id="limpar-filtros" style="flex: 1;">Limpar</button>
+            </div>
+        </form>
     </div>
 </div>
-<div id="filtros-backdrop-novo" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9998;"></div>
+<div id="filtros-backdrop-novo"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9998;">
+</div>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <h1 class="mb-0">
             {% if nome_pasta.lower() == 'calendarios' %}
-                <i class="fas fa-calendar-alt"></i>
+            <i class="fas fa-calendar-alt"></i>
             {% else %}
-                <i class="fas fa-project-diagram"></i>
+            <i class="fas fa-project-diagram"></i>
             {% endif %}
             {{ nome_pasta }}
             <!-- DEBUG: URL atual = {{ request.url }}, ambiente={{ request.args.get('ambiente') }}, tipo_id={{ request.args.get('tipo_id') }}, nome_pasta={{ nome_pasta }} -->
@@ -268,7 +307,8 @@
         {% for tipo in tipos %}
         <div class="tipo-card">
             <a href="/projetos?ambiente={{ tipo.id }}" class="text-decoration-none w-100 h-100">
-                <div class="card shadow-sm folder-card h-100 {% if request.args.get('ambiente') == tipo.id|string %}border-primary bg-light{% endif %}" style="cursor:pointer;">
+                <div class="card shadow-sm folder-card h-100 {% if request.args.get('ambiente') == tipo.id|string %}border-primary bg-light{% endif %}"
+                    style="cursor:pointer;">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
                         <i class="fas fa-folder fa-2x mb-1 text-warning"></i>
                         <span class="fw-bold text-center">{{ tipo.nome }}</span>
@@ -283,677 +323,697 @@
     <div class="carousel-wrapper">
         <div class="carousel-cards" id="carousel-cards">
             {% if projetos %}
-                {% for projeto in projetos %}
-                {% set alerta = alertas_projetos.get(projeto.id) %}
-                {% set card_style = '' %}
-                {% set alerta_badge = '' %}
-                {% set alerta_icon = '' %}
-                
-                {% if alerta %}
-                    {% if alerta.tipo == 'atrasado' %}
-                        {% set card_style = 'border-left: 4px solid #dc3545;' %}
-                        {% set alerta_icon = '<i class="fas fa-exclamation-triangle text-danger me-1" title="' + alerta.quantidade|string + ' tarefa(s) atrasada(s)"></i>' %}
-                    {% elif alerta.tipo == 'pendente' %}
-                        {% set card_style = 'border-left: 4px solid #e0a800;' %}
-                        {% set alerta_icon = '<i class="fas fa-clock text-warning me-1" title="' + alerta.quantidade|string + ' tarefa(s) pendente(s)"></i>' %}
-                    {% endif %}
-                {% endif %}
-                
-                <div class="projeto-card-mobile" style="display: flex !important; flex-direction: column !important; min-height: 320px; max-height: 320px; height: 320px; vertical-align:top!important; {{ card_style }}; position: relative; overflow: hidden;">
-                    <div class="card-header compact-header" style="background: #e6eaff; border-bottom: 1px solid #bfc6e0; position: relative; height: 65px; display: flex; justify-content: center; align-items: center; padding: 0 36px;">
-                        <h6 class="mb-0" style="font-size: 0.78em; font-weight: bold; text-align: center; margin: 0 auto; display: flex; align-items: center; height: 100%; padding-top: 2px;">
-                            {% if alerta %}{{ alerta_icon|safe }}{% endif %}{{ projeto.nome[:25] }}{% if projeto.nome|length > 25 %}...{% endif %}
-                        </h6>
-                        {% if projeto.status %}
-                        <span class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;">{{ projeto.status }}</span>
-                        {% endif %}
-                    </div>
-                    
-                    {% if alerta %}
-                    <div class="projeto-watermark" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 18px; font-weight: 900; letter-spacing: 2px; opacity: 0.25; z-index: 10; pointer-events: none; padding: 6px 12px; border-radius: 6px; border: 4px solid; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.8); font-stretch: condensed; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); white-space: nowrap; {% if alerta.tipo == 'atrasado' %}color: #dc3545; border-color: #dc3545;{% elif alerta.tipo == 'pendente' %}color: #e0a800; border-color: #e0a800;{% else %}color: #6c757d; border-color: #6c757d;{% endif %}">
-                        {% if alerta.tipo == 'atrasado' %}ATRASADO{% elif alerta.tipo == 'pendente' %}PENDENTE{% else %}NORMAL{% endif %}
-                    </div>
-                    {% endif %}
-                    <div class="card-body compact-body py-2" style="flex: 1 1 auto; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
-                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;">
-                            <i class="fas fa-calendar-alt" style="color: #4a47a3; font-size: 3.2em; opacity: 0.8; margin: 0 auto;"></i>
-                        </div>
-                        <div class="mb-4" style="text-align: center;">
-                            <small style="font-size: 0.65em; font-weight: 900; color: #2c3e50;">
-                                {% if projeto.data_inicio %}
-                                    {% set data_inicio = projeto.data_inicio %}
-                                    {% if '-' in data_inicio %}
-                                        {% set partes = data_inicio.split('-') %}
-                                        {{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}
-                                    {% else %}
-                                        {{ data_inicio }}
-                                    {% endif %}
-                                {% else %}
-                                    Não definida
-                                {% endif %}
-                                - 
-                                {% if projeto.data_fim %}
-                                    {% set data_fim = projeto.data_fim %}
-                                    {% if '-' in data_fim %}
-                                        {% set partes = data_fim.split('-') %}
-                                        {{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}
-                                    {% else %}
-                                        {{ data_fim }}
-                                    {% endif %}
-                                {% else %}
-                                    Não definida
-                                {% endif %}
-                            </small>
-                        </div>
+            {% for projeto in projetos %}
+            {% set alerta = alertas_projetos.get(projeto.id) %}
+            {% set card_style = '' %}
+            {% set alerta_badge = '' %}
+            {% set alerta_icon = '' %}
 
-                        <!-- Tarefas filtradas por status -->
-                        {% if projeto.tarefas %}
-                            {% set tarefas_filtradas = [] %}
-                            {% if alerta %}
-                                {% if alerta.tipo == 'atrasado' %}
-                                    {% for tarefa in projeto.tarefas %}
-                                        {% if tarefa.status == 'atrasado' or (tarefa.data_fim and tarefa.data_fim < now().strftime('%Y-%m-%d')) %}
-                                            {% set _ = tarefas_filtradas.append(tarefa) %}
-                                        {% endif %}
-                                    {% endfor %}
-                                {% elif alerta.tipo == 'pendente' %}
-                                    {% for tarefa in projeto.tarefas %}
-                                        {% if tarefa.status == 'pendente' or tarefa.status == 'em progresso' %}
-                                            {% set _ = tarefas_filtradas.append(tarefa) %}
-                                        {% endif %}
-                                    {% endfor %}
-                                {% else %}
-                                    {% set tarefas_filtradas = projeto.tarefas %}
-                                {% endif %}
-                            {% else %}
-                                {% set tarefas_filtradas = projeto.tarefas %}
-                            {% endif %}
-                            
-                            {% if tarefas_filtradas %}
-                                <div class="mt-2" style="text-align: center; max-height: 80px; overflow-y: auto;">
-                                    <small style="font-size: 0.6em; font-weight: bold; color: #495057;">
-                                        Tarefas {{ alerta.tipo if alerta else '' }} ({{ tarefas_filtradas|length }}):
-                                    </small>
-                                    <div style="font-size: 0.55em; color: #6c757d; margin-top: 2px;">
-                                        {% for tarefa in tarefas_filtradas[:3] %}
-                                            <div style="margin: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                <i class="fas fa-tasks" style="font-size: 0.8em;"></i> 
-                                                {{ tarefa.nome[:20] }}{% if tarefa.nome|length > 20 %}...{% endif %}
-                                                <span class="badge badge-sm {% if tarefa.status == 'pendente' %}badge-warning{% elif tarefa.status == 'em progresso' %}badge-info{% elif tarefa.status == 'concluída' %}badge-success{% elif tarefa.status == 'atrasado' %}badge-danger{% else %}badge-secondary{% endif %}" style="font-size: 0.5em;">
-                                                    {{ tarefa.status|title if tarefa.status else 'Sem status' }}
-                                                </span>
-                                            </div>
-                                        {% endfor %}
-                                        {% if tarefas_filtradas|length > 3 %}
-                                            <div style="color: #007bff; font-size: 0.5em; margin-top: 2px;">
-                                                +{{ tarefas_filtradas|length - 3 }} mais
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            {% else %}
-                                <div class="mt-2" style="text-align: center;">
-                                    <small style="font-size: 0.6em; color: #6c757d;">
-                                        Nenhuma tarefa {{ alerta.tipo if alerta else '' }} encontrada
-                                    </small>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                    <div class="card-footer compact-footer bg-white border-0" style="border-top: 1px solid #e9ecef; width: 100%; text-align: center; margin-top: auto; padding-bottom: 16px; padding-top: 8px;">
-                        <div class="card-actions" style="display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%;">
-                            <form action="/projetos/{{ projeto.id }}" method="get" style="display:inline;">
-                                <button type="submit" class="btn btn-info btn-sm" title="Ver Detalhes">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </form>
-                            {% if pode_editar_projeto %}
-                            <form action="/projetos/editar/{{ projeto.id }}" method="get" style="display:inline;">
-                                <button type="submit" class="btn btn-warning btn-sm" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                            {% if pode_excluir_projeto %}
-                            <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
-                                <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto" data-projeto-id="{{ projeto.id }}" title="Excluir">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="alert alert-info" style="min-width: 120px; text-align: center;">
-                    <i class="fas fa-info-circle"></i>
-                    <br>Nenhum projeto encontrado
-                </div>
+            {% if alerta %}
+            {% if alerta.tipo == 'atrasado' %}
+            {% set card_style = 'border-left: 4px solid #dc3545;' %}
+            {% set alerta_icon = '<i class="fas fa-exclamation-triangle text-danger me-1"
+                title="' + alerta.quantidade|string + ' tarefa(s) atrasada(s)"></i>' %}
+            {% elif alerta.tipo == 'pendente' %}
+            {% set card_style = 'border-left: 4px solid #e0a800;' %}
+            {% set alerta_icon = '<i class="fas fa-clock text-warning me-1"
+                title="' + alerta.quantidade|string + ' tarefa(s) pendente(s)"></i>' %}
             {% endif %}
-        </div>
-    </div>
+            {% endif %}
 
-    <!-- Indicadores do carousel -->
-    <div class="carousel-indicators" id="carousel-indicators" style="display:flex;justify-content:center;align-items:center;width:100%;background:transparent;position:relative;z-index:1;margin:20px 0 24px 0;"></div>
+            <div class="projeto-card-mobile"
+                style="display: flex !important; flex-direction: column !important; min-height: 320px; max-height: 320px; height: 320px; vertical-align:top!important; {{ card_style }}; position: relative; overflow: hidden;">
+                <div class="card-header compact-header"
+                    style="background: #e6eaff; border-bottom: 1px solid #bfc6e0; position: relative; height: 65px; display: flex; justify-content: center; align-items: center; padding: 0 36px;">
+                    <h6 class="mb-0"
+                        style="font-size: 0.78em; font-weight: bold; text-align: center; margin: 0 auto; display: flex; align-items: center; height: 100%; padding-top: 2px;">
+                        {% if alerta %}{{ alerta_icon|safe }}{% endif %}{{ projeto.nome[:25] }}{% if projeto.nome|length
+                        > 25 %}...{% endif %}
+                    </h6>
+                    {% if projeto.status %}
+                    <span
+                        class="badge {% if projeto.status == 'Concluído' %}badge-success{% else %}badge-warning{% endif %}"
+                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.7em; white-space: nowrap;">{{
+                        projeto.status }}</span>
+                    {% endif %}
+                </div>
 
-    <!-- Gantt agrupado estilo desktop -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Cronograma Geral</h5>
-            <div class="gantt-controls">
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-out" title="Diminuir zoom">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
-                    <span class="btn btn-outline-secondary btn-sm disabled" id="zoom-label">100%</span>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-in" title="Aumentar zoom">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
+                {% if alerta %}
+                <div class="projeto-watermark"
+                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 18px; font-weight: 900; letter-spacing: 2px; opacity: 0.25; z-index: 10; pointer-events: none; padding: 6px 12px; border-radius: 6px; border: 4px solid; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.8); font-stretch: condensed; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); white-space: nowrap; {% if alerta.tipo == 'atrasado' %}color: #dc3545; border-color: #dc3545;{% elif alerta.tipo == 'pendente' %}color: #e0a800; border-color: #e0a800;{% else %}color: #6c757d; border-color: #6c757d;{% endif %}">
+                    {% if alerta.tipo == 'atrasado' %}ATRASADO{% elif alerta.tipo == 'pendente' %}PENDENTE{% else
+                    %}NORMAL{% endif %}
+                </div>
+                {% endif %}
+                <div class="card-body compact-body py-2"
+                    style="flex: 1 1 auto; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;">
+                        <i class="fas fa-calendar-alt"
+                            style="color: #4a47a3; font-size: 3.2em; opacity: 0.8; margin: 0 auto;"></i>
+                    </div>
+                    <div class="mb-4" style="text-align: center;">
+                        <small style="font-size: 0.65em; font-weight: 900; color: #2c3e50;">
+                            {% if projeto.data_inicio %}
+                            {% set data_inicio = projeto.data_inicio %}
+                            {% if '-' in data_inicio %}
+                            {% set partes = data_inicio.split('-') %}
+                            {{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}
+                            {% else %}
+                            {{ data_inicio }}
+                            {% endif %}
+                            {% else %}
+                            Não definida
+                            {% endif %}
+                            -
+                            {% if projeto.data_fim %}
+                            {% set data_fim = projeto.data_fim %}
+                            {% if '-' in data_fim %}
+                            {% set partes = data_fim.split('-') %}
+                            {{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}
+                            {% else %}
+                            {{ data_fim }}
+                            {% endif %}
+                            {% else %}
+                            Não definida
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <!-- Tarefas filtradas por status -->
+                    {% if projeto.tarefas %}
+                    {% set tarefas_filtradas = [] %}
+                    {% if alerta %}
+                    {% if alerta.tipo == 'atrasado' %}
+                    {% for tarefa in projeto.tarefas %}
+                    {% if tarefa.status == 'atrasado' or (tarefa.data_fim and tarefa.data_fim <
+                        now().strftime('%Y-%m-%d')) %} {% set _=tarefas_filtradas.append(tarefa) %} {% endif %} {%
+                        endfor %} {% elif alerta.tipo=='pendente' %} {% for tarefa in projeto.tarefas %} {% if
+                        tarefa.status=='pendente' or tarefa.status=='em progresso' %} {% set
+                        _=tarefas_filtradas.append(tarefa) %} {% endif %} {% endfor %} {% else %} {% set
+                        tarefas_filtradas=projeto.tarefas %} {% endif %} {% else %} {% set
+                        tarefas_filtradas=projeto.tarefas %} {% endif %} {% if tarefas_filtradas %} <div class="mt-2"
+                        style="text-align: center; max-height: 80px; overflow-y: auto;">
+                        <small style="font-size: 0.6em; font-weight: bold; color: #495057;">
+                            Tarefas {{ alerta.tipo if alerta else '' }} ({{ tarefas_filtradas|length }}):
+                        </small>
+                        <div style="font-size: 0.55em; color: #6c757d; margin-top: 2px;">
+                            {% for tarefa in tarefas_filtradas[:3] %}
+                            <div style="margin: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <i class="fas fa-tasks" style="font-size: 0.8em;"></i>
+                                {{ tarefa.nome[:20] }}{% if tarefa.nome|length > 20 %}...{% endif %}
+                                <span
+                                    class="badge badge-sm {% if tarefa.status == 'pendente' %}badge-warning{% elif tarefa.status == 'em progresso' %}badge-info{% elif tarefa.status == 'concluída' %}badge-success{% elif tarefa.status == 'atrasado' %}badge-danger{% else %}badge-secondary{% endif %}"
+                                    style="font-size: 0.5em;">
+                                    {{ tarefa.status|title if tarefa.status else 'Sem status' }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                            {% if tarefas_filtradas|length > 3 %}
+                            <div style="color: #007bff; font-size: 0.5em; margin-top: 2px;">
+                                +{{ tarefas_filtradas|length - 3 }} mais
+                            </div>
+                            {% endif %}
+                        </div>
+                </div>
+                {% else %}
+                <div class="mt-2" style="text-align: center;">
+                    <small style="font-size: 0.6em; color: #6c757d;">
+                        Nenhuma tarefa {{ alerta.tipo if alerta else '' }} encontrada
+                    </small>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+            <div class="card-footer compact-footer bg-white border-0"
+                style="border-top: 1px solid #e9ecef; width: 100%; text-align: center; margin-top: auto; padding-bottom: 16px; padding-top: 8px;">
+                <div class="card-actions"
+                    style="display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%;">
+                    <form action="/projetos/{{ projeto.id }}" method="get" style="display:inline;">
+                        <button type="submit" class="btn btn-info btn-sm" title="Ver Detalhes">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </form>
+                    {% if pode_editar_projeto %}
+                    <form action="/projetos/editar/{{ projeto.id }}" method="get" style="display:inline;">
+                        <button type="submit" class="btn btn-warning btn-sm" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if pode_excluir_projeto %}
+                    <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
+                        <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto"
+                            data-projeto-id="{{ projeto.id }}" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        <div class="card-body p-0">
-            <!-- Bloco para dados do Gantt -->
+        {% endfor %}
+        {% else %}
+        <div class="alert alert-info" style="min-width: 120px; text-align: center;">
+            <i class="fas fa-info-circle"></i>
+            <br>Nenhum projeto encontrado
         </div>
-        <script>
-        window.ganttData = {{ gantt_geral_data | tojson | safe }};
-        </script>
-        <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
-            <div style="display: flex; flex-direction: column;">
-                <div style="display: flex;">
-                </div>
-            </div>
-            <div id="gantt-cronograma-area" style="position: relative;">
-                <div id="gantt-hoje-container"></div>
-                <table style="border-collapse: collapse; width: 100%;">
-                    <thead>
-                        <tr>
-                            <th style="width: 180px; min-width: 180px; max-width: 180px; text-align: left; padding: 8px;">
-                                Tarefa
-                            </th>
-                            {# Cabeçalho dos meses e dias removidos #}
-                        </tr>
-                    </thead>
-                    <tbody id="gantt-body">
-                        <!-- Linhas das tarefas geradas via JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- Legenda colorida por projeto -->
-        <div class="legend mt-2" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
-            {% for projeto, cor in projects_colors.items() %}
-            <div class="legend-item" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;" data-projeto="{{ projeto }}">
-                <div class="legend-color" style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
-                <span>{{ projeto }}</span>
-            </div>
-            {% endfor %}
-        </div>
+        {% endif %}
     </div>
 </div>
 
-    <style>
+<!-- Indicadores do carousel -->
+<div class="carousel-indicators" id="carousel-indicators"
+    style="display:flex;justify-content:center;align-items:center;width:100%;background:transparent;position:relative;z-index:1;margin:20px 0 24px 0;">
+</div>
+
+<!-- Gantt agrupado estilo desktop -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Cronograma Geral</h5>
+        <div class="gantt-controls">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-out" title="Diminuir zoom">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <span class="btn btn-outline-secondary btn-sm disabled" id="zoom-label">100%</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-in" title="Aumentar zoom">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <!-- Bloco para dados do Gantt -->
+    </div>
+    <script>
+        window.ganttData = {{ gantt_geral_data | tojson | safe }};
+    </script>
+    <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex;">
+            </div>
+        </div>
+        <div id="gantt-cronograma-area" style="position: relative;">
+            <div id="gantt-hoje-container"></div>
+            <table style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 180px; min-width: 180px; max-width: 180px; text-align: left; padding: 8px;">
+                            Tarefa
+                        </th>
+                        {# Cabeçalho dos meses e dias removidos #}
+                    </tr>
+                </thead>
+                <tbody id="gantt-body">
+                    <!-- Linhas das tarefas geradas via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Legenda colorida por projeto -->
+    <div class="legend mt-2"
+        style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+        {% for projeto, cor in projects_colors.items() %}
+        <div class="legend-item"
+            style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+            data-projeto="{{ projeto }}">
+            <div class="legend-color"
+                style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
+            <span>{{ projeto }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</div>
+
+<style>
     .tipos-scroll {
-      display: flex !important;
-      flex-direction: row !important;
-      gap: 16px;
-      overflow-x: auto !important;
-      overflow-y: hidden;
-      padding-bottom: 8px;
-      -webkit-overflow-scrolling: touch;
-      width: 100%;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
-    .tipo-card {
-      flex: 0 0 160px !important;
-      max-width: 180px;
-      min-width: 140px;
-      margin-bottom: 0 !important;
-    }
-    @media (min-width: 992px) {
-      .tipos-scroll {
-        flex-wrap: wrap !important;
-        overflow-x: visible !important;
-        justify-content: flex-start;
-      }
-      .tipo-card {
-        flex: 0 0 180px !important;
-      }
-    }
-
-.carousel-wrapper {
-  position: relative;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 16px;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
         width: 100%;
-  margin-bottom: 24px;
-}
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
 
-.carousel-cards {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 12px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0 8px 8px 8px;
-  -webkit-overflow-scrolling: touch;
-  white-space: nowrap !important;
-  scroll-behavior: smooth;
-  scroll-snap-type: none;
-  margin-bottom: 12px;
-}
-.carousel-cards .projeto-card-mobile {
-  display: inline-flex !important;
-  vertical-align: top !important;
-  width: 170px !important;
-  height: 170px !important;
-  min-width: 170px !important;
-  max-width: 170px !important;
-  min-height: 170px !important;
-  max-height: 170px !important;
-  border-radius: 12px;
-    flex-direction: column;
-    overflow: hidden;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  transition: box-shadow 0.2s;
-  /* scroll-snap-align: center; */
-}
-.carousel-indicators {
-    display: flex;
-  justify-content: center;
-    align-items: center;
-    gap: 8px;
-  margin-top: 36px;
-  margin-bottom: 8px;
-}
-.carousel-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #d0d0d0;
-  transition: background 0.2s, transform 0.2s;
-    cursor: pointer;
-}
-.carousel-indicator.active {
-  background: #4a47a3;
-  transform: scale(1.2);
-}
+    .tipo-card {
+        flex: 0 0 160px !important;
+        max-width: 180px;
+        min-width: 140px;
+        margin-bottom: 0 !important;
+    }
 
-.carousel-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: none;
-  background: #bbb;
-  margin: 0 3px;
-  outline: none;
-  transition: background 0.2s;
-  cursor: pointer;
-}
+    @media (min-width: 992px) {
+        .tipos-scroll {
+            flex-wrap: wrap !important;
+            overflow-x: visible !important;
+            justify-content: flex-start;
+        }
 
-.carousel-dot:hover {
-  background: #999;
-}
+        .tipo-card {
+            flex: 0 0 180px !important;
+        }
+    }
 
-.carousel-dot.active {
-  background: #007bff;
-}
+    .carousel-wrapper {
+        position: relative;
+        width: 100%;
+        margin-bottom: 24px;
+    }
 
-/* Estilos do Gantt */
-.gantt-header {
-  display: flex;
-  border-bottom: 2px solid #dee2e6;
-  background: #f8f9fa;
-  font-weight: bold;
-}
+    .carousel-cards {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0 8px 8px 8px;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap !important;
+        scroll-behavior: smooth;
+        scroll-snap-type: none;
+        margin-bottom: 12px;
+    }
 
-.gantt-header-cell {
-  padding: 10px;
-  text-align: center;
-  border-right: 1px solid #dee2e6;
-  min-width: 100px;
-  transition: min-width 0.3s ease;
-}
+    .carousel-cards .projeto-card-mobile {
+        display: inline-flex !important;
+        vertical-align: top !important;
+        width: 170px !important;
+        height: 170px !important;
+        min-width: 170px !important;
+        max-width: 170px !important;
+        min-height: 170px !important;
+        max-height: 170px !important;
+        border-radius: 12px;
+        flex-direction: column;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        transition: box-shadow 0.2s;
+        /* scroll-snap-align: center; */
+    }
 
-.gantt-day {
-  padding: 10px;
-  border-right: 1px solid #dee2e6;
-  min-width: 100px;
-  text-align: center;
-  position: relative;
-  transition: min-width 0.3s ease;
-}
+    .carousel-indicators {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 36px;
+        margin-bottom: 8px;
+    }
 
-.gantt-controls .btn-group {
-  margin-left: 5px;
-}
+    .carousel-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #d0d0d0;
+        transition: background 0.2s, transform 0.2s;
+        cursor: pointer;
+    }
 
-.gantt-controls .btn {
-  font-size: 0.875rem;
-  padding: 0.25rem 0.5rem;
-}
+    .carousel-indicator.active {
+        background: #4a47a3;
+        transform: scale(1.2);
+    }
 
-.gantt-controls .btn.active {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
-}
+    .carousel-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: none;
+        background: #bbb;
+        margin: 0 3px;
+        outline: none;
+        transition: background 0.2s;
+        cursor: pointer;
+    }
 
-.gantt-row {
-    display: flex;
-  border-bottom: 1px solid #dee2e6;
-  min-height: 40px;
-}
+    .carousel-dot:hover {
+        background: #999;
+    }
 
-.gantt-row:nth-child(even) {
-  background: #f8f9fa;
-}
+    .carousel-dot.active {
+        background: #007bff;
+    }
 
-.gantt-task-name,
-td[style*='min-width: 200px'] {
-  font-size: 13px !important;
-}
+    /* Estilos do Gantt */
+    .gantt-header {
+        display: flex;
+        border-bottom: 2px solid #dee2e6;
+        background: #f8f9fa;
+        font-weight: bold;
+    }
 
-.gantt-task-bar {
-  position: absolute;
-  height: 20px;
-  background: #007bff;
-  border-radius: 3px;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: background 0.3s;
-  z-index: 10;
-  opacity: 1;
-}
+    .gantt-header-cell {
+        padding: 10px;
+        text-align: center;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        transition: min-width 0.3s ease;
+    }
 
-.gantt-task-bar:hover {
-  background: #0056b3;
-}
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+        transition: min-width 0.3s ease;
+    }
 
-/* Tooltip personalizado */
-.gantt-tooltip {
-  position: absolute;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  max-width: 300px;
-  z-index: 9999;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
+    .gantt-controls .btn-group {
+        margin-left: 5px;
+    }
 
-.gantt-tooltip::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 5px solid rgba(0, 0, 0, 0.9);
-}
+    .gantt-controls .btn {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
 
-.gantt-tooltip-title {
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 8px;
-    color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  padding-bottom: 4px;
-}
+    .gantt-controls .btn.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
 
-.gantt-tooltip-project {
-  color: #ffd700;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
+    .gantt-row {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        min-height: 40px;
+    }
 
-.gantt-tooltip-info {
-  margin-bottom: 4px;
-  display: flex;
-  justify-content: space-between;
-}
+    .gantt-row:nth-child(even) {
+        background: #f8f9fa;
+    }
 
-.gantt-tooltip-label {
-  color: #ccc;
-  font-size: 11px;
-}
+    .gantt-task-name,
+    td[style*='min-width: 200px'] {
+        font-size: 13px !important;
+    }
 
-.gantt-tooltip-value {
-  color: #fff;
-  font-weight: 500;
-  text-align: right;
-}
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
 
-.gantt-tooltip-days {
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
 
-.gantt-tooltip-days .gantt-tooltip-info {
-  margin-bottom: 2px;
-}
+    /* Tooltip personalizado */
+    .gantt-tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 9999;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-.gantt-task-bar.pendente {
-  background: #ffc107;
-}
+    .gantt-tooltip::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid rgba(0, 0, 0, 0.9);
+    }
 
-.gantt-task-bar.em-progresso {
-  background: #17a2b8;
-}
+    .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
 
-.gantt-task-bar.concluida {
-  background: #28a745;
-}
+    .gantt-tooltip-project {
+        color: #ffd700;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
 
-.gantt-day {
-  padding: 10px;
-  border-right: 1px solid #dee2e6;
-  min-width: 100px;
-  text-align: center;
-  position: relative;
-}
+    .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
 
-.gantt-today {
-  background: rgba(255, 193, 7, 0.2);
-  font-weight: bold;
-}
+    .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
 
-.gantt-weekend {
-  background: rgba(220, 53, 69, 0.1);
-}
+    .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
 
-#gantt-timeline {
-  position: relative;
-  min-width: 800px;
-  background: #fff;
-  overflow: visible;
-}
+    .gantt-tooltip-days {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-.gantt-task-bar {
-  position: absolute;
-  height: 20px;
-  background: #007bff;
-  border-radius: 3px;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: background 0.3s;
-  z-index: 10;
-  opacity: 1;
-}
+    .gantt-tooltip-days .gantt-tooltip-info {
+        margin-bottom: 2px;
+    }
 
-.gantt-task-bar:hover {
-  background: #0056b3;
-}
+    .gantt-task-bar.pendente {
+        background: #ffc107;
+    }
 
-/* Coluna fixa para Tarefa */
-#gantt-custom th:first-child,
-#gantt-custom td:first-child {
-  position: sticky;
-  left: 0;
-  background: #fff;
-  z-index: 50;
-  width: 180px;
-  min-width: 180px;
-  max-width: 180px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    .gantt-task-bar.em-progresso {
+        background: #17a2b8;
+    }
 
-/* Cabeçalho de meses e dias do Gantt */
-#gantt-date-header {
-  font-family: inherit;
-}
+    .gantt-task-bar.concluida {
+        background: #28a745;
+    }
 
-/* CSS extra para centralizar e aumentar altura do cabeçalho */
-.gantt-dia-cell {
-  font-size: 11px;
-  color: #888;
-  background: #f8f9fa;
-  border-right: 1px solid #eee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 20px;
-}
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+    }
 
-.gantt-hoje-linha {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: repeating-linear-gradient(to bottom,
-          #e74c3c 0px, #e74c3c 8px,
-          transparent 8px, transparent 16px);
-  z-index: 5;
-  pointer-events: none;
-}
+    .gantt-today {
+        background: rgba(255, 193, 7, 0.2);
+        font-weight: bold;
+    }
 
-#gantt-hoje-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-}
+    .gantt-weekend {
+        background: rgba(220, 53, 69, 0.1);
+    }
 
-#gantt-cronograma-area {
-  position: relative;
-}
+    #gantt-timeline {
+        position: relative;
+        min-width: 800px;
+        background: #fff;
+        overflow: visible;
+    }
 
-.gantt-row-compact {
-  height: 16px !important;
-}
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
 
-.gantt-bar-compact {
-  height: 18px !important;
-  line-height: 18px !important;
-  font-size: 11px !important;
-  top: 2px !important;
-}
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
 
-.gantt-tooltip-detalhado {
-  position: fixed;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  max-width: 300px;
-  z-index: 1000;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
+    /* Coluna fixa para Tarefa */
+    #gantt-custom th:first-child,
+    #gantt-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 50;
+        width: 180px;
+        min-width: 180px;
+        max-width: 180px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-.gantt-tooltip-detalhado .gantt-tooltip-title {
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 8px;
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  padding-bottom: 4px;
-}
+    /* Cabeçalho de meses e dias do Gantt */
+    #gantt-date-header {
+        font-family: inherit;
+    }
 
-.gantt-tooltip-detalhado .gantt-tooltip-info {
-  margin-bottom: 4px;
-  display: flex;
-  justify-content: space-between;
-}
+    /* CSS extra para centralizar e aumentar altura do cabeçalho */
+    .gantt-dia-cell {
+        font-size: 11px;
+        color: #888;
+        background: #f8f9fa;
+        border-right: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 20px;
+    }
 
-.gantt-tooltip-detalhado .gantt-tooltip-label {
-  color: #ccc;
-  font-size: 11px;
-}
+    .gantt-hoje-linha {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: repeating-linear-gradient(to bottom,
+                #e74c3c 0px, #e74c3c 8px,
+                transparent 8px, transparent 16px);
+        z-index: 5;
+        pointer-events: none;
+    }
 
-.gantt-tooltip-detalhado .gantt-tooltip-value {
-  color: #fff;
-  font-weight: 500;
-  text-align: right;
-}
+    #gantt-hoje-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
 
-.gantt-row-compact td,
-.gantt-row-compact th {
-  height: 16px !important;
-  min-height: 16px !important;
-  max-height: 24px !important;
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-  font-size: 13px !important;
-}
+    #gantt-cronograma-area {
+        position: relative;
+    }
 
-.gantt-h-linha {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: #dee2e6;
-  z-index: 0;
-}
+    .gantt-row-compact {
+        height: 16px !important;
+    }
 
-.gantt-bar-compact.evidencia {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 20;
-  opacity: 1 !important;
-  border: none !important;
-}
+    .gantt-bar-compact {
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+    }
 
-.gantt-bar-compact.apagada {
-  opacity: 0.25 !important;
-  filter: grayscale(0.5);
-}
+    .gantt-tooltip-detalhado {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-.legend-item.selecionada {
-  outline: 2px solid #222;
-  outline-offset: 2px;
-  background: #f3f3f3;
-  border-radius: 5px;
-}
+    .gantt-tooltip-detalhado .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
 
-#gantt-custom.dragging {
-  cursor: grabbing !important;
-  user-select: none !important;
-}
+    .gantt-tooltip-detalhado .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
 
-/* Estilo para linha evidenciada no Gantt */
-.gantt-row-evidenciada {
-  background: #e3f0ff !important;
-  box-shadow: inset 0 0 0 2px #007bff !important;
-}
+    .gantt-tooltip-detalhado .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
 
-.gantt-row-evidenciada td {
-  background: #e3f0ff !important;
-  font-weight: bold !important;
-}
+    .gantt-tooltip-detalhado .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-row-compact td,
+    .gantt-row-compact th {
+        height: 16px !important;
+        min-height: 16px !important;
+        max-height: 24px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 13px !important;
+    }
+
+    .gantt-h-linha {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #dee2e6;
+        z-index: 0;
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: none !important;
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+    }
+
+    #gantt-custom.dragging {
+        cursor: grabbing !important;
+        user-select: none !important;
+    }
+
+    /* Estilo para linha evidenciada no Gantt */
+    .gantt-row-evidenciada {
+        background: #e3f0ff !important;
+        box-shadow: inset 0 0 0 2px #007bff !important;
+    }
+
+    .gantt-row-evidenciada td {
+        background: #e3f0ff !important;
+        font-weight: bold !important;
+    }
 </style>
 {% endblock %}
 
@@ -962,537 +1022,552 @@ td[style*='min-width: 200px'] {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // --- OFFCANVAS FILTROS ---
-    var btnAbrir = document.getElementById('btn-abrir-filtros');
-    var offcanvas = document.getElementById('offcanvas-filtros-novo');
-    var backdrop = document.getElementById('filtros-backdrop-novo');
-    var btnFechar = document.getElementById('btn-fechar-filtros-novo');
-    var btnLimpar = document.getElementById('limpar-filtros');
-    var formFiltros = document.getElementById('filtros-mobile-novo');
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- OFFCANVAS FILTROS ---
+        var btnAbrir = document.getElementById('btn-abrir-filtros');
+        var offcanvas = document.getElementById('offcanvas-filtros-novo');
+        var backdrop = document.getElementById('filtros-backdrop-novo');
+        var btnFechar = document.getElementById('btn-fechar-filtros-novo');
+        var btnLimpar = document.getElementById('limpar-filtros');
+        var formFiltros = document.getElementById('filtros-mobile-novo');
 
-    if (btnAbrir && offcanvas && backdrop && btnFechar) {
-        btnAbrir.addEventListener('click', function() {
-            offcanvas.classList.add('aberto');
-            backdrop.classList.add('aberto');
-        });
-        
-        btnFechar.addEventListener('click', function() {
-            offcanvas.classList.remove('aberto');
-            backdrop.classList.remove('aberto');
-        });
-        
-        backdrop.addEventListener('click', function() {
-            offcanvas.classList.remove('aberto');
-            backdrop.classList.remove('aberto');
-        });
-    }
-
-    if (btnLimpar && formFiltros) {
-        btnLimpar.addEventListener('click', function() {
-            // Limpar todos os campos do formulário
-            var inputs = formFiltros.querySelectorAll('input');
-            inputs.forEach(function(input) {
-                input.value = '';
+        if (btnAbrir && offcanvas && backdrop && btnFechar) {
+            btnAbrir.addEventListener('click', function () {
+                offcanvas.classList.add('aberto');
+                backdrop.classList.add('aberto');
             });
-            
-            var selects = formFiltros.querySelectorAll('select');
-            selects.forEach(function(select) {
-                if (select.multiple) {
-                    // Para selects múltiplos, desmarcar todas as opções
-                    for (var i = 0; i < select.options.length; i++) {
-                        select.options[i].selected = false;
+
+            btnFechar.addEventListener('click', function () {
+                offcanvas.classList.remove('aberto');
+                backdrop.classList.remove('aberto');
+            });
+
+            backdrop.addEventListener('click', function () {
+                offcanvas.classList.remove('aberto');
+                backdrop.classList.remove('aberto');
+            });
+        }
+
+        if (btnLimpar && formFiltros) {
+            btnLimpar.addEventListener('click', function () {
+                // Limpar todos os campos do formulário
+                var inputs = formFiltros.querySelectorAll('input');
+                inputs.forEach(function (input) {
+                    input.value = '';
+                });
+
+                var selects = formFiltros.querySelectorAll('select');
+                selects.forEach(function (select) {
+                    if (select.multiple) {
+                        // Para selects múltiplos, desmarcar todas as opções
+                        for (var i = 0; i < select.options.length; i++) {
+                            select.options[i].selected = false;
+                        }
+                    } else {
+                        // Para selects simples, voltar para a primeira opção
+                        select.selectedIndex = 0;
                     }
-                } else {
-                    // Para selects simples, voltar para a primeira opção
-                    select.selectedIndex = 0;
-                }
-            });
-            
-            // Submeter o formulário
-            formFiltros.submit();
-        });
-    }
+                });
 
-    // Definir valores selecionados baseado nos parâmetros da URL
-    function definirValoresFiltros() {
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Definir valores para select múltiplo de projetos
-        const nomesSelecionados = urlParams.getAll('nome');
-        const selectNome = document.getElementById('nome');
-        if (selectNome && nomesSelecionados.length > 0) {
-            Array.from(selectNome.options).forEach(option => {
-                if (nomesSelecionados.includes(option.value)) {
-                    option.selected = true;
-                }
+                // Submeter o formulário
+                formFiltros.submit();
             });
         }
-        
-        // Definir valor para select de status
-        const statusSelecionado = urlParams.get('status');
-        const selectStatus = document.getElementById('status');
-        if (selectStatus && statusSelecionado) {
-            Array.from(selectStatus.options).forEach(option => {
-                if (option.value === statusSelecionado) {
-                    option.selected = true;
-                }
-            });
-        }
-        
-        // Definir valores para select múltiplo de responsáveis
-        const responsaveisSelecionados = urlParams.getAll('responsavel');
-        const selectResponsavel = document.getElementById('responsavel');
-        if (selectResponsavel && responsaveisSelecionados.length > 0) {
-            Array.from(selectResponsavel.options).forEach(option => {
-                if (responsaveisSelecionados.includes(option.value)) {
-                    option.selected = true;
-                }
-            });
-        }
-        
-        // Definir valores para select múltiplo de tarefas
-        const tarefasSelecionadas = urlParams.getAll('tarefa');
-        const selectTarefa = document.getElementById('tarefa');
-        if (selectTarefa && tarefasSelecionadas.length > 0) {
-            Array.from(selectTarefa.options).forEach(option => {
-                if (tarefasSelecionadas.includes(option.value)) {
-                    option.selected = true;
-                }
-            });
-        }
-        
-        // Definir valores para select múltiplo de coleções
-        const colecoesSelecionadas = urlParams.getAll('colecao');
-        const selectColecao = document.getElementById('colecao');
-        if (selectColecao && colecoesSelecionadas.length > 0) {
-            Array.from(selectColecao.options).forEach(option => {
-                if (colecoesSelecionadas.includes(option.value)) {
-                    option.selected = true;
-                }
-            });
-        }
-        
-        // Definir valores para campos de data
-        const dataInicio = urlParams.get('data_inicio');
-        const dataFim = urlParams.get('data_fim');
-        const inputDataInicio = document.getElementById('data_inicio');
-        const inputDataFim = document.getElementById('data_fim');
-        
-        if (inputDataInicio && dataInicio) {
-            inputDataInicio.value = dataInicio;
-        }
-        if (inputDataFim && dataFim) {
-            inputDataFim.value = dataFim;
-        }
-    }
-    
-    // Executar quando a página carregar
-    definirValoresFiltros();
-    
-    // Atualizar dinamicamente os filtros baseado nas seleções
-    function atualizarFiltros() {
-        const selectNome = document.getElementById('nome');
-        const selectResponsavel = document.getElementById('responsavel');
-        const selectTarefa = document.getElementById('tarefa');
-        const selectColecao = document.getElementById('colecao');
-        
-        // Obter valores selecionados
-        const projetosSelecionados = Array.from(selectNome.selectedOptions).map(option => option.value);
-        const responsaveisSelecionados = Array.from(selectResponsavel.selectedOptions).map(option => option.value);
-        const tarefasSelecionadas = Array.from(selectTarefa.selectedOptions).map(option => option.value);
-        const colecoesSelecionadas = Array.from(selectColecao.selectedOptions).map(option => option.value);
-        
-        // Atualizar projetos baseado nas coleções selecionadas
-        if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
-            fetch(`/api/projetos_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectNome.innerHTML = '<option value="" disabled>Selecione o Projeto</option>';
-                    
-                    // Adicionar novas opções
-                    data.forEach(projeto => {
-                        const option = document.createElement('option');
-                        option.value = projeto.nome;
-                        option.textContent = projeto.nome;
-                        selectNome.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    projetosSelecionados.forEach(projeto => {
-                        const option = selectNome.querySelector(`option[value="${projeto}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        } else {
-            // Se não há coleções selecionadas, mostrar todos os projetos
-            fetch('/api/todos_projetos')
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectNome.innerHTML = '<option value="" disabled>Selecione o Projeto</option>';
-                    
-                    // Adicionar todas as opções
-                    data.forEach(projeto => {
-                        const option = document.createElement('option');
-                        option.value = projeto.nome;
-                        option.textContent = projeto.nome;
-                        selectNome.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    projetosSelecionados.forEach(projeto => {
-                        const option = selectNome.querySelector(`option[value="${projeto}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        }
-        
-        // Atualizar coleções baseado nos projetos selecionados
-        if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
-            fetch(`/api/colecoes_por_projetos?projetos=${projetosSelecionados.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectColecao.innerHTML = '<option value="" disabled>Selecione a Coleção</option>';
-                    
-                    // Adicionar novas opções
-                    data.forEach(colecao => {
-                        const option = document.createElement('option');
-                        option.value = colecao;
-                        option.textContent = colecao;
-                        selectColecao.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    colecoesSelecionadas.forEach(colecao => {
-                        const option = selectColecao.querySelector(`option[value="${colecao}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        } else {
-            // Se não há projetos selecionados, mostrar todas as coleções
-            fetch('/api/todas_colecoes')
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectColecao.innerHTML = '<option value="" disabled>Selecione a Coleção</option>';
-                    
-                    // Adicionar todas as opções
-                    data.forEach(colecao => {
-                        const option = document.createElement('option');
-                        option.value = colecao;
-                        option.textContent = colecao;
-                        selectColecao.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    colecoesSelecionadas.forEach(colecao => {
-                        const option = selectColecao.querySelector(`option[value="${colecao}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        }
-        
-        // Atualizar responsáveis baseado nos projetos, tarefas e coleções selecionados
-        if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
-            fetch(`/api/responsaveis_por_projetos?projetos=${projetosSelecionados.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
-                    
-                    // Adicionar novas opções
-                    data.forEach(responsavel => {
-                        const option = document.createElement('option');
-                        option.value = responsavel;
-                        option.textContent = responsavel;
-                        selectResponsavel.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    responsaveisSelecionados.forEach(responsavel => {
-                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        } else if (tarefasSelecionadas.length > 0 && tarefasSelecionadas[0] !== '') {
-            fetch(`/api/responsaveis_por_tarefas?tarefas=${tarefasSelecionadas.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
-                    
-                    // Adicionar novas opções
-                    data.forEach(responsavel => {
-                        const option = document.createElement('option');
-                        option.value = responsavel;
-                        option.textContent = responsavel;
-                        selectResponsavel.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    responsaveisSelecionados.forEach(responsavel => {
-                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        } else if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
-            fetch(`/api/responsaveis_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
-                    
-                    // Adicionar novas opções
-                    data.forEach(responsavel => {
-                        const option = document.createElement('option');
-                        option.value = responsavel;
-                        option.textContent = responsavel;
-                        selectResponsavel.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    responsaveisSelecionados.forEach(responsavel => {
-                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        } else {
-            // Se não há filtros, mostrar todos os responsáveis
-            fetch('/api/todos_responsaveis')
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
-                    
-                    // Adicionar todas as opções
-                    data.forEach(responsavel => {
-                        const option = document.createElement('option');
-                        option.value = responsavel;
-                        option.textContent = responsavel;
-                        selectResponsavel.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    responsaveisSelecionados.forEach(responsavel => {
-                        const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        }
-        
-        // Atualizar tarefas baseado nos projetos e coleções selecionados
-        if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
-            fetch(`/api/tarefas_por_projetos?projetos=${projetosSelecionados.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
-                    
-                    // Adicionar novas opções
-                    data.forEach(tarefa => {
-                        const option = document.createElement('option');
-                        option.value = tarefa;
-                        option.textContent = tarefa;
-                        selectTarefa.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    tarefasSelecionadas.forEach(tarefa => {
-                        const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        } else if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
-            fetch(`/api/tarefas_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
-                    
-                    // Adicionar novas opções
-                    data.forEach(tarefa => {
-                        const option = document.createElement('option');
-                        option.value = tarefa;
-                        option.textContent = tarefa;
-                        selectTarefa.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    tarefasSelecionadas.forEach(tarefa => {
-                        const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        } else {
-            // Se não há filtros, mostrar todas as tarefas
-            fetch('/api/todas_tarefas')
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar opções atuais
-                    selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
-                    
-                    // Adicionar todas as opções
-                    data.forEach(tarefa => {
-                        const option = document.createElement('option');
-                        option.value = tarefa;
-                        option.textContent = tarefa;
-                        selectTarefa.appendChild(option);
-                    });
-                    
-                    // Restaurar seleções anteriores se possível
-                    tarefasSelecionadas.forEach(tarefa => {
-                        const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    });
-                });
-        }
-    }
-    
-    // Adicionar event listeners para mudanças nos selects
-    const selectNome = document.getElementById('nome');
-    const selectResponsavel = document.getElementById('responsavel');
-    const selectTarefa = document.getElementById('tarefa');
-    const selectColecao = document.getElementById('colecao');
-    
-    if (selectNome) {
-        selectNome.addEventListener('change', atualizarFiltros);
-    }
-    
-    if (selectResponsavel) {
-        selectResponsavel.addEventListener('change', atualizarFiltros);
-    }
-    
-    if (selectTarefa) {
-        selectTarefa.addEventListener('change', atualizarFiltros);
-    }
-    
-    if (selectColecao) {
-        selectColecao.addEventListener('change', atualizarFiltros);
-    }
-    
-    // Adicionar event listeners para os botões de borracha
-    const btnLimparNome = document.querySelector('button[onclick*="document.getElementById(\'nome\')"]');
-    const btnLimparResponsavel = document.querySelector('button[onclick*="document.getElementById(\'responsavel\')"]');
-    const btnLimparTarefa = document.querySelector('button[onclick*="document.getElementById(\'tarefa\')"]');
-    const btnLimparColecao = document.querySelector('button[onclick*="document.getElementById(\'colecao\')"]');
-    
-    if (btnLimparNome) {
-        btnLimparNome.addEventListener('click', function() {
-            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
-        });
-    }
-    
-    if (btnLimparResponsavel) {
-        btnLimparResponsavel.addEventListener('click', function() {
-            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
-        });
-    }
-    
-    if (btnLimparTarefa) {
-        btnLimparTarefa.addEventListener('click', function() {
-            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
-        });
-    }
-    
-    if (btnLimparColecao) {
-        btnLimparColecao.addEventListener('click', function() {
-            setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
-        });
-    }
-    
 
+        // Definir valores selecionados baseado nos parâmetros da URL
+        function definirValoresFiltros() {
+            const urlParams = new URLSearchParams(window.location.search);
 
-    // --- GANTT MOBILE ---
-    const larguraBase = 4;
-    let larguraDia = larguraBase;
-    const larguraMin = 1;
-    const larguraMax = 32;
-    const dados = window.ganttData || [];
-    const body = document.getElementById('gantt-body');
-    function diasEntre(a, b) {
-        return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
-    }
-    function corStatus(tarefa) {
-        if (tarefa.bar_color) return tarefa.bar_color;
-        if (tarefa.status === 'concluida') return '#28a745';
-        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
-        return '#ffc107';
-    }
-    function agruparTarefasPorNome(tarefas) {
-        const grupos = {};
-        tarefas.forEach(tarefa => {
-            if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
-            grupos[tarefa.name].push(tarefa);
-        });
-        return grupos;
-    }
-    function obterPeriodo(tarefas) {
-        let min = null, max = null;
-        tarefas.forEach(t => {
-            const ini = new Date(t.start);
-            const fim = new Date(t.end);
-            if (!min || ini < min) min = ini;
-            if (!max || fim > max) max = fim;
-        });
-        return { min, max };
-    }
-    function atualizarZoomLabel() {
-        const zoomLabel = document.getElementById('zoom-label');
-        if (zoomLabel) {
-            const percent = Math.round((larguraDia / larguraBase) * 100);
-            zoomLabel.textContent = percent + '%';
-        }
-    }
-    function mostrarTooltipDetalhado(event, barra) {
-        esconderTooltipDetalhado();
-        const startDate = new Date(barra.start);
-        const endDate = new Date(barra.end);
-        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-        function calcularDiasUteis(dataInicio, dataFim) {
-            let diasUteis = 0;
-            const dataAtual = new Date(dataInicio);
-            while (dataAtual <= dataFim) {
-                if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
-                    diasUteis++;
-                }
-                dataAtual.setDate(dataAtual.getDate() + 1);
+            // Definir valores para select múltiplo de projetos
+            const nomesSelecionados = urlParams.getAll('nome');
+            const selectNome = document.getElementById('nome');
+            if (selectNome && nomesSelecionados.length > 0) {
+                Array.from(selectNome.options).forEach(option => {
+                    if (nomesSelecionados.includes(option.value)) {
+                        option.selected = true;
+                    }
+                });
             }
-            return diasUteis;
+
+            // Definir valor para select de status
+            const statusSelecionado = urlParams.get('status');
+            const selectStatus = document.getElementById('status');
+            if (selectStatus && statusSelecionado) {
+                Array.from(selectStatus.options).forEach(option => {
+                    if (option.value === statusSelecionado) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            // Definir valores para select múltiplo de responsáveis
+            const responsaveisSelecionados = urlParams.getAll('responsavel');
+            const selectResponsavel = document.getElementById('responsavel');
+            if (selectResponsavel && responsaveisSelecionados.length > 0) {
+                Array.from(selectResponsavel.options).forEach(option => {
+                    if (responsaveisSelecionados.includes(option.value)) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            // Definir valores para select múltiplo de tarefas
+            const tarefasSelecionadas = urlParams.getAll('tarefa');
+            const selectTarefa = document.getElementById('tarefa');
+            if (selectTarefa && tarefasSelecionadas.length > 0) {
+                Array.from(selectTarefa.options).forEach(option => {
+                    if (tarefasSelecionadas.includes(option.value)) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            // Definir valores para select múltiplo de coleções
+            const colecoesSelecionadas = urlParams.getAll('colecao');
+            const selectColecao = document.getElementById('colecao');
+            if (selectColecao && colecoesSelecionadas.length > 0) {
+                Array.from(selectColecao.options).forEach(option => {
+                    if (colecoesSelecionadas.includes(option.value)) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            // Definir valores para campos de data
+            const dataInicio = urlParams.get('data_inicio');
+            const dataFim = urlParams.get('data_fim');
+            const inputDataInicio = document.getElementById('data_inicio');
+            const inputDataFim = document.getElementById('data_fim');
+
+            if (inputDataInicio && dataInicio) {
+                inputDataInicio.value = dataInicio;
+            }
+            if (inputDataFim && dataFim) {
+                inputDataFim.value = dataFim;
+            }
         }
-        const diasUteis = calcularDiasUteis(startDate, endDate);
-        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
-        const tooltip = document.createElement('div');
-        tooltip.className = 'gantt-tooltip-detalhado';
-        tooltip.id = 'gantt-tooltip-detalhado';
-        const dataInicio = startDate.toLocaleDateString('pt-BR');
-        const dataFim = endDate.toLocaleDateString('pt-BR');
-        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
-        tooltip.innerHTML = `
+
+        // Executar quando a página carregar
+        definirValoresFiltros();
+
+        // Atualizar dinamicamente os filtros baseado nas seleções
+        function atualizarFiltros() {
+            const selectNome = document.getElementById('nome');
+            const selectResponsavel = document.getElementById('responsavel');
+            const selectTarefa = document.getElementById('tarefa');
+            const selectColecao = document.getElementById('colecao');
+
+            // Obter valores selecionados
+            const projetosSelecionados = Array.from(selectNome.selectedOptions).map(option => option.value);
+            const responsaveisSelecionados = Array.from(selectResponsavel.selectedOptions).map(option => option.value);
+            const tarefasSelecionadas = Array.from(selectTarefa.selectedOptions).map(option => option.value);
+            const colecoesSelecionadas = Array.from(selectColecao.selectedOptions).map(option => option.value);
+
+            // Atualizar projetos baseado nas coleções selecionadas
+            if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
+                fetch(`/api/projetos_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectNome.innerHTML = '<option value="" disabled>Selecione o Projeto</option>';
+
+                        // Adicionar novas opções
+                        data.forEach(projeto => {
+                            const option = document.createElement('option');
+                            option.value = projeto.nome;
+                            option.textContent = projeto.nome;
+                            selectNome.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        projetosSelecionados.forEach(projeto => {
+                            const option = selectNome.querySelector(`option[value="${projeto}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            } else {
+                // Se não há coleções selecionadas, mostrar todos os projetos
+                fetch('/api/todos_projetos')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectNome.innerHTML = '<option value="" disabled>Selecione o Projeto</option>';
+
+                        // Adicionar todas as opções
+                        data.forEach(projeto => {
+                            const option = document.createElement('option');
+                            option.value = projeto.nome;
+                            option.textContent = projeto.nome;
+                            selectNome.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        projetosSelecionados.forEach(projeto => {
+                            const option = selectNome.querySelector(`option[value="${projeto}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            }
+
+            // Atualizar coleções baseado nos projetos selecionados
+            if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
+                fetch(`/api/colecoes_por_projetos?projetos=${projetosSelecionados.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectColecao.innerHTML = '<option value="" disabled>Selecione a Coleção</option>';
+
+                        // Adicionar novas opções
+                        data.forEach(colecao => {
+                            const option = document.createElement('option');
+                            option.value = colecao;
+                            option.textContent = colecao;
+                            selectColecao.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        colecoesSelecionadas.forEach(colecao => {
+                            const option = selectColecao.querySelector(`option[value="${colecao}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            } else {
+                // Se não há projetos selecionados, mostrar todas as coleções
+                fetch('/api/todas_colecoes')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectColecao.innerHTML = '<option value="" disabled>Selecione a Coleção</option>';
+
+                        // Adicionar todas as opções
+                        data.forEach(colecao => {
+                            const option = document.createElement('option');
+                            option.value = colecao;
+                            option.textContent = colecao;
+                            selectColecao.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        colecoesSelecionadas.forEach(colecao => {
+                            const option = selectColecao.querySelector(`option[value="${colecao}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            }
+
+            // Atualizar responsáveis baseado nos projetos, tarefas e coleções selecionados
+            if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
+                fetch(`/api/responsaveis_por_projetos?projetos=${projetosSelecionados.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+
+                        // Adicionar novas opções
+                        data.forEach(responsavel => {
+                            const option = document.createElement('option');
+                            option.value = responsavel;
+                            option.textContent = responsavel;
+                            selectResponsavel.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        responsaveisSelecionados.forEach(responsavel => {
+                            const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            } else if (tarefasSelecionadas.length > 0 && tarefasSelecionadas[0] !== '') {
+                fetch(`/api/responsaveis_por_tarefas?tarefas=${tarefasSelecionadas.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+
+                        // Adicionar novas opções
+                        data.forEach(responsavel => {
+                            const option = document.createElement('option');
+                            option.value = responsavel;
+                            option.textContent = responsavel;
+                            selectResponsavel.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        responsaveisSelecionados.forEach(responsavel => {
+                            const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            } else if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
+                fetch(`/api/responsaveis_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+
+                        // Adicionar novas opções
+                        data.forEach(responsavel => {
+                            const option = document.createElement('option');
+                            option.value = responsavel;
+                            option.textContent = responsavel;
+                            selectResponsavel.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        responsaveisSelecionados.forEach(responsavel => {
+                            const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            } else {
+                // Se não há filtros, mostrar todos os responsáveis
+                fetch('/api/todos_responsaveis')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectResponsavel.innerHTML = '<option value="" disabled>Selecione o Responsável</option>';
+
+                        // Adicionar todas as opções
+                        data.forEach(responsavel => {
+                            const option = document.createElement('option');
+                            option.value = responsavel;
+                            option.textContent = responsavel;
+                            selectResponsavel.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        responsaveisSelecionados.forEach(responsavel => {
+                            const option = selectResponsavel.querySelector(`option[value="${responsavel}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            }
+
+            // Atualizar tarefas baseado nos projetos e coleções selecionados
+            if (projetosSelecionados.length > 0 && projetosSelecionados[0] !== '') {
+                fetch(`/api/tarefas_por_projetos?projetos=${projetosSelecionados.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
+
+                        // Adicionar novas opções
+                        data.forEach(tarefa => {
+                            const option = document.createElement('option');
+                            option.value = tarefa;
+                            option.textContent = tarefa;
+                            selectTarefa.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        tarefasSelecionadas.forEach(tarefa => {
+                            const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            } else if (colecoesSelecionadas.length > 0 && colecoesSelecionadas[0] !== '') {
+                fetch(`/api/tarefas_por_colecoes?colecoes=${colecoesSelecionadas.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
+
+                        // Adicionar novas opções
+                        data.forEach(tarefa => {
+                            const option = document.createElement('option');
+                            option.value = tarefa;
+                            option.textContent = tarefa;
+                            selectTarefa.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        tarefasSelecionadas.forEach(tarefa => {
+                            const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            } else {
+                // Se não há filtros, mostrar todas as tarefas
+                fetch('/api/todas_tarefas')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar opções atuais
+                        selectTarefa.innerHTML = '<option value="" disabled>Selecione a Tarefa</option>';
+
+                        // Adicionar todas as opções
+                        data.forEach(tarefa => {
+                            const option = document.createElement('option');
+                            option.value = tarefa;
+                            option.textContent = tarefa;
+                            selectTarefa.appendChild(option);
+                        });
+
+                        // Restaurar seleções anteriores se possível
+                        tarefasSelecionadas.forEach(tarefa => {
+                            const option = selectTarefa.querySelector(`option[value="${tarefa}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    });
+            }
+        }
+
+        // Adicionar event listeners para mudanças nos selects
+        const selectNome = document.getElementById('nome');
+        const selectResponsavel = document.getElementById('responsavel');
+        const selectTarefa = document.getElementById('tarefa');
+        const selectColecao = document.getElementById('colecao');
+
+        if (selectNome) {
+            selectNome.addEventListener('change', atualizarFiltros);
+        }
+
+        if (selectResponsavel) {
+            selectResponsavel.addEventListener('change', atualizarFiltros);
+        }
+
+        if (selectTarefa) {
+            selectTarefa.addEventListener('change', atualizarFiltros);
+        }
+
+        if (selectColecao) {
+            selectColecao.addEventListener('change', atualizarFiltros);
+        }
+
+        // Adicionar event listeners para os botões de borracha
+        const btnLimparNome = document.querySelector('button[onclick*="document.getElementById(\'nome\')"]');
+        const btnLimparResponsavel = document.querySelector('button[onclick*="document.getElementById(\'responsavel\')"]');
+        const btnLimparTarefa = document.querySelector('button[onclick*="document.getElementById(\'tarefa\')"]');
+        const btnLimparColecao = document.querySelector('button[onclick*="document.getElementById(\'colecao\')"]');
+
+        if (btnLimparNome) {
+            btnLimparNome.addEventListener('click', function () {
+                setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+            });
+        }
+
+        if (btnLimparResponsavel) {
+            btnLimparResponsavel.addEventListener('click', function () {
+                setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+            });
+        }
+
+        if (btnLimparTarefa) {
+            btnLimparTarefa.addEventListener('click', function () {
+                setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+            });
+        }
+
+        if (btnLimparColecao) {
+            btnLimparColecao.addEventListener('click', function () {
+                setTimeout(atualizarFiltros, 100); // Pequeno delay para garantir que o select foi limpo
+            });
+        }
+
+
+
+        // --- GANTT MOBILE ---
+        const larguraBase = 4;
+        let larguraDia = larguraBase;
+        const larguraMin = 1;
+        const larguraMax = 32;
+        const dados = window.ganttData || [];
+        const body = document.getElementById('gantt-body');
+        function diasEntre(a, b) {
+            // Usar datas no fuso horário local para cálculo preciso
+            const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+            const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+            return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
+        }
+        function corStatus(tarefa) {
+            if (tarefa.bar_color) return tarefa.bar_color;
+            if (tarefa.status === 'concluida') return '#28a745';
+            if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+            return '#ffc107';
+        }
+
+        // Função para cor da borda baseada no status
+        function corBordaStatus(tarefa) {
+            console.log('Status da tarefa:', tarefa.status, 'Nome:', tarefa.name);
+            if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
+            if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
+            if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
+            if (tarefa.status === 'atrasada') return '#dc3545'; // Vermelho
+            return '#6c757d'; // Cinza padrão
+        }
+        function agruparTarefasPorNome(tarefas) {
+            const grupos = {};
+            tarefas.forEach(tarefa => {
+                if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+                grupos[tarefa.name].push(tarefa);
+            });
+            return grupos;
+        }
+        function obterPeriodo(tarefas) {
+            let min = null, max = null;
+            tarefas.forEach(t => {
+                // Criar datas no fuso horário local para evitar problemas de UTC
+                const ini = new Date(t.start + 'T00:00:00');
+                const fim = new Date(t.end + 'T00:00:00');
+                if (!min || ini < min) min = ini;
+                if (!max || fim > max) max = fim;
+            });
+            return { min, max };
+        }
+        function atualizarZoomLabel() {
+            const zoomLabel = document.getElementById('zoom-label');
+            if (zoomLabel) {
+                const percent = Math.round((larguraDia / larguraBase) * 100);
+                zoomLabel.textContent = percent + '%';
+            }
+        }
+        function mostrarTooltipDetalhado(event, barra) {
+            esconderTooltipDetalhado();
+            // Criar datas no fuso horário local para evitar problemas de UTC
+            const startDate = new Date(barra.start + 'T00:00:00');
+            const endDate = new Date(barra.end + 'T00:00:00');
+            const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            function calcularDiasUteis(dataInicio, dataFim) {
+                let diasUteis = 0;
+                const dataAtual = new Date(dataInicio);
+                while (dataAtual <= dataFim) {
+                    if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+                        diasUteis++;
+                    }
+                    dataAtual.setDate(dataAtual.getDate() + 1);
+                }
+                return diasUteis;
+            }
+            const diasUteis = calcularDiasUteis(startDate, endDate);
+            const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+            const tooltip = document.createElement('div');
+            tooltip.className = 'gantt-tooltip-detalhado';
+            tooltip.id = 'gantt-tooltip-detalhado';
+            const dataInicio = startDate.toLocaleDateString('pt-BR');
+            const dataFim = endDate.toLocaleDateString('pt-BR');
+            const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+            tooltip.innerHTML = `
             <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
             <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
             <div style="color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;"><b>Coleção:</b> ${barra.colecao || '-'}</div>
@@ -1511,266 +1586,267 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
             </div>
         `;
-        document.body.appendChild(tooltip);
-        atualizarPosicaoTooltipDetalhado(event);
-    }
-    function esconderTooltipDetalhado() {
-        const tooltip = document.getElementById('gantt-tooltip-detalhado');
-        if (tooltip) tooltip.remove();
-    }
-    function atualizarPosicaoTooltipDetalhado(event) {
-        const tooltip = document.getElementById('gantt-tooltip-detalhado');
-        if (tooltip) {
-            const tooltipRect = tooltip.getBoundingClientRect();
-            let left = event.clientX + 12;
-            let top = event.clientY + 12;
-            if (left + tooltipRect.width > window.innerWidth) {
-                left = window.innerWidth - tooltipRect.width - 8;
-            }
-            if (top + tooltipRect.height > window.innerHeight) {
-                top = window.innerHeight - tooltipRect.height - 8;
-            }
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = top + 'px';
+            document.body.appendChild(tooltip);
+            atualizarPosicaoTooltipDetalhado(event);
         }
-    }
-    function montarGanttAgrupado() {
-        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
-        if (!dados.length) {
-            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
-            return;
+        function esconderTooltipDetalhado() {
+            const tooltip = document.getElementById('gantt-tooltip-detalhado');
+            if (tooltip) tooltip.remove();
         }
-        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
-        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
-        const grupos = agruparTarefasPorNome(tarefas);
-        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
-            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
-            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
-            return ordemA - ordemB;
-        });
-        const periodo = obterPeriodo(tarefas);
-        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
-            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
-            return;
-        }
-        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
-        // Adicionar barra tracejada do dia de hoje
-        const hojeContainer = document.getElementById('gantt-hoje-container');
-        if (hojeContainer) {
-            hojeContainer.innerHTML = '';
-            hojeContainer.style.position = 'absolute';
-            hojeContainer.style.top = '0';
-            hojeContainer.style.left = '0';
-            hojeContainer.style.bottom = '0';
-            hojeContainer.style.right = '0';
-            hojeContainer.style.zIndex = '10';
-            hojeContainer.style.pointerEvents = 'none';
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            if (hoje >= periodo.min && hoje <= periodo.max) {
-                const offset = diasEntre(periodo.min, hoje);
-                const left = 180 + (offset * larguraDia); // 180px da coluna tarefa
-                const linhaHoje = document.createElement('div');
-                linhaHoje.className = 'gantt-hoje-linha';
-                linhaHoje.style.left = left + 'px';
-                linhaHoje.style.height = '100%';
-                hojeContainer.appendChild(linhaHoje);
-                // Adicionar label com a data
-                const hojeLabel = document.createElement('div');
-                const dia = String(hoje.getDate()).padStart(2, '0');
-                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
-                hojeLabel.style.position = 'absolute';
-                hojeLabel.style.top = '0px';
-                hojeLabel.style.left = (left + 6) + 'px';
-                hojeLabel.style.transform = 'none';
-                hojeLabel.style.fontSize = '12px';
-                hojeLabel.style.color = '#e74c3c';
-                hojeLabel.style.fontWeight = 'bold';
-                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
-                hojeLabel.style.padding = '2px 6px';
-                hojeLabel.style.borderRadius = '4px';
-                hojeLabel.style.zIndex = '20';
-                hojeContainer.appendChild(hojeLabel);
+        function atualizarPosicaoTooltipDetalhado(event) {
+            const tooltip = document.getElementById('gantt-tooltip-detalhado');
+            if (tooltip) {
+                const tooltipRect = tooltip.getBoundingClientRect();
+                let left = event.clientX + 12;
+                let top = event.clientY + 12;
+                if (left + tooltipRect.width > window.innerWidth) {
+                    left = window.innerWidth - tooltipRect.width - 8;
+                }
+                if (top + tooltipRect.height > window.innerHeight) {
+                    top = window.innerHeight - tooltipRect.height - 8;
+                }
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
             }
         }
-        body.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-        nomesOrdenados.forEach((nome, idx) => {
-            const barras = grupos[nome];
-            const tr = document.createElement('tr');
-            tr.className = 'gantt-row-compact';
-            // Nome da tarefa
-            const tdNome = document.createElement('td');
-            tdNome.textContent = nome;
-            tdNome.title = nome;
-            tdNome.style.padding = "2px 8px";
-            tdNome.style.whiteSpace = "nowrap";
-            tdNome.style.overflow = "hidden";
-            tdNome.style.textOverflow = "ellipsis";
-            tdNome.style.height = "16px";
-            tdNome.style.fontSize = "13px";
-            // Evidenciar linha ao clicar
-            tdNome.onclick = function() {
-                document.querySelectorAll('#gantt-body tr').forEach(tr => tr.classList.remove('gantt-row-evidenciada'));
-                tr.classList.add('gantt-row-evidenciada');
-            };
-            tr.appendChild(tdNome);
-            const tdCrono = document.createElement('td');
-            tdCrono.style.position = "relative";
-            tdCrono.style.height = "16px";
-            tdCrono.style.background = "#f8f9fa";
-            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
-            const linhaH = document.createElement('div');
-            linhaH.className = 'gantt-h-linha';
-            linhaH.style.position = 'absolute';
-            linhaH.style.left = '0';
-            linhaH.style.right = '0';
-            linhaH.style.bottom = '0';
-            linhaH.style.height = '1px';
-            linhaH.style.background = '#dee2e6';
-            linhaH.style.zIndex = '1';
-            tdCrono.appendChild(linhaH);
-            barras.forEach((barra, idx) => {
-                const inicio = new Date(barra.start);
-                const fim = new Date(barra.end);
-                const offset = diasEntre(periodo.min, inicio);
-                const largura = diasEntre(inicio, fim) + 1;
-                const div = document.createElement('div');
-                div.className = 'gantt-bar-compact';
-                div.style.position = "absolute";
-                div.style.left = (offset * larguraDia) + "px";
-                div.style.top = "2px";
-                div.style.height = "8px";
-                div.style.width = (largura * larguraDia) + "px";
-                div.style.background = corStatus(barra);
-                div.style.borderRadius = "4px";
-                div.style.textAlign = "center";
-                div.style.color = "#fff";
-                div.style.fontSize = "11px";
-                div.style.lineHeight = "14px";
-                div.style.cursor = "pointer";
-                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
-                // Tooltip detalhado
-                div.onmouseenter = function (e) {
-                    mostrarTooltipDetalhado(e, barra);
-                    this._mousemoveHandler = function (ev) {
-                        atualizarPosicaoTooltipDetalhado(ev);
-                    };
-                    this.addEventListener('mousemove', this._mousemoveHandler);
-                };
-                div.onmouseleave = function () {
-                    esconderTooltipDetalhado();
-                    if (this._mousemoveHandler) {
-                        this.removeEventListener('mousemove', this._mousemoveHandler);
-                        this._mousemoveHandler = null;
-                    }
-                };
-                tdCrono.appendChild(div);
+        function montarGanttAgrupado() {
+            if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+            if (!dados.length) {
+                if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+                return;
+            }
+            const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+            tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+            const grupos = agruparTarefasPorNome(tarefas);
+            const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+                const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+                const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+                return ordemA - ordemB;
             });
-            tr.appendChild(tdCrono);
-            fragment.appendChild(tr);
-        });
-        body.appendChild(fragment);
-    }
-    montarGanttAgrupado();
-    atualizarZoomLabel();
-    const zoomIn = document.getElementById('zoom-in');
-    const zoomOut = document.getElementById('zoom-out');
-    if (zoomIn) {
-        zoomIn.onclick = function () {
-            if (larguraDia < larguraMax) {
-                larguraDia += larguraBase * 0.1;
-                if (larguraDia > larguraMax) larguraDia = larguraMax;
-                montarGanttAgrupado();
-                atualizarZoomLabel();
+            const periodo = obterPeriodo(tarefas);
+            if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+                if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+                return;
             }
-        };
-    }
-    if (zoomOut) {
-        zoomOut.onclick = function () {
-            if (larguraDia > larguraMin) {
-                larguraDia -= larguraBase * 0.1;
-                if (larguraDia < larguraMin) larguraDia = larguraMin;
-                montarGanttAgrupado();
-                atualizarZoomLabel();
+            const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+            // Adicionar barra tracejada do dia de hoje
+            const hojeContainer = document.getElementById('gantt-hoje-container');
+            if (hojeContainer) {
+                hojeContainer.innerHTML = '';
+                hojeContainer.style.position = 'absolute';
+                hojeContainer.style.top = '0';
+                hojeContainer.style.left = '0';
+                hojeContainer.style.bottom = '0';
+                hojeContainer.style.right = '0';
+                hojeContainer.style.zIndex = '10';
+                hojeContainer.style.pointerEvents = 'none';
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                if (hoje >= periodo.min && hoje <= periodo.max) {
+                    const offset = diasEntre(periodo.min, hoje);
+                    const left = 180 + (offset * larguraDia); // 180px da coluna tarefa
+                    const linhaHoje = document.createElement('div');
+                    linhaHoje.className = 'gantt-hoje-linha';
+                    linhaHoje.style.left = left + 'px';
+                    linhaHoje.style.height = '100%';
+                    hojeContainer.appendChild(linhaHoje);
+                    // Adicionar label com a data
+                    const hojeLabel = document.createElement('div');
+                    const dia = String(hoje.getDate()).padStart(2, '0');
+                    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                    hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+                    hojeLabel.style.position = 'absolute';
+                    hojeLabel.style.top = '0px';
+                    hojeLabel.style.left = (left + 6) + 'px';
+                    hojeLabel.style.transform = 'none';
+                    hojeLabel.style.fontSize = '12px';
+                    hojeLabel.style.color = '#e74c3c';
+                    hojeLabel.style.fontWeight = 'bold';
+                    hojeLabel.style.background = 'rgba(255,255,255,0.9)';
+                    hojeLabel.style.padding = '2px 6px';
+                    hojeLabel.style.borderRadius = '4px';
+                    hojeLabel.style.zIndex = '20';
+                    hojeContainer.appendChild(hojeLabel);
+                }
             }
-        };
-    }
-    // Evidenciar barras ao clicar na legenda (seleção múltipla só por clique)
-    let projetosSelecionados = [];
-    document.querySelectorAll('.legend-item[data-projeto]').forEach(item => {
-        item.addEventListener('click', function (e) {
-            const projeto = this.getAttribute('data-projeto');
-            // Seleção múltipla só por clique
-            if (projetosSelecionados.includes(projeto)) {
-                projetosSelecionados = projetosSelecionados.filter(p => p !== projeto);
-            } else {
-                projetosSelecionados.push(projeto);
-            }
-            if (projetosSelecionados.length === 0) {
-                // Mostrar todas as barras
-                document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
-                    bar.classList.remove('evidencia', 'apagada');
+            body.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+            nomesOrdenados.forEach((nome, idx) => {
+                const barras = grupos[nome];
+                const tr = document.createElement('tr');
+                tr.className = 'gantt-row-compact';
+                // Nome da tarefa
+                const tdNome = document.createElement('td');
+                tdNome.textContent = nome;
+                tdNome.title = nome;
+                tdNome.style.padding = "2px 8px";
+                tdNome.style.whiteSpace = "nowrap";
+                tdNome.style.overflow = "hidden";
+                tdNome.style.textOverflow = "ellipsis";
+                tdNome.style.height = "16px";
+                tdNome.style.fontSize = "13px";
+                // Evidenciar linha ao clicar
+                tdNome.onclick = function () {
+                    document.querySelectorAll('#gantt-body tr').forEach(tr => tr.classList.remove('gantt-row-evidenciada'));
+                    tr.classList.add('gantt-row-evidenciada');
+                };
+                tr.appendChild(tdNome);
+                const tdCrono = document.createElement('td');
+                tdCrono.style.position = "relative";
+                tdCrono.style.height = "16px";
+                tdCrono.style.background = "#f8f9fa";
+                tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+                const linhaH = document.createElement('div');
+                linhaH.className = 'gantt-h-linha';
+                linhaH.style.position = 'absolute';
+                linhaH.style.left = '0';
+                linhaH.style.right = '0';
+                linhaH.style.bottom = '0';
+                linhaH.style.height = '1px';
+                linhaH.style.background = '#dee2e6';
+                linhaH.style.zIndex = '1';
+                tdCrono.appendChild(linhaH);
+                barras.forEach((barra, idx) => {
+                    // Criar datas no fuso horário local para evitar problemas de UTC
+                    const inicio = new Date(barra.start + 'T00:00:00');
+                    const fim = new Date(barra.end + 'T00:00:00');
+                    const offset = diasEntre(periodo.min, inicio);
+                    const largura = diasEntre(inicio, fim) + 1;
+                    const div = document.createElement('div');
+                    div.className = 'gantt-bar-compact';
+                    div.style.position = "absolute";
+                    div.style.left = (offset * larguraDia) + "px";
+                    div.style.top = "2px";
+                    div.style.height = "8px";
+                    div.style.width = (largura * larguraDia) + "px";
+                    div.style.background = corStatus(barra);
+                    div.style.borderRadius = "4px";
+                    div.style.textAlign = "center";
+                    div.style.color = "#fff";
+                    div.style.fontSize = "11px";
+                    div.style.lineHeight = "14px";
+                    div.style.cursor = "pointer";
+                    div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                    // Tooltip detalhado
+                    div.onmouseenter = function (e) {
+                        mostrarTooltipDetalhado(e, barra);
+                        this._mousemoveHandler = function (ev) {
+                            atualizarPosicaoTooltipDetalhado(ev);
+                        };
+                        this.addEventListener('mousemove', this._mousemoveHandler);
+                    };
+                    div.onmouseleave = function () {
+                        esconderTooltipDetalhado();
+                        if (this._mousemoveHandler) {
+                            this.removeEventListener('mousemove', this._mousemoveHandler);
+                            this._mousemoveHandler = null;
+                        }
+                    };
+                    tdCrono.appendChild(div);
                 });
-                document.querySelectorAll('.legend-item').forEach(l => {
-                    l.classList.remove('selecionada');
-                });
-            } else {
-                // Evidenciar apenas as barras selecionadas
-                document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
-                    if (projetosSelecionados.includes(bar.getAttribute('data-projeto'))) {
-                        bar.classList.add('evidencia');
-                        bar.classList.remove('apagada');
-                    } else {
-                        bar.classList.remove('evidencia');
-                        bar.classList.add('apagada');
-                    }
-                });
-                document.querySelectorAll('.legend-item').forEach(l => {
-                    const p = l.getAttribute('data-projeto');
-                    if (projetosSelecionados.includes(p)) {
-                        l.classList.add('selecionada');
-                    } else {
+                tr.appendChild(tdCrono);
+                fragment.appendChild(tr);
+            });
+            body.appendChild(fragment);
+        }
+        montarGanttAgrupado();
+        atualizarZoomLabel();
+        const zoomIn = document.getElementById('zoom-in');
+        const zoomOut = document.getElementById('zoom-out');
+        if (zoomIn) {
+            zoomIn.onclick = function () {
+                if (larguraDia < larguraMax) {
+                    larguraDia += larguraBase * 0.1;
+                    if (larguraDia > larguraMax) larguraDia = larguraMax;
+                    montarGanttAgrupado();
+                    atualizarZoomLabel();
+                }
+            };
+        }
+        if (zoomOut) {
+            zoomOut.onclick = function () {
+                if (larguraDia > larguraMin) {
+                    larguraDia -= larguraBase * 0.1;
+                    if (larguraDia < larguraMin) larguraDia = larguraMin;
+                    montarGanttAgrupado();
+                    atualizarZoomLabel();
+                }
+            };
+        }
+        // Evidenciar barras ao clicar na legenda (seleção múltipla só por clique)
+        let projetosSelecionados = [];
+        document.querySelectorAll('.legend-item[data-projeto]').forEach(item => {
+            item.addEventListener('click', function (e) {
+                const projeto = this.getAttribute('data-projeto');
+                // Seleção múltipla só por clique
+                if (projetosSelecionados.includes(projeto)) {
+                    projetosSelecionados = projetosSelecionados.filter(p => p !== projeto);
+                } else {
+                    projetosSelecionados.push(projeto);
+                }
+                if (projetosSelecionados.length === 0) {
+                    // Mostrar todas as barras
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        bar.classList.remove('evidencia', 'apagada');
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => {
                         l.classList.remove('selecionada');
-                    }
-                });
-            }
+                    });
+                } else {
+                    // Evidenciar apenas as barras selecionadas
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        if (projetosSelecionados.includes(bar.getAttribute('data-projeto'))) {
+                            bar.classList.add('evidencia');
+                            bar.classList.remove('apagada');
+                        } else {
+                            bar.classList.remove('evidencia');
+                            bar.classList.add('apagada');
+                        }
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => {
+                        const p = l.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(p)) {
+                            l.classList.add('selecionada');
+                        } else {
+                            l.classList.remove('selecionada');
+                        }
+                    });
+                }
+            });
         });
-    });
-    
-    // --- CAROUSEL MOBILE ---
-    const carousel = document.getElementById('carousel-cards');
-    const indicators = document.getElementById('carousel-indicators');
-    
-    if (carousel && indicators) {
-        const CARD_WIDTH = 170; // Largura real dos cards no CSS
-        const CARD_GAP = 12; // Gap real no CSS
-        
 
-        
-        // Função para atualizar indicadores
-        function atualizarIndicadoresCarousel() {
-            const cards = carousel.querySelectorAll('.projeto-card-mobile');
-            const visibleWidth = carousel.clientWidth;
-            const cardWidth = CARD_WIDTH + CARD_GAP;
-            // Calcular quantos cards cabem na tela
-            const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
-            // Calcular quantas páginas são necessárias
-            const totalPages = Math.ceil(cards.length / itemsPerPage);
-            
-            console.log('Cards:', cards.length, 'Items por página:', itemsPerPage, 'Total páginas:', totalPages, 'Card width:', cardWidth, 'Visible width:', visibleWidth);
-            
-            indicators.innerHTML = '';
-            
-            // Só criar bolinhas se houver mais de uma página
-            if (totalPages > 1) {
-                for (let i = 0; i < totalPages; i++) {
-                    const dot = document.createElement('button');
-                    dot.type = 'button';
-                    dot.className = 'carousel-dot';
-                    dot.setAttribute('aria-label', 'Ir para página ' + (i + 1));
-                    dot.style.cssText = `
+        // --- CAROUSEL MOBILE ---
+        const carousel = document.getElementById('carousel-cards');
+        const indicators = document.getElementById('carousel-indicators');
+
+        if (carousel && indicators) {
+            const CARD_WIDTH = 170; // Largura real dos cards no CSS
+            const CARD_GAP = 12; // Gap real no CSS
+
+
+
+            // Função para atualizar indicadores
+            function atualizarIndicadoresCarousel() {
+                const cards = carousel.querySelectorAll('.projeto-card-mobile');
+                const visibleWidth = carousel.clientWidth;
+                const cardWidth = CARD_WIDTH + CARD_GAP;
+                // Calcular quantos cards cabem na tela
+                const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
+                // Calcular quantas páginas são necessárias
+                const totalPages = Math.ceil(cards.length / itemsPerPage);
+
+                console.log('Cards:', cards.length, 'Items por página:', itemsPerPage, 'Total páginas:', totalPages, 'Card width:', cardWidth, 'Visible width:', visibleWidth);
+
+                indicators.innerHTML = '';
+
+                // Só criar bolinhas se houver mais de uma página
+                if (totalPages > 1) {
+                    for (let i = 0; i < totalPages; i++) {
+                        const dot = document.createElement('button');
+                        dot.type = 'button';
+                        dot.className = 'carousel-dot';
+                        dot.setAttribute('aria-label', 'Ir para página ' + (i + 1));
+                        dot.style.cssText = `
                         width: 12px;
                         height: 12px;
                         border-radius: 50%;
@@ -1781,97 +1857,97 @@ document.addEventListener('DOMContentLoaded', function () {
                         transition: background 0.2s;
                         cursor: pointer;
                     `;
-                    
-                    dot.addEventListener('click', function () {
-                        currentPage = i; // Atualizar a página atual
-                        scrollToPage(i);
-                        // Parar e reiniciar o auto-scroll para continuar da nova página
-                        stopAutoScroll();
-                        setTimeout(startAutoScroll, 2000);
-                    });
-                    
-                    indicators.appendChild(dot);
+
+                        dot.addEventListener('click', function () {
+                            currentPage = i; // Atualizar a página atual
+                            scrollToPage(i);
+                            // Parar e reiniciar o auto-scroll para continuar da nova página
+                            stopAutoScroll();
+                            setTimeout(startAutoScroll, 2000);
+                        });
+
+                        indicators.appendChild(dot);
+                    }
+                }
+
+                atualizarBolinhasAtivas();
+            }
+
+            // Função para atualizar bolinhas ativas
+            function atualizarBolinhasAtivas() {
+                const dots = indicators.querySelectorAll('.carousel-dot');
+                const scrollLeft = carousel.scrollLeft;
+                const cardWidth = CARD_WIDTH + CARD_GAP;
+                const visibleWidth = carousel.clientWidth;
+                const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
+                const page = Math.floor(scrollLeft / (itemsPerPage * cardWidth));
+
+                dots.forEach((dot, idx) => {
+                    dot.style.background = (idx === page) ? '#007bff' : '#bbb';
+                });
+            }
+
+            // Função para scroll preciso baseado nos cards
+            function scrollToPage(pageIndex) {
+                const cardWidth = CARD_WIDTH + CARD_GAP;
+                const visibleWidth = carousel.clientWidth;
+                const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
+                // Calcular a posição exata para mostrar o primeiro card da página
+                const scrollAmount = pageIndex * itemsPerPage * cardWidth;
+                carousel.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+            }
+
+            // Variáveis para auto-scroll
+            let autoScrollInterval;
+            let currentPage = 0;
+            let totalPages = 0;
+
+            // Função para mover para a próxima página
+            function nextPage() {
+                const dots = indicators.querySelectorAll('.carousel-dot');
+                if (dots.length > 1) {
+                    currentPage = (currentPage + 1) % dots.length;
+                    scrollToPage(currentPage);
                 }
             }
-            
-            atualizarBolinhasAtivas();
-        }
-        
-        // Função para atualizar bolinhas ativas
-        function atualizarBolinhasAtivas() {
-            const dots = indicators.querySelectorAll('.carousel-dot');
-            const scrollLeft = carousel.scrollLeft;
-            const cardWidth = CARD_WIDTH + CARD_GAP;
-            const visibleWidth = carousel.clientWidth;
-            const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
-            const page = Math.floor(scrollLeft / (itemsPerPage * cardWidth));
-            
-            dots.forEach((dot, idx) => {
-                dot.style.background = (idx === page) ? '#007bff' : '#bbb';
+
+            // Função para iniciar auto-scroll
+            function startAutoScroll() {
+                const dots = indicators.querySelectorAll('.carousel-dot');
+                if (dots.length > 1) {
+                    autoScrollInterval = setInterval(nextPage, 2500); // 2.5 segundos
+                }
+            }
+
+            // Função para parar auto-scroll
+            function stopAutoScroll() {
+                if (autoScrollInterval) {
+                    clearInterval(autoScrollInterval);
+                    autoScrollInterval = null;
+                }
+            }
+
+            // Event listeners
+            carousel.addEventListener('scroll', atualizarBolinhasAtivas);
+
+            // Pausar auto-scroll quando o usuário interage
+            carousel.addEventListener('mouseenter', stopAutoScroll);
+            carousel.addEventListener('mouseleave', startAutoScroll);
+            carousel.addEventListener('touchstart', stopAutoScroll);
+            carousel.addEventListener('touchend', () => {
+                setTimeout(startAutoScroll, 2000); // Retomar após 2 segundos
             });
-        }
-        
-        // Função para scroll preciso baseado nos cards
-        function scrollToPage(pageIndex) {
-            const cardWidth = CARD_WIDTH + CARD_GAP;
-            const visibleWidth = carousel.clientWidth;
-            const itemsPerPage = Math.max(1, Math.floor(visibleWidth / cardWidth));
-            // Calcular a posição exata para mostrar o primeiro card da página
-            const scrollAmount = pageIndex * itemsPerPage * cardWidth;
-            carousel.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-        }
-        
-        // Variáveis para auto-scroll
-        let autoScrollInterval;
-        let currentPage = 0;
-        let totalPages = 0;
-        
-        // Função para mover para a próxima página
-        function nextPage() {
-            const dots = indicators.querySelectorAll('.carousel-dot');
-            if (dots.length > 1) {
-                currentPage = (currentPage + 1) % dots.length;
-                scrollToPage(currentPage);
-            }
-        }
-        
-        // Função para iniciar auto-scroll
-        function startAutoScroll() {
-            const dots = indicators.querySelectorAll('.carousel-dot');
-            if (dots.length > 1) {
-                autoScrollInterval = setInterval(nextPage, 2500); // 2.5 segundos
-            }
-        }
-        
-        // Função para parar auto-scroll
-        function stopAutoScroll() {
-            if (autoScrollInterval) {
-                clearInterval(autoScrollInterval);
-                autoScrollInterval = null;
-            }
-        }
-        
-        // Event listeners
-        carousel.addEventListener('scroll', atualizarBolinhasAtivas);
-        
-        // Pausar auto-scroll quando o usuário interage
-        carousel.addEventListener('mouseenter', stopAutoScroll);
-        carousel.addEventListener('mouseleave', startAutoScroll);
-        carousel.addEventListener('touchstart', stopAutoScroll);
-        carousel.addEventListener('touchend', () => {
-            setTimeout(startAutoScroll, 2000); // Retomar após 2 segundos
-        });
-        
-        // Inicializar indicadores
-        setTimeout(() => {
-            atualizarIndicadoresCarousel();
-            // Iniciar auto-scroll após criar os indicadores
+
+            // Inicializar indicadores
             setTimeout(() => {
-                startAutoScroll();
-            }, 1500);
-        }, 100);
-    }
-});
+                atualizarIndicadoresCarousel();
+                // Iniciar auto-scroll após criar os indicadores
+                setTimeout(() => {
+                    startAutoScroll();
+                }, 1500);
+            }, 100);
+        }
+    });
 </script>
 {% endblock %}
 
@@ -1895,4 +1971,4 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     </div>
-</div> 
+</div>

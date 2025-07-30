@@ -131,11 +131,9 @@
                                     <td class="drag-handle"
                                         style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
                                         &#9776;</td>
-                                    <td class="numero-tarefa" contenteditable="true" 
-                                        data-id="{{ tarefa.id }}" 
+                                    <td class="numero-tarefa" contenteditable="true" data-id="{{ tarefa.id }}"
                                         style="cursor: pointer; text-align: center; font-weight: bold; padding: 0 !important; min-width: 30px; max-width: 40px;"
-                                        onblur="atualizarOrdemTarefa(this)"
-                                        onkeydown="handleOrdemKeydown(event, this)"
+                                        onblur="atualizarOrdemTarefa(this)" onkeydown="handleOrdemKeydown(event, this)"
                                         title="Clique para editar a ordem">{{ tarefa.ordem or '' }}</td>
                                     <td><input type="text" class="form-control form-control-sm"
                                             value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome" {% if not
@@ -353,7 +351,8 @@
                             <select id="selectTarefa" class="form-select">
                                 <option value="">Escolha uma tarefa...</option>
                                 {% for tarefa in tarefas %}
-                                <option value="{{ tarefa.id }}" data-ordem="{{ tarefa.ordem }}">{{ tarefa.ordem }} - {{ tarefa.nome }}</option>
+                                <option value="{{ tarefa.id }}" data-ordem="{{ tarefa.ordem }}">{{ tarefa.ordem }} - {{
+                                    tarefa.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -379,12 +378,12 @@
                             <label for="inputDeslocamento" class="form-label">
                                 <i class="fas fa-calendar-plus"></i> Deslocamento (dias):
                             </label>
-                            <input type="number" id="inputDeslocamento" class="form-control" 
-                                   placeholder="Ex: 2 (positivo = atraso, negativo = adiantamento)" 
-                                   value="0" min="-30" max="30">
+                            <input type="number" id="inputDeslocamento" class="form-control"
+                                placeholder="Ex: 2 (positivo = atraso, negativo = adiantamento)" value="0" min="-30"
+                                max="30">
                             <div class="form-text">
                                 <small class="text-muted">
-                                    <i class="fas fa-info-circle"></i> 
+                                    <i class="fas fa-info-circle"></i>
                                     Positivo = atraso, Negativo = adiantamento
                                 </small>
                             </div>
@@ -395,26 +394,31 @@
                             <label class="form-label">
                                 <i class="fas fa-eye"></i> Prévia do Código:
                             </label>
-                            <div id="previewCodigo" class="form-control" style="background-color: #f8f9fa; font-family: monospace; font-weight: bold; color: #495057;">
+                            <div id="previewCodigo" class="form-control"
+                                style="background-color: #f8f9fa; font-family: monospace; font-weight: bold; color: #495057;">
                                 Código será gerado automaticamente...
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="alert alert-info">
                     <h6><i class="fas fa-info-circle"></i> Significado dos Tipos de Relação:</h6>
                     <div class="row">
                         <div class="col-md-6">
                             <ul class="mb-0">
-                                <li><strong>FS (Fim / Início):</strong> A tarefa atual só pode começar quando a predecessora terminar</li>
-                                <li><strong>SS (Início / Início):</strong> A tarefa atual deve começar junto com a predecessora</li>
+                                <li><strong>FS (Fim / Início):</strong> A tarefa atual só pode começar quando a
+                                    predecessora terminar</li>
+                                <li><strong>SS (Início / Início):</strong> A tarefa atual deve começar junto com a
+                                    predecessora</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
                             <ul class="mb-0">
-                                <li><strong>FF (Fim / Fim):</strong> A tarefa atual deve terminar junto com a predecessora</li>
-                                <li><strong>SF (Início / Fim):</strong> A tarefa atual deve terminar quando a predecessora começar</li>
+                                <li><strong>FF (Fim / Fim):</strong> A tarefa atual deve terminar junto com a
+                                    predecessora</li>
+                                <li><strong>SF (Início / Fim):</strong> A tarefa atual deve terminar quando a
+                                    predecessora começar</li>
                             </ul>
                         </div>
                     </div>
@@ -838,8 +842,9 @@
     function obterPeriodo(tarefas) {
         let min = null, max = null;
         tarefas.forEach(t => {
-            const ini = new Date(t.start);
-            const fim = new Date(t.end);
+            // Criar datas no fuso horário local para evitar problemas de UTC
+            const ini = new Date(t.start + 'T00:00:00');
+            const fim = new Date(t.end + 'T00:00:00');
             if (!min || ini < min) min = ini;
             if (!max || fim > max) max = fim;
         });
@@ -848,7 +853,10 @@
 
     // Função para calcular dias entre datas
     function diasEntre(a, b) {
-        return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
+        // Usar datas no fuso horário local para cálculo preciso
+        const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+        const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
     }
 
     // Função para cor de status
@@ -859,10 +867,21 @@
         return '#ffc107';
     }
 
+    // Função para cor da borda baseada no status
+    function corBordaStatus(tarefa) {
+        console.log('Status da tarefa:', tarefa.status, 'Nome:', tarefa.name);
+        if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
+        if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
+        if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
+        if (tarefa.status === 'atrasada') return '#dc3545'; // Vermelho
+        return '#6c757d'; // Cinza padrão
+    }
+
     // Função para tooltip
     function tooltipBarra(tarefa) {
-        const ini = new Date(tarefa.start).toLocaleDateString('pt-BR');
-        const fim = new Date(tarefa.end).toLocaleDateString('pt-BR');
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const ini = new Date(tarefa.start + 'T00:00:00').toLocaleDateString('pt-BR');
+        const fim = new Date(tarefa.end + 'T00:00:00').toLocaleDateString('pt-BR');
         return `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
     }
 
@@ -880,8 +899,9 @@
 
     function mostrarTooltipDetalhado(event, barra) {
         esconderTooltipDetalhado();
-        const startDate = new Date(barra.start);
-        const endDate = new Date(barra.end);
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const startDate = new Date(barra.start + 'T00:00:00');
+        const endDate = new Date(barra.end + 'T00:00:00');
         const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
         const diasUteis = calcularDiasUteis(startDate, endDate);
         const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
@@ -1050,8 +1070,9 @@
             linhaH.style.zIndex = '1';
             tdCrono.appendChild(linhaH);
             barras.forEach((barra, idx) => {
-                const inicio = new Date(barra.start);
-                const fim = new Date(barra.end);
+                // Criar datas no fuso horário local para evitar problemas de UTC
+                const inicio = new Date(barra.start + 'T00:00:00');
+                const fim = new Date(barra.end + 'T00:00:00');
                 const offset = diasEntre(periodo.min, inicio);
                 const largura = diasEntre(inicio, fim) + 1;
                 const div = document.createElement('div');
@@ -1508,22 +1529,22 @@
     function abrirModalPredecessora(btn) {
         const tr = btn.closest('tr');
         const input = tr.querySelector('input[name="predecessoras"]');
-        
+
         // Limpar campos do modal
         document.getElementById('selectTarefa').value = '';
         document.getElementById('selectTipo').value = '';
         document.getElementById('inputDeslocamento').value = '0';
         document.getElementById('previewCodigo').textContent = 'Código será gerado automaticamente...';
-        
+
         // Armazenar input ativo
         window._inputPredecessorasAtivo = input;
-        
+
         // Mostrar modal
         var modal = new bootstrap.Modal(document.getElementById('modalPredecessora'));
         modal.show();
-        
+
         // Inicializar Select2 após o modal estar visível
-        setTimeout(function() {
+        setTimeout(function () {
             try {
                 // Destruir instâncias existentes
                 if ($('#selectTarefa').data('select2')) {
@@ -1532,7 +1553,7 @@
                 if ($('#selectTipo').data('select2')) {
                     $('#selectTipo').select2('destroy');
                 }
-                
+
                 // Inicializar Select2
                 $('#selectTarefa').select2({
                     placeholder: 'Escolha uma tarefa...',
@@ -1540,80 +1561,80 @@
                     width: '100%',
                     theme: 'bootstrap-5'
                 });
-                
+
                 $('#selectTipo').select2({
                     placeholder: 'Escolha o tipo...',
                     allowClear: true,
                     width: '100%',
                     theme: 'bootstrap-5'
                 });
-                
+
                 console.log('Select2 inicializado no modal');
-                
+
                 // Adicionar eventos para preview
-                $('#selectTarefa, #selectTipo').on('change', function() {
+                $('#selectTarefa, #selectTipo').on('change', function () {
                     atualizarPreviewCodigo();
                 });
-                $('#inputDeslocamento').on('input', function() {
+                $('#inputDeslocamento').on('input', function () {
                     atualizarPreviewCodigo();
                 });
-                
+
                 // Inicializar evento do botão salvar AQUI
                 console.log('Inicializando evento do botão salvar...');
                 const btnSalvar = document.getElementById('btnSalvarPredecessoras');
                 console.log('Botão salvar encontrado:', btnSalvar);
-                
+
                 if (btnSalvar) {
                     // Remover eventos anteriores
                     $('#btnSalvarPredecessoras').off('click');
                     btnSalvar.removeEventListener('click', window._salvarPredecessorasHandler);
-                    
+
                     // Adicionar novo evento
-                    window._salvarPredecessorasHandler = function(e) {
+                    window._salvarPredecessorasHandler = function (e) {
                         console.log('=== EVENTO CLICK DISPARADO ===');
                         e.preventDefault();
                         e.stopPropagation();
-                        
+
                         console.log('Botão salvar clicado');
-                        
+
                         const tarefaId = $('#selectTarefa').val();
                         const tipo = $('#selectTipo').val();
                         const deslocamento = $('#inputDeslocamento').val();
-                        
+
                         console.log('Valores:', { tarefaId, tipo, deslocamento });
-                        
+
                         if (!tarefaId || !tipo) {
                             alert('Por favor, selecione uma tarefa e um tipo de relação.');
                             return;
                         }
-                        
+
                         const tarefaOption = $('#selectTarefa option:selected');
                         const ordem = tarefaOption.data('ordem');
-                        
+
                         console.log('Ordem da tarefa:', ordem);
-                        
+
                         // Gerar código no formato: ordem + tipo + deslocamento
                         let codigo = `${ordem}${tipo}`;
                         if (deslocamento && deslocamento !== '0') {
                             const sinal = parseInt(deslocamento) > 0 ? '+' : '';
                             codigo += `${sinal}${deslocamento}d`;
                         }
-                        
+
                         console.log('Código final:', codigo);
-                        
+
                         // Adicionar ao campo de predecessoras
                         if (window._inputPredecessorasAtivo) {
                             const valorAtual = window._inputPredecessorasAtivo.value.trim();
                             let novasPredecessoras = valorAtual ? valorAtual.split(';') : [];
-                            
+
                             console.log('Predecessoras atuais:', novasPredecessoras);
-                            
+
                             // Verificar se já existe uma predecessora para esta tarefa
                             const indexExistente = novasPredecessoras.findIndex(pred => {
                                 const match = pred.match(/^(\d+)/);
                                 return match && match[1] === ordem;
                             });
-                            
+
                             if (indexExistente >= 0) {
                                 // Substituir predecessora existente
                                 novasPredecessoras[indexExistente] = codigo;
@@ -1623,22 +1644,22 @@
                                 novasPredecessoras.push(codigo);
                                 console.log('Adicionando nova predecessora');
                             }
-                            
+
                             const novoValor = novasPredecessoras.join(';');
                             console.log('Novo valor:', novoValor);
-                            
+
                             window._inputPredecessorasAtivo.value = novoValor;
                             window._inputPredecessorasAtivo.dispatchEvent(new Event('change'));
-                            
+
                             console.log('Campo atualizado com sucesso');
                         } else {
                             console.error('Input ativo não encontrado');
                         }
-                        
+
                         // Fechar modal
                         var modal = bootstrap.Modal.getInstance(document.getElementById('modalPredecessora'));
                         modal.hide();
-                        
+
                         // Mostrar feedback
                         const btn = document.getElementById('btnSalvarPredecessoras');
                         const textoOriginal = btn.innerHTML;
@@ -1649,37 +1670,37 @@
                             btn.classList.remove('btn-success');
                         }, 1500);
                     };
-                    
+
                     btnSalvar.addEventListener('click', window._salvarPredecessorasHandler);
                     console.log('Evento do botão salvar adicionado com sucesso');
                 } else {
                     console.error('Botão salvar não encontrado!');
                 }
-                
+
             } catch (error) {
                 console.error('Erro ao inicializar Select2 no modal:', error);
             }
         }, 300);
     }
-    
+
     // Função para atualizar preview do código
     function atualizarPreviewCodigo() {
         const tarefaId = $('#selectTarefa').val();
         const tipo = $('#selectTipo').val();
         const deslocamento = $('#inputDeslocamento').val();
-        
+
         console.log('Atualizando preview:', { tarefaId, tipo, deslocamento });
-        
+
         if (tarefaId && tipo) {
             const tarefaOption = $('#selectTarefa option:selected');
             const ordem = tarefaOption.data('ordem');
-            
+
             let codigo = `${ordem}${tipo}`;
             if (deslocamento && deslocamento !== '0') {
                 const sinal = parseInt(deslocamento) > 0 ? '+' : '';
                 codigo += `${sinal}${deslocamento}d`;
             }
-            
+
             console.log('Código gerado:', codigo);
             document.getElementById('previewCodigo').textContent = codigo;
             document.getElementById('previewCodigo').style.color = '#28a745';
@@ -1690,7 +1711,7 @@
     }
 
     // Inicializar Select2 para os campos do modal
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Teste para verificar se jQuery está carregado
         console.log('jQuery version:', $.fn.jquery);
         console.log('Document ready - modal de predecessoras pronto');
@@ -2133,7 +2154,7 @@
     function atualizarOrdemTarefa(element) {
         const tarefaId = element.getAttribute('data-id');
         const novaOrdem = parseInt(element.textContent.trim());
-        
+
         // Validar se é um número válido
         if (isNaN(novaOrdem) || novaOrdem < 1) {
             alert('A ordem deve ser um número maior que 0.');
@@ -2166,43 +2187,43 @@
                 nova_ordem: novaOrdem
             })
         })
-        .then(resp => resp.json())
-        .then(data => {
-            if (data.sucesso) {
-                // Atualizar o valor original
-                element.setAttribute('data-original-value', novaOrdem.toString());
-                
-                // Feedback visual
-                element.style.backgroundColor = '#d4edda';
-                element.style.color = '#155724';
-                setTimeout(() => {
-                    element.style.backgroundColor = '';
-                    element.style.color = '';
-                }, 1000);
-            } else {
-                alert('Erro ao atualizar ordem: ' + (data.erro || 'Erro desconhecido.'));
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.sucesso) {
+                    // Atualizar o valor original
+                    element.setAttribute('data-original-value', novaOrdem.toString());
+
+                    // Feedback visual
+                    element.style.backgroundColor = '#d4edda';
+                    element.style.color = '#155724';
+                    setTimeout(() => {
+                        element.style.backgroundColor = '';
+                        element.style.color = '';
+                    }, 1000);
+                } else {
+                    alert('Erro ao atualizar ordem: ' + (data.erro || 'Erro desconhecido.'));
+                    element.textContent = element.getAttribute('data-original-value') || '';
+                }
+            })
+            .catch(err => {
+                alert('Erro ao atualizar ordem: ' + err);
                 element.textContent = element.getAttribute('data-original-value') || '';
-            }
-        })
-        .catch(err => {
-            alert('Erro ao atualizar ordem: ' + err);
-            element.textContent = element.getAttribute('data-original-value') || '';
-        });
+            });
     }
 
     function reordenarTarefasVisualmente() {
         const tbody = document.querySelector('#tabela-tarefas-inline tbody');
         const novaLinha = document.getElementById('linha-nova-tarefa');
-        
+
         // Remover temporariamente a linha de nova tarefa
         let novaLinhaRemovida = null;
         if (novaLinha) {
             novaLinhaRemovida = novaLinha.parentNode.removeChild(novaLinha);
         }
-        
+
         // Pegar apenas as linhas de tarefas existentes (excluir linha de nova tarefa)
         const linhas = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
-        
+
         // Ordenar linhas por ordem
         linhas.sort((a, b) => {
             const ordemA = parseInt(a.querySelector('.numero-tarefa').textContent.trim()) || 0;
@@ -2214,7 +2235,7 @@
         linhas.forEach(linha => {
             tbody.appendChild(linha);
         });
-        
+
         // Reinserir a linha de nova tarefa no final
         if (novaLinhaRemovida) {
             tbody.appendChild(novaLinhaRemovida);
@@ -2222,23 +2243,23 @@
     }
 
     // Adicionar eventos para edição da ordem
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.numero-tarefa').forEach(td => {
             // Salvar valor original ao focar
-            td.addEventListener('focus', function() {
+            td.addEventListener('focus', function () {
                 this.setAttribute('data-original-value', this.textContent.trim());
                 this.style.backgroundColor = '#fff3cd';
                 this.style.border = '1px solid #ffc107';
             });
 
             // Restaurar estilo ao perder foco
-            td.addEventListener('blur', function() {
+            td.addEventListener('blur', function () {
                 this.style.backgroundColor = '';
                 this.style.border = '';
             });
 
             // Permitir apenas números ao digitar
-            td.addEventListener('input', function() {
+            td.addEventListener('input', function () {
                 const valor = this.textContent.trim();
                 if (valor && !/^\d+$/.test(valor)) {
                     this.textContent = valor.replace(/\D/g, '');

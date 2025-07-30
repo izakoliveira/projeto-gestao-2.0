@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, session, flash, make_response, url_for, jsonify, render_template_string, abort
 from supabase import create_client, Client
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # Import datetime for date operations
 from werkzeug.security import generate_password_hash, check_password_hash
 from supabase_client import get_user_by_email, create_user, get_all_users
 import requests
@@ -135,8 +135,10 @@ def login():
         if user:
             print('Hash salvo:', user['senha_hash'])
             print('Senha digitada:', senha)
-            print('Verificação:', check_password_hash(user['senha_hash'], senha))
-        if user and check_password_hash(user['senha_hash'], senha):
+            # Garantir que a senha seja uma string
+            senha_str = str(senha) if senha is not None else ""
+            print('Verificação:', check_password_hash(user['senha_hash'], senha_str))
+        if user and check_password_hash(user['senha_hash'], str(senha) if senha is not None else ""):
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
             session['user_email'] = user['email']
