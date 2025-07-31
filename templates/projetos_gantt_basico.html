@@ -1262,7 +1262,47 @@
         min-width: 260px !important;
         max-width: 260px !important;
         width: 260px !important;
-        max-height: 280px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        height: 260px !important;
+    }
+
+    /* Regras de alta prioridade para carousel items */
+    .projetos-carousel .carousel-item {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .projetos-carousel .carousel-item .card,
+    .projetos-carousel .carousel-item .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        height: 260px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Forçar tamanho mesmo em telas pequenas */
+    @media (max-width: 767.98px) {
+        .projetos-carousel .carousel-item {
+            min-width: 260px !important;
+            max-width: 260px !important;
+            width: 260px !important;
+        }
+
+        .projetos-carousel .carousel-item .card,
+        .projetos-carousel .carousel-item .compact-card {
+            min-width: 260px !important;
+            max-width: 260px !important;
+            width: 260px !important;
+            min-height: 260px !important;
+            max-height: 260px !important;
+            height: 260px !important;
+        }
     }
 
     .compact-header {
