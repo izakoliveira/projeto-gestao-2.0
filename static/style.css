@@ -336,53 +336,76 @@ body {
 
 /* Responsividade para cards de projetos/tarefas */
 @media (max-width: 767.98px) {
-  .row > [class*='col-'] {
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin-bottom: 1rem;
-  }
-  .card, .compact-card {
-    width: 100% !important;
-    min-width: 0 !important;
-    margin-bottom: 1rem !important;
-  }
-  .card-header, .compact-header {
-    font-size: 1.1em;
-    padding: 0.75rem 1rem;
-  }
-  .card-body, .compact-body {
-    padding: 1rem;
-  }
-  .card-footer, .compact-footer {
-    padding: 0.75rem 1rem;
-  }
-  .task-list, .compact-tasks {
-    font-size: 1em;
-  }
+    .row>[class*='col-'] {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    /* Preservar tamanho dos cards no carousel mesmo em telas pequenas */
+    .projetos-carousel .card,
+    .projetos-carousel .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+    }
+
+    /* Aplicar regras responsivas apenas para cards fora do carousel */
+    .card:not(.projetos-carousel .card),
+    .compact-card:not(.projetos-carousel .compact-card) {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .card-header,
+    .compact-header {
+        font-size: 1.1em;
+        padding: 0.75rem 1rem;
+    }
+
+    .card-body,
+    .compact-body {
+        padding: 1rem;
+    }
+
+    .card-footer,
+    .compact-footer {
+        padding: 0.75rem 1rem;
+    }
+
+    .task-list,
+    .compact-tasks {
+        font-size: 1em;
+    }
 }
 
 /* Navbar responsiva: aumenta área de toque e fonte */
 @media (max-width: 991.98px) {
-  .navbar-nav .nav-link, .navbar-nav .dropdown-item {
-    font-size: 1.1em;
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
-  }
-  .navbar-toggler {
-    font-size: 1.5em;
-    padding: 0.75rem 1.25rem;
-  }
+
+    .navbar-nav .nav-link,
+    .navbar-nav .dropdown-item {
+        font-size: 1.1em;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .navbar-toggler {
+        font-size: 1.5em;
+        padding: 0.75rem 1.25rem;
+    }
 }
 
 /* Ajuste para tabelas: rolagem horizontal no mobile */
 @media (max-width: 767.98px) {
-  .table-responsive {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  .table {
-    min-width: 600px;
-  }
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+        min-width: 600px;
+    }
 }
 
 .projetos-carousel {
@@ -398,14 +421,17 @@ body {
     scrollbar-width: thin;
     scrollbar-color: #ccc #f8f9fa;
 }
+
 .projetos-carousel::-webkit-scrollbar {
     height: 8px;
     background: #f8f9fa;
 }
+
 .projetos-carousel::-webkit-scrollbar-thumb {
     background: #ccc;
     border-radius: 4px;
 }
+
 .carousel-item {
     flex: 0 0 auto;
     min-width: 260px;
@@ -414,7 +440,8 @@ body {
 }
 
 /* Revisão: Remover possíveis conflitos antigos */
-.row.projetos-carousel, .container.projetos-carousel {
+.row.projetos-carousel,
+.container.projetos-carousel {
     display: flex !important;
     flex-direction: row !important;
     width: 100% !important;
@@ -426,9 +453,17 @@ body {
 
 /* Garante que o card não quebre dentro do carousel */
 .projetos-carousel .card {
-    min-width: 260px;
-    max-width: 260px;
-    width: 260px;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    width: 260px !important;
+}
+
+/* Garante que cards compactos no carousel mantenham o tamanho */
+.projetos-carousel .compact-card {
+    min-width: 260px !important;
+    max-width: 260px !important;
+    width: 260px !important;
+    max-height: 280px !important;
 }
 
 /* Remove margens laterais de container-pai se houver */
@@ -439,11 +474,14 @@ body {
 
 /* Opcional: responsividade para mobile */
 @media (max-width: 600px) {
-    .carousel-item, .projetos-carousel .card {
+
+    .carousel-item,
+    .projetos-carousel .card {
         min-width: 90vw;
         max-width: 90vw;
         width: 90vw;
     }
+
     .projetos-carousel {
         gap: 8px;
     }
