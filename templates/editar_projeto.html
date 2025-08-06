@@ -20,7 +20,8 @@
             </div>
             <div class="mb-3">
                 <label for="descricao" class="form-label">Descrição:</label>
-                <textarea class="form-control" id="descricao" name="descricao" required>{{ projeto.descricao }}</textarea>
+                <textarea class="form-control" id="descricao" name="descricao"
+                    required>{{ projeto.descricao }}</textarea>
                 <div class="invalid-feedback">A descrição é obrigatória.</div>
             </div>
             <div class="mb-3">
@@ -29,21 +30,25 @@
                     <select class="form-select" id="tipo_id" name="tipo_id" required>
                         <option value="">Selecione...</option>
                         {% for tipo in tipos %}
-                        <option value="{{ tipo.id }}" {% if projeto.tipo_id == tipo.id %}selected{% endif %}>{{ tipo.nome }}</option>
+                        <option value="{{ tipo.id }}" {% if projeto.tipo_id==tipo.id %}selected{% endif %}>{{ tipo.nome
+                            }}</option>
                         {% endfor %}
                     </select>
-                    <a href="{{ url_for('criar_pasta') }}" target="_blank" class="btn btn-outline-secondary">Nova Pasta</a>
+                    <a href="{{ url_for('pastas.criar_pasta') }}" target="_blank" class="btn btn-outline-secondary">Nova
+                        Pasta</a>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="data_inicio" class="form-label">Data de Início:</label>
-                    <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ projeto.data_inicio }}" required>
+                    <input type="date" class="form-control" id="data_inicio" name="data_inicio"
+                        value="{{ projeto.data_inicio }}" required>
                     <div class="invalid-feedback">A data de início é obrigatória.</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="data_fim" class="form-label">Data de Término:</label>
-                    <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ projeto.data_fim }}" required>
+                    <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ projeto.data_fim }}"
+                        required>
                     <div class="invalid-feedback">A data de término é obrigatória.</div>
                 </div>
             </div>
@@ -53,57 +58,57 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-// Validação visual do formulário de edição de projeto
-const formEditarProjeto = document.getElementById('form-editar-projeto');
-formEditarProjeto.addEventListener('submit', function (e) {
-    let valido = true;
-    // Nome
-    const nome = document.getElementById('nome');
-    if (!nome.value.trim()) {
-        nome.classList.add('is-invalid');
-        valido = false;
-    } else {
-        nome.classList.remove('is-invalid');
-    }
-    // Descrição
-    const descricao = document.getElementById('descricao');
-    if (!descricao.value.trim()) {
-        descricao.classList.add('is-invalid');
-        valido = false;
-    } else {
-        descricao.classList.remove('is-invalid');
-    }
-    // Data início
-    const dataInicio = document.getElementById('data_inicio');
-    if (!dataInicio.value) {
-        dataInicio.classList.add('is-invalid');
-        valido = false;
-    } else {
-        dataInicio.classList.remove('is-invalid');
-    }
-    // Data fim
-    const dataFim = document.getElementById('data_fim');
-    if (!dataFim.value) {
-        dataFim.classList.add('is-invalid');
-        valido = false;
-    } else {
-        dataFim.classList.remove('is-invalid');
-    }
-    if (!valido) {
-        e.preventDefault();
-        e.stopPropagation();
-        alert('Por favor, preencha todos os campos obrigatórios.');
-        return false;
-    }
-});
-// Preencher campo hidden com a página anterior
-window.addEventListener('DOMContentLoaded', function() {
-    var voltarPara = document.getElementById('voltar_para');
-    if (voltarPara && document.referrer && !document.referrer.includes('/projetos/editar/')) {
-        voltarPara.value = document.referrer;
-    }
-});
-</script>
+        // Validação visual do formulário de edição de projeto
+        const formEditarProjeto = document.getElementById('form-editar-projeto');
+        formEditarProjeto.addEventListener('submit', function (e) {
+            let valido = true;
+            // Nome
+            const nome = document.getElementById('nome');
+            if (!nome.value.trim()) {
+                nome.classList.add('is-invalid');
+                valido = false;
+            } else {
+                nome.classList.remove('is-invalid');
+            }
+            // Descrição
+            const descricao = document.getElementById('descricao');
+            if (!descricao.value.trim()) {
+                descricao.classList.add('is-invalid');
+                valido = false;
+            } else {
+                descricao.classList.remove('is-invalid');
+            }
+            // Data início
+            const dataInicio = document.getElementById('data_inicio');
+            if (!dataInicio.value) {
+                dataInicio.classList.add('is-invalid');
+                valido = false;
+            } else {
+                dataInicio.classList.remove('is-invalid');
+            }
+            // Data fim
+            const dataFim = document.getElementById('data_fim');
+            if (!dataFim.value) {
+                dataFim.classList.add('is-invalid');
+                valido = false;
+            } else {
+                dataFim.classList.remove('is-invalid');
+            }
+            if (!valido) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return false;
+            }
+        });
+        // Preencher campo hidden com a página anterior
+        window.addEventListener('DOMContentLoaded', function () {
+            var voltarPara = document.getElementById('voltar_para');
+            if (voltarPara && document.referrer && !document.referrer.includes('/projetos/editar/')) {
+                voltarPara.value = document.referrer;
+            }
+        });
+    </script>
 </body>
 
 </html>

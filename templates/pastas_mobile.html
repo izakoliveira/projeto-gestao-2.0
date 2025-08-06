@@ -17,10 +17,12 @@
     <div class="row g-0">
       {% for projeto in projetos_sem_pasta %}
       <div class="col-3">
-        <div class="card h-100" style="border-radius: 12px; border: none; background: transparent; box-shadow: none;" 
-             draggable="true" ondragstart="dragProjeto(event, '{{ projeto.id }}')" id="projeto-{{ projeto.id }}">
-          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1" style="background: transparent;">
-            <a href="{{ url_for('detalhes_projeto', projeto_id=projeto.id) }}" class="text-decoration-none text-center">
+        <div class="card h-100" style="border-radius: 12px; border: none; background: transparent; box-shadow: none;"
+          draggable="true" ondragstart="dragProjeto(event, '{{ projeto.id }}')" id="projeto-{{ projeto.id }}">
+          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1"
+            style="background: transparent;">
+            <a href="{{ url_for('main.detalhes_projeto', projeto_id=projeto.id) }}"
+              class="text-decoration-none text-center">
               <div style="font-size: 1.5em; color: #6c757d; margin-bottom: 0.2em;">
                 <i class="fas fa-box-open"></i>
               </div>
@@ -32,16 +34,15 @@
           <div class="card-footer bg-transparent border-0 pt-0">
             <div class="d-flex justify-content-center gap-2">
               {% if pode_editar_projeto %}
-              <a href="{{ url_for('editar_projeto', projeto_id=projeto.id) }}" 
-                 class="btn btn-warning btn-sm" style="border-radius: 8px; padding: 0.25rem 0.5rem;">
+              <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}" class="btn btn-warning btn-sm"
+                style="border-radius: 8px; padding: 0.25rem 0.5rem;">
                 <i class="fas fa-edit"></i>
               </a>
               {% endif %}
               {% if pode_excluir_projeto %}
               <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-danger btn-sm" 
-                        style="border-radius: 8px; padding: 0.25rem 0.5rem;"
-                        onclick="return confirm('Excluir este projeto?');">
+                <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 8px; padding: 0.25rem 0.5rem;"
+                  onclick="return confirm('Excluir este projeto?');">
                   <i class="fas fa-trash"></i>
                 </button>
               </form>
@@ -65,8 +66,9 @@
       <!-- Card Nova Pasta -->
       <div class="col-3">
         <div class="card h-100" style="border-radius: 12px; border: none; background: transparent; box-shadow: none;">
-          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1" style="background: transparent;">
-            <a href="{{ url_for('criar_pasta') }}" class="text-decoration-none text-center">
+          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1"
+            style="background: transparent;">
+            <a href="{{ url_for('pastas.criar_pasta') }}" class="text-decoration-none text-center">
               <div style="font-size: 2em; color: #28a745; margin-bottom: 0.2em;">
                 <i class="fas fa-folder-plus"></i>
               </div>
@@ -83,25 +85,32 @@
       </div>
       {% for tipo in tipos %}
       <div class="col-3">
-        <div class="card h-100" style="border-radius: 12px; border: none; background: transparent; box-shadow: none; position: relative;"
-             ondragover="allowDrop(event)" ondrop="dropProjetoNaPasta(event, '{{ tipo.id }}')" id="pasta-{{ tipo.id }}">
+        <div class="card h-100"
+          style="border-radius: 12px; border: none; background: transparent; box-shadow: none; position: relative;"
+          ondragover="allowDrop(event)" ondrop="dropProjetoNaPasta(event, '{{ tipo.id }}')" id="pasta-{{ tipo.id }}">
           <!-- Botão 3 pontinhos no canto superior direito -->
           <div class="dropdown" style="position: absolute; top: 8px; right: 8px; z-index: 10;">
-            <button class="btn btn-link btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #6c757d; text-decoration: none; background: rgba(255,255,255,0.9); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+            <button class="btn btn-link btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+              style="color: #6c757d; text-decoration: none; background: rgba(255,255,255,0.9); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
               <i class="fas fa-ellipsis-v" style="font-size: 0.8em;"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url_for('editar_pasta', tipo_id=tipo.id) }}">
-                <i class="fas fa-edit me-2"></i>Editar
-              </a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="#" onclick="confirmarExclusao('{{ tipo.id }}', '{{ tipo.nome }}')">
-                <i class="fas fa-trash me-2"></i>Excluir
-              </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('pastas.editar_pasta', pasta_id=tipo.id) }}">
+                  <i class="fas fa-edit me-2"></i>Editar
+                </a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item text-danger" href="#"
+                  onclick="confirmarExclusao('{{ tipo.id }}', '{{ tipo.nome }}')">
+                  <i class="fas fa-trash me-2"></i>Excluir
+                </a></li>
             </ul>
           </div>
-          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1" style="background: transparent;">
-            <a href="{{ url_for('projetos') }}?ambiente={{ tipo.id }}" class="text-decoration-none text-center">
+          <div class="card-body d-flex flex-column align-items-center justify-content-center py-1"
+            style="background: transparent;">
+            <a href="{{ url_for('projetos.listar_projetos') }}?ambiente={{ tipo.id }}"
+              class="text-decoration-none text-center">
               <div style="font-size: 2em; color: #ffc107; margin-bottom: 0.2em;">
                 <i class="fas fa-folder"></i>
               </div>
@@ -109,7 +118,8 @@
                 {{ tipo.nome[:12] }}{% if tipo.nome|length > 12 %}...{% endif %}
               </div>
               <div class="badge bg-secondary" style="font-size: 0.6em; padding: 0.2em 0.4em;">
-                {{ projetos_por_pasta[tipo.id]|length }} projeto{{ 's' if projetos_por_pasta[tipo.id]|length != 1 else '' }}
+                {{ projetos_por_pasta[tipo.id]|length }} projeto{{ 's' if projetos_por_pasta[tipo.id]|length != 1 else
+                '' }}
               </div>
             </a>
           </div>
@@ -134,231 +144,232 @@
 
 <!-- Estilos específicos para mobile -->
 <style>
-/* Reset para garantir layout correto */
-* {
-  box-sizing: border-box;
-}
-
-.container-fluid {
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
-}
-
-.card {
-  background: transparent !important;
-}
-
-.card-body {
-  background: transparent !important;
-}
-
-.card-footer {
-  background: transparent !important;
-}
-.card {
-  transition: transform 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-}
-
-.card:active {
-  transform: translateY(0);
-}
-
-.btn {
-  transition: all 0.2s ease;
-}
-
-.btn:active {
-  transform: scale(0.95);
-}
-
-/* Melhorar espaçamento em telas muito pequenas */
-@media (max-width: 576px) {
-  .col-3 {
-    padding: 0 0.05rem;
-    flex: 0 0 25% !important;
-    max-width: 25% !important;
-    width: 25% !important;
+  /* Reset para garantir layout correto */
+  * {
+    box-sizing: border-box;
   }
-  
-  .card-body {
-    padding: 0.5rem 0.2rem;
+
+  .container-fluid {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
   }
-  
-  .card-footer {
-    padding: 0.3rem;
-  }
-  
+
   .card {
-    min-height: 120px;
-    height: 100%;
+    background: transparent !important;
   }
-  
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 0 -0.1rem;
+
+  .card-body {
+    background: transparent !important;
   }
-}
 
-/* Feedback visual para drag and drop */
-.card[draggable="true"]:active {
-  opacity: 0.7;
-}
+  .card-footer {
+    background: transparent !important;
+  }
 
-.card[ondragover] {
-  border: none !important;
-  background-color: rgba(0, 123, 255, 0.1);
-}
+  .card {
+    transition: transform 0.2s ease;
+  }
 
-/* Estilos para o dropdown */
-.dropdown-menu {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border: none;
-  padding: 0.5rem 0;
-}
+  .card:hover {
+    transform: translateY(-2px);
+  }
 
-.dropdown-item {
-  padding: 0.5rem 1rem;
-  font-size: 0.9em;
-}
+  .card:active {
+    transform: translateY(0);
+  }
 
-.dropdown-item:hover {
-  background-color: #f8f9fa;
-}
+  .btn {
+    transition: all 0.2s ease;
+  }
 
-.dropdown-item.text-danger:hover {
-  background-color: #f8d7da;
-}
+  .btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Melhorar espaçamento em telas muito pequenas */
+  @media (max-width: 576px) {
+    .col-3 {
+      padding: 0 0.05rem;
+      flex: 0 0 25% !important;
+      max-width: 25% !important;
+      width: 25% !important;
+    }
+
+    .card-body {
+      padding: 0.5rem 0.2rem;
+    }
+
+    .card-footer {
+      padding: 0.3rem;
+    }
+
+    .card {
+      min-height: 120px;
+      height: 100%;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 -0.1rem;
+    }
+  }
+
+  /* Feedback visual para drag and drop */
+  .card[draggable="true"]:active {
+    opacity: 0.7;
+  }
+
+  .card[ondragover] {
+    border: none !important;
+    background-color: rgba(0, 123, 255, 0.1);
+  }
+
+  /* Estilos para o dropdown */
+  .dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: none;
+    padding: 0.5rem 0;
+  }
+
+  .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9em;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f8f9fa;
+  }
+
+  .dropdown-item.text-danger:hover {
+    background-color: #f8d7da;
+  }
 </style>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
-function allowDrop(ev) {
-  ev.preventDefault();
-}
+  function allowDrop(ev) {
+    ev.preventDefault();
+  }
 
-let projetoArrastado = null;
+  let projetoArrastado = null;
 
-function dragProjeto(ev, projetoId) {
-  projetoArrastado = projetoId;
-  ev.dataTransfer.setData("text", projetoId);
-  
-  // Feedback visual
-  ev.target.style.opacity = "0.7";
-}
+  function dragProjeto(ev, projetoId) {
+    projetoArrastado = projetoId;
+    ev.dataTransfer.setData("text", projetoId);
 
-function dropProjetoNaPasta(ev, tipoId) {
-  ev.preventDefault();
-  const projetoId = projetoArrastado || ev.dataTransfer.getData("text");
-  if (!projetoId || !tipoId) return;
-  
-  // Feedback visual
-  ev.target.style.border = "1px solid #e9ecef";
-  ev.target.style.backgroundColor = "white";
-  
-  // Mostrar loading
-  const loadingDiv = document.createElement('div');
-  loadingDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Movendo...</div>';
-  loadingDiv.style.position = 'fixed';
-  loadingDiv.style.top = '50%';
-  loadingDiv.style.left = '50%';
-  loadingDiv.style.transform = 'translate(-50%, -50%)';
-  loadingDiv.style.background = 'rgba(0,0,0,0.8)';
-  loadingDiv.style.color = 'white';
-  loadingDiv.style.padding = '1rem 2rem';
-  loadingDiv.style.borderRadius = '10px';
-  loadingDiv.style.zIndex = '9999';
-  document.body.appendChild(loadingDiv);
-  
-  // AJAX para mover projeto
-  fetch(`/projetos/${projetoId}/mover_para_pasta`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tipo_id: tipoId })
-  })
-  .then(resp => resp.json())
-  .then(data => {
-    document.body.removeChild(loadingDiv);
-    if (data.sucesso) {
-      // Remove o card do projeto da lista sem pasta
-      const card = document.getElementById('projeto-' + projetoId);
-      if (card) {
-        card.style.animation = 'fadeOut 0.3s ease';
-        setTimeout(() => {
-          card.parentNode.removeChild(card);
-        }, 300);
-      }
-      
-      // Mostrar sucesso
-      const successDiv = document.createElement('div');
-      successDiv.innerHTML = '<div class="text-center"><i class="fas fa-check"></i> Projeto movido!</div>';
-      successDiv.style.position = 'fixed';
-      successDiv.style.top = '20px';
-      successDiv.style.left = '50%';
-      successDiv.style.transform = 'translateX(-50%)';
-      successDiv.style.background = '#28a745';
-      successDiv.style.color = 'white';
-      successDiv.style.padding = '0.75rem 1.5rem';
-      successDiv.style.borderRadius = '10px';
-      successDiv.style.zIndex = '9999';
-      document.body.appendChild(successDiv);
-      
-      setTimeout(() => {
-        document.body.removeChild(successDiv);
-        location.reload();
-      }, 1500);
-    } else {
-      alert('Erro ao mover projeto: ' + (data.erro || ''));
-    }
-  })
-  .catch(() => {
-    document.body.removeChild(loadingDiv);
-    alert('Erro ao mover projeto.');
-  });
-}
+    // Feedback visual
+    ev.target.style.opacity = "0.7";
+  }
 
-// Animação de fade out
-const style = document.createElement('style');
-style.textContent = `
+  function dropProjetoNaPasta(ev, tipoId) {
+    ev.preventDefault();
+    const projetoId = projetoArrastado || ev.dataTransfer.getData("text");
+    if (!projetoId || !tipoId) return;
+
+    // Feedback visual
+    ev.target.style.border = "1px solid #e9ecef";
+    ev.target.style.backgroundColor = "white";
+
+    // Mostrar loading
+    const loadingDiv = document.createElement('div');
+    loadingDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Movendo...</div>';
+    loadingDiv.style.position = 'fixed';
+    loadingDiv.style.top = '50%';
+    loadingDiv.style.left = '50%';
+    loadingDiv.style.transform = 'translate(-50%, -50%)';
+    loadingDiv.style.background = 'rgba(0,0,0,0.8)';
+    loadingDiv.style.color = 'white';
+    loadingDiv.style.padding = '1rem 2rem';
+    loadingDiv.style.borderRadius = '10px';
+    loadingDiv.style.zIndex = '9999';
+    document.body.appendChild(loadingDiv);
+
+    // AJAX para mover projeto
+    fetch(`/projetos/${projetoId}/mover_para_pasta`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo_id: tipoId })
+    })
+      .then(resp => resp.json())
+      .then(data => {
+        document.body.removeChild(loadingDiv);
+        if (data.sucesso) {
+          // Remove o card do projeto da lista sem pasta
+          const card = document.getElementById('projeto-' + projetoId);
+          if (card) {
+            card.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+              card.parentNode.removeChild(card);
+            }, 300);
+          }
+
+          // Mostrar sucesso
+          const successDiv = document.createElement('div');
+          successDiv.innerHTML = '<div class="text-center"><i class="fas fa-check"></i> Projeto movido!</div>';
+          successDiv.style.position = 'fixed';
+          successDiv.style.top = '20px';
+          successDiv.style.left = '50%';
+          successDiv.style.transform = 'translateX(-50%)';
+          successDiv.style.background = '#28a745';
+          successDiv.style.color = 'white';
+          successDiv.style.padding = '0.75rem 1.5rem';
+          successDiv.style.borderRadius = '10px';
+          successDiv.style.zIndex = '9999';
+          document.body.appendChild(successDiv);
+
+          setTimeout(() => {
+            document.body.removeChild(successDiv);
+            location.reload();
+          }, 1500);
+        } else {
+          alert('Erro ao mover projeto: ' + (data.erro || ''));
+        }
+      })
+      .catch(() => {
+        document.body.removeChild(loadingDiv);
+        alert('Erro ao mover projeto.');
+      });
+  }
+
+  // Animação de fade out
+  const style = document.createElement('style');
+  style.textContent = `
 @keyframes fadeOut {
   from { opacity: 1; transform: scale(1); }
   to { opacity: 0; transform: scale(0.8); }
 }
 `;
-document.head.appendChild(style);
+  document.head.appendChild(style);
 
-// Função para confirmar exclusão de pasta
-function confirmarExclusao(tipoId, nomePasta) {
-  if (confirm(`Tem certeza que deseja excluir a pasta "${nomePasta}"?`)) {
-    // Criar formulário dinamicamente e submeter
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/pastas/excluir/${tipoId}`;
-    document.body.appendChild(form);
-    form.submit();
+  // Função para confirmar exclusão de pasta
+  function confirmarExclusao(tipoId, nomePasta) {
+    if (confirm(`Tem certeza que deseja excluir a pasta "${nomePasta}"?`)) {
+      // Criar formulário dinamicamente e submeter
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/pastas/excluir/${tipoId}`;
+      document.body.appendChild(form);
+      form.submit();
+    }
   }
-}
 
-// Melhorar experiência touch
-document.addEventListener('DOMContentLoaded', function() {
-  // Adicionar feedback tátil para botões
-  const buttons = document.querySelectorAll('.btn');
-  buttons.forEach(btn => {
-    btn.addEventListener('touchstart', function() {
-      this.style.transform = 'scale(0.95)';
-    });
-    
-    btn.addEventListener('touchend', function() {
-      this.style.transform = 'scale(1)';
+  // Melhorar experiência touch
+  document.addEventListener('DOMContentLoaded', function () {
+    // Adicionar feedback tátil para botões
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('touchstart', function () {
+        this.style.transform = 'scale(0.95)';
+      });
+
+      btn.addEventListener('touchend', function () {
+        this.style.transform = 'scale(1)';
+      });
     });
   });
-});
 </script>
-{% endblock %} 
+{% endblock %}

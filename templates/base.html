@@ -32,18 +32,27 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('projetos') }}">
+                        <a class="nav-link" href="{{ url_for('projetos.listar_projetos') }}">
                             <i class="fas fa-project-diagram"></i> Projetos
                         </a>
                     </li>
+                    <!-- DEBUG: Email da sessão -->
+                    <!-- Email atual: {{ session.user_email }} -->
                     {% if session.user_email == 'izak.gomes59@gmail.com' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin_restricoes') }}">
+                        <a class="nav-link" href="{{ url_for('producao.producao_dashboard') }}">
+                            <i class="fas fa-calendar-alt"></i> Produção
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if session.user_email == 'izak.gomes59@gmail.com' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.admin_restricoes') }}">
                             <i class="fas fa-user-shield"></i> Administração
                         </a>
                     </li>
@@ -52,20 +61,27 @@
                 {% if session.user_email == 'izak.gomes59@gmail.com' %}
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('listar_pastas') }}">Pastas</a>
+                        <a class="nav-link" href="{{ url_for('pastas.listar_pastas') }}">Pastas</a>
                     </li>
                 </ul>
                 {% endif %}
                 <ul class="navbar-nav ms-auto align-items-center">
                     <!-- Ícone de sininho de notificações -->
                     <li class="nav-item dropdown me-3" id="notificacaoDropdownLi" style="position:relative;">
-                        <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificacaoBadge" style="display:none;">0</span>
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                id="notificacaoBadge" style="display:none;">0</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificacaoDropdown" style="min-width:350px; max-width:400px; max-height:400px; overflow-y:auto;">
-                            <li class="dropdown-header bg-light fw-bold d-flex justify-content-between align-items-center">Notificações
-                                <button id="btnLimparNotificacoes" class="btn btn-outline-danger btn-sm ms-2" style="font-size:0.8em; display:none;">Limpar</button>
+                        <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificacaoDropdown"
+                            style="min-width:350px; max-width:400px; max-height:400px; overflow-y:auto;">
+                            <li
+                                class="dropdown-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                                Notificações
+                                <button id="btnLimparNotificacoes" class="btn btn-outline-danger btn-sm ms-2"
+                                    style="font-size:0.8em; display:none;">Limpar</button>
                             </li>
                             <div id="notificacoesLista">
                                 <li class="text-center text-muted small p-2">Carregando...</li>
@@ -74,7 +90,7 @@
                     </li>
                     <!-- Botão Logout visível na navbar -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">
                             <i class="fas fa-sign-out-alt"></i> Sair
                         </a>
                     </li>
@@ -108,6 +124,7 @@
             var toastId = 'flashToast{{ loop.index }}_' + Date.now();
             var icon = '';
             var bg = 'bg-success';
+            var category = '{{ category }}';
             if (category === 'error' || category === 'danger') { icon = '<i class=\'fas fa-times-circle me-2\'></i>'; bg = 'bg-danger'; }
             else if (category === 'warning') { icon = '<i class=\'fas fa-exclamation-triangle me-2\'></i>'; bg = 'bg-warning text-dark'; }
             else if (category === 'info') { icon = '<i class=\'fas fa-info-circle me-2\'></i>'; bg = 'bg-info text-dark'; }
@@ -152,7 +169,7 @@
     {% block scripts %}
     <script>
         // Função para buscar notificações do usuário logado
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const usuarioId = '{{ session.user_id }}';
             const badge = document.getElementById('notificacaoBadge');
             const lista = document.getElementById('notificacoesLista');
@@ -177,7 +194,7 @@
                                 li.style.cursor = 'pointer';
                                 let linkProjeto = '';
                                 if (notif.projeto_id) {
-                                  linkProjeto = `<a href="/projetos/${notif.projeto_id}" class="btn btn-primary btn-sm ms-2" style="font-size:0.8em; padding:2px 8px;">Ver projeto</a>`;
+                                    linkProjeto = `<a href="/projetos/${notif.projeto_id}" class="btn btn-primary btn-sm ms-2" style="font-size:0.8em; padding:2px 8px;">Ver projeto</a>`;
                                 }
                                 li.innerHTML = `
   <div class=\"w-100\">
@@ -193,11 +210,11 @@
 `;
                                 // Inicializar tooltip Bootstrap
                                 setTimeout(() => { var t = li.querySelector('[title]'); if (t) new bootstrap.Tooltip(t); }, 10);
-                                li.onclick = function() {
-                                  if (!lida) {
-                                    fetch(`/notificacoes/${notif.id}/ler`, {method:'PATCH'})
-                                      .then(() => carregarNotificacoes());
-                                  }
+                                li.onclick = function () {
+                                    if (!lida) {
+                                        fetch(`/notificacoes/${notif.id}/ler`, { method: 'PATCH' })
+                                            .then(() => carregarNotificacoes());
+                                    }
                                 };
                                 lista.appendChild(li);
                             });
@@ -217,9 +234,9 @@
             setInterval(carregarNotificacoes, 60000); // a cada 60s
             carregarNotificacoes();
 
-            document.getElementById('btnLimparNotificacoes').onclick = function() {
+            document.getElementById('btnLimparNotificacoes').onclick = function () {
                 if (!confirm('Tem certeza que deseja limpar todas as notificações?')) return;
-                fetch(`/notificacoes/${usuarioId}/limpar`, {method:'DELETE'})
+                fetch(`/notificacoes/${usuarioId}/limpar`, { method: 'DELETE' })
                     .then(resp => resp.json())
                     .then(data => {
                         carregarNotificacoes();
@@ -229,27 +246,27 @@
                         toast.innerHTML = `<div class='d-flex'><div class='toast-body'>Notificações limpas com sucesso!</div><button type='button' class='btn-close btn-close-white me-2 m-auto' data-bs-dismiss='toast'></button></div>`;
                         document.body.appendChild(toast);
                         new bootstrap.Toast(toast).show();
-                        setTimeout(()=>toast.remove(), 4000);
+                        setTimeout(() => toast.remove(), 4000);
                     })
-                    .catch(()=>{
+                    .catch(() => {
                         var toast = document.createElement('div');
                         toast.className = 'toast align-items-center text-white bg-danger border-0';
                         toast.role = 'alert';
                         toast.innerHTML = `<div class='d-flex'><div class='toast-body'>Erro ao limpar notificações!</div><button type='button' class='btn-close btn-close-white me-2 m-auto' data-bs-dismiss='toast'></button></div>`;
                         document.body.appendChild(toast);
                         new bootstrap.Toast(toast).show();
-                        setTimeout(()=>toast.remove(), 4000);
+                        setTimeout(() => toast.remove(), 4000);
                     });
             };
         });
     </script>
     {% endblock %}
     <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/static/service-worker.js')
-        .then(function(reg) { console.log('Service worker registrado!', reg); })
-        .catch(function(err) { console.log('Erro ao registrar service worker:', err); });
-    }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(function (reg) { console.log('Service worker registrado!', reg); })
+                .catch(function (err) { console.log('Erro ao registrar service worker:', err); });
+        }
     </script>
 </body>
 

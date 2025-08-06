@@ -15,12 +15,12 @@
     <!-- Cards de Estatísticas -->
     <div class="row mb-4 justify-content-center">
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
-            <a href="{{ url_for('projetos') }}" class="text-decoration-none">
+            <a href="{{ url_for('projetos.listar_projetos') }}" class="text-decoration-none">
                 <div class="stats-card h-100"
                     style="background: linear-gradient(135deg, #5f2c82 0%, #49a09d 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="text-white">{{ total_projetos }}</h3>
+                            <h3 class="text-white">{{ stats.projetos_count }}</h3>
                             <p class="text-white">Total de Projetos</p>
                         </div>
                         <i class="fas fa-project-diagram fa-2x text-white"></i>
@@ -29,12 +29,12 @@
             </a>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
-            <a href="{{ url_for('projetos') }}" class="text-decoration-none">
+            <a href="{{ url_for('projetos.listar_projetos') }}" class="text-decoration-none">
                 <div class="stats-card h-100"
                     style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="text-white">{{ total_tarefas }}</h3>
+                            <h3 class="text-white">{{ stats.tarefas_count }}</h3>
                             <p class="text-white">Total de Tarefas</p>
                         </div>
                         <i class="fas fa-tasks fa-2x text-white"></i>
@@ -43,12 +43,12 @@
             </a>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
-            <a href="{{ url_for('projetos') }}?status=pendente" class="text-decoration-none">
+            <a href="{{ url_for('projetos.listar_projetos') }}?status=pendente" class="text-decoration-none">
                 <div class="stats-card h-100"
                     style="background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="text-white">{{ tarefas_pendentes }}</h3>
+                            <h3 class="text-white">{{ stats.tarefas_pendentes }}</h3>
                             <p class="text-white">Tarefas Pendentes</p>
                         </div>
                         <i class="fas fa-times-circle fa-2x text-white"></i>
@@ -57,12 +57,12 @@
             </a>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
-            <a href="{{ url_for('projetos') }}?status=em%20progresso" class="text-decoration-none">
+            <a href="{{ url_for('projetos.listar_projetos') }}?status=em%20progresso" class="text-decoration-none">
                 <div class="stats-card h-100"
                     style="background: linear-gradient(135deg, #8f00ff 0%, #e100ff 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="text-white">{{ tarefas_em_andamento }}</h3>
+                            <h3 class="text-white">{{ stats.tarefas_em_andamento }}</h3>
                             <p class="text-white">Tarefas Em Progresso</p>
                         </div>
                         <i class="fas fa-clock fa-2x text-white"></i>
@@ -71,12 +71,12 @@
             </a>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-lg mb-3">
-            <a href="{{ url_for('projetos') }}?status=concluída" class="text-decoration-none">
+            <a href="{{ url_for('projetos.listar_projetos') }}?status=concluída" class="text-decoration-none">
                 <div class="stats-card h-100"
                     style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="text-white">{{ tarefas_concluidas }}</h3>
+                            <h3 class="text-white">{{ stats.tarefas_concluidas }}</h3>
                             <p class="text-white">Tarefas Concluídas</p>
                         </div>
                         <i class="fas fa-check-circle fa-2x text-white"></i>
@@ -95,7 +95,7 @@
                         <h5 class="mb-0">
                             <i class="fas fa-project-diagram"></i> Projetos Recentes
                         </h5>
-                        <a href="{{ url_for('projetos') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ url_for('projetos.listar_projetos') }}" class="btn btn-sm btn-outline-primary">
                             Ver Todos
                         </a>
                     </div>
@@ -106,7 +106,8 @@
                         {% for projeto in projetos_recentes %}
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="mb-1">{{ projeto.nome }} <span class="badge bg-light text-dark border ms-2" style="font-size:0.85em;">{{ projeto.tipo_nome }}</span></h6>
+                                <h6 class="mb-1">{{ projeto.nome }} <span class="badge bg-light text-dark border ms-2"
+                                        style="font-size:0.85em;">{{ projeto.tipo_nome }}</span></h6>
                                 <small class="text-muted">
                                     {{ projeto.data_inicio }} - {{ projeto.data_fim }}
                                 </small>
@@ -116,7 +117,7 @@
                                     class="badge {% if projeto.status == 'concluido' %}bg-success{% elif projeto.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %}">
                                     {{ projeto.status|title }}
                                 </span>
-                                <a href="{{ url_for('detalhes_projeto', projeto_id=projeto.id) }}"
+                                <a href="{{ url_for('main.detalhes_projeto', projeto_id=projeto.id) }}"
                                     class="btn btn-sm btn-outline-primary ms-2">
                                     <i class="fas fa-eye"></i>
                                 </a>
@@ -126,7 +127,7 @@
                     </div>
                     {% else %}
                     <div class="text-center py-4">
-                        <a href="{{ url_for('criar_projeto') }}" class="btn btn-primary">
+                        <a href="{{ url_for('projetos.criar_projeto') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Criar Primeiro Projeto
                         </a>
                     </div>
@@ -153,7 +154,7 @@
                             <div>
                                 <h6 class="mb-1">{{ tarefa.nome }}</h6>
                                 <small class="text-muted">
-                                    {{ tarefa.projetos.nome if tarefa.projetos else 'Projeto não encontrado' }}
+                                    {{ tarefa.projeto_nome if tarefa.projeto_nome else 'Projeto não encontrado' }}
                                 </small>
                             </div>
                             <div class="d-flex align-items-center">
@@ -161,7 +162,7 @@
                                     class="badge {% if tarefa.status == 'concluida' %}bg-success{% elif tarefa.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %} me-2">
                                     {{ tarefa.status|title }}
                                 </span>
-                                <a href="{{ url_for('detalhes_projeto', projeto_id=tarefa.projeto_id) }}#tarefa-{{ tarefa.id }}"
+                                <a href="{{ url_for('main.detalhes_projeto', projeto_id=tarefa.projeto_id) }}#tarefa-{{ tarefa.id }}"
                                     class="btn btn-sm btn-outline-primary" title="Ver detalhes da tarefa no projeto">
                                     <i class="fas fa-eye"></i>
                                 </a>
@@ -173,7 +174,7 @@
                     <div class="text-center py-4">
                         <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
                         <p class="text-muted">Nenhuma tarefa encontrada</p>
-                        <a href="{{ url_for('projetos') }}" class="btn btn-primary">
+                        <a href="{{ url_for('projetos.listar_projetos') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Criar Primeira Tarefa
                         </a>
                     </div>
@@ -195,13 +196,13 @@
                 <div class="card-body">
                     <div class="row justify-content-center">
                         <div class="col-md-3 text-center">
-                            <a href="{{ url_for('criar_projeto') }}" class="btn btn-primary btn-lg mb-2">
+                            <a href="{{ url_for('projetos.criar_projeto') }}" class="btn btn-primary btn-lg mb-2">
                                 <i class="fas fa-plus"></i>
                             </a>
                             <p>Novo Projeto</p>
                         </div>
                         <div class="col-md-3 text-center">
-                            <a href="{{ url_for('projetos') }}" class="btn btn-info btn-lg mb-2">
+                            <a href="{{ url_for('projetos.listar_projetos') }}" class="btn btn-info btn-lg mb-2">
                                 <i class="fas fa-list"></i>
                             </a>
                             <p>Ver Projetos</p>

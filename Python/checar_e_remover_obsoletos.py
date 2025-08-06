@@ -13,7 +13,6 @@ DETALHADO = '--detalhado' in sys.argv
 RAPIDO = '--rapido' in sys.argv or not DETALHADO
 IGNORAR_DIRS = {'venv', 'env', '.venv', '__pycache__'}
 IGNORAR_ARQUIVOS = {
-    'app.py',
     'requirements.txt',
     'env_example.txt',
     'git_auto_commit.py',

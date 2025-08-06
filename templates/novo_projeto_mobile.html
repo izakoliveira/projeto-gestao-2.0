@@ -29,7 +29,8 @@
                                     <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
                                     {% endfor %}
                                 </select>
-                                <a href="{{ url_for('criar_pasta') }}" target="_blank" class="btn btn-outline-secondary">Nova Pasta</a>
+                                <a href="{{ url_for('pastas.criar_pasta') }}" target="_blank"
+                                    class="btn btn-outline-secondary">Nova Pasta</a>
                             </div>
                         </div>
                         <div class="row">
@@ -44,7 +45,7 @@
                                 <div class="invalid-feedback">A data de término é obrigatória.</div>
                             </div>
                         </div>
-                        
+
                         <!-- Seção de Tarefas Únicas -->
                         <div class="mb-3">
                             <label class="form-label">
@@ -52,11 +53,11 @@
                             </label>
                             <div class="alert alert-info py-2">
                                 <small>
-                                    <i class="fas fa-info-circle"></i> 
+                                    <i class="fas fa-info-circle"></i>
                                     Selecione as tarefas e quantidades desejadas.
                                 </small>
                             </div>
-                            
+
                             <div class="tarefas-lista">
                                 <!-- DEBUG: Total de tarefas únicas: {{ tarefas_unicas|length }} -->
                                 {% for tarefa in tarefas_unicas %}
@@ -67,10 +68,10 @@
                                                 <label class="form-label mb-1">
                                                     <strong class="text-sm">{{ tarefa.nome }}</strong>
                                                     {% if tarefa.descricao %}
-                                                        <br><small class="text-muted">{{ tarefa.descricao }}</small>
+                                                    <br><small class="text-muted">{{ tarefa.descricao }}</small>
                                                     {% endif %}
                                                     {% if tarefa.duracao %}
-                                                        <small class="text-info">({{ tarefa.duracao }} dia(s))</small>
+                                                    <small class="text-info">({{ tarefa.duracao }} dia(s))</small>
                                                     {% endif %}
                                                 </label>
                                             </div>
@@ -78,10 +79,9 @@
                                         <div class="col-4">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text">Qtd</span>
-                                                <input type="number" class="form-control quantidade-input" 
-                                                       name="quantidades_{{ tarefa.id }}" 
-                                                       placeholder="1" min="0" max="100" value="1"
-                                                       data-tarefa-id="{{ tarefa.id }}">
+                                                <input type="number" class="form-control quantidade-input"
+                                                    name="quantidades_{{ tarefa.id }}" placeholder="1" min="0" max="100"
+                                                    value="1" data-tarefa-id="{{ tarefa.id }}">
                                             </div>
                                         </div>
                                     </div>
@@ -107,82 +107,82 @@
 
 {% block scripts %}
 <style>
-.tarefa-item {
-    background-color: #f8f9fa;
-    border-color: #dee2e6 !important;
-}
-
-.tarefa-item:hover {
-    background-color: #e9ecef;
-}
-
-.text-sm {
-    font-size: 0.875rem;
-}
-
-.form-check-label {
-    font-size: 0.875rem;
-    line-height: 1.2;
-}
-
-.input-group-sm .form-control {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-}
-
-.input-group-sm .input-group-text {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-}
-
-/* Estilos específicos para mobile */
-@media (max-width: 768px) {
     .tarefa-item {
-        padding: 0.5rem !important;
+        background-color: #f8f9fa;
+        border-color: #dee2e6 !important;
     }
-    
-    .tarefa-item .form-label {
-        margin-bottom: 0.25rem !important;
-        font-size: 0.8rem;
+
+    .tarefa-item:hover {
+        background-color: #e9ecef;
     }
-    
-    .tarefa-item .text-sm {
-        font-size: 0.8rem;
+
+    .text-sm {
+        font-size: 0.875rem;
     }
-    
-    .tarefa-item small {
-        font-size: 0.7rem;
+
+    .form-check-label {
+        font-size: 0.875rem;
+        line-height: 1.2;
     }
-    
-    .input-group-sm .form-control,
+
+    .input-group-sm .form-control {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
     .input-group-sm .input-group-text {
-        font-size: 0.8rem;
-        padding: 0.2rem 0.4rem;
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
     }
-    
-    .input-group-text {
-        font-size: 0.7rem;
+
+    /* Estilos específicos para mobile */
+    @media (max-width: 768px) {
+        .tarefa-item {
+            padding: 0.5rem !important;
+        }
+
+        .tarefa-item .form-label {
+            margin-bottom: 0.25rem !important;
+            font-size: 0.8rem;
+        }
+
+        .tarefa-item .text-sm {
+            font-size: 0.8rem;
+        }
+
+        .tarefa-item small {
+            font-size: 0.7rem;
+        }
+
+        .input-group-sm .form-control,
+        .input-group-sm .input-group-text {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .input-group-text {
+            font-size: 0.7rem;
+        }
     }
-}
 </style>
 
 <script>
-// Gerenciamento de tarefas únicas
-document.addEventListener('DOMContentLoaded', function() {
-    // Gerenciar apenas as quantidades
-    const quantidadeInputs = document.querySelectorAll('.quantidade-input');
-    
-    // Quando quantidade é alterada
-    quantidadeInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            const quantidade = parseInt(this.value) || 0;
-            
-            // Garantir que a quantidade seja um número válido
-            if (quantidade < 0) {
-                this.value = 0;
-            }
+    // Gerenciamento de tarefas únicas
+    document.addEventListener('DOMContentLoaded', function () {
+        // Gerenciar apenas as quantidades
+        const quantidadeInputs = document.querySelectorAll('.quantidade-input');
+
+        // Quando quantidade é alterada
+        quantidadeInputs.forEach(input => {
+            input.addEventListener('change', function () {
+                const quantidade = parseInt(this.value) || 0;
+
+                // Garantir que a quantidade seja um número válido
+                if (quantidade < 0) {
+                    this.value = 0;
+                }
+            });
         });
     });
-});
 </script>
-{% endblock %} 
+{% endblock %}

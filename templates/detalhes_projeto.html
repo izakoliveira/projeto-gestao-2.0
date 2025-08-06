@@ -5,6 +5,98 @@
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
     rel="stylesheet" />
 
+<style>
+    /* Estilo para tarefas atrasadas - VERSÃO ULTRA SIMPLIFICADA */
+    .tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    .tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    .tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    .tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    /* Ícone de aviso para tarefas atrasadas */
+    tr.tarefa-atrasada::before {
+        content: "⚠️";
+        position: absolute;
+        left: -25px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        color: #dc2626;
+        z-index: 10;
+    }
+
+    /* Estilo para linha de coleção quando atrasada */
+    tr.linha-colecao.tarefa-atrasada {
+        background-color: #fff0f0 !important;
+        border-left: 3px solid #dc2626 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada td {
+        background-color: #fff0f0 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada:hover {
+        background-color: #ffe0e0 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada:hover td {
+        background-color: #ffe0e0 !important;
+    }
+
+    /* Garantir que os estilos sejam aplicados mesmo com outros estilos */
+    table tbody tr.tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    table tbody tr.tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    table tbody tr.tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    table tbody tr.tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    /* Estilo específico para tabelas responsivas */
+    .table-responsive tbody tr.tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    .icone-atrasada {
+        color: #dc2626;
+        margin-right: 5px;
+        font-size: 12px;
+    }
+</style>
+
 {% set numero_para_id = {} %}
 {% for t in tarefas %}
 {% set _ = numero_para_id.update({loop.index|string: t.id}) %}
@@ -66,7 +158,7 @@
                         <h5 class="mb-0"><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
                         <div class="d-flex align-items-center p-0" style="gap: 8px;">
                             {% if pode_editar_projeto %}
-                            <a href="{{ url_for('editar_projeto', projeto_id=projeto.id) }}"
+                            <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}"
                                 class="btn btn-warning m-0">
                                 <i class="fas fa-edit"></i> Editar Projeto
                             </a>
@@ -127,7 +219,10 @@
                             </thead>
                             <tbody>
                                 {% for tarefa in tarefas %}
-                                <tr {% if tarefa.colecao %}class="linha-colecao" {% endif %}>
+                                <tr class="{% if tarefa.colecao %}linha-colecao{% endif %}{% if tarefa.atrasada %} tarefa-atrasada{% endif %}"
+                                    {% if tarefa.atrasada
+                                    %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: #333;"
+                                    {% endif %}>
                                     <td class="drag-handle"
                                         style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
                                         &#9776;</td>
@@ -192,7 +287,7 @@
                                         <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
                                                 class="fas fa-save"></i></button>
                                         {% if pode_editar_tarefa %}
-                                        <a href="{{ url_for('editar_tarefa', tarefa_id=tarefa.id) }}"
+                                        <a href="{{ url_for('tarefas.editar_tarefa', tarefa_id=tarefa.id) }}"
                                             class="btn btn-warning btn-sm" title="Editar tarefa"><i
                                                 class="fas fa-edit"></i></a>
                                         {% endif %}
@@ -270,10 +365,36 @@
             <div class="row">
                 <div class="col-12">
                     <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <i class="fas fa-chart-bar"></i> Gráfico de Gantt
+                        <div
+                            class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
+                            <div class="d-flex gap-2">
+                                {% if pode_editar_projeto %}
+                                <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}"
+                                    class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i> Editar Projeto
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('projetos.listar_projetos') }}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </a>
+                            </div>
                         </div>
                         <div class="card-body">
+                            <!-- DEBUG: Mostrar permissões do usuário -->
+                            <div
+                                style="background: #f8f9fa; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-size: 12px;">
+                                <strong>DEBUG - Permissões do usuário:</strong><br>
+                                Pode criar tarefa: {{ pode_criar_tarefa }}<br>
+                                Pode editar tarefa: {{ pode_editar_tarefa }}<br>
+                                Pode excluir tarefa: {{ pode_excluir_tarefa }}<br>
+                                Pode editar projeto: {{ pode_editar_projeto }}<br>
+                                Pode editar responsável: {{ pode_editar_responsavel }}<br>
+                                Pode editar duração: {{ pode_editar_duracao }}<br>
+                                Pode editar datas: {{ pode_editar_data_inicio }}<br>
+                                Pode editar predecessoras: {{ pode_editar_predecessoras }}<br>
+                                Pode editar nome tarefa: {{ pode_editar_nome_tarefa }}
+                            </div>
                             <div
                                 style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
                                 <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
@@ -324,7 +445,7 @@
             </div>
 
             <div class="text-center mt-4">
-                <a href="{{ url_for('projetos') }}" class="btn btn-secondary">
+                <a href="{{ url_for('projetos.listar_projetos') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Voltar para a Lista de Projetos
                 </a>
             </div>
@@ -862,9 +983,45 @@
     // Função para cor de status
     function corStatus(tarefa) {
         if (tarefa.bar_color) return tarefa.bar_color;
-        if (tarefa.status === 'concluida') return '#28a745';
+        if (tarefa.status === 'concluída') return '#28a745';
         if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
         return '#ffc107';
+    }
+
+    // Função para verificar se tarefa está atrasada
+    function tarefaAtrasada(tarefa) {
+        const hoje = new Date();
+        const status = tarefa.status?.toLowerCase();
+        const dataFim = tarefa.end;
+        const dataInicio = tarefa.start;
+
+        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim, 'Data início:', dataInicio);
+
+        // LÓGICA 1: Tarefa pendente com data de início passada
+        if (status === 'pendente' && dataInicio) {
+            try {
+                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
+                if (dataInicioObj < hoje) {
+                    return true;
+                }
+            } catch (e) {
+                // Ignorar erro de parsing
+            }
+        }
+
+        // LÓGICA 2: Tarefa não concluída com data de fim passada
+        if (dataFim) {
+            try {
+                const dataFimObj = new Date(dataFim + 'T00:00:00');
+                if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') {
+                    return true;
+                }
+            } catch (e) {
+                // Ignorar erro de parsing
+            }
+        }
+
+        return false;
     }
 
     // Função para cor da borda baseada no status
@@ -873,7 +1030,7 @@
         if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
         if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
         if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
-        if (tarefa.status === 'atrasada') return '#dc3545'; // Vermelho
+        if (tarefa.status === 'atrasada') return '#dc2626'; // Vermelho
         return '#6c757d'; // Cinza padrão
     }
 
@@ -1041,10 +1198,24 @@
             const barras = grupos[nome];
             const tr = document.createElement('tr');
             tr.className = 'gantt-row-compact';
+
+            // Verificar se alguma barra está atrasada para aplicar estilo vermelho na linha
+            const temTarefaAtrasada = barras.some(barra => tarefaAtrasada(barra));
+            console.log('Tarefa:', nome, 'Tem tarefa atrasada:', temTarefaAtrasada);
+            if (temTarefaAtrasada) {
+                tr.classList.add('tarefa-atrasada');
+                console.log('Aplicando classe tarefa-atrasada para:', nome);
+            }
             // Nome da tarefa
             const tdNome = document.createElement('td');
             tdNome.textContent = nome;
             tdNome.title = nome;
+
+            // Adicionar ícone de alerta para tarefas atrasadas
+            if (temTarefaAtrasada) {
+                tdNome.innerHTML = `<span class="icone-atrasada">⚠️</span>${nome}`;
+                tdNome.title = nome + ' (ATRASADA)';
+            }
             tdNome.style.padding = "2px 8px";
             tdNome.style.whiteSpace = "nowrap";
             tdNome.style.overflow = "hidden";
@@ -1451,13 +1622,25 @@
 
     function salvarLinhaTarefa(btn) {
         const tr = btn.closest('tr');
-        const tarefaId = tr.querySelector('input[name="nome"]').dataset.id;
-        const nome = tr.querySelector('input[name="nome"]').value.trim();
-        const predecessoras = tr.querySelector('input[name="predecessoras"]').value.trim();
-        const data_inicio = tr.querySelector('input[name="data_inicio"]').value;
-        const data_fim = tr.querySelector('input[name="data_fim"]').value;
-        const duracao = tr.querySelector('input[name="duracao"]').value;
-        const status = tr.querySelector('select[name="status"]').value;
+        const nomeInput = tr.querySelector('input[name="nome"]');
+        const tarefaId = nomeInput ? nomeInput.dataset.id : null;
+
+        if (!tarefaId) {
+            alert('Erro: ID da tarefa não encontrado.');
+            return;
+        }
+
+        const nome = nomeInput ? nomeInput.value.trim() : '';
+        const predecessorasInput = tr.querySelector('input[name="predecessoras"]');
+        const predecessoras = predecessorasInput ? predecessorasInput.value.trim() : '';
+        const data_inicioInput = tr.querySelector('input[name="data_inicio"]');
+        const data_inicio = data_inicioInput ? data_inicioInput.value : '';
+        const data_fimInput = tr.querySelector('input[name="data_fim"]');
+        const data_fim = data_fimInput ? data_fimInput.value : '';
+        const duracaoInput = tr.querySelector('input[name="duracao"]');
+        const duracao = duracaoInput ? duracaoInput.value : '';
+        const statusSelect = tr.querySelector('select[name="status"]');
+        const status = statusSelect ? statusSelect.value : 'pendente';
         const usuario_id_el = tr.querySelector('select[name="usuario_id"]');
         let usuario_id = usuario_id_el ? usuario_id_el.value : null;
         usuario_id = (usuario_id === '' ? null : usuario_id);
@@ -1479,11 +1662,13 @@
             status,
             usuario_id: usuario_id || null
         };
+
         // Se houver input de colecao na linha, envie
         const colecaoInput = tr.querySelector('input[name="colecao"]');
         if (colecaoInput) {
             payload.colecao = colecaoInput.value.trim();
         }
+
         fetch(`/tarefas/editar/${tarefaId}`, {
             method: 'POST',
             headers: {
@@ -1492,7 +1677,12 @@
             },
             body: JSON.stringify(payload)
         })
-            .then(resp => resp.json())
+            .then(resp => {
+                if (!resp.ok) {
+                    throw new Error(`HTTP error! status: ${resp.status}`);
+                }
+                return resp.json();
+            })
             .then(data => {
                 if (data.sucesso) {
                     btn.classList.remove('btn-danger');
@@ -1513,11 +1703,12 @@
                     }, 2000);
                 }
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error('Erro ao salvar tarefa:', error);
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-danger');
                 btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-                alert('Erro ao salvar tarefa.');
+                alert('Erro ao salvar tarefa: ' + error.message);
                 setTimeout(() => {
                     btn.innerHTML = '<i class="fas fa-save"></i>';
                     btn.disabled = false;
@@ -1963,12 +2154,21 @@
     }
 
     function onPredecessorasEdit(input) {
+        console.log('🔧 onPredecessorasEdit chamada para:', input.value);
         const tr = input.closest('tr');
         const predecessorasStr = input.value.trim();
         const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
         const dataFimInput = tr.querySelector('input[name="data_fim"]');
+
+        console.log('📅 Campos encontrados:', {
+            dataInicioInput: !!dataInicioInput,
+            dataFimInput: !!dataFimInput,
+            predecessorasStr: predecessorasStr
+        });
+
         // Se não há predecessoras, liberar edição manual
         if (!predecessorasStr) {
+            console.log('❌ Sem predecessoras, liberando edição manual');
             if (dataInicioInput) {
                 dataInicioInput.readOnly = false;
                 dataInicioInput.dataset.calculada = '';
@@ -1981,8 +2181,12 @@
             }
             return;
         }
+
         const preds = predecessorasStr.split(';').map(s => s.trim()).filter(Boolean);
+        console.log('🔗 Predecessoras processadas:', preds);
+
         if (preds.length === 0) return;
+
         // Mapear número de ordem para linha da tabela
         const linhas = Array.from(document.querySelectorAll('#tabela-tarefas-inline tbody tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
         const ordemParaLinha = {};
@@ -1990,26 +2194,47 @@
             const ordem = trLinha.querySelector('.numero-tarefa')?.textContent?.trim();
             if (ordem) ordemParaLinha[ordem] = trLinha;
         });
+
+        console.log('📊 Ordem para linha mapeada:', ordemParaLinha);
+
         // Para cada predecessora, calcular a data alvo
         let datasInicio = [];
         let datasFim = [];
         preds.forEach(pred => {
             // Ex: 2FS+2d, 3SS-1d
             const m = pred.match(/^(\d+)(FS|SS|FF|SF)?([+-]\d+d)?$/);
-            if (!m) return;
+            if (!m) {
+                console.log(`⚠️ Predecessora inválida: ${pred}`);
+                return;
+            }
             const ordemPred = m[1];
             const tipo = m[2] || 'FS';
             const desloc = m[3] || '';
             const linhaPred = ordemParaLinha[ordemPred];
-            if (!linhaPred) return;
+
+            console.log(`🔍 Processando predecessora: ${pred} (ordem: ${ordemPred}, tipo: ${tipo}, desloc: ${desloc})`);
+
+            if (!linhaPred) {
+                console.log(`❌ Linha predecessora não encontrada para ordem: ${ordemPred}`);
+                return;
+            }
+
             const dataInicioPred = linhaPred.querySelector('input[name="data_inicio"]').value;
             const dataFimPred = linhaPred.querySelector('input[name="data_fim"]').value;
+
+            console.log(`📅 Datas da predecessora: início=${dataInicioPred}, fim=${dataFimPred}`);
+
             let baseDate = null;
             if (tipo === 'FS') baseDate = dataFimPred;
             else if (tipo === 'SS') baseDate = dataInicioPred;
             else if (tipo === 'FF') baseDate = dataFimPred;
             else if (tipo === 'SF') baseDate = dataInicioPred;
-            if (!baseDate) return;
+
+            if (!baseDate) {
+                console.log(`❌ Data base não encontrada para tipo: ${tipo}`);
+                return;
+            }
+
             let data = new Date(baseDate);
             if (desloc) {
                 const matchDesloc = desloc.match(/([+-])(\d+)d/);
@@ -2017,47 +2242,93 @@
                     const sinal = matchDesloc[1] === '+' ? 1 : -1;
                     const dias = parseInt(matchDesloc[2], 10);
                     data.setDate(data.getDate() + sinal * dias);
+                    console.log(`📅 Data ajustada: ${data.toISOString().split('T')[0]} (${sinal * dias} dias)`);
                 }
             }
+
             if (tipo === 'FS' || tipo === 'SS') datasInicio.push(data);
             else if (tipo === 'FF' || tipo === 'SF') datasFim.push(data);
         });
+
+        console.log('📊 Datas calculadas:', { datasInicio: datasInicio.length, datasFim: datasFim.length });
+
         // Para múltiplas predecessoras: para datas de início, usar a MAIOR; para datas de fim, usar a MAIOR
         let dataInicioFinal = null;
         let dataFimFinal = null;
         datasInicio.forEach(d => { if (!dataInicioFinal || d > dataInicioFinal) dataInicioFinal = d; });
         datasFim.forEach(d => { if (!dataFimFinal || d > dataFimFinal) dataFimFinal = d; });
+
+        console.log('🎯 Datas finais:', {
+            dataInicioFinal: dataInicioFinal ? dataInicioFinal.toISOString().split('T')[0] : null,
+            dataFimFinal: dataFimFinal ? dataFimFinal.toISOString().split('T')[0] : null
+        });
+
         // Preencher e bloquear os campos conforme o tipo
         if (dataInicioFinal && dataInicioInput) {
             dataInicioInput.value = dataInicioFinal.toISOString().split('T')[0];
             dataInicioInput.dataset.calculada = '1';
             dataInicioInput.readOnly = true;
             dataInicioInput.style.background = '#fffbe6';
+            console.log('✅ Data de início calculada e bloqueada');
         }
         if (dataFimFinal && dataFimInput) {
             dataFimInput.value = dataFimFinal.toISOString().split('T')[0];
             dataFimInput.dataset.calculada = '1';
             dataFimInput.readOnly = true;
             dataFimInput.style.background = '#fffbe6';
+            console.log('✅ Data de fim calculada e bloqueada');
         }
+
         // Se não houver predecessora para um dos campos, liberar edição
         if (!dataInicioFinal && dataInicioInput) {
             dataInicioInput.readOnly = false;
             dataInicioInput.dataset.calculada = '';
             dataInicioInput.style.background = '';
+            console.log('🔓 Data de início liberada para edição');
         }
         if (!dataFimFinal && dataFimInput) {
             dataFimInput.readOnly = false;
             dataFimInput.dataset.calculada = '';
             dataFimInput.style.background = '';
+            console.log('🔓 Data de fim liberada para edição');
         }
+
         marcarDatasCalculadasPorPredecessora();
     }
-    window.onPredecessorasEdit = onPredecessorasEdit;
 
     // Garante que datas calculadas por predecessora fiquem com a cor correta ao carregar a página
     document.addEventListener('DOMContentLoaded', function () {
+        console.log('🔍 DOMContentLoaded - Iniciando validação de predecessoras');
         marcarDatasCalculadasPorPredecessora();
+
+        // Executar validação de predecessoras para todas as tarefas ao carregar a página
+        setTimeout(() => {
+            console.log('🔍 Executando validação de predecessoras após timeout');
+            const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
+            console.log(`📋 Encontrados ${predecessorasInputs.length} campos de predecessoras`);
+
+            if (predecessorasInputs.length === 0) {
+                console.log('⚠️ Nenhum campo de predecessoras encontrado');
+                return;
+            }
+
+            predecessorasInputs.forEach((input, index) => {
+                const valor = input.value.trim();
+                console.log(`📝 Predecessora ${index + 1}: "${valor}"`);
+                if (valor) {
+                    console.log(`✅ Executando validação para predecessora: ${valor}`);
+                    try {
+                        if (typeof onPredecessorasEdit === 'function') {
+                            onPredecessorasEdit(input);
+                        } else {
+                            console.error('❌ Função onPredecessorasEdit não encontrada');
+                        }
+                    } catch (error) {
+                        console.error('❌ Erro ao executar validação de predecessoras:', error);
+                    }
+                }
+            });
+        }, 1000);
     });
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -2267,6 +2538,9 @@
             });
         });
     });
+
+    // Exportar função para escopo global
+    window.onPredecessorasEdit = onPredecessorasEdit;
 </script>
 
 <!-- jQuery e Select2 JS (carregados no final para garantir ordem) -->

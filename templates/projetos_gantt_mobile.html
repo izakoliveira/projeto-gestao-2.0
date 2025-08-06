@@ -405,12 +405,39 @@
                     {% if alerta %}
                     {% if alerta.tipo == 'atrasado' %}
                     {% for tarefa in projeto.tarefas %}
-                    {% if tarefa.status == 'atrasado' or (tarefa.data_fim and tarefa.data_fim <
-                        now().strftime('%Y-%m-%d')) %} {% set _=tarefas_filtradas.append(tarefa) %} {% endif %} {%
-                        endfor %} {% elif alerta.tipo=='pendente' %} {% for tarefa in projeto.tarefas %} {% if
-                        tarefa.status=='pendente' or tarefa.status=='em progresso' %} {% set
-                        _=tarefas_filtradas.append(tarefa) %} {% endif %} {% endfor %} {% else %} {% set
-                        tarefas_filtradas=projeto.tarefas %} {% endif %} {% else %} {% set
+                    {% set status = tarefa.status|lower %}
+                    {% set data_fim = tarefa.data_fim or tarefa.data_fim_tarefa %}
+                    {% set data_inicio = tarefa.data_inicio or tarefa.data_inicio_tarefa %}
+                    {% set hoje = now().strftime('%Y-%m-%d') %}
+                    {% set is_atrasada = false %}
+                    
+                    {# LÓGICA 1: Tarefa pendente com data de início passada #}
+                    {% if status == 'pendente' and data_inicio %}
+                        {% if data_inicio < hoje %}
+                            {% set is_atrasada = true %}
+                        {% endif %}
+                    {% endif %}
+                    
+                    {# LÓGICA 2: Tarefa não concluída com data de fim passada #}
+                    {% if data_fim and not is_atrasada %}
+                        {% if data_fim < hoje and status not in ['concluída', 'concluida'] %}
+                            {% set is_atrasada = true %}
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if is_atrasada %}
+                        {% set _=tarefas_filtradas.append(tarefa) %}
+                    {% endif %}
+                    {% endfor %}
+                    {% elif alerta.tipo=='pendente' %}
+                    {% for tarefa in projeto.tarefas %}
+                    {% if tarefa.status=='pendente' or tarefa.status=='em progresso' %}
+                        {% set _=tarefas_filtradas.append(tarefa) %}
+                    {% endif %}
+                    {% endfor %}
+                    {% else %}
+                    {% set tarefas_filtradas=projeto.tarefas %}
+                    {% endif %} {% else %} {% set
                         tarefas_filtradas=projeto.tarefas %} {% endif %} {% if tarefas_filtradas %} <div class="mt-2"
                         style="text-align: center; max-height: 80px; overflow-y: auto;">
                         <small style="font-size: 0.6em; font-weight: bold; color: #495057;">

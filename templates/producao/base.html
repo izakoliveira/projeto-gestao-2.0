@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}{% block producao_title %}Sistema de Produção{% endblock %} - Gestão de Projetos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar do Sistema de Produção -->
+        <div class="col-md-2 sidebar-producao">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-industry"></i> Produção
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <nav class="nav flex-column">
+                        <a class="nav-link {% if request.endpoint == 'producao.producao_dashboard' %}active{% endif %}" 
+                           href="{{ url_for('producao.producao_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a class="nav-link {% if request.endpoint == 'producao.producao_calendario' %}active{% endif %}" 
+                           href="{{ url_for('producao.producao_calendario') }}">
+                            <i class="fas fa-calendar-alt me-2"></i>Calendário
+                        </a>
+                        <a class="nav-link {% if request.endpoint == 'producao.producao_colecoes' %}active{% endif %}" 
+                           href="{{ url_for('producao.producao_colecoes') }}">
+                            <i class="fas fa-boxes me-2"></i>Coleções
+                        </a>
+                        <a class="nav-link {% if request.endpoint == 'producao.producao_projecoes' %}active{% endif %}" 
+                           href="{{ url_for('producao.producao_projecoes') }}">
+                            <i class="fas fa-chart-line me-2"></i>Projeções
+                        </a>
+                        <a class="nav-link {% if request.endpoint == 'producao.producao_atividades' %}active{% endif %}" 
+                           href="{{ url_for('producao.producao_atividades') }}">
+                            <i class="fas fa-tasks me-2"></i>Atividades
+                        </a>
+                        <a class="nav-link {% if request.endpoint == 'producao.producao_feriados' %}active{% endif %}" 
+                           href="{{ url_for('producao.producao_feriados') }}">
+                            <i class="fas fa-calendar-day me-2"></i>Feriados
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <div class="col-md-10">
+            <div class="content-producao">
+                {% block producao_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos específicos para o sistema de produção -->
+<style>
+.sidebar-producao {
+    background: #f8f9fa;
+    min-height: calc(100vh - 76px);
+    border-right: 1px solid #dee2e6;
+}
+
+.sidebar-producao .nav-link {
+    color: #495057;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.sidebar-producao .nav-link:hover,
+.sidebar-producao .nav-link.active {
+    background-color: #667eea;
+    color: white;
+    transform: translateX(5px);
+}
+
+.content-producao {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 76px);
+}
+
+.stats-card-producao {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stats-card-producao .icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.btn-producao {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 8px 20px;
+    color: white;
+}
+
+.btn-producao:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    color: white;
+}
+
+.card-producao {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.card-header-producao {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .sidebar-producao {
+        position: fixed;
+        top: 76px;
+        left: -100%;
+        width: 250px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar-producao.show {
+        left: 0;
+    }
+    
+    .content-producao {
+        margin-left: 0;
+    }
+}
+</style>
+
+<!-- Scripts específicos para o sistema de produção -->
+<script>
+// Sistema de Produção - Integração
+class SistemaProducaoIntegrado {
+    constructor() {
+        this.baseURL = '/api/producao';
+        this.init();
+    }
+    
+    init() {
+        this.loadData();
+        this.bindEvents();
+    }
+    
+    loadData() {
+        // Carregar dados do localStorage ou API
+        this.colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+        this.eventos = JSON.parse(localStorage.getItem('eventos')) || [];
+        this.projecoes = JSON.parse(localStorage.getItem('projecoes')) || [];
+        this.atividades = JSON.parse(localStorage.getItem('atividades')) || [];
+        this.feriados = JSON.parse(localStorage.getItem('feriados')) || [];
+    }
+    
+    saveData() {
+        localStorage.setItem('colecoes', JSON.stringify(this.colecoes));
+        localStorage.setItem('eventos', JSON.stringify(this.eventos));
+        localStorage.setItem('projecoes', JSON.stringify(this.projecoes));
+        localStorage.setItem('atividades', JSON.stringify(this.atividades));
+        localStorage.setItem('feriados', JSON.stringify(this.feriados));
+    }
+    
+    bindEvents() {
+        // Eventos específicos do sistema de produção
+        document.addEventListener('DOMContentLoaded', () => {
+            this.setupNavigation();
+        });
+    }
+    
+    setupNavigation() {
+        // Configurar navegação ativa
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar-producao .nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    }
+    
+    // Métodos da API
+    async getColecoes() {
+        try {
+            const response = await fetch(`${this.baseURL}/colecoes`);
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao obter coleções:', error);
+            return this.colecoes;
+        }
+    }
+    
+    async createColecao(colecao) {
+        try {
+            const response = await fetch(`${this.baseURL}/colecoes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(colecao)
+            });
+            const result = await response.json();
+            if (result.success) {
+                this.colecoes.push(colecao);
+                this.saveData();
+            }
+            return result;
+        } catch (error) {
+            console.error('Erro ao criar coleção:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    async getEventos() {
+        try {
+            const response = await fetch(`${this.baseURL}/eventos`);
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao obter eventos:', error);
+            return this.eventos;
+        }
+    }
+    
+    async createEvento(evento) {
+        try {
+            const response = await fetch(`${this.baseURL}/eventos`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(evento)
+            });
+            const result = await response.json();
+            if (result.success) {
+                this.eventos.push(evento);
+                this.saveData();
+            }
+            return result;
+        } catch (error) {
+            console.error('Erro ao criar evento:', error);
+            return { success: false, error: error.message };
+        }
+    }
+}
+
+// Inicializar sistema de produção
+const sistemaProducao = new SistemaProducaoIntegrado();
+</script>
+{% endblock %} 

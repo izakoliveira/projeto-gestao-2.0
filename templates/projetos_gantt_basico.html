@@ -309,17 +309,33 @@
                 </div>
             </div>
             <!-- Legenda colorida por projeto -->
-            <div class="legend mt-2"
-                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+            <div class="legend mt-3"
+                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                <div style="width: 100%; text-align: center; margin-bottom: 12px;">
+                    <h6 style="margin: 0; color: #495057; font-weight: 600;">
+                        <i class="fas fa-palette"></i> Cores dos Projetos
+                    </h6>
+                </div>
                 {% for projeto, cor in projects_colors.items() %}
                 <div class="legend-item"
-                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease; border: 1px solid transparent;"
                     data-projeto="{{ projeto }}">
                     <div class="legend-color"
-                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
-                    <span>{{ projeto }}</span>
+                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }}; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    <span style="font-weight: 500;">{{ projeto }}</span>
                 </div>
                 {% endfor %}
+            </div>
+
+            <!-- Estatísticas dos projetos selecionados -->
+            <div id="estatisticas-projetos" class="mt-3"
+                style="display: none; padding: 12px; background: #e3f2fd; border-radius: 8px; border: 1px solid #bbdefb;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <i class="fas fa-chart-bar" style="color: #1976d2;"></i>
+                    <span style="font-weight: 600; color: #1976d2;">Estatísticas dos Projetos Selecionados</span>
+                </div>
+                <div id="estatisticas-conteudo" style="font-size: 13px; color: #424242;"></div>
             </div>
         </div>
     </div>
@@ -393,11 +409,39 @@
                 let tarefasFiltradas = [];
                 if (alerta) {
                     if (alerta.tipo === 'atrasado') {
-                        // Mostrar apenas tarefas atrasadas
-                        tarefasFiltradas = projeto.tarefas.filter(tarefa =>
-                            tarefa.status === 'atrasado' ||
-                            (tarefa.data_fim && new Date(tarefa.data_fim) < new Date())
-                        );
+                        // Mostrar apenas tarefas atrasadas usando a mesma lógica do backend
+                        tarefasFiltradas = projeto.tarefas.filter(tarefa => {
+                            const status = tarefa.status?.toLowerCase();
+                            const dataFim = tarefa.data_fim || tarefa.data_fim_tarefa;
+                            const dataInicio = tarefa.data_inicio || tarefa.data_inicio_tarefa;
+                            const hoje = new Date();
+
+                            // LÓGICA 1: Tarefa pendente com data de início passada
+                            if (status === 'pendente' && dataInicio) {
+                                try {
+                                    const dataInicioObj = new Date(dataInicio.split('T')[0]);
+                                    if (dataInicioObj < hoje) {
+                                        return true;
+                                    }
+                                } catch (e) {
+                                    // Ignorar erro de parsing
+                                }
+                            }
+
+                            // LÓGICA 2: Tarefa não concluída com data de fim passada
+                            if (dataFim) {
+                                try {
+                                    const dataFimObj = new Date(dataFim.split('T')[0]);
+                                    if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') {
+                                        return true;
+                                    }
+                                } catch (e) {
+                                    // Ignorar erro de parsing
+                                }
+                            }
+
+                            return false;
+                        });
                     } else if (alerta.tipo === 'pendente') {
                         // Mostrar apenas tarefas pendentes
                         tarefasFiltradas = projeto.tarefas.filter(tarefa =>
@@ -1980,6 +2024,54 @@
         border-color: #4a47a3;
         box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25);
     }
+
+    .legend-item:hover {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: #dee2e6;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Melhorar a aparência das barras do Gantt */
+    .gantt-bar-compact {
+        position: absolute;
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .gantt-bar-compact:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        z-index: 25;
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
+        transform: scale(1.05);
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
 </style>
 
 <script>
@@ -2137,13 +2229,16 @@
             return;
         }
         const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        console.log('DEBUG: Tarefas antes da ordenação:', tarefas.map(t => ({ nome: t.name, ordem: t.ordem })));
         tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        console.log('DEBUG: Tarefas depois da ordenação:', tarefas.map(t => ({ nome: t.name, ordem: t.ordem })));
         const grupos = agruparTarefasPorNome(tarefas);
         const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
             const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
             const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
             return ordemA - ordemB;
         });
+        console.log('DEBUG: Nomes ordenados:', nomesOrdenados);
         const periodo = obterPeriodo(tarefas);
         if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
             if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
@@ -2251,16 +2346,20 @@
                 div.style.position = "absolute";
                 div.style.left = (offset * larguraDia) + "px";
                 div.style.top = "2px";
-                div.style.height = "8px";
+                div.style.height = "12px";
                 div.style.width = (largura * larguraDia) + "px";
-                div.style.background = corStatus(barra);
+                div.style.background = barra.bar_color || corStatus(barra);
                 div.style.borderRadius = "4px";
                 div.style.textAlign = "center";
                 div.style.color = "#fff";
-                div.style.fontSize = "11px";
-                div.style.lineHeight = "14px";
+                div.style.fontSize = "10px";
+                div.style.lineHeight = "12px";
                 div.style.cursor = "pointer";
+                div.style.fontWeight = "500";
+                div.style.textShadow = "0 1px 2px rgba(0,0,0,0.3)";
                 div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                div.setAttribute('data-tarefa', barra.name || '');
+                div.setAttribute('title', `${barra.name} - ${barra.projeto_origem || barra.projeto_nome || 'Projeto'}`);
                 tdCrono.appendChild(div);
                 div.onmouseenter = function (e) {
                     mostrarTooltipDetalhado(e, barra);
@@ -2317,6 +2416,7 @@
             item.addEventListener('click', function (e) {
                 const projeto = this.getAttribute('data-projeto');
                 const ctrl = e.ctrlKey || e.metaKey; // metaKey para Mac
+
                 if (ctrl) {
                     // Seleção múltipla
                     if (projetosSelecionados.includes(projeto)) {
@@ -2332,15 +2432,19 @@
                         projetosSelecionados = [projeto];
                     }
                 }
+
                 // Atualizar barras
                 if (projetosSelecionados.length === 0) {
+                    // Mostrar todas as barras
                     document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
                         bar.classList.remove('evidencia', 'apagada');
                     });
                     document.querySelectorAll('.legend-item').forEach(l => l.classList.remove('selecionada'));
                 } else {
+                    // Destacar apenas os projetos selecionados
                     document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
-                        if (projetosSelecionados.includes(bar.getAttribute('data-projeto'))) {
+                        const barProjeto = bar.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(barProjeto)) {
                             bar.classList.add('evidencia');
                             bar.classList.remove('apagada');
                         } else {
@@ -2348,6 +2452,8 @@
                             bar.classList.add('apagada');
                         }
                     });
+
+                    // Atualizar legenda
                     document.querySelectorAll('.legend-item').forEach(l => {
                         const p = l.getAttribute('data-projeto');
                         if (projetosSelecionados.includes(p)) {
@@ -2356,6 +2462,15 @@
                             l.classList.remove('selecionada');
                         }
                     });
+                }
+
+                // Adicionar feedback visual
+                if (projetosSelecionados.length > 0) {
+                    console.log(`Projetos selecionados: ${projetosSelecionados.join(', ')}`);
+                    mostrarEstatisticasProjetos(projetosSelecionados);
+                } else {
+                    console.log('Nenhum projeto selecionado - mostrando todos');
+                    esconderEstatisticasProjetos();
                 }
             });
         });
@@ -2573,6 +2688,47 @@
             });
         }
     })();
+
+    // Função para mostrar estatísticas dos projetos selecionados
+    function mostrarEstatisticasProjetos(projetosSelecionados) {
+        const estatisticasDiv = document.getElementById('estatisticas-projetos');
+        const conteudoDiv = document.getElementById('estatisticas-conteudo');
+
+        if (!estatisticasDiv || !conteudoDiv) return;
+
+        const dados = window.ganttData || [];
+        const tarefasSelecionadas = dados.filter(t =>
+            projetosSelecionados.includes(t.projeto_origem || t.projeto_nome || '')
+        );
+
+        const totalTarefas = tarefasSelecionadas.length;
+        const projetosUnicos = [...new Set(tarefasSelecionadas.map(t => t.projeto_origem || t.projeto_nome || ''))];
+
+        let estatisticas = `
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Projetos:</strong> ${projetosUnicos.length}
+                </div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Tarefas:</strong> ${totalTarefas}
+                </div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Projetos:</strong> ${projetosSelecionados.join(', ')}
+                </div>
+            </div>
+        `;
+
+        conteudoDiv.innerHTML = estatisticas;
+        estatisticasDiv.style.display = 'block';
+    }
+
+    // Função para esconder estatísticas
+    function esconderEstatisticasProjetos() {
+        const estatisticasDiv = document.getElementById('estatisticas-projetos');
+        if (estatisticasDiv) {
+            estatisticasDiv.style.display = 'none';
+        }
+    }
 </script>
 {% endblock %}
 

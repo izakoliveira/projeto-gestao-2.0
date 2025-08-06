@@ -1,0 +1,212 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Feriados{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-calendar-day"></i> Feriados
+                </h1>
+                <button class="btn btn-producao" onclick="showAddFeriadoModal()">
+                    <i class="fas fa-plus me-2"></i>Novo Feriado
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Feriados -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Feriados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="feriados-table">
+                        <p class="text-muted">Nenhum feriado encontrado.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar/Editar Feriado -->
+<div class="modal fade" id="addFeriadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header card-header-producao">
+                <h5 class="modal-title text-white" id="modalTitle">Novo Feriado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFeriadoForm">
+                    <input type="hidden" id="feriadoId">
+                    <div class="mb-3">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-control" id="feriadoData" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="feriadoNome" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-producao" onclick="saveFeriado()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadFeriados();
+    });
+
+    function loadFeriados() {
+        const feriados = JSON.parse(localStorage.getItem('feriados')) || [];
+        const container = document.getElementById('feriados-table');
+
+        if (feriados.length === 0) {
+            container.innerHTML = '<p class="text-muted">Nenhum feriado encontrado.</p>';
+            return;
+        }
+
+        let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nome</th>
+                        <th>Dia da Semana</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+        feriados.forEach(feriado => {
+            const date = new Date(feriado.data);
+            const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+
+            tableHtml += `
+            <tr>
+                <td><strong>${formatDate(feriado.data)}</strong></td>
+                <td>${feriado.nome}</td>
+                <td>${dayOfWeek}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editFeriado('${feriado.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteFeriado('${feriado.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        });
+
+        tableHtml += '</tbody></table></div>';
+        container.innerHTML = tableHtml;
+    }
+
+    function showAddFeriadoModal() {
+        document.getElementById('modalTitle').textContent = 'Novo Feriado';
+        document.getElementById('feriadoId').value = '';
+        document.getElementById('addFeriadoForm').reset();
+
+        const modal = new bootstrap.Modal(document.getElementById('addFeriadoModal'));
+        modal.show();
+    }
+
+    function editFeriado(id) {
+        const feriados = JSON.parse(localStorage.getItem('feriados')) || [];
+        const feriado = feriados.find(f => f.id === id);
+
+        if (!feriado) {
+            alert('Feriado não encontrado.');
+            return;
+        }
+
+        document.getElementById('modalTitle').textContent = 'Editar Feriado';
+        document.getElementById('feriadoId').value = feriado.id;
+        document.getElementById('feriadoData').value = feriado.data;
+        document.getElementById('feriadoNome').value = feriado.nome;
+
+        const modal = new bootstrap.Modal(document.getElementById('addFeriadoModal'));
+        modal.show();
+    }
+
+    function saveFeriado() {
+        const id = document.getElementById('feriadoId').value;
+        const data = document.getElementById('feriadoData').value;
+        const nome = document.getElementById('feriadoNome').value;
+
+        if (!data || !nome) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        const feriados = JSON.parse(localStorage.getItem('feriados')) || [];
+
+        if (id) {
+            // Editar feriado existente
+            const index = feriados.findIndex(f => f.id === id);
+            if (index !== -1) {
+                feriados[index] = {
+                    ...feriados[index],
+                    data: data,
+                    nome: nome
+                };
+            }
+        } else {
+            // Criar novo feriado
+            const novoFeriado = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                data: data,
+                nome: nome,
+                created_at: new Date().toISOString()
+            };
+            feriados.push(novoFeriado);
+        }
+
+        localStorage.setItem('feriados', JSON.stringify(feriados));
+
+        // Fechar modal e recarregar
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addFeriadoModal'));
+        modal.hide();
+
+        // Limpar formulário
+        document.getElementById('addFeriadoForm').reset();
+
+        // Recarregar lista
+        loadFeriados();
+
+        alert(id ? 'Feriado atualizado com sucesso!' : 'Feriado criado com sucesso!');
+    }
+
+    function deleteFeriado(id) {
+        if (confirm('Tem certeza que deseja excluir este feriado?')) {
+            const feriados = JSON.parse(localStorage.getItem('feriados')) || [];
+            const filteredFeriados = feriados.filter(f => f.id !== id);
+            localStorage.setItem('feriados', JSON.stringify(filteredFeriados));
+
+            loadFeriados();
+            alert('Feriado excluído com sucesso!');
+        }
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+</script>
+{% endblock %}

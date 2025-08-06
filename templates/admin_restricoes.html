@@ -65,26 +65,37 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="font-size:1.1em;">Funcionalidades restritas
                                 para os usuários selecionados:</label>
+
+                            {% if usuario_id|length > 1 %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Múltiplos usuários selecionados. As restrições serão
+                                aplicadas a todos os usuários selecionados.
+                            </div>
+                            {% endif %}
+
                             <div class="row campos-restricoes">
                                 <div class="col-md-4 mb-2">
                                     <strong>Projetos</strong>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_criar_projeto"
-                                            name="restr_criar_projeto" {% if restricoes.get('restr_criar_projeto')
-                                            %}checked{% endif %}>
+                                            name="restr_criar_projeto" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_criar_projeto') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_criar_projeto">Criar Projetos</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_editar_projeto"
-                                            name="restr_editar_projeto" {% if restricoes.get('restr_editar_projeto')
-                                            %}checked{% endif %}>
+                                            name="restr_editar_projeto" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_editar_projeto') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_editar_projeto">Editar
                                             Projetos</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_excluir_projeto"
-                                            name="restr_excluir_projeto" {% if restricoes.get('restr_excluir_projeto')
-                                            %}checked{% endif %}>
+                                            name="restr_excluir_projeto" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_excluir_projeto') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_excluir_projeto">Excluir
                                             Projetos</label>
                                     </div>
@@ -93,20 +104,23 @@
                                     <strong>Tarefas</strong>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_criar_tarefa"
-                                            name="restr_criar_tarefa" {% if restricoes.get('restr_criar_tarefa')
-                                            %}checked{% endif %}>
+                                            name="restr_criar_tarefa" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_criar_tarefa') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_criar_tarefa">Criar Tarefas</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_editar_tarefa"
-                                            name="restr_editar_tarefa" {% if restricoes.get('restr_editar_tarefa')
-                                            %}checked{% endif %}>
+                                            name="restr_editar_tarefa" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_editar_tarefa') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_editar_tarefa">Editar Tarefas</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_excluir_tarefa"
-                                            name="restr_excluir_tarefa" {% if restricoes.get('restr_excluir_tarefa')
-                                            %}checked{% endif %}>
+                                            name="restr_excluir_tarefa" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_excluir_tarefa') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_excluir_tarefa">Excluir
                                             Tarefas</label>
                                     </div>
@@ -115,36 +129,41 @@
                                     <strong>Campos da Tarefa</strong>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_editar_responsavel"
-                                            name="restr_editar_responsavel" {% if
-                                            restricoes.get('restr_editar_responsavel') %}checked{% endif %}>
+                                            name="restr_editar_responsavel" {% if usuario_id and usuario_id|length==1
+                                            and restricoes.get(usuario_id[0], {}).get('restr_editar_responsavel')
+                                            %}checked{% endif %}>
                                         <label class="form-check-label" for="restr_editar_responsavel">Editar
                                             Responsável</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_editar_duracao"
-                                            name="restr_editar_duracao" {% if restricoes.get('restr_editar_duracao')
-                                            %}checked{% endif %}>
+                                            name="restr_editar_duracao" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_editar_duracao') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_editar_duracao">Editar Duração
                                             (dias)</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_editar_datas"
-                                            name="restr_editar_datas" {% if restricoes.get('restr_editar_datas')
-                                            %}checked{% endif %}>
+                                            name="restr_editar_datas" {% if usuario_id and usuario_id|length==1 and
+                                            restricoes.get(usuario_id[0], {}).get('restr_editar_datas') %}checked{%
+                                            endif %}>
                                         <label class="form-check-label" for="restr_editar_datas">Editar Datas
                                             (Início/Término)</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_editar_predecessoras"
-                                            name="restr_editar_predecessoras" {% if
-                                            restricoes.get('restr_editar_predecessoras') %}checked{% endif %}>
+                                            name="restr_editar_predecessoras" {% if usuario_id and usuario_id|length==1
+                                            and restricoes.get(usuario_id[0], {}).get('restr_editar_predecessoras')
+                                            %}checked{% endif %}>
                                         <label class="form-check-label" for="restr_editar_predecessoras">Editar
                                             Predecessoras</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_editar_nome_tarefa"
-                                            name="restr_editar_nome_tarefa" {% if
-                                            restricoes.get('restr_editar_nome_tarefa') %}checked{% endif %}>
+                                            name="restr_editar_nome_tarefa" {% if usuario_id and usuario_id|length==1
+                                            and restricoes.get(usuario_id[0], {}).get('restr_editar_nome_tarefa')
+                                            %}checked{% endif %}>
                                         <label class="form-check-label" for="restr_editar_nome_tarefa">Editar Nome/Ordem
                                             da Tarefa</label>
                                     </div>
@@ -182,15 +201,18 @@
                     <div id="painel-visualizacao" style="margin-top: 1em;">
                         <h5>Permissões de Visualização de Projetos</h5>
                         <form id="form-projeto-select" style="display:inline-block; margin-bottom:0.5em;">
-                            <label for="projeto_id">Projeto:</label>
-                            <select name="projeto_id" id="projeto_id" class="form-select form-select-sm"
-                                style="width:auto; display:inline-block;">
-                                <option value="">Selecione um projeto</option>
+                            <label for="projeto_id">Projetos:</label>
+                            <select name="projeto_id" id="projeto_id" class="form-select form-select-sm" multiple
+                                size="5" style="width:auto; display:inline-block; min-width: 300px;">
                                 {% for projeto in projetos %}
-                                <option value="{{ projeto.id }}" {% if projeto.id==projeto_id %}selected{% endif %}>{{
+                                <option value="{{ projeto.id }}" {% if projeto_id and projeto.id|string in
+                                    projeto_id.split(',') %}selected{% endif %}>{{
                                     projeto.nome }}</option>
                                 {% endfor %}
                             </select>
+                            <br>
+                            <small class="text-muted">Segure Ctrl (Windows) ou Command (Mac) para selecionar vários
+                                projetos.</small>
                         </form>
                         <form id="form-usuarios-visiveis" method="post" style="margin-top:0.5em;">
                             <input type="hidden" name="form_tipo" value="visualizacao_projeto">
@@ -296,32 +318,59 @@
     });
 </script>
 <script>
-    // AJAX para atualizar checkboxes de usuários ao selecionar projeto
+    // AJAX para atualizar checkboxes de usuários ao selecionar projetos
     const projetoSelect = document.getElementById('projeto_id');
     const usuariosDiv = document.getElementById('usuarios-checkboxes');
     const hiddenProjetoId = document.getElementById('hidden_projeto_id');
     const formUsuarios = document.getElementById('form-usuarios-visiveis');
 
     projetoSelect.addEventListener('change', function () {
-        const projetoId = this.value;
-        hiddenProjetoId.value = projetoId;
-        if (!projetoId) {
-            usuariosDiv.innerHTML = '<label style="font-weight:600;">Usuários autorizados:</label><br><span style="color:#888;">Selecione um projeto acima.</span>';
+        const projetosSelecionados = Array.from(this.selectedOptions).map(option => option.value);
+        hiddenProjetoId.value = projetosSelecionados.join(',');
+
+        if (projetosSelecionados.length === 0) {
+            usuariosDiv.innerHTML = '<label style="font-weight:600;">Usuários autorizados:</label><br><span style="color:#888;">Selecione um ou mais projetos acima.</span>';
             return;
         }
-        fetch(`/admin/usuarios_visiveis_projeto?projeto_id=${projetoId}`)
-            .then(resp => resp.json())
-            .then(data => {
-                const usuariosVisiveis = data.usuarios_visiveis || [];
-                let html = '<label style="font-weight:600;">Usuários autorizados:</label><br>';
+
+        if (projetosSelecionados.length === 1) {
+            // Se apenas um projeto selecionado, buscar usuários visíveis
+            fetch(`/admin/usuarios_visiveis_projeto?projeto_id=${projetosSelecionados[0]}`)
+                .then(resp => resp.json())
+                .then(data => {
+                    const usuariosVisiveis = data.usuarios || [];
+                    let html = '<label style="font-weight:600;">Usuários autorizados:</label><br>';
+                    {% for usuario in usuarios %}
+                    html += `<label style="display:inline-block; margin-right:1em; margin-bottom:0.3em;">
+          <input type="checkbox" name="usuarios" value="{{ usuario.id }}" ${usuariosVisiveis.some(u => u.id === '{{ usuario.id }}') ? 'checked' : ''}>
+          {{ usuario.nome }} <span style="color:#888; font-size:0.9em;">({{ usuario.email }})</span>
+        </label>`;
+                    {% endfor %}
+                    usuariosDiv.innerHTML = html;
+                });
+        } else {
+            // Se múltiplos projetos selecionados, buscar usuários visíveis para todos
+            Promise.all(projetosSelecionados.map(projetoId =>
+                fetch(`/admin/usuarios_visiveis_projeto?projeto_id=${projetoId}`)
+                    .then(resp => resp.json())
+                    .then(data => data.usuarios || [])
+            )).then(results => {
+                // Combinar todos os usuários visíveis (união)
+                const todosUsuarios = new Set();
+                results.forEach(usuarios => {
+                    usuarios.forEach(usuario => todosUsuarios.add(usuario.id));
+                });
+
+                let html = '<label style="font-weight:600;">Usuários autorizados (para todos os projetos selecionados):</label><br>';
                 {% for usuario in usuarios %}
                 html += `<label style="display:inline-block; margin-right:1em; margin-bottom:0.3em;">
-          <input type=\"checkbox\" name=\"usuarios\" value=\"{{ usuario.id }}\" ${usuariosVisiveis.includes('{{ usuario.id }}') ? 'checked' : ''}>
-          {{ usuario.nome }} <span style=\"color:#888; font-size:0.9em;\">({{ usuario.email }})</span>
+          <input type="checkbox" name="usuarios" value="{{ usuario.id }}" ${todosUsuarios.has('{{ usuario.id }}') ? 'checked' : ''}>
+          {{ usuario.nome }} <span style="color:#888; font-size:0.9em;">({{ usuario.email }})</span>
         </label>`;
                 {% endfor %}
                 usuariosDiv.innerHTML = html;
             });
+        }
     });
 </script>
 {% endblock %}

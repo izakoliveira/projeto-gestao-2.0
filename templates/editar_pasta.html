@@ -5,10 +5,10 @@
   <form method="post">
     <div class="mb-3">
       <label for="nome" class="form-label">Nome da pasta</label>
-      <input type="text" class="form-control" id="nome" name="nome" required maxlength="50" value="{{ tipo.nome }}">
+      <input type="text" class="form-control" id="nome" name="nome" required maxlength="50" value="{{ pasta.nome }}">
     </div>
     <button type="submit" class="btn btn-primary">Salvar</button>
-    <a href="{{ url_for('listar_pastas') }}" class="btn btn-secondary ms-2">Cancelar</a>
+    <a href="{{ url_for('pastas.listar_pastas') }}" class="btn btn-secondary ms-2">Cancelar</a>
   </form>
 </div>
 {% endblock %} 
