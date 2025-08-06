@@ -6,6 +6,9 @@ Sistema de Gestão de Projetos v2.0.0
 import multiprocessing
 import os
 
+# Criar diretórios de log se não existirem
+os.makedirs('logs', exist_ok=True)
+
 # Configurações básicas
 bind = "0.0.0.0:5000"
 workers = multiprocessing.cpu_count() * 2 + 1
@@ -19,9 +22,9 @@ timeout = 30
 keepalive = 2
 graceful_timeout = 30
 
-# Configurações de logging
-accesslog = "logs/access.log"
-errorlog = "logs/error.log"
+# Configurações de logging (usando caminhos relativos)
+accesslog = "-"  # Log para stdout
+errorlog = "-"   # Log para stderr
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 

@@ -15,6 +15,10 @@ load_dotenv()
 os.environ.setdefault('FLASK_ENV', 'production')
 os.environ.setdefault('FLASK_APP', 'app_producao.py')
 
+# Criar diretórios necessários
+os.makedirs('logs', exist_ok=True)
+os.makedirs('static/uploads', exist_ok=True)
+
 try:
     from config.app_config import Config
     from config.database import supabase

@@ -26,21 +26,24 @@ COPY requirements_producao.txt .
 # Instalar dependências Python
 RUN pip install --no-cache-dir -r requirements_producao.txt
 
-# Criar diretórios necessários
-RUN mkdir -p logs static/uploads
+# Criar diretórios necessários com permissões corretas
+RUN mkdir -p logs static/uploads && \
+    chmod 755 logs static/uploads
 
 # Copiar código da aplicação
 COPY . .
 
 # Criar usuário não-root para segurança
 RUN useradd --create-home --shell /bin/bash app && \
-    chown -R app:app /app
+    chown -R app:app /app && \
+    chmod -R 755 /app/logs /app/static
+
 USER app
 
 # Expor porta
 EXPOSE 5000
 
-# Health check (usando wget em vez de curl para compatibilidade)
+# Health check (usando Python em vez de curl)
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/health')" || exit 1
 
