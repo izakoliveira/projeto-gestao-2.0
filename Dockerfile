@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar diretório de trabalho
@@ -39,9 +40,9 @@ USER app
 # Expor porta
 EXPOSE 5000
 
-# Health check
+# Health check (usando wget em vez de curl para compatibilidade)
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:5000/health')" || exit 1
 
 # Comando para iniciar a aplicação
 CMD ["gunicorn", "--config", "gunicorn.conf.py", "app_producao:app"] 

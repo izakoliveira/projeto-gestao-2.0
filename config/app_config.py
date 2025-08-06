@@ -6,10 +6,11 @@ load_dotenv()
 
 # Configuração da aplicação Flask
 class Config:
-    SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+    SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET_KEY")
     
     if not SECRET_KEY:
-        raise Exception("FLASK_SECRET_KEY não definida no arquivo .env")
+        # Em produção, usar uma chave padrão se não estiver definida
+        SECRET_KEY = "sua-chave-secreta-producao-padrao-123456789"
     
     # Configurações de sessão
     SESSION_TYPE = 'filesystem'
