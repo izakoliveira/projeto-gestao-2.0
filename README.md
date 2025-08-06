@@ -1,4 +1,4 @@
-# Projeto de Gestão de Projetos com Gantt
+# Projeto de Gestão de Projetos 2.0
 
 Sistema web para gestão de projetos com visualização de tarefas em gráfico de Gantt, desenvolvido em Flask e integrado ao Supabase.
 
@@ -14,7 +14,7 @@ Sistema web para gestão de projetos com visualização de tarefas em gráfico d
 
 ## Estrutura de Pastas
 ```
-projeto-gestao/
+projeto-gestao-2.0/
 ├── app.py                  # Backend Flask principal
 ├── supabase_client.py      # Funções utilitárias para Supabase
 ├── detectar_ciclos.py      # Script para detectar ciclos em tarefas
@@ -31,8 +31,8 @@ projeto-gestao/
 
 1. **Clone o repositório:**
    ```sh
-   git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-   cd projeto-gestao
+   git clone https://github.com/SEU_USUARIO/projeto-gestao-2.0.git
+   cd projeto-gestao-2.0
    ```
 2. **Crie e ative o ambiente virtual:**
    ```sh
@@ -99,7 +99,7 @@ start_cloudflared.bat
   ```
 - Trocar o remoto:
   ```sh
-  git remote set-url origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+  git remote set-url origin https://github.com/SEU_USUARIO/projeto-gestao-2.0.git
   ```
 - Ver endereço remoto:
   ```sh
