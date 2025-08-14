@@ -1,0 +1,229 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Coleções{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-boxes"></i> Gerenciamento de Coleções
+                </h1>
+                <button class="btn btn-producao" onclick="showAddColecaoModal()">
+                    <i class="fas fa-plus me-2"></i>Nova Coleção
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Coleções -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Coleções
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="colecoes-table">
+                        <p class="text-muted">Nenhuma coleção encontrada.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar/Editar Coleção -->
+<div class="modal fade" id="addColecaoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header card-header-producao">
+                <h5 class="modal-title text-white" id="modalTitle">Nova Coleção</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addColecaoForm">
+                    <input type="hidden" id="colecaoId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="colecaoNome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" id="colecaoDescricao" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ano de Lançamento</label>
+                        <input type="number" class="form-control" id="colecaoAno" min="2000" max="2030">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" id="colecaoStatus">
+                            <option value="ATIVA">Ativa</option>
+                            <option value="INATIVA">Inativa</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-producao" onclick="saveColecao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadColecoes();
+    });
+
+    function loadColecoes() {
+        const colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+        const container = document.getElementById('colecoes-table');
+
+        if (colecoes.length === 0) {
+            container.innerHTML = '<p class="text-muted">Nenhuma coleção encontrada.</p>';
+            return;
+        }
+
+        let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Ano</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+        colecoes.forEach(colecao => {
+            tableHtml += `
+            <tr>
+                <td><strong>${colecao.nome}</strong></td>
+                <td>${colecao.descricao || '-'}</td>
+                <td>${colecao.ano_lancamento || '-'}</td>
+                <td>
+                    <span class="badge bg-${colecao.status === 'ATIVA' ? 'success' : 'secondary'}">
+                        ${colecao.status}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editColecao('${colecao.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteColecao('${colecao.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        });
+
+        tableHtml += '</tbody></table></div>';
+        container.innerHTML = tableHtml;
+    }
+
+    function showAddColecaoModal() {
+        document.getElementById('modalTitle').textContent = 'Nova Coleção';
+        document.getElementById('colecaoId').value = '';
+        document.getElementById('addColecaoForm').reset();
+
+        const modal = new bootstrap.Modal(document.getElementById('addColecaoModal'));
+        modal.show();
+    }
+
+    function editColecao(id) {
+        const colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+        const colecao = colecoes.find(c => c.id === id);
+
+        if (!colecao) {
+            alert('Coleção não encontrada.');
+            return;
+        }
+
+        document.getElementById('modalTitle').textContent = 'Editar Coleção';
+        document.getElementById('colecaoId').value = colecao.id;
+        document.getElementById('colecaoNome').value = colecao.nome;
+        document.getElementById('colecaoDescricao').value = colecao.descricao || '';
+        document.getElementById('colecaoAno').value = colecao.ano_lancamento || '';
+        document.getElementById('colecaoStatus').value = colecao.status || 'ATIVA';
+
+        const modal = new bootstrap.Modal(document.getElementById('addColecaoModal'));
+        modal.show();
+    }
+
+    function saveColecao() {
+        const id = document.getElementById('colecaoId').value;
+        const nome = document.getElementById('colecaoNome').value;
+        const descricao = document.getElementById('colecaoDescricao').value;
+        const ano = document.getElementById('colecaoAno').value;
+        const status = document.getElementById('colecaoStatus').value;
+
+        if (!nome) {
+            alert('Por favor, preencha o nome da coleção.');
+            return;
+        }
+
+        const colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+
+        if (id) {
+            // Editar coleção existente
+            const index = colecoes.findIndex(c => c.id === id);
+            if (index !== -1) {
+                colecoes[index] = {
+                    ...colecoes[index],
+                    nome: nome,
+                    descricao: descricao,
+                    ano_lancamento: ano ? parseInt(ano) : null,
+                    status: status
+                };
+            }
+        } else {
+            // Criar nova coleção
+            const novaColecao = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                nome: nome,
+                descricao: descricao,
+                ano_lancamento: ano ? parseInt(ano) : null,
+                status: status,
+                created_at: new Date().toISOString()
+            };
+            colecoes.push(novaColecao);
+        }
+
+        localStorage.setItem('colecoes', JSON.stringify(colecoes));
+
+        // Fechar modal e recarregar
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addColecaoModal'));
+        modal.hide();
+
+        // Limpar formulário
+        document.getElementById('addColecaoForm').reset();
+
+        // Recarregar lista
+        loadColecoes();
+
+        alert(id ? 'Coleção atualizada com sucesso!' : 'Coleção criada com sucesso!');
+    }
+
+    function deleteColecao(id) {
+        if (confirm('Tem certeza que deseja excluir esta coleção?')) {
+            const colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+            const filteredColecoes = colecoes.filter(c => c.id !== id);
+            localStorage.setItem('colecoes', JSON.stringify(filteredColecoes));
+
+            loadColecoes();
+            alert('Coleção excluída com sucesso!');
+        }
+    }
+</script>
+{% endblock %}

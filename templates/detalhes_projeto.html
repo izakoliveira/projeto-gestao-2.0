@@ -1,0 +1,3129 @@
+{% extends "base.html" %}
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" />
+
+<style>
+    /* Estilo para tarefas atrasadas - VERSÃO ULTRA SIMPLIFICADA */
+    .tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    .tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    .tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    .tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    /* Ícone de aviso para tarefas atrasadas */
+    tr.tarefa-atrasada::before {
+        content: "⚠️";
+        position: absolute;
+        left: -25px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        color: #dc2626;
+        z-index: 10;
+    }
+
+    /* Estilo para linha de coleção quando atrasada */
+    tr.linha-colecao.tarefa-atrasada {
+        background-color: #fff0f0 !important;
+        border-left: 3px solid #dc2626 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada td {
+        background-color: #fff0f0 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada:hover {
+        background-color: #ffe0e0 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada:hover td {
+        background-color: #ffe0e0 !important;
+    }
+
+    /* Garantir que os estilos sejam aplicados mesmo com outros estilos */
+    table tbody tr.tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    table tbody tr.tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    table tbody tr.tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    table tbody tr.tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    /* Estilo específico para tabelas responsivas */
+    .table-responsive tbody tr.tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    .icone-atrasada {
+        color: #dc2626;
+        margin-right: 5px;
+        font-size: 12px;
+    }
+
+    /* Estilos para datas calculadas por predecessoras */
+    .data-calculada {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+    }
+
+    .data-calculada:focus {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
+
+    /* Garantir que os estilos sejam aplicados mesmo com Bootstrap */
+    input[data-calculada="1"] {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+    }
+
+    input[data-calculada="1"]:focus {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
+</style>
+
+{% set numero_para_id = {} %}
+{% for t in tarefas %}
+{% set _ = numero_para_id.update({loop.index|string: t.id}) %}
+{% endfor %}
+
+{% set id_para_ordem = {} %}
+{% for t in tarefas %}
+{% set _ = id_para_ordem.update({t.id: t.ordem|string}) %}
+{% endfor %}
+
+{% macro extrair_ids_predecessoras(predecessoras, numero_para_id) -%}
+{%- set ids = [] -%}
+{%- for pred in predecessoras.split(';') if pred -%}
+{%- set num = pred.split('FS')[0].split('SS')[0].split('FF')[0].split('SF')[0] -%}
+{%- set id = numero_para_id.get(num, num) -%}
+{%- set _ = ids.append(id) -%}
+{%- endfor -%}
+{{ ids|join(',') }}
+{%- endmacro %}
+
+{% block content %}
+<div class="container-fluid mt-4" style="padding-left: 15px; padding-right: 0px; padding-bottom: 24px;">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="fas fa-project-diagram"></i> {{ projeto.nome }}
+                        </h2>
+                        <!-- Botões removidos do topo -->
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5><i class="fas fa-align-left"></i> Descrição:</h5>
+                            <p class="text-muted">{{ projeto.descricao or 'Sem descrição' }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-calendar"></i> Período do Projeto:</h6>
+                                    <p class="mb-1">
+                                        <strong>Início:</strong> {{ projeto.data_inicio }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Término:</strong> {{ projeto.data_fim }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <!-- Removido: bloco duplicado de botões acima do título Tarefas do Projeto -->
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-0" style="min-height:44px;">
+                        <h5 class="mb-0"><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
+                        <div class="d-flex align-items-center p-0" style="gap: 8px;">
+                            {% if pode_editar_projeto %}
+                            <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}"
+                                class="btn btn-warning m-0">
+                                <i class="fas fa-edit"></i> Editar Projeto
+                            </a>
+                            {% endif %}
+                            {% if pode_criar_tarefa %}
+                            <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success m-0">Criar Tarefa</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if tarefas %}
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table class="table table-hover w-100" id="tabela-tarefas-inline" style="font-size: 0.95em;">
+                            <colgroup>
+                                <col style="width: 32px;">
+                                <col style="width: 40px;">
+                                {# Calcular larguras dinâmicas #}
+                                {% set nome_width = 300 %}
+                                {% set responsavel_width = 150 %}
+                                {% set removed_width = 0 %}
+                                {% if not pode_editar_predecessoras %}
+                                {% set nome_width = nome_width + 120 %} {# toda a largura da predecessora vai para Nome
+                                #}
+                                {% endif %}
+                                {% if not pode_editar_tarefa and not pode_excluir_tarefa %}
+                                {% set responsavel_width = responsavel_width + 100 %} {# toda a largura da coluna de
+                                ações vai para Responsável #}
+                                {% endif %}
+                                {% set nome_width = nome_width + (removed_width // 2) %}
+                                {% set responsavel_width = responsavel_width + (removed_width - (removed_width // 2)) %}
+                                <col style="width: {{ nome_width }}px;">
+                                {% if pode_editar_predecessoras %}
+                                <col style="width: 120px;"> {# Predecessoras #}
+                                {% endif %}
+                                <col> {# Data Início #}
+                                <col> {# Data Término #}
+                                <col style="width: 55px;"> {# Duração (fixa, nunca removida) #}
+                                <col> {# Status #}
+                                <col style="width: {{ responsavel_width }}px;"> {# Responsável #}
+                                {% if pode_editar_tarefa or pode_excluir_tarefa %}
+                                <col style="width: 100px;"> {# Ações #}
+                                {% endif %}
+                            </colgroup>
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width:32px"></th>
+                                    <th>Nº</th>
+                                    <th>Nome</th>
+                                    {% if pode_editar_predecessoras %}
+                                    <th>Predecessoras</th>
+                                    {% endif %}
+                                    <th>Data Início</th>
+                                    <th>Data Término</th>
+                                    <th>Duração (dias)</th>
+                                    <th>Status</th>
+                                    <th>Responsável</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tarefa in tarefas %}
+                                <tr class="{% if tarefa.colecao %}linha-colecao{% endif %}{% if tarefa.atrasada %} tarefa-atrasada{% endif %}"
+                                    {% if tarefa.atrasada
+                                    %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: #333;"
+                                    {% endif %}>
+                                    <td class="drag-handle"
+                                        style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
+                                        &#9776;</td>
+                                    <td class="numero-tarefa" contenteditable="true" data-id="{{ tarefa.id }}"
+                                        style="cursor: pointer; text-align: center; font-weight: bold; padding: 0 !important; min-width: 30px; max-width: 40px;"
+                                        onblur="atualizarOrdemTarefa(this)" onkeydown="handleOrdemKeydown(event, this)"
+                                        title="Clique para editar a ordem">{{ tarefa.ordem or '' }}</td>
+                                    <td><input type="text" class="form-control form-control-sm"
+                                            value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome" {% if not
+                                            pode_editar_nome_tarefa %}disabled{% endif %}></td>
+                                    {% if pode_editar_predecessoras %}
+                                    <td class="predecessoras-td">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                            onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
+                                        <input type="text" class="form-control form-control-sm"
+                                            value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
+                                            name="predecessoras" placeholder="Ex: 2FS+2d"
+                                            onchange="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)"
+                                            onkeyup="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)">
+                                    </td>
+                                    {% endif %}
+                                    <td><input type="date" class="form-control form-control-sm"
+                                            value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
+                                            name="data_inicio" {% if tarefa.data_inicio_calculada %} data-calculada="1"
+                                            readonly style="background:#fffbe6;" {% endif %}
+                                            oninput="onInicioOuFimEdit(this)" {% if not pode_editar_data_inicio
+                                            %}disabled{% endif %}></td>
+                                    <td><input type="date" class="form-control form-control-sm"
+                                            value="{{ tarefa.data_fim_iso }}" data-id="{{ tarefa.id }}" name="data_fim"
+                                            {% if tarefa.data_fim_calculada %} data-calculada="1" readonly
+                                            style="background:#fffbe6;" {% endif %} oninput="onDuracaoOuFimEdit(this)"
+                                            onblur="onDuracaoOuFimEdit(this, true)" {% if not pode_editar_data_termino
+                                            %}disabled{% endif %}></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
+                                            value="{{ tarefa.duracao or '' }}" oninput="onDuracaoOuFimEdit(this)"
+                                            onblur="onDuracaoOuFimEdit(this, true)" onkeyup="onDuracaoOuFimEdit(this)"
+                                            {% if not pode_editar_duracao %}disabled{% endif %}>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
+                                            name="status">
+                                            <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif
+                                                %}>Pendente</option>
+                                            <option value="em progresso" {% if tarefa.status=='em progresso'
+                                                %}selected{% endif %}>Em Progresso</option>
+                                            <option value="concluída" {% if tarefa.status=='concluída' %}selected{%
+                                                endif %}>Concluída</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="usuario_id"
+                                            data-id="{{ tarefa.id }}" {% if not pode_editar_responsavel %}disabled{%
+                                            endif %}>
+                                            <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem
+                                                responsável</option>
+                                            {% for usuario in usuarios %}
+                                            <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id
+                                                %}selected{% endif %}>{{ usuario.email }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
+                                                class="fas fa-save"></i></button>
+                                        {% if pode_editar_tarefa %}
+                                        <a href="{{ url_for('tarefas.editar_tarefa', tarefa_id=tarefa.id) }}"
+                                            class="btn btn-warning btn-sm" title="Editar tarefa"><i
+                                                class="fas fa-edit"></i></a>
+                                        {% endif %}
+                                        {% if pode_excluir_tarefa %}
+                                        <button class="btn btn-danger btn-sm btn-excluir-tarefa"
+                                            data-tarefa-id="{{ tarefa.id }}"><i class="fas fa-trash"></i></button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Linha para nova tarefa -->
+                                {% if pode_criar_tarefa %}
+                                <tr id="linha-nova-tarefa">
+                                    <td></td>
+                                    <td></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="nome"
+                                            placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{%
+                                            endif %}></td>
+                                    {% if pode_editar_predecessoras %}
+                                    <td class="predecessoras-td">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                            onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
+                                        <input type="text" class="form-control form-control-sm" name="predecessoras"
+                                            value="" placeholder="Ex: 2FS+2d"
+                                            onchange="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)"
+                                            onkeyup="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)">
+                                    </td>
+                                    {% endif %}
+                                    <td><input type="date" class="form-control form-control-sm" name="data_inicio"
+                                            oninput="onInicioOuFimEdit(this)"></td>
+                                    <td><input type="date" class="form-control form-control-sm" name="data_fim"
+                                            oninput="onDuracaoOuFimEdit(this)" onblur="onDuracaoOuFimEdit(this, true)">
+                                    </td>
+                                    <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
+                                            placeholder="Dias" oninput="onDuracaoOuFimEdit(this)"
+                                            onblur="onDuracaoOuFimEdit(this, true)"></td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="status">
+                                            <option value="pendente">Pendente</option>
+                                            <option value="em progresso">Em Progresso</option>
+                                            <option value="concluída">Concluída</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="usuario_id">
+                                            <option value="">Sem responsável</option>
+                                            {% for usuario in usuarios %}
+                                            <option value="{{ usuario.id }}">{{ usuario.email }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" onclick="criarTarefaNovaLinha(this)"><i
+                                                class="fas fa-plus"></i></button>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h5>Nenhuma tarefa encontrada</h5>
+                        <p>Este projeto ainda não possui tarefas. Crie a primeira tarefa para começar!</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-end mt-2" style="padding-right: 16px;">
+                    <button class="btn btn-primary mb-4" type="button" onclick="salvarTodasTarefas()">
+                        <i class="fas fa-save"></i> Salvar todas
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div
+                            class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
+                            <div class="d-flex gap-2">
+                                {% if pode_editar_projeto %}
+                                <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}"
+                                    class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i> Editar Projeto
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('projetos.listar_projetos') }}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div
+                                style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
+                                <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
+                                    style="font-size: 1.2em;">-</button>
+                                <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
+                                <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Aumentar Zoom"
+                                    style="font-size: 1.2em;">+</button>
+                            </div>
+                            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <div style="display: flex;">
+                                    </div>
+                                </div>
+                                <div id="gantt-cronograma-area" style="position: relative;">
+                                    <div id="gantt-hoje-container"></div>
+                                    <table style="border-collapse: collapse; width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th
+                                                    style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                                    Tarefa
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="gantt-body">
+                                            <!-- Linhas das tarefas geradas via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- Legenda colorida por projeto -->
+                            <div class="legend mt-2"
+                                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                                {% for projeto, cor in projects_colors.items() %}
+                                <div class="legend-item"
+                                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                                    data-projeto="{{ projeto }}">
+                                    <div class="legend-color"
+                                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};">
+                                    </div>
+                                    <span>{{ projeto }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('projetos.listar_projetos') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar para a Lista de Projetos
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal avançado de seleção de predecessoras -->
+<div class="modal fade" id="modalPredecessora" tabindex="-1" aria-labelledby="modalPredecessoraLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPredecessoraLabel">Selecionar Predecessoras</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="selectTarefa" class="form-label">
+                                <i class="fas fa-tasks"></i> Selecione a Tarefa:
+                            </label>
+                            <select id="selectTarefa" class="form-select">
+                                <option value="">Escolha uma tarefa...</option>
+                                {% for tarefa in tarefas %}
+                                <option value="{{ tarefa.id }}" data-ordem="{{ tarefa.ordem }}">{{ tarefa.ordem }} - {{
+                                    tarefa.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="selectTipo" class="form-label">
+                                <i class="fas fa-link"></i> Tipo de Relação:
+                            </label>
+                            <select id="selectTipo" class="form-select">
+                                <option value="">Escolha o tipo...</option>
+                                <option value="FS">FS (Fim / Início)</option>
+                                <option value="SS">SS (Início / Início)</option>
+                                <option value="FF">FF (Fim / Fim)</option>
+                                <option value="SF">SF (Início / Fim)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="inputDeslocamento" class="form-label">
+                                <i class="fas fa-calendar-plus"></i> Deslocamento (dias):
+                            </label>
+                            <input type="number" id="inputDeslocamento" class="form-control"
+                                placeholder="Ex: 2 (positivo = atraso, negativo = adiantamento)" value="0" min="-30"
+                                max="30">
+                            <div class="form-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i>
+                                    Positivo = atraso, Negativo = adiantamento
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-eye"></i> Prévia do Código:
+                            </label>
+                            <div id="previewCodigo" class="form-control"
+                                style="background-color: #f8f9fa; font-family: monospace; font-weight: bold; color: #495057;">
+                                Código será gerado automaticamente...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Significado dos Tipos de Relação:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>FS (Fim / Início):</strong> A tarefa atual só pode começar quando a
+                                    predecessora terminar</li>
+                                <li><strong>SS (Início / Início):</strong> A tarefa atual deve começar junto com a
+                                    predecessora</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>FF (Fim / Fim):</strong> A tarefa atual deve terminar junto com a
+                                    predecessora</li>
+                                <li><strong>SF (Início / Fim):</strong> A tarefa atual deve terminar quando a
+                                    predecessora começar</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarPredecessoras">
+                    <i class="fas fa-save"></i> Salvar Predecessora
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação de exclusão de tarefa -->
+<div class="modal fade" id="modalConfirmarExclusaoTarefa" tabindex="-1"
+    aria-labelledby="modalConfirmarExclusaoTarefaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalConfirmarExclusaoTarefaLabel"><i class="fas fa-trash"></i> Confirmar
+                    Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoTarefa"><i
+                        class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos do Gantt Customizado -->
+<style>
+    /* Estilos do Gantt Customizado */
+    .gantt-header {
+        display: flex;
+        border-bottom: 2px solid #dee2e6;
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .gantt-header-cell {
+        padding: 10px;
+        text-align: center;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-row {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        min-height: 40px;
+    }
+
+    .gantt-row:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
+
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
+
+    /* Coluna fixa para Tarefa */
+    #gantt-custom th:first-child,
+    #gantt-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 50;
+        width: 320px;
+        min-width: 320px;
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .gantt-hoje-linha {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: repeating-linear-gradient(to bottom,
+                #e74c3c 0px, #e74c3c 8px,
+                transparent 8px, transparent 16px);
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    #gantt-hoje-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
+
+    #gantt-cronograma-area {
+        position: relative;
+    }
+
+    .gantt-row-compact {
+        height: 16px !important;
+    }
+
+    .gantt-bar-compact {
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+    }
+
+    .gantt-tooltip-detalhado {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-row-compact td,
+    .gantt-row-compact th {
+        height: 16px !important;
+        min-height: 16px !important;
+        max-height: 24px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 13px !important;
+    }
+
+    .gantt-h-linha {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #dee2e6;
+        z-index: 0;
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: none !important;
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+    }
+
+    #gantt-custom.dragging {
+        cursor: grabbing !important;
+        user-select: none !important;
+    }
+
+    #tabela-tarefas-inline input[name="duracao"] {
+        width: 55px !important;
+        max-width: 55px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline input[type="date"] {
+        width: 110px !important;
+        max-width: 110px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline select[name="status"] {
+        width: 120px !important;
+        max-width: 150px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline td,
+    #tabela-tarefas-inline th {
+        padding-left: 4px;
+        padding-right: 4px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    #tabela-tarefas-inline input,
+    #tabela-tarefas-inline select {
+        height: 40px !important;
+        line-height: 20px !important;
+        vertical-align: middle !important;
+    }
+
+    #tabela-tarefas-inline .btn {
+        margin: 0px 3px 0px 0px !important;
+        padding: 8px 8px !important;
+    }
+
+    #tabela-tarefas-inline td:last-child {
+        white-space: nowrap;
+    }
+
+    #tabela-tarefas-inline input[name="nome"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    #tabela-tarefas-inline input[name="predecessoras"] {
+        width: 120px !important;
+        max-width: 180px !important;
+        min-width: 60px !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline input[type="date"] {
+        width: 110px !important;
+        max-width: 110px !important;
+        min-width: 0 !important;
+        padding-left: 6px;
+        padding-right: 3px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline select[name="status"] {
+        width: 130px !important;
+        max-width: 150px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline select[name="usuario_id"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-left: 8px;
+        padding-right: 8px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline td.drag-handle {
+        width: 25px !important;
+        min-width: 25px !important;
+        max-width: 32px !important;
+        text-align: center;
+        vertical-align: middle !important;
+        font-size: 1.3em;
+        color: #888;
+        padding-left: 4px !important;
+        padding-right: 0px !important;
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa {
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 40px !important;
+        text-align: center;
+        vertical-align: middle !important;
+        font-weight: bold;
+        padding: 0 !important;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa:hover {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        cursor: pointer;
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa:focus {
+        outline: none;
+        background-color: #fff3cd !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa[contenteditable="true"] {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .linha-colecao {
+        background-color: #e0e7ef !important;
+    }
+
+    #tabela-tarefas-inline thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #212529 !important;
+        color: #fff !important;
+    }
+
+    #tabela-tarefas-inline {
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #tabela-tarefas-inline select:disabled {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: none !important;
+        cursor: not-allowed;
+    }
+</style>
+<script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    window.ganttData = {{ gantt_geral_data | tojson | safe }};
+</script>
+
+<script>
+    const larguraBase = 4; // 100% = 4px
+    let larguraDia = larguraBase;
+    const larguraMin = 1;
+    const larguraMax = 32;
+    const ROW_HEIGHT = 32; // altura de cada linha (ajuste conforme seu CSS)
+    const VISIBLE_ROWS = 18; // quantas linhas mostrar de cada vez (ajuste conforme altura do container)
+    let tarefas = [];
+    let nomesOrdenados = [];
+    let grupos = {};
+    let periodo = { min: null, max: null };
+    let diasTotais = 0;
+
+    // Função utilitária para agrupar tarefas por nome
+    function agruparTarefasPorNome(tarefas) {
+        const grupos = {};
+        tarefas.forEach(tarefa => {
+            if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+            grupos[tarefa.name].push(tarefa);
+        });
+        return grupos;
+    }
+
+    // Função para obter datas mínimas e máximas
+    function obterPeriodo(tarefas) {
+        let min = null, max = null;
+        tarefas.forEach(t => {
+            // Criar datas no fuso horário local para evitar problemas de UTC
+            const ini = new Date(t.start + 'T00:00:00');
+            const fim = new Date(t.end + 'T00:00:00');
+            if (!min || ini < min) min = ini;
+            if (!max || fim > max) max = fim;
+        });
+        return { min, max };
+    }
+
+    // Função para calcular dias entre datas
+    function diasEntre(a, b) {
+        // Usar datas no fuso horário local para cálculo preciso
+        const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+        const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
+    }
+
+    // Função para cor de status
+    function corStatus(tarefa) {
+        if (tarefa.bar_color) return tarefa.bar_color;
+        if (tarefa.status === 'concluída') return '#28a745';
+        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+        return '#ffc107';
+    }
+
+    // Função para verificar se tarefa está atrasada
+    function tarefaAtrasada(tarefa) {
+        // Usar apenas a data (sem hora) para comparação
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0); // Zerar hora, minuto, segundo e milissegundos
+
+        const status = tarefa.status?.toLowerCase();
+        const dataFim = tarefa.end;
+        const dataInicio = tarefa.start;
+
+        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim, 'Data início:', dataInicio);
+
+        // LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
+        if (status === 'pendente' && dataInicio) {
+            try {
+                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
+                if (dataInicioObj < hoje) { // Apenas datas ANTERIORES a hoje
+                    return true;
+                }
+            } catch (e) {
+                // Ignorar erro de parsing
+            }
+        }
+
+        // LÓGICA 2: Tarefa não concluída com data de fim passada (excluindo hoje)
+        if (dataFim) {
+            try {
+                const dataFimObj = new Date(dataFim + 'T00:00:00');
+                if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') { // Apenas datas ANTERIORES a hoje
+                    return true;
+                }
+            } catch (e) {
+                // Ignorar erro de parsing
+            }
+        }
+
+        return false;
+    }
+
+    // Função para cor da borda baseada no status
+    function corBordaStatus(tarefa) {
+        console.log('Status da tarefa:', tarefa.status, 'Nome:', tarefa.name);
+        if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
+        if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
+        if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
+        if (tarefa.status === 'atrasada') return '#dc2626'; // Vermelho
+        return '#6c757d'; // Cinza padrão
+    }
+
+    // Função para tooltip
+    function tooltipBarra(tarefa) {
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const ini = new Date(tarefa.start + 'T00:00:00').toLocaleDateString('pt-BR');
+        const fim = new Date(tarefa.end + 'T00:00:00').toLocaleDateString('pt-BR');
+        return `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
+    }
+
+    function calcularDiasUteis(dataInicio, dataFim) {
+        let diasUteis = 0;
+        const dataAtual = new Date(dataInicio);
+        while (dataAtual <= dataFim) {
+            if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+                diasUteis++;
+            }
+            dataAtual.setDate(dataAtual.getDate() + 1);
+        }
+        return diasUteis;
+    }
+
+    function mostrarTooltipDetalhado(event, barra) {
+        esconderTooltipDetalhado();
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const startDate = new Date(barra.start + 'T00:00:00');
+        const endDate = new Date(barra.end + 'T00:00:00');
+        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        const diasUteis = calcularDiasUteis(startDate, endDate);
+        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+        const tooltip = document.createElement('div');
+        tooltip.className = 'gantt-tooltip-detalhado';
+        tooltip.id = 'gantt-tooltip-detalhado';
+        const dataInicio = startDate.toLocaleDateString('pt-BR');
+        const dataFim = endDate.toLocaleDateString('pt-BR');
+        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+        tooltip.innerHTML = `
+            <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
+            <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
+            <div style="color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;"><b>Coleção:</b> ${barra.colecao || '-'} </div>
+            <div class="gantt-tooltip-info" style="gap: 12px;">
+                <span class="gantt-tooltip-label">🏁 Início:</span>
+                <span class="gantt-tooltip-value">${dataInicio}</span>
+                <span class="gantt-tooltip-label">🎯 Fim:</span>
+                <span class="gantt-tooltip-value">${dataFim}</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Corridos:</span>
+                <span class="gantt-tooltip-value">${diasCorridos} dias</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Úteis:</span>
+                <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
+        atualizarPosicaoTooltipDetalhado(event);
+    }
+
+    function esconderTooltipDetalhado() {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) tooltip.remove();
+    }
+
+    function atualizarPosicaoTooltipDetalhado(event) {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = event.clientX + 12;
+            let top = event.clientY + 12;
+            if (left + tooltipRect.width > window.innerWidth) {
+                left = window.innerWidth - tooltipRect.width - 8;
+            }
+            if (top + tooltipRect.height > window.innerHeight) {
+                top = window.innerHeight - tooltipRect.height - 8;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+    }
+
+    // Função principal para montar o Gantt (sem virtualização)
+    function montarGanttAgrupado() {
+        const dados = window.ganttData || [];
+        const body = document.getElementById('gantt-body');
+        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+        if (!dados.length) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+            return;
+        }
+        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        const grupos = agruparTarefasPorNome(tarefas);
+        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+            return ordemA - ordemB;
+        });
+        const periodo = obterPeriodo(tarefas);
+        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+            return;
+        }
+        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+        // Linha de hoje, cabeçalhos, etc (igual ao seu código)
+        const hojeContainer = document.getElementById('gantt-hoje-container');
+        if (hojeContainer) {
+            hojeContainer.innerHTML = '';
+            hojeContainer.style.position = 'absolute';
+            hojeContainer.style.top = '0';
+            hojeContainer.style.left = '0';
+            hojeContainer.style.bottom = '0';
+            hojeContainer.style.right = '0';
+            hojeContainer.style.zIndex = '10';
+            hojeContainer.style.pointerEvents = 'none';
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            if (hoje >= periodo.min && hoje <= periodo.max) {
+                const offset = diasEntre(periodo.min, hoje);
+                const left = 320 + (offset * larguraDia); // 320px da coluna tarefa
+                const linhaHoje = document.createElement('div');
+                linhaHoje.className = 'gantt-hoje-linha';
+                linhaHoje.style.left = left + 'px';
+                linhaHoje.style.height = '100%';
+                hojeContainer.appendChild(linhaHoje);
+                // Adicionar label com a data
+                const hojeLabel = document.createElement('div');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+                hojeLabel.style.position = 'absolute';
+                hojeLabel.style.top = '0px';
+                hojeLabel.style.left = (left + 6) + 'px'; // 6px à direita da linha
+                hojeLabel.style.transform = 'none';
+                hojeLabel.style.fontSize = '12px';
+                hojeLabel.style.color = '#e74c3c';
+                hojeLabel.style.fontWeight = 'bold';
+                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
+                hojeLabel.style.padding = '2px 6px';
+                hojeLabel.style.borderRadius = '4px';
+                hojeLabel.style.zIndex = '20';
+                hojeContainer.appendChild(hojeLabel);
+            }
+        }
+        // Cabeçalho de datas de um nível (apenas dias)
+        const dateHeader = document.getElementById('gantt-date-header');
+        if (dateHeader) {
+            dateHeader.innerHTML = '';
+            // Espaço à esquerda para alinhar com a coluna Tarefa
+            const espacoTarefa = document.createElement('div');
+            espacoTarefa.style.width = '320px';
+            espacoTarefa.style.minWidth = '320px';
+            espacoTarefa.style.maxWidth = '320px';
+            espacoTarefa.style.display = 'inline-block';
+            espacoTarefa.style.height = '19px';
+            espacoTarefa.style.background = 'transparent';
+            dateHeader.appendChild(espacoTarefa);
+            // Não renderizar mais os dias
+        }
+        // Renderizar todas as linhas de uma vez
+        body.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        nomesOrdenados.forEach((nome, idx) => {
+            const barras = grupos[nome];
+            const tr = document.createElement('tr');
+            tr.className = 'gantt-row-compact';
+
+            // Verificar se alguma barra está atrasada para aplicar estilo vermelho na linha
+            const temTarefaAtrasada = barras.some(barra => tarefaAtrasada(barra));
+            console.log('Tarefa:', nome, 'Tem tarefa atrasada:', temTarefaAtrasada);
+            if (temTarefaAtrasada) {
+                tr.classList.add('tarefa-atrasada');
+                console.log('Aplicando classe tarefa-atrasada para:', nome);
+            }
+            // Nome da tarefa
+            const tdNome = document.createElement('td');
+            tdNome.textContent = nome;
+            tdNome.title = nome;
+
+            // Adicionar ícone de alerta para tarefas atrasadas
+            if (temTarefaAtrasada) {
+                tdNome.innerHTML = `<span class="icone-atrasada">⚠️</span>${nome}`;
+                tdNome.title = nome + ' (ATRASADA)';
+            }
+            tdNome.style.padding = "2px 8px";
+            tdNome.style.whiteSpace = "nowrap";
+            tdNome.style.overflow = "hidden";
+            tdNome.style.textOverflow = "ellipsis";
+            tdNome.style.height = "16px";
+            tdNome.style.fontSize = "13px";
+            tr.appendChild(tdNome);
+            // Cronograma
+            const tdCrono = document.createElement('td');
+            tdCrono.style.position = "relative";
+            tdCrono.style.height = "16px";
+            tdCrono.style.background = "#f8f9fa";
+            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+            // Adicionar linha horizontal de grade
+            const linhaH = document.createElement('div');
+            linhaH.className = 'gantt-h-linha';
+            linhaH.style.position = 'absolute';
+            linhaH.style.left = '0';
+            linhaH.style.right = '0';
+            linhaH.style.bottom = '0';
+            linhaH.style.height = '1px';
+            linhaH.style.background = '#dee2e6';
+            linhaH.style.zIndex = '1';
+            tdCrono.appendChild(linhaH);
+            barras.forEach((barra, idx) => {
+                // Criar datas no fuso horário local para evitar problemas de UTC
+                const inicio = new Date(barra.start + 'T00:00:00');
+                const fim = new Date(barra.end + 'T00:00:00');
+                const offset = diasEntre(periodo.min, inicio);
+                const largura = diasEntre(inicio, fim) + 1;
+                const div = document.createElement('div');
+                div.className = 'gantt-bar-compact';
+                div.style.position = "absolute";
+                div.style.left = (offset * larguraDia) + "px";
+                div.style.top = "2px";
+                div.style.height = "8px";
+                div.style.width = (largura * larguraDia) + "px";
+                div.style.background = corStatus(barra);
+                div.style.borderRadius = "4px";
+                div.style.textAlign = "center";
+                div.style.color = "#fff";
+                div.style.fontSize = "11px";
+                div.style.lineHeight = "14px";
+                div.style.cursor = "pointer";
+                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                tdCrono.appendChild(div);
+                div.onmouseenter = function (e) {
+                    mostrarTooltipDetalhado(e, barra);
+                    this._mousemoveHandler = function (ev) {
+                        atualizarPosicaoTooltipDetalhado(ev);
+                    };
+                    this.addEventListener('mousemove', this._mousemoveHandler);
+                };
+                div.onmouseleave = function () {
+                    esconderTooltipDetalhado();
+                    if (this._mousemoveHandler) {
+                        this.removeEventListener('mousemove', this._mousemoveHandler);
+                        this._mousemoveHandler = null;
+                    }
+                };
+            });
+            tr.appendChild(tdCrono);
+            fragment.appendChild(tr);
+        });
+        body.appendChild(fragment);
+    }
+
+    // Evento de scroll para atualizar as linhas visíveis
+    document.addEventListener('DOMContentLoaded', function () {
+        montarGanttAgrupado();
+        function atualizarZoomLabel() {
+            const zoomLabel = document.getElementById('zoom-label');
+            if (zoomLabel) {
+                const percent = Math.round((larguraDia / larguraBase) * 100);
+                zoomLabel.textContent = percent + '%';
+            }
+        }
+        atualizarZoomLabel();
+        document.getElementById('zoom-in').onclick = function () {
+            if (larguraDia < larguraMax) {
+                larguraDia += larguraBase * 0.1;
+                if (larguraDia > larguraMax) larguraDia = larguraMax;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+        document.getElementById('zoom-out').onclick = function () {
+            if (larguraDia > larguraMin) {
+                larguraDia -= larguraBase * 0.1;
+                if (larguraDia < larguraMin) larguraDia = larguraMin;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+
+        // Evidenciar barras ao clicar na legenda (agora com seleção múltipla via Ctrl)
+        let projetosSelecionados = [];
+        document.querySelectorAll('.legend-item').forEach(item => {
+            item.addEventListener('click', function (e) {
+                const projeto = this.getAttribute('data-projeto');
+                if (e.ctrlKey || e.metaKey) {
+                    // Seleção múltipla
+                    const index = projetosSelecionados.indexOf(projeto);
+                    if (index > -1) {
+                        projetosSelecionados.splice(index, 1);
+                    } else {
+                        projetosSelecionados.push(projeto);
+                    }
+                } else {
+                    // Seleção única
+                    projetosSelecionados = [projeto];
+                }
+                if (projetosSelecionados.length === 0) {
+                    // Mostrar todas as barras
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        bar.classList.remove('evidencia', 'apagada');
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => {
+                        l.classList.remove('selecionada');
+                    });
+                } else {
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        if (projetosSelecionados.includes(bar.getAttribute('data-projeto'))) {
+                            bar.classList.add('evidencia');
+                            bar.classList.remove('apagada');
+                        } else {
+                            bar.classList.remove('evidencia');
+                            bar.classList.add('apagada');
+                        }
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => {
+                        const p = l.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(p)) {
+                            l.classList.add('selecionada');
+                        } else {
+                            l.classList.remove('selecionada');
+                        }
+                    });
+                }
+            });
+        });
+    });
+
+    // Sincronizar scroll horizontal do cabeçalho e do corpo do Gantt
+    const ganttCustom = document.getElementById('gantt-custom');
+    const dateHeader = document.getElementById('gantt-date-header');
+    const cronogramaArea = document.getElementById('gantt-cronograma-area');
+    if (ganttCustom && dateHeader && cronogramaArea) {
+        ganttCustom.addEventListener('scroll', function () {
+            dateHeader.scrollLeft = ganttCustom.scrollLeft;
+            cronogramaArea.scrollLeft = ganttCustom.scrollLeft;
+        });
+    }
+
+    // Pan/drag horizontal no Gantt
+    (function () {
+        const ganttCustom = document.getElementById('gantt-custom');
+        let isDown = false;
+        let startX, scrollLeft;
+        if (ganttCustom) {
+            ganttCustom.addEventListener('mousedown', function (e) {
+                if (e.button !== 0) return; // só botão esquerdo
+                isDown = true;
+                ganttCustom.classList.add('dragging');
+                startX = e.pageX - ganttCustom.offsetLeft;
+                scrollLeft = ganttCustom.scrollLeft;
+                document.body.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function (e) {
+                if (!isDown) return;
+                const x = e.pageX - ganttCustom.offsetLeft;
+                const walk = (x - startX) * -1; // sentido inverso
+                ganttCustom.scrollLeft = scrollLeft + walk;
+            });
+            document.addEventListener('mouseup', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+            // Evita seleção de texto durante o drag
+            ganttCustom.addEventListener('mouseleave', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+        }
+    })();
+
+    function isFeriado(val) {
+        // val: yyyy-mm-dd
+        const [yyyy, mm, dd] = val.split('-');
+        const feriadosManuais = getTodosFeriadosManuais();
+        const dataBR = `${dd}/${mm}/${yyyy}`;
+        const feriadoManual = feriadosManuais.find(f => f.data === dataBR);
+        if (feriadoManual) {
+            return feriadoManual.nome || 'Feriado';
+        }
+        if (window.feriadosNacionaisDetalhes) {
+            const feriado = window.feriadosNacionaisDetalhes.find(f => f.date === val);
+            if (feriado) return feriado.name || 'Feriado Nacional';
+        }
+        if (window.feriadosNacionais && window.feriadosNacionais.includes(val)) {
+            return 'Feriado Nacional';
+        }
+        return null;
+    }
+
+    function marcarDatasVermelhas() {
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            // Garante que o input está dentro de um container relativo
+            let container = input.parentNode;
+            if (!container.classList.contains('data-tooltip-container')) {
+                // Cria um container e move o input para dentro dele
+                const wrapper = document.createElement('span');
+                wrapper.className = 'data-tooltip-container';
+                container.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+                container = wrapper;
+            }
+
+            // Remove motivo anterior, se existir
+            let motivoDiv = container.querySelector('.motivo-data-vermelha');
+            if (motivoDiv) motivoDiv.remove();
+
+            let motivo = '';
+            const val = input.value;
+            if (val) {
+                const [yyyy, mm, dd] = val.split('-');
+                const day = new Date(`${yyyy}-${mm}-${dd}T00:00:00`).getDay();
+                const feriado = isFeriado(val);
+                if (feriado) {
+                    motivo = feriado;
+                } else if (day === 0) {
+                    motivo = 'Domingo';
+                } else if (day === 6) {
+                    motivo = 'Sábado';
+                }
+            }
+
+            if (motivo) {
+                input.classList.add('data-vermelha');
+                input.title = motivo;
+                motivoDiv = document.createElement('div');
+                motivoDiv.className = 'motivo-data-vermelha';
+                motivoDiv.textContent = motivo;
+                container.appendChild(motivoDiv);
+            } else {
+                input.classList.remove('data-vermelha');
+                input.removeAttribute('title');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const anoAtual = new Date().getFullYear();
+        const uf = 'GO';
+        const cidade = 'GOIANIA';
+        carregarFeriadosBrasilAPI(anoAtual, uf, cidade);
+
+        // Delegação para qualquer input de data, inclusive dinâmico
+        document.body.addEventListener('input', function (e) {
+            if (e.target && e.target.type === 'date') {
+                setTimeout(marcarDatasVermelhas, 10);
+            }
+        });
+        document.body.addEventListener('change', function (e) {
+            if (e.target && e.target.type === 'date') {
+                setTimeout(marcarDatasVermelhas, 10);
+            }
+        });
+
+        // Observa mudanças na tabela para inputs dinâmicos
+        const tabela = document.getElementById('tabela-tarefas-inline');
+        if (tabela) {
+            const observer = new MutationObserver(() => setTimeout(marcarDatasVermelhas, 10));
+            observer.observe(tabela, { childList: true, subtree: true });
+        }
+
+        // Chama ao carregar
+        setTimeout(marcarDatasVermelhas, 10);
+    });
+
+    // Funções utilitárias para feriados manuais (usadas pelo sistema, sem interface)
+    function getFeriadosManuaisStorage(ano) {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        return (dados[ano] || []);
+    }
+    function setFeriadosManuaisStorage(ano, lista) {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        dados[ano] = lista;
+        localStorage.setItem('feriadosManuais', JSON.stringify(dados));
+    }
+    // Nova função: retorna todos os feriados manuais de todos os anos
+    function getTodosFeriadosManuais() {
+        const dados = JSON.parse(localStorage.getItem('feriadosManuais') || '{}');
+        let todos = [];
+        Object.values(dados).forEach(arr => { todos = todos.concat(arr); });
+        return todos;
+    }
+
+    // Função para buscar feriados nacionais via BrasilAPI
+    function carregarFeriadosBrasilAPI(ano, uf, cidade) {
+        fetch(`https://brasilapi.com.br/api/feriados/v1/${ano}`)
+            .then(resp => resp.json())
+            .then(data => {
+                window.feriadosNacionaisDetalhes = data;
+                window.feriadosNacionais = data.map(f => f.date); // formato yyyy-mm-dd
+            })
+            .catch(() => {
+                window.feriadosNacionais = [];
+                window.feriadosNacionaisDetalhes = [];
+            });
+        // Para feriados municipais, use os manuais
+    }
+
+    // Nova função global para evitar erro de referência
+    function onInicioOuFimEdit(input) {
+        setTimeout(() => {
+            const tr = input.closest('tr');
+            const dataInicio = tr.querySelector('input[name="data_inicio"]').value;
+            const dataFim = tr.querySelector('input[name="data_fim"]').value;
+            const duracaoInput = tr.querySelector('input[name="duracao"]');
+            if (dataInicio && dataFim) {
+                const dur = calcularDuracao(dataInicio, dataFim);
+                if (duracaoInput) duracaoInput.value = dur;
+            }
+            marcarDatasVermelhas();
+            // NOVO: Recalcula todas as tarefas dependentes
+            atualizarTarefasDependentes();
+        }, 10);
+    }
+    window.onInicioOuFimEdit = onInicioOuFimEdit;
+
+    // NOVO: Função para recalcular todas as tarefas dependentes
+    function atualizarTarefasDependentes() {
+        document.querySelectorAll('input[name="predecessoras"]').forEach(input => {
+            window.onPredecessorasEdit(input);
+        });
+    }
+
+    // Debounce para o cálculo de duração
+    window._debounceTimers = window._debounceTimers || new WeakMap();
+    function onDuracaoOuFimEdit(input, immediate) {
+        const tr = input.closest('tr');
+        if (!immediate) {
+            // Debounce: só executa se o usuário parar de digitar por 400ms
+            if (window._debounceTimers.has(tr)) clearTimeout(window._debounceTimers.get(tr));
+            const timer = setTimeout(() => {
+                _onDuracaoOuFimEditExec(input);
+                window._debounceTimers.delete(tr);
+            }, 400);
+            window._debounceTimers.set(tr, timer);
+        } else {
+            if (window._debounceTimers.has(tr)) clearTimeout(window._debounceTimers.get(tr));
+            _onDuracaoOuFimEditExec(input);
+        }
+    }
+    function _onDuracaoOuFimEditExec(input) {
+        const tr = input.closest('tr');
+        const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+        const dataFimInput = tr.querySelector('input[name="data_fim"]');
+        const duracaoInput = tr.querySelector('input[name="duracao"]');
+        const duracao = parseInt(duracaoInput.value, 10);
+        const dataInicio = dataInicioInput.value;
+        const dataFim = dataFimInput.value;
+        if (duracao && duracao > 0) {
+            if (dataInicioInput.readOnly && !dataFimInput.readOnly && dataInicio) {
+                const inicio = new Date(dataInicio);
+                inicio.setDate(inicio.getDate() + duracao - 1);
+                dataFimInput.value = inicio.toISOString().split('T')[0];
+            }
+            else if (dataFimInput.readOnly && !dataInicioInput.readOnly && dataFim) {
+                const fim = new Date(dataFim);
+                fim.setDate(fim.getDate() - duracao + 1);
+                dataInicioInput.value = fim.toISOString().split('T')[0];
+            }
+            else if (!dataInicioInput.readOnly && !dataFimInput.readOnly) {
+                if (dataInicio) {
+                    const inicio = new Date(dataInicio);
+                    inicio.setDate(inicio.getDate() + duracao - 1);
+                    dataFimInput.value = inicio.toISOString().split('T')[0];
+                } else if (dataFim) {
+                    const fim = new Date(dataFim);
+                    fim.setDate(fim.getDate() - duracao + 1);
+                    dataInicioInput.value = fim.toISOString().split('T')[0];
+                }
+            }
+        }
+        marcarDatasVermelhas();
+    }
+    window.onDuracaoOuFimEdit = onDuracaoOuFimEdit;
+
+    // Indicativo visual para datas calculadas automaticamente (exemplo: fundo amarelo)
+    function marcarDatasCalculadasPorPredecessora() {
+        document.querySelectorAll('input[name="data_inicio"], input[name="data_fim"]').forEach(input => {
+            if (input.dataset.calculada === '1') {
+                input.style.background = '#fffbe6 !important';
+                input.classList.add('data-calculada');
+            } else {
+                input.style.background = '';
+                input.classList.remove('data-calculada');
+            }
+        });
+    }
+
+    function salvarLinhaTarefa(btn) {
+        const tr = btn.closest('tr');
+        const nomeInput = tr.querySelector('input[name="nome"]');
+        const tarefaId = nomeInput ? nomeInput.dataset.id : null;
+
+        if (!tarefaId) {
+            alert('Erro: ID da tarefa não encontrado.');
+            return;
+        }
+
+        const nome = nomeInput ? nomeInput.value.trim() : '';
+        const predecessorasInput = tr.querySelector('input[name="predecessoras"]');
+        const predecessoras = predecessorasInput ? predecessorasInput.value.trim() : '';
+        const data_inicioInput = tr.querySelector('input[name="data_inicio"]');
+        const data_inicio = data_inicioInput ? data_inicioInput.value : '';
+        const data_fimInput = tr.querySelector('input[name="data_fim"]');
+        const data_fim = data_fimInput ? data_fimInput.value : '';
+        const duracaoInput = tr.querySelector('input[name="duracao"]');
+        const duracao = duracaoInput ? duracaoInput.value : '';
+        const statusSelect = tr.querySelector('select[name="status"]');
+        const status = statusSelect ? statusSelect.value : 'pendente';
+        const usuario_id_el = tr.querySelector('select[name="usuario_id"]');
+        let usuario_id = usuario_id_el ? usuario_id_el.value : null;
+        usuario_id = (usuario_id === '' ? null : usuario_id);
+
+        if (!nome) {
+            alert('O nome da tarefa é obrigatório.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        let payload = {
+            nome,
+            predecessoras,
+            data_inicio: data_inicio || null,
+            data_fim: data_fim || null,
+            duracao: duracao || null,
+            status,
+            usuario_id: usuario_id || null
+        };
+
+        // Se houver input de colecao na linha, envie
+        const colecaoInput = tr.querySelector('input[name="colecao"]');
+        if (colecaoInput) {
+            payload.colecao = colecaoInput.value.trim();
+        }
+
+        fetch(`/tarefas/editar/${tarefaId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(resp => {
+                if (!resp.ok) {
+                    throw new Error(`HTTP error! status: ${resp.status}`);
+                }
+                return resp.json();
+            })
+            .then(data => {
+                if (data.sucesso) {
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-success');
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-save"></i>';
+                        btn.disabled = false;
+                    }, 1000);
+                } else {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-danger');
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    alert(data.erro || 'Erro ao salvar tarefa.');
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-save"></i>';
+                        btn.disabled = false;
+                    }, 2000);
+                }
+            })
+            .catch((error) => {
+                console.error('Erro ao salvar tarefa:', error);
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-danger');
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                alert('Erro ao salvar tarefa: ' + error.message);
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-save"></i>';
+                    btn.disabled = false;
+                }, 2000);
+            });
+    }
+    window.salvarLinhaTarefa = salvarLinhaTarefa;
+
+    function abrirModalPredecessora(btn) {
+        const tr = btn.closest('tr');
+        const input = tr.querySelector('input[name="predecessoras"]');
+
+        // Limpar campos do modal
+        document.getElementById('selectTarefa').value = '';
+        document.getElementById('selectTipo').value = '';
+        document.getElementById('inputDeslocamento').value = '0';
+        document.getElementById('previewCodigo').textContent = 'Código será gerado automaticamente...';
+
+        // Armazenar input ativo
+        window._inputPredecessorasAtivo = input;
+
+        // Mostrar modal
+        var modal = new bootstrap.Modal(document.getElementById('modalPredecessora'));
+        modal.show();
+
+        // Inicializar Select2 após o modal estar visível
+        setTimeout(function () {
+            try {
+                // Destruir instâncias existentes
+                if ($('#selectTarefa').data('select2')) {
+                    $('#selectTarefa').select2('destroy');
+                }
+                if ($('#selectTipo').data('select2')) {
+                    $('#selectTipo').select2('destroy');
+                }
+
+                // Inicializar Select2
+                $('#selectTarefa').select2({
+                    placeholder: 'Escolha uma tarefa...',
+                    allowClear: true,
+                    width: '100%',
+                    theme: 'bootstrap-5'
+                });
+
+                $('#selectTipo').select2({
+                    placeholder: 'Escolha o tipo...',
+                    allowClear: true,
+                    width: '100%',
+                    theme: 'bootstrap-5'
+                });
+
+                console.log('Select2 inicializado no modal');
+
+                // Adicionar eventos para preview
+                $('#selectTarefa, #selectTipo').on('change', function () {
+                    atualizarPreviewCodigo();
+                });
+                $('#inputDeslocamento').on('input', function () {
+                    atualizarPreviewCodigo();
+                });
+
+                // Inicializar evento do botão salvar AQUI
+                console.log('Inicializando evento do botão salvar...');
+                const btnSalvar = document.getElementById('btnSalvarPredecessoras');
+                console.log('Botão salvar encontrado:', btnSalvar);
+
+                if (btnSalvar) {
+                    // Remover eventos anteriores
+                    $('#btnSalvarPredecessoras').off('click');
+                    btnSalvar.removeEventListener('click', window._salvarPredecessorasHandler);
+
+                    // Adicionar novo evento
+                    window._salvarPredecessorasHandler = function (e) {
+                        console.log('=== EVENTO CLICK DISPARADO ===');
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        console.log('Botão salvar clicado');
+
+                        const tarefaId = $('#selectTarefa').val();
+                        const tipo = $('#selectTipo').val();
+                        const deslocamento = $('#inputDeslocamento').val();
+
+                        console.log('Valores:', { tarefaId, tipo, deslocamento });
+
+                        if (!tarefaId || !tipo) {
+                            alert('Por favor, selecione uma tarefa e um tipo de relação.');
+                            return;
+                        }
+
+                        const tarefaOption = $('#selectTarefa option:selected');
+                        const ordem = tarefaOption.data('ordem');
+
+                        console.log('Ordem da tarefa:', ordem);
+
+                        // Gerar código no formato: ordem + tipo + deslocamento
+                        let codigo = `${ordem}${tipo}`;
+                        if (deslocamento && deslocamento !== '0') {
+                            const sinal = parseInt(deslocamento) > 0 ? '+' : '';
+                            codigo += `${sinal}${deslocamento}d`;
+                        }
+
+                        console.log('Código final:', codigo);
+
+                        // Adicionar ao campo de predecessoras
+                        if (window._inputPredecessorasAtivo) {
+                            const valorAtual = window._inputPredecessorasAtivo.value.trim();
+                            let novasPredecessoras = valorAtual ? valorAtual.split(';') : [];
+
+                            console.log('Predecessoras atuais:', novasPredecessoras);
+
+                            // Verificar se já existe uma predecessora para esta tarefa
+                            const indexExistente = novasPredecessoras.findIndex(pred => {
+                                const match = pred.match(/^(\d+)/);
+                                return match && match[1] === ordem;
+                            });
+
+                            if (indexExistente >= 0) {
+                                // Substituir predecessora existente
+                                novasPredecessoras[indexExistente] = codigo;
+                                console.log('Substituindo predecessora existente');
+                            } else {
+                                // Adicionar nova predecessora
+                                novasPredecessoras.push(codigo);
+                                console.log('Adicionando nova predecessora');
+                            }
+
+                            const novoValor = novasPredecessoras.join(';');
+                            console.log('Novo valor:', novoValor);
+
+                            window._inputPredecessorasAtivo.value = novoValor;
+                            window._inputPredecessorasAtivo.dispatchEvent(new Event('change'));
+
+                            console.log('Campo atualizado com sucesso');
+                        } else {
+                            console.error('Input ativo não encontrado');
+                        }
+
+                        // Fechar modal
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalPredecessora'));
+                        modal.hide();
+
+                        // Mostrar feedback
+                        const btn = document.getElementById('btnSalvarPredecessoras');
+                        const textoOriginal = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i> Salvo!';
+                        btn.classList.add('btn-success');
+                        setTimeout(() => {
+                            btn.innerHTML = textoOriginal;
+                            btn.classList.remove('btn-success');
+                        }, 1500);
+                    };
+
+                    btnSalvar.addEventListener('click', window._salvarPredecessorasHandler);
+                    console.log('Evento do botão salvar adicionado com sucesso');
+                } else {
+                    console.error('Botão salvar não encontrado!');
+                }
+
+            } catch (error) {
+                console.error('Erro ao inicializar Select2 no modal:', error);
+            }
+        }, 300);
+    }
+
+    // Função para atualizar preview do código
+    function atualizarPreviewCodigo() {
+        const tarefaId = $('#selectTarefa').val();
+        const tipo = $('#selectTipo').val();
+        const deslocamento = $('#inputDeslocamento').val();
+
+        console.log('Atualizando preview:', { tarefaId, tipo, deslocamento });
+
+        if (tarefaId && tipo) {
+            const tarefaOption = $('#selectTarefa option:selected');
+            const ordem = tarefaOption.data('ordem');
+
+            let codigo = `${ordem}${tipo}`;
+            if (deslocamento && deslocamento !== '0') {
+                const sinal = parseInt(deslocamento) > 0 ? '+' : '';
+                codigo += `${sinal}${deslocamento}d`;
+            }
+
+            console.log('Código gerado:', codigo);
+            document.getElementById('previewCodigo').textContent = codigo;
+            document.getElementById('previewCodigo').style.color = '#28a745';
+        } else {
+            document.getElementById('previewCodigo').textContent = 'Código será gerado automaticamente...';
+            document.getElementById('previewCodigo').style.color = '#495057';
+        }
+    }
+
+    // Inicializar Select2 para os campos do modal
+    $(document).ready(function () {
+        // Teste para verificar se jQuery está carregado
+        console.log('jQuery version:', $.fn.jquery);
+        console.log('Document ready - modal de predecessoras pronto');
+    });
+
+    function calcularDuracao(dataInicio, dataFim) {
+        if (!dataInicio || !dataFim) return '';
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+        if (isNaN(inicio) || isNaN(fim)) return '';
+        // Inclusivo: diferença em dias + 1
+        return Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    // Salvar ao pressionar Tab ou Enter em qualquer input/select da linha
+    function adicionarEventosSalvarTabEnter() {
+        document.querySelectorAll('#tabela-tarefas-inline input, #tabela-tarefas-inline select').forEach(el => {
+            el.addEventListener('keydown', function (e) {
+                const tr = el.closest('tr');
+                if (e.key === 'Enter') {
+                    if (tr && tr.id === 'linha-nova-tarefa') {
+                        // Enter na linha de nova tarefa cria a tarefa
+                        const btnCriar = tr.querySelector('.btn-success');
+                        if (btnCriar && !btnCriar.disabled) {
+                            e.preventDefault();
+                            btnCriar.disabled = true; // previne duplo envio
+                            criarTarefaNovaLinha(btnCriar);
+                            setTimeout(() => { btnCriar.disabled = false; }, 1000); // reabilita após 1s
+                        }
+                    } else if (tr) {
+                        // Enter em linha existente salva
+                        const btnSalvar = tr.querySelector('.btn-success');
+                        if (btnSalvar) {
+                            e.preventDefault();
+                            salvarLinhaTarefa(btnSalvar);
+                        }
+                    }
+                }
+                // NOVO: Ctrl+S ou Cmd+S salva a tarefa da linha atual
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                    if (tr && tr.id !== 'linha-nova-tarefa') {
+                        const btnSalvar = tr.querySelector('.btn-success');
+                        if (btnSalvar) {
+                            e.preventDefault();
+                            salvarLinhaTarefa(btnSalvar);
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', adicionarEventosSalvarTabEnter);
+    // Se linhas forem adicionadas dinamicamente, chame adicionarEventosSalvarTabEnter() após inserir a linha
+
+    function criarTarefaNovaLinha(btn) {
+        const tr = btn.closest('tr');
+        const nome = tr.querySelector('input[name="nome"]').value.trim();
+        const predecessoras = tr.querySelector('input[name="predecessoras"]').value.trim();
+        const data_inicio = tr.querySelector('input[name="data_inicio"]').value;
+        const data_fim = tr.querySelector('input[name="data_fim"]').value;
+        const duracao = tr.querySelector('input[name="duracao"]').value;
+        const status = tr.querySelector('select[name="status"]').value;
+        const usuario_id_el = tr.querySelector('select[name="usuario_id"]');
+        let usuario_id = usuario_id_el ? usuario_id_el.value : null;
+        usuario_id = (usuario_id === '' ? null : usuario_id);
+
+        if (!nome) {
+            alert('O nome da tarefa é obrigatório.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        // Pega o id do projeto do contexto Jinja
+        const projeto_id = '{{ projeto.id }}';
+
+        fetch(`/projetos/${projeto_id}/criar_tarefa_rapida`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                nome,
+                predecessoras: predecessoras || null,
+                data_inicio: data_inicio || null,
+                data_fim: data_fim || null,
+                status,
+                usuario_id: usuario_id || null,
+                duracao: duracao || null
+            })
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus"></i>';
+                if (data.sucesso) {
+                    // Insere a nova linha antes da linha de nova tarefa
+                    const tbody = tr.parentElement;
+                    const temp = document.createElement('tbody');
+                    temp.innerHTML = data.html_linha;
+                    const novaLinha = temp.querySelector('tr');
+                    tbody.insertBefore(novaLinha, tr);
+                    // Atualiza o número da nova linha
+                    const linhas = Array.from(tbody.querySelectorAll('tr')).filter(row => row.id !== 'linha-nova-tarefa');
+                    const numero = linhas.length;
+                    const tdNumero = novaLinha.querySelector('.numero-tarefa');
+                    if (tdNumero) tdNumero.textContent = numero;
+                    novaLinha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Limpa os campos da linha de nova tarefa
+                    tr.querySelectorAll('input, select').forEach(el => {
+                        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                        else el.value = '';
+                    });
+                    // Reaplica eventos de salvar ao Tab/Enter e drag&drop
+                    adicionarEventosSalvarTabEnter();
+                    inicializarSortableTarefas();
+                    atualizarNumerosTarefas();
+                } else {
+                    alert('Erro ao criar tarefa: ' + (data.erro || 'Erro desconhecido.'));
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus"></i>';
+                alert('Erro ao criar tarefa: ' + err);
+            });
+    }
+
+    // Função para excluir tarefa via AJAX
+    function excluirTarefa(btn) {
+        if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+        const tr = btn.closest('tr');
+        const tarefaId = tr.querySelector('input[name="nome"]').dataset.id;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        fetch(`/tarefas/excluir/${tarefaId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.sucesso) {
+                    tr.remove();
+                } else {
+                    alert(data.erro || 'Erro ao excluir tarefa.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-trash"></i>';
+                }
+            })
+            .catch(() => {
+                alert('Erro ao excluir tarefa.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i>';
+            });
+    }
+    window.excluirTarefa = excluirTarefa;
+
+    // Drag & Drop com SortableJS
+    function inicializarSortableTarefas() {
+        const tabela = document.getElementById('tabela-tarefas-inline').querySelector('tbody');
+        if (!tabela) return;
+        // Remove a linha de nova tarefa temporariamente
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        let tempLinha = null;
+        if (novaLinha) {
+            tempLinha = novaLinha.parentNode.removeChild(novaLinha);
+        }
+        // Inicializa o Sortable apenas nas linhas existentes
+        new Sortable(tabela, {
+            handle: '.drag-handle',
+            animation: 150,
+            draggable: 'tr',
+            onEnd: function () {
+                // Atualiza os números na coluna "Nº"
+                const linhas = Array.from(tabela.querySelectorAll('tr'));
+                linhas.forEach((tr, idx) => {
+                    const tdNumero = tr.querySelector('.numero-tarefa');
+                    if (tdNumero) tdNumero.textContent = idx + 1;
+                });
+                // Coletar IDs das tarefas na nova ordem
+                const ids = linhas.map(tr => tr.querySelector('input[name="nome"]').dataset.id).filter(Boolean);
+                // Enviar para o backend
+                fetch('/tarefas/atualizar_ordem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ ids })
+                });
+            }
+        });
+        // Reinsere a linha de nova tarefa
+        if (tempLinha) {
+            tabela.appendChild(tempLinha);
+            setTimeout(focarNomeNovaTarefa, 50); // Foca após reinserir
+        }
+    }
+    document.addEventListener('DOMContentLoaded', inicializarSortableTarefas);
+    // Se linhas forem adicionadas dinamicamente, chame inicializarSortableTarefas() após inserir a linha
+
+    function salvarTodasTarefas() {
+        // Seleciona todos os botões de salvar das linhas de tarefa (exceto a linha de nova tarefa)
+        document.querySelectorAll('#tabela-tarefas-inline tbody tr:not(#linha-nova-tarefa) .btn-success').forEach(btn => {
+            salvarLinhaTarefa(btn);
+        });
+    }
+    window.salvarTodasTarefas = salvarTodasTarefas;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        if (novaLinha) {
+            novaLinha.querySelectorAll('input, select').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+            });
+        }
+    });
+
+    function liberarLinhaNovaTarefa() {
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        if (novaLinha) {
+            novaLinha.querySelectorAll('input, select, button').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+                el.style.pointerEvents = 'auto';
+            });
+        }
+    }
+    document.addEventListener('DOMContentLoaded', liberarLinhaNovaTarefa);
+    // E sempre que criar uma nova tarefa, reaplique:
+    const _oldCriarTarefaNovaLinha = criarTarefaNovaLinha;
+    criarTarefaNovaLinha = function (btn) {
+        _oldCriarTarefaNovaLinha(btn);
+        setTimeout(liberarLinhaNovaTarefa, 100);
+    }
+
+    function atualizarNumerosTarefas() {
+        const linhas = Array.from(document.querySelectorAll('#tabela-tarefas-inline tbody tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+        linhas.forEach((tr, idx) => {
+            const tdNumero = tr.querySelector('.numero-tarefa');
+            if (tdNumero) tdNumero.textContent = idx + 1;
+        });
+    }
+
+    function onPredecessorasEdit(input) {
+        console.log('🔧 onPredecessorasEdit chamada para:', input.value);
+        const tr = input.closest('tr');
+        const predecessorasStr = input.value.trim();
+        const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+        const dataFimInput = tr.querySelector('input[name="data_fim"]');
+
+        console.log('📅 Campos encontrados:', {
+            dataInicioInput: !!dataInicioInput,
+            dataFimInput: !!dataFimInput,
+            predecessorasStr: predecessorasStr
+        });
+
+        // Se não há predecessoras, liberar edição manual
+        if (!predecessorasStr) {
+            console.log('❌ Sem predecessoras, liberando edição manual');
+            if (dataInicioInput) {
+                dataInicioInput.readOnly = false;
+                dataInicioInput.dataset.calculada = '';
+                dataInicioInput.style.background = '';
+                dataInicioInput.classList.remove('data-calculada');
+            }
+            if (dataFimInput) {
+                dataFimInput.readOnly = false;
+                dataFimInput.dataset.calculada = '';
+                dataFimInput.style.background = '';
+                dataFimInput.classList.remove('data-calculada');
+            }
+            return;
+        }
+
+        const preds = predecessorasStr.split(';').map(s => s.trim()).filter(Boolean);
+        console.log('🔗 Predecessoras processadas:', preds);
+
+        if (preds.length === 0) return;
+
+        // Mapear número de ordem para linha da tabela
+        const linhas = Array.from(document.querySelectorAll('#tabela-tarefas-inline tbody tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+        const ordemParaLinha = {};
+        linhas.forEach(trLinha => {
+            const ordem = trLinha.querySelector('.numero-tarefa')?.textContent?.trim();
+            if (ordem) ordemParaLinha[ordem] = trLinha;
+        });
+
+        console.log('📊 Ordem para linha mapeada:', ordemParaLinha);
+
+        // Para cada predecessora, calcular a data alvo
+        let datasInicio = [];
+        let datasFim = [];
+        preds.forEach(pred => {
+            // Ex: 2FS+2d, 3SS-1d
+            const m = pred.match(/^(\d+)(FS|SS|FF|SF)?([+-]\d+d)?$/);
+            if (!m) {
+                console.log(`⚠️ Predecessora inválida: ${pred}`);
+                return;
+            }
+            const ordemPred = m[1];
+            const tipo = m[2] || 'FS';
+            const desloc = m[3] || '';
+            const linhaPred = ordemParaLinha[ordemPred];
+
+            console.log(`🔍 Processando predecessora: ${pred} (ordem: ${ordemPred}, tipo: ${tipo}, desloc: ${desloc})`);
+
+            if (!linhaPred) {
+                console.log(`❌ Linha predecessora não encontrada para ordem: ${ordemPred}`);
+                return;
+            }
+
+            const dataInicioPred = linhaPred.querySelector('input[name="data_inicio"]').value;
+            const dataFimPred = linhaPred.querySelector('input[name="data_fim"]').value;
+
+            console.log(`📅 Datas da predecessora: início=${dataInicioPred}, fim=${dataFimPred}`);
+
+            let baseDate = null;
+            if (tipo === 'FS') baseDate = dataFimPred;
+            else if (tipo === 'SS') baseDate = dataInicioPred;
+            else if (tipo === 'FF') baseDate = dataFimPred;
+            else if (tipo === 'SF') baseDate = dataInicioPred;
+
+            if (!baseDate) {
+                console.log(`❌ Data base não encontrada para tipo: ${tipo}`);
+                return;
+            }
+
+            let data = new Date(baseDate);
+            if (desloc) {
+                const matchDesloc = desloc.match(/([+-])(\d+)d/);
+                if (matchDesloc) {
+                    const sinal = matchDesloc[1] === '+' ? 1 : -1;
+                    const dias = parseInt(matchDesloc[2], 10);
+                    data.setDate(data.getDate() + sinal * dias);
+                    console.log(`📅 Data ajustada: ${data.toISOString().split('T')[0]} (${sinal * dias} dias)`);
+                }
+            }
+
+            if (tipo === 'FS' || tipo === 'SS') datasInicio.push(data);
+            else if (tipo === 'FF' || tipo === 'SF') datasFim.push(data);
+        });
+
+        console.log('📊 Datas calculadas:', { datasInicio: datasInicio.length, datasFim: datasFim.length });
+
+        // Para múltiplas predecessoras: para datas de início, usar a MAIOR; para datas de fim, usar a MAIOR
+        let dataInicioFinal = null;
+        let dataFimFinal = null;
+        datasInicio.forEach(d => { if (!dataInicioFinal || d > dataInicioFinal) dataInicioFinal = d; });
+        datasFim.forEach(d => { if (!dataFimFinal || d > dataFimFinal) dataFimFinal = d; });
+
+        console.log('🎯 Datas finais:', {
+            dataInicioFinal: dataInicioFinal ? dataInicioFinal.toISOString().split('T')[0] : null,
+            dataFimFinal: dataFimFinal ? dataFimFinal.toISOString().split('T')[0] : null
+        });
+
+        // Preencher e bloquear os campos conforme o tipo
+        if (dataInicioFinal && dataInicioInput) {
+            dataInicioInput.value = dataInicioFinal.toISOString().split('T')[0];
+            dataInicioInput.dataset.calculada = '1';
+            dataInicioInput.readOnly = true;
+            dataInicioInput.style.background = '#fffbe6 !important';
+            dataInicioInput.classList.add('data-calculada');
+            console.log('✅ Data de início calculada e bloqueada');
+        }
+        if (dataFimFinal && dataFimInput) {
+            dataFimInput.value = dataFimFinal.toISOString().split('T')[0];
+            dataFimInput.dataset.calculada = '1';
+            dataFimInput.readOnly = true;
+            dataFimInput.style.background = '#fffbe6 !important';
+            dataFimInput.classList.add('data-calculada');
+            console.log('✅ Data de fim calculada e bloqueada');
+        }
+
+        // Se não houver predecessora para um dos campos, liberar edição
+        if (!dataInicioFinal && dataInicioInput) {
+            dataInicioInput.readOnly = false;
+            dataInicioInput.dataset.calculada = '';
+            dataInicioInput.style.background = '';
+            dataInicioInput.classList.remove('data-calculada');
+            console.log('🔓 Data de início liberada para edição');
+        }
+        if (!dataFimFinal && dataFimInput) {
+            dataFimInput.readOnly = false;
+            dataFimInput.dataset.calculada = '';
+            dataFimInput.style.background = '';
+            dataFimInput.classList.remove('data-calculada');
+            console.log('🔓 Data de fim liberada para edição');
+        }
+
+        marcarDatasCalculadasPorPredecessora();
+    }
+
+    // Garante que datas calculadas por predecessora fiquem com a cor correta ao carregar a página
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('🔍 DOMContentLoaded - Iniciando validação de predecessoras');
+
+        // Aguardar um pouco mais para garantir que todos os scripts estejam carregados
+        setTimeout(() => {
+            console.log('🔍 Executando validação de predecessoras após timeout');
+
+            // Verificar se a função existe
+            if (typeof onPredecessorasEdit !== 'function') {
+                console.error('❌ Função onPredecessorasEdit não encontrada, aguardando...');
+                // Tentar novamente após mais tempo
+                setTimeout(() => {
+                    if (typeof onPredecessorasEdit === 'function') {
+                        console.log('✅ Função onPredecessorasEdit encontrada na segunda tentativa');
+                        executarValidacaoPredecessoras();
+                    } else {
+                        console.error('❌ Função onPredecessorasEdit ainda não encontrada');
+                    }
+                }, 1000);
+                return;
+            }
+
+            executarValidacaoPredecessoras();
+        }, 1500);
+
+        function executarValidacaoPredecessoras() {
+            marcarDatasCalculadasPorPredecessora();
+
+            const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
+            console.log(`📋 Encontrados ${predecessorasInputs.length} campos de predecessoras`);
+
+            if (predecessorasInputs.length === 0) {
+                console.log('⚠️ Nenhum campo de predecessoras encontrado');
+                return;
+            }
+
+            predecessorasInputs.forEach((input, index) => {
+                const valor = input.value.trim();
+                console.log(`📝 Predecessora ${index + 1}: "${valor}"`);
+                if (valor) {
+                    console.log(`✅ Executando validação para predecessora: ${valor}`);
+                    try {
+                        onPredecessorasEdit(input);
+                    } catch (error) {
+                        console.error('❌ Erro ao executar validação de predecessoras:', error);
+                    }
+                }
+            });
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(marcarDatasVermelhas, 10);
+
+        // Adicionar event listeners para mudanças nas predecessoras
+        setTimeout(() => {
+            const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
+            console.log(`🔗 Adicionando event listeners para ${predecessorasInputs.length} campos de predecessoras`);
+
+            predecessorasInputs.forEach((input, index) => {
+                // Event listener para mudanças
+                input.addEventListener('change', function () {
+                    console.log(`🔄 Mudança detectada em predecessoras ${index + 1}: ${this.value}`);
+                    if (typeof onPredecessorasEdit === 'function') {
+                        onPredecessorasEdit(this);
+                    }
+                });
+
+                // Event listener para digitação
+                input.addEventListener('input', function () {
+                    console.log(`⌨️ Input detectado em predecessoras ${index + 1}: ${this.value}`);
+                    if (typeof onPredecessorasEdit === 'function') {
+                        onPredecessorasEdit(this);
+                    }
+                });
+
+                // Event listener para perda de foco
+                input.addEventListener('blur', function () {
+                    console.log(`👁️ Blur detectado em predecessoras ${index + 1}: ${this.value}`);
+                    if (typeof onPredecessorasEdit === 'function') {
+                        onPredecessorasEdit(this);
+                    }
+                });
+            });
+        }, 2000);
+    });
+
+    // Função para focar o campo nome da linha de nova tarefa
+    function focarNomeNovaTarefa() {
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+        if (novaLinha) {
+            const inputNome = novaLinha.querySelector('input[name="nome"]');
+            if (inputNome && !inputNome.disabled && !inputNome.readOnly) {
+                inputNome.focus();
+                inputNome.select();
+            }
+        }
+    }
+    // Foca ao carregar a página
+    document.addEventListener('DOMContentLoaded', focarNomeNovaTarefa);
+
+    // Modifique a função criarTarefaNovaLinha para focar após limpar os campos
+    const _oldCriarTarefaNovaLinha2 = criarTarefaNovaLinha;
+    criarTarefaNovaLinha = function (btn) {
+        _oldCriarTarefaNovaLinha2(btn);
+        setTimeout(() => {
+            liberarLinhaNovaTarefa();
+            focarNomeNovaTarefa();
+        }, 100);
+    }
+
+    // Substituir confirm por modal de exclusão
+    let tarefaIdParaExcluir = null;
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-excluir-tarefa').forEach(btn => {
+            btn.addEventListener('click', function () {
+                tarefaIdParaExcluir = this.getAttribute('data-tarefa-id');
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmarExclusaoTarefa'));
+                modal.show();
+            });
+        });
+        document.getElementById('btnConfirmarExclusaoTarefa').addEventListener('click', function () {
+            if (!tarefaIdParaExcluir) return;
+            const btn = document.querySelector(`.btn-excluir-tarefa[data-tarefa-id='${tarefaIdParaExcluir}']`);
+            if (!btn) return;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            fetch(`/tarefas/excluir/${tarefaIdParaExcluir}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        const tr = btn.closest('tr');
+                        if (tr) tr.remove();
+                    } else {
+                        alert(data.erro || 'Erro ao excluir tarefa.');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-trash"></i>';
+                    }
+                })
+                .catch(() => {
+                    alert('Erro ao excluir tarefa.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-trash"></i>';
+                });
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusaoTarefa'));
+            if (modal) modal.hide();
+            tarefaIdParaExcluir = null;
+        });
+    });
+
+    // Funções para edição da ordem das tarefas
+    function handleOrdemKeydown(event, element) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            element.blur();
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            element.textContent = element.getAttribute('data-original-value') || '';
+            element.blur();
+        } else if (event.key === 'Tab') {
+            // Permitir navegação normal com Tab
+            return;
+        } else {
+            // Permitir apenas números
+            if (!/^\d$/.test(event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+                event.preventDefault();
+            }
+        }
+    }
+
+    function atualizarOrdemTarefa(element) {
+        const tarefaId = element.getAttribute('data-id');
+        const novaOrdem = parseInt(element.textContent.trim());
+
+        // Validar se é um número válido
+        if (isNaN(novaOrdem) || novaOrdem < 1) {
+            alert('A ordem deve ser um número maior que 0.');
+            element.textContent = element.getAttribute('data-original-value') || '';
+            return;
+        }
+
+        // Verificar se a ordem já existe (permitir com aviso)
+        const todasOrdens = Array.from(document.querySelectorAll('.numero-tarefa'))
+            .filter(td => td !== element)
+            .map(td => parseInt(td.textContent.trim()))
+            .filter(ordem => !isNaN(ordem));
+
+        if (todasOrdens.includes(novaOrdem)) {
+            if (!confirm(`A ordem ${novaOrdem} já existe. Deseja continuar mesmo assim?`)) {
+                element.textContent = element.getAttribute('data-original-value') || '';
+                return;
+            }
+        }
+
+        // Atualizar no backend
+        fetch('/tarefas/atualizar_ordem_individual', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                tarefa_id: tarefaId,
+                nova_ordem: novaOrdem
+            })
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.sucesso) {
+                    // Atualizar o valor original
+                    element.setAttribute('data-original-value', novaOrdem.toString());
+
+                    // Feedback visual
+                    element.style.backgroundColor = '#d4edda';
+                    element.style.color = '#155724';
+                    setTimeout(() => {
+                        element.style.backgroundColor = '';
+                        element.style.color = '';
+                    }, 1000);
+                } else {
+                    alert('Erro ao atualizar ordem: ' + (data.erro || 'Erro desconhecido.'));
+                    element.textContent = element.getAttribute('data-original-value') || '';
+                }
+            })
+            .catch(err => {
+                alert('Erro ao atualizar ordem: ' + err);
+                element.textContent = element.getAttribute('data-original-value') || '';
+            });
+    }
+
+    function reordenarTarefasVisualmente() {
+        const tbody = document.querySelector('#tabela-tarefas-inline tbody');
+        const novaLinha = document.getElementById('linha-nova-tarefa');
+
+        // Remover temporariamente a linha de nova tarefa
+        let novaLinhaRemovida = null;
+        if (novaLinha) {
+            novaLinhaRemovida = novaLinha.parentNode.removeChild(novaLinha);
+        }
+
+        // Pegar apenas as linhas de tarefas existentes (excluir linha de nova tarefa)
+        const linhas = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+
+        // Ordenar linhas por ordem
+        linhas.sort((a, b) => {
+            const ordemA = parseInt(a.querySelector('.numero-tarefa').textContent.trim()) || 0;
+            const ordemB = parseInt(b.querySelector('.numero-tarefa').textContent.trim()) || 0;
+            return ordemA - ordemB;
+        });
+
+        // Reinserir linhas na ordem correta
+        linhas.forEach(linha => {
+            tbody.appendChild(linha);
+        });
+
+        // Reinserir a linha de nova tarefa no final
+        if (novaLinhaRemovida) {
+            tbody.appendChild(novaLinhaRemovida);
+        }
+    }
+
+    // Adicionar eventos para edição da ordem
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.numero-tarefa').forEach(td => {
+            // Salvar valor original ao focar
+            td.addEventListener('focus', function () {
+                this.setAttribute('data-original-value', this.textContent.trim());
+                this.style.backgroundColor = '#fff3cd';
+                this.style.border = '1px solid #ffc107';
+            });
+
+            // Restaurar estilo ao perder foco
+            td.addEventListener('blur', function () {
+                this.style.backgroundColor = '';
+                this.style.border = '';
+            });
+
+            // Permitir apenas números ao digitar
+            td.addEventListener('input', function () {
+                const valor = this.textContent.trim();
+                if (valor && !/^\d+$/.test(valor)) {
+                    this.textContent = valor.replace(/\D/g, '');
+                }
+            });
+        });
+    });
+
+    // Exportar função para escopo global
+    window.onPredecessorasEdit = onPredecessorasEdit;
+
+    // Função de inicialização robusta para predecessoras
+    function inicializarPredecessoras() {
+        console.log('🚀 Inicializando sistema de predecessoras...');
+
+        // Aguardar um pouco para garantir que o DOM esteja pronto
+        setTimeout(() => {
+            const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
+            console.log(`📋 Encontrados ${predecessorasInputs.length} campos de predecessoras`);
+
+            if (predecessorasInputs.length === 0) {
+                console.log('⚠️ Nenhum campo de predecessoras encontrado, tentando novamente...');
+                setTimeout(inicializarPredecessoras, 500);
+                return;
+            }
+
+            // Remover event listeners antigos para evitar duplicação
+            predecessorasInputs.forEach(input => {
+                input.removeEventListener('change', window._handlerPredecessoras);
+                input.removeEventListener('input', window._handlerPredecessoras);
+                input.removeEventListener('blur', window._handlerPredecessoras);
+            });
+
+            // Criar handler único para evitar duplicação
+            window._handlerPredecessoras = function () {
+                console.log('🔄 Evento detectado em predecessoras:', this.value);
+                if (typeof window.onPredecessorasEdit === 'function') {
+                    window.onPredecessorasEdit(this);
+                } else {
+                    console.error('❌ Função onPredecessorasEdit não disponível');
+                }
+            };
+
+            // Adicionar event listeners para todos os campos
+            predecessorasInputs.forEach((input, index) => {
+                input.addEventListener('change', window._handlerPredecessoras);
+                input.addEventListener('input', window._handlerPredecessoras);
+                input.addEventListener('blur', window._handlerPredecessoras);
+                console.log(`✅ Event listeners adicionados para predecessora ${index + 1}`);
+            });
+
+            // Executar validação inicial para campos que já têm valor
+            predecessorasInputs.forEach((input, index) => {
+                const valor = input.value.trim();
+                if (valor) {
+                    console.log(`📝 Executando validação inicial para predecessora ${index + 1}: "${valor}"`);
+                    setTimeout(() => {
+                        if (typeof window.onPredecessorasEdit === 'function') {
+                            window.onPredecessorasEdit(input);
+                        }
+                    }, 100);
+                }
+            });
+
+            console.log('✅ Sistema de predecessoras inicializado com sucesso!');
+        }, 100);
+    }
+
+    // Inicializar quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializarPredecessoras);
+    } else {
+        inicializarPredecessoras();
+    }
+
+    // Também inicializar quando a página for carregada (para casos de navegação)
+    window.addEventListener('load', inicializarPredecessoras);
+
+    // Inicializar após um tempo adicional para garantir que tudo esteja carregado
+    setTimeout(inicializarPredecessoras, 1000);
+    setTimeout(inicializarPredecessoras, 2000);
+
+    // Função de debug para verificar o estado
+    window.debugPredecessoras = function () {
+        console.log('🔍 Debug do sistema de predecessoras:');
+        console.log('- Função onPredecessorasEdit disponível:', typeof window.onPredecessorasEdit === 'function');
+        console.log('- Handler de eventos disponível:', typeof window._handlerPredecessoras === 'function');
+        console.log('- Campos de predecessoras encontrados:', document.querySelectorAll('input[name="predecessoras"]').length);
+        console.log('- Event listeners ativos:', document.querySelectorAll('input[name="predecessoras"]').length > 0);
+
+        // Testar um campo
+        const primeiroCampo = document.querySelector('input[name="predecessoras"]');
+        if (primeiroCampo) {
+            console.log('- Primeiro campo:', primeiroCampo);
+            console.log('- Valor atual:', primeiroCampo.value);
+            console.log('- Event listeners:', primeiroCampo.onchange, primeiroCampo.onkeyup);
+        }
+    };
+
+    // FUNÇÃO PRINCIPAL: Restaurar formatação visual das predecessoras
+    function restaurarFormatacaoPredecessoras() {
+        console.log('🎨 Restaurando formatação visual das predecessoras...');
+
+        const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
+        console.log(`📋 Encontrados ${predecessorasInputs.length} campos de predecessoras para restaurar`);
+
+        predecessorasInputs.forEach((input, index) => {
+            const predecessorasStr = input.value.trim();
+            if (predecessorasStr) {
+                console.log(`🔄 Restaurando formatação para predecessora ${index + 1}: "${predecessorasStr}"`);
+
+                // Executar a função de predecessoras para restaurar formatação
+                if (typeof window.onPredecessorasEdit === 'function') {
+                    window.onPredecessorasEdit(input);
+                } else if (typeof onPredecessorasEdit === 'function') {
+                    onPredecessorasEdit(input);
+                }
+            }
+        });
+
+        console.log('✅ Formatação visual restaurada com sucesso!');
+    }
+
+    // Função para detectar e marcar campos calculados automaticamente
+    function marcarCamposCalculados() {
+        console.log('🔍 Detectando campos calculados automaticamente...');
+
+        // Aguardar um pouco para garantir que todos os campos estejam carregados
+        setTimeout(() => {
+            const dataInicioInputs = document.querySelectorAll('input[name="data_inicio"]');
+            const dataFimInputs = document.querySelectorAll('input[name="data_fim"]');
+
+            console.log(`📅 Encontrados ${dataInicioInputs.length} campos de data_inicio e ${dataFimInputs.length} de data_fim`);
+
+            // Marcar campos que já têm datas calculadas
+            [...dataInicioInputs, ...dataFimInputs].forEach(input => {
+                if (input.value && input.dataset.calculada === '1') {
+                    console.log(`✅ Marcando campo calculado: ${input.name} = ${input.value}`);
+                    input.style.background = '#fffbe6 !important';
+                    input.classList.add('data-calculada');
+                    input.readOnly = true;
+                }
+            });
+
+            // Agora restaurar formatação das predecessoras
+            restaurarFormatacaoPredecessoras();
+        }, 500);
+    }
+
+    // Expor função de debug no console
+    console.log('🔧 Para debugar predecessoras, use: debugPredecessoras()');
+    console.log('🎨 Para restaurar formatação manualmente, use: restaurarFormatacaoPredecessoras()');
+    console.log('🔍 Para detectar campos calculados, use: marcarCamposCalculados()');
+
+    // EXECUTAR restauração automática da formatação
+    console.log('🚀 Iniciando restauração automática da formatação...');
+
+    // Executar quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', marcarCamposCalculados);
+    } else {
+        marcarCamposCalculados();
+    }
+
+    // Também executar quando a página carregar completamente
+    window.addEventListener('load', marcarCamposCalculados);
+
+    // Executar múltiplas vezes para garantir
+    setTimeout(marcarCamposCalculados, 1000);
+    setTimeout(marcarCamposCalculados, 2000);
+    setTimeout(marcarCamposCalculados, 3000);
+
+    // SOLUÇÃO DEFINITIVA - Forçar funcionamento das predecessoras
+    function forcarPredecessoras() {
+        console.log('💪 FORÇANDO funcionamento das predecessoras...');
+
+        // Aguardar um pouco mais
+        setTimeout(() => {
+            const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
+            console.log(`📋 Encontrados ${predecessorasInputs.length} campos de predecessoras`);
+
+            if (predecessorasInputs.length === 0) {
+                console.log('⚠️ Nenhum campo encontrado, tentando novamente...');
+                setTimeout(forcarPredecessoras, 500);
+                return;
+            }
+
+            // REMOVER TODOS os event listeners antigos
+            predecessorasInputs.forEach(input => {
+                // Limpar event listeners inline
+                input.onchange = null;
+                input.onkeyup = null;
+                input.oninput = null;
+                input.onblur = null;
+
+                // Remover event listeners adicionados via addEventListener
+                input.removeEventListener('change', window._handlerPredecessoras);
+                input.removeEventListener('input', window._handlerPredecessoras);
+                input.removeEventListener('blur', window._handlerPredecessoras);
+
+                // Limpar qualquer outro event listener
+                input.removeEventListener('change', null);
+                input.removeEventListener('input', null);
+                input.removeEventListener('blur', null);
+            });
+
+            // CRIAR NOVO handler que SEMPRE funciona
+            window._handlerPredecessorasForcado = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                console.log('🔥 EVENTO FORÇADO detectado:', this.value, 'Tipo:', event.type);
+
+                // Chamar a função principal
+                if (typeof window.onPredecessorasEdit === 'function') {
+                    console.log('✅ Chamando onPredecessorasEdit...');
+                    window.onPredecessorasEdit(this);
+                } else {
+                    console.error('❌ Função onPredecessorasEdit não encontrada!');
+                    // Tentar definir a função se não existir
+                    if (typeof onPredecessorasEdit === 'function') {
+                        window.onPredecessorasEdit = onPredecessorasEdit;
+                        console.log('✅ Função definida no escopo global');
+                        onPredecessorasEdit(this);
+                    }
+                }
+            };
+
+            // ADICIONAR event listeners FORÇADOS
+            predecessorasInputs.forEach((input, index) => {
+                // Event listeners via addEventListener
+                input.addEventListener('change', window._handlerPredecessorasForcado, true);
+                input.addEventListener('input', window._handlerPredecessorasForcado, true);
+                input.addEventListener('blur', window._handlerPredecessorasForcado, true);
+
+                // Event listeners inline como backup
+                input.onchange = function () {
+                    console.log('🔥 INLINE CHANGE detectado:', this.value);
+                    if (typeof window.onPredecessorasEdit === 'function') {
+                        window.onPredecessorasEdit(this);
+                    }
+                };
+
+                input.onkeyup = function () {
+                    console.log('🔥 INLINE KEYUP detectado:', this.value);
+                    if (typeof window.onPredecessorasEdit === 'function') {
+                        window.onPredecessorasEdit(this);
+                    }
+                };
+
+                console.log(`✅ Event listeners FORÇADOS adicionados para predecessora ${index + 1}`);
+            });
+
+            // EXECUTAR validação inicial para campos com valor
+            predecessorasInputs.forEach((input, index) => {
+                const valor = input.value.trim();
+                if (valor) {
+                    console.log(`📝 Executando validação inicial forçada para predecessora ${index + 1}: "${valor}"`);
+                    setTimeout(() => {
+                        if (typeof window.onPredecessorasEdit === 'function') {
+                            window.onPredecessorasEdit(input);
+                        } else if (typeof onPredecessorasEdit === 'function') {
+                            onPredecessorasEdit(input);
+                        }
+                    }, 200);
+                }
+            });
+
+            console.log('💪 SISTEMA DE PREDECESSORAS FORÇADO COM SUCESSO!');
+        }, 500);
+    }
+
+    // EXECUTAR a solução forçada múltiplas vezes
+    setTimeout(forcarPredecessoras, 1000);
+    setTimeout(forcarPredecessoras, 2000);
+    setTimeout(forcarPredecessoras, 3000);
+
+    // Também executar quando a página carregar
+    window.addEventListener('load', forcarPredecessoras);
+
+    // Função para testar manualmente
+    window.testarPredecessorasForcado = function () {
+        console.log('🧪 Testando predecessoras forçadas...');
+        const input = document.querySelector('input[name="predecessoras"]');
+        if (input) {
+            input.value = '1FS';
+            input.dispatchEvent(new Event('change'));
+            console.log('✅ Teste executado!');
+        } else {
+            console.log('❌ Nenhum campo de predecessoras encontrado');
+        }
+    };
+
+    console.log('💪 Para testar manualmente, use: testarPredecessorasForcado()');
+</script>
+
+<!-- jQuery e Select2 JS (carregados no final para garantir ordem) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- ARQUIVO DE PREDECESSORAS SEPARADO -->
+<script src="{{ url_for('static', filename='js/predecessoras.js') }}"></script>
+
+<!-- SCRIPT INLINE DE PREDECESSORAS - GARANTIA DE FUNCIONAMENTO -->
+<script>
+    console.log('💪 SCRIPT INLINE DE PREDECESSORAS CARREGADO!');
+
+    // FUNÇÃO INLINE PARA RESTAURAR PREDECESSORAS
+    function restaurarPredecessorasInline() {
+        console.log('🎨 RESTAURANDO PREDECESSORAS INLINE...');
+
+        try {
+            // Encontrar todos os campos de predecessoras
+            const campos = document.querySelectorAll('input[name="predecessoras"]');
+            console.log('📋 Campos encontrados: ' + campos.length);
+
+            // Para cada campo com valor, executar a função principal
+            campos.forEach((campo, index) => {
+                if (campo.value && campo.value.trim()) {
+                    console.log(`🔄 Processando campo ${index + 1}: "${campo.value}"`);
+
+                    // Chamar função principal se existir
+                    if (typeof onPredecessorasEdit === 'function') {
+                        onPredecessorasEdit(campo);
+                        console.log(`✅ Campo ${index + 1} processado`);
+                    } else {
+                        console.log(`❌ Função onPredecessorasEdit não encontrada`);
+                    }
+                }
+            });
+
+            console.log('✅ RESTAURAÇÃO INLINE CONCLUÍDA!');
+        } catch (error) {
+            console.log('⚠️ Erro na restauração: ' + error);
+        }
+    }
+
+    // EXECUTAR IMEDIATAMENTE
+    console.log('💥 EXECUTANDO IMEDIATAMENTE...');
+    setTimeout(restaurarPredecessorasInline, 100);
+
+    // EXECUTAR QUANDO DOM ESTIVER PRONTO
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('📱 DOM carregado, executando...');
+            setTimeout(restaurarPredecessorasInline, 100);
+        });
+    } else {
+        console.log('📱 DOM já carregado, executando...');
+        setTimeout(restaurarPredecessorasInline, 100);
+    }
+
+    // EXECUTAR QUANDO PÁGINA CARREGAR
+    window.addEventListener('load', function () {
+        console.log('🌐 Página carregada, executando...');
+        setTimeout(restaurarPredecessorasInline, 200);
+    });
+
+    // EXECUTAR MÚLTIPLAS VEZES
+    setTimeout(restaurarPredecessorasInline, 1000);
+    setTimeout(restaurarPredecessorasInline, 3000);
+    setTimeout(restaurarPredecessorasInline, 5000);
+
+    // EXPOR FUNÇÃO GLOBALMENTE
+    window.restaurarPredecessoras = restaurarPredecessorasInline;
+    window.restaurarPredecessorasInline = restaurarPredecessorasInline;
+
+    console.log('💪 Função disponível: restaurarPredecessoras()');
+    console.log('🚀 SCRIPT INLINE ATIVO!');
+</script>
+
+<!-- EXECUÇÃO FORÇADA VIA ONLOAD -->
+<script>
+    window.onload = function () {
+        console.log('🌐 ONLOAD EXECUTADO - FORÇANDO RESTAURAÇÃO...');
+        if (typeof restaurarPredecessorasInline === 'function') {
+            restaurarPredecessorasInline();
+        } else {
+            console.log('❌ Função não encontrada, tentando novamente...');
+            setTimeout(function () {
+                if (typeof restaurarPredecessorasInline === 'function') {
+                    restaurarPredecessorasInline();
+                }
+            }, 1000);
+        }
+    };
+</script>
+
+<!-- SCRIPT FINAL - FUNCIONA NO SISTEMA PRINCIPAL -->
+<script>
+    console.log('🚀 SCRIPT FINAL CARREGADO NO SISTEMA PRINCIPAL!');
+
+    // Função para restaurar predecessoras (IDÊNTICA AO TESTE QUE FUNCIONOU)
+    function restaurarPredecessoras() {
+        console.log('🎨 RESTAURANDO PREDECESSORAS...');
+
+        try {
+            // Encontrar todos os campos de predecessoras
+            const campos = document.querySelectorAll('input[name="predecessoras"]');
+            console.log('📋 Campos encontrados: ' + campos.length);
+
+            // Para cada campo com valor, executar a função principal
+            campos.forEach((campo, index) => {
+                if (campo.value && campo.value.trim()) {
+                    console.log(`🔄 Processando campo ${index + 1}: "${campo.value}"`);
+
+                    // Chamar função principal se existir
+                    if (typeof onPredecessorasEdit === 'function') {
+                        onPredecessorasEdit(campo);
+                        console.log(`✅ Campo ${index + 1} processado`);
+                    } else {
+                        console.log(`❌ Função onPredecessorasEdit não encontrada`);
+                    }
+                }
+            });
+
+            console.log('✅ RESTAURAÇÃO CONCLUÍDA!');
+        } catch (error) {
+            console.log('⚠️ Erro na restauração: ' + error);
+        }
+    }
+
+    // EXECUTAR IMEDIATAMENTE
+    console.log('💥 EXECUTANDO IMEDIATAMENTE...');
+    setTimeout(restaurarPredecessoras, 100);
+
+    // EXECUTAR QUANDO DOM ESTIVER PRONTO
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('📱 DOM carregado, executando...');
+            setTimeout(restaurarPredecessoras, 100);
+        });
+    } else {
+        console.log('📱 DOM já carregado, executando...');
+        setTimeout(restaurarPredecessoras, 100);
+    }
+
+    // EXECUTAR QUANDO PÁGINA CARREGAR
+    window.addEventListener('load', function () {
+        console.log('🌐 Página carregada, executando...');
+        setTimeout(restaurarPredecessoras, 200);
+    });
+
+    // EXECUTAR MÚLTIPLAS VEZES
+    setTimeout(restaurarPredecessoras, 1000);
+    setTimeout(restaurarPredecessoras, 3000);
+    setTimeout(restaurarPredecessoras, 5000);
+
+    // EXPOR FUNÇÃO GLOBALMENTE
+    window.restaurarPredecessoras = restaurarPredecessoras;
+
+    console.log('💪 Função disponível: restaurarPredecessoras()');
+    console.log('🚀 SCRIPT FINAL ATIVO NO SISTEMA PRINCIPAL!');
+</script>
+
+<!-- SCRIPT DEFINITIVO - EXECUTA SEMPRE -->
+<script>
+    console.log('💪 SCRIPT DEFINITIVO CARREGADO!');
+
+    // FUNÇÃO DEFINITIVA PARA RESTAURAR PREDECESSORAS
+    function restaurarPredecessorasDefinitivo() {
+        console.log('🎨 RESTAURANDO PREDECESSORAS DEFINITIVAMENTE...');
+
+        try {
+            // Encontrar todos os campos de predecessoras
+            const campos = document.querySelectorAll('input[name="predecessoras"]');
+            console.log('📋 Campos encontrados: ' + campos.length);
+
+            // Para cada campo com valor, executar a função principal
+            campos.forEach((campo, index) => {
+                if (campo.value && campo.value.trim()) {
+                    console.log(`🔄 Processando campo ${index + 1}: "${campo.value}"`);
+
+                    // Chamar função principal se existir
+                    if (typeof onPredecessorasEdit === 'function') {
+                        onPredecessorasEdit(campo);
+                        console.log(`✅ Campo ${index + 1} processado`);
+                    } else {
+                        console.log(`❌ Função onPredecessorasEdit não encontrada`);
+                    }
+                }
+            });
+
+            console.log('✅ RESTAURAÇÃO DEFINITIVA CONCLUÍDA!');
+        } catch (error) {
+            console.log('⚠️ Erro na restauração: ' + error);
+        }
+    }
+
+    // EXECUTAR IMEDIATAMENTE
+    console.log('💥 EXECUTANDO IMEDIATAMENTE...');
+    setTimeout(restaurarPredecessorasDefinitivo, 100);
+
+    // EXECUTAR QUANDO DOM ESTIVER PRONTO
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('📱 DOM carregado, executando...');
+            setTimeout(restaurarPredecessorasDefinitivo, 100);
+        });
+    } else {
+        console.log('📱 DOM já carregado, executando...');
+        setTimeout(restaurarPredecessorasDefinitivo, 100);
+    }
+
+    // EXECUTAR QUANDO PÁGINA CARREGAR
+    window.addEventListener('load', function () {
+        console.log('🌐 Página carregada, executando...');
+        setTimeout(restaurarPredecessorasDefinitivo, 200);
+    });
+
+    // EXECUTAR MÚLTIPLAS VEZES
+    setTimeout(restaurarPredecessorasDefinitivo, 1000);
+    setTimeout(restaurarPredecessorasDefinitivo, 3000);
+    setTimeout(restaurarPredecessorasDefinitivo, 5000);
+
+    // EXPOR FUNÇÃO GLOBALMENTE
+    window.restaurarPredecessoras = restaurarPredecessorasDefinitivo;
+    window.restaurarPredecessorasDefinitivo = restaurarPredecessorasDefinitivo;
+
+    console.log('💪 Função disponível: restaurarPredecessoras()');
+    console.log('🚀 SCRIPT DEFINITIVO ATIVO!');
+</script>
+
+{% endblock %}

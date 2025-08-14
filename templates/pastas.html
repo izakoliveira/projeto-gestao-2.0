@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fas fa-folder-open"></i> Pastas (Tipos de Projeto)</h2>
+    <a href="{{ url_for('pastas.criar_pasta') }}" class="btn btn-success"><i class="fas fa-plus"></i> Nova Pasta</a>
+  </div>
+  <div class="row">
+    <!-- Card para criar nova pasta -->
+    <div class="col-md-4 col-lg-3 mb-3 d-flex align-items-stretch justify-content-center">
+      <a href="{{ url_for('pastas.criar_pasta') }}"
+        class="d-flex flex-column align-items-center justify-content-center text-warning text-decoration-none"
+        style="min-height: 140px; background: none; border: none; box-shadow: none; border-radius: 0;">
+        <div style="font-size: 2.5em; margin-bottom: 0.3em;"><i class="fas fa-folder-plus"></i></div>
+        <span style="font-size: 1.1em; font-weight: 600;">Nova Pasta</span>
+      </a>
+    </div>
+    {% for projeto in projetos_sem_pasta %}
+    <div class="col-md-4 col-lg-3 mb-3 d-flex align-items-stretch justify-content-center">
+      <div class="d-flex flex-column align-items-center justify-content-center w-100"
+        style="min-height: 140px; background: none; border: none; box-shadow: none; border-radius: 0;" draggable="true"
+        ondragstart="dragProjeto(event, '{{ projeto.id }}')" id="projeto-{{ projeto.id }}">
+        <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 w-100">
+          <a href="{{ url_for('main.detalhes_projeto', projeto_id=projeto.id) }}"
+            class="text-secondary text-decoration-none" style="font-size: 2.5em; margin-bottom: 0.3em;">
+            <i class="fas fa-box-open"></i>
+          </a>
+          <a href="{{ url_for('main.detalhes_projeto', projeto_id=projeto.id) }}"
+            class="text-secondary text-decoration-none" style="font-size: 1.1em; font-weight: 600; margin-bottom:0;">
+            {{ projeto.nome }}
+          </a>
+        </div>
+        <div class="d-flex justify-content-center w-100" style="margin-top:0;">
+          <div class="btn-group" role="group" style="margin-top:0;">
+            {% if pode_editar_projeto %}
+            <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}" class="btn btn-warning btn-sm"
+              title="Editar Projeto" style="margin-top:0;">
+              <i class="fas fa-edit"></i>
+            </a>
+            {% endif %}
+            {% if pode_excluir_projeto %}
+            <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;margin-top:0;">
+              <button type="submit" class="btn btn-danger btn-sm" title="Excluir Projeto"
+                onclick="return confirm('Tem certeza que deseja excluir este projeto?');" style="margin-top:0;">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% for tipo in tipos %}
+    <div class="col-md-4 col-lg-3 mb-3">
+      <div class="card compact-card shadow-sm h-100 d-flex flex-column" style="min-height: 140px;"
+        ondragover="allowDrop(event)" ondrop="dropProjetoNaPasta(event, '{{ tipo.id }}')" id="pasta-{{ tipo.id }}">
+        <div
+          class="card-body compact-body py-2 mt-3 pt-2 d-flex flex-column align-items-center justify-content-center flex-grow-1">
+          <a href="{{ url_for('projetos.listar_projetos') }}?ambiente={{ tipo.id }}"
+            class="text-warning text-decoration-none" style="font-size: 3.5em; margin-bottom: 0.3em;">
+            <i class="fas fa-folder"></i>
+          </a>
+          <a href="{{ url_for('projetos.listar_projetos') }}?ambiente={{ tipo.id }}"
+            class="text-dark text-decoration-none" style="font-size: 1.1em; font-weight: 600; margin-bottom:0;">
+            {{ tipo.nome }}
+          </a>
+          <span class="badge bg-secondary mb-2">{{ projetos_por_pasta[tipo.id]|length }} projeto{{ 's' if
+            projetos_por_pasta[tipo.id]|length != 1 else '' }}</span>
+        </div>
+        <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-between py-2">
+          <div class="btn-group" role="group">
+            <a href="{{ url_for('pastas.editar_pasta', pasta_id=tipo.id) }}" class="btn btn-warning btn-sm"
+              title="Editar Pasta">
+              <i class="fas fa-edit"></i>
+            </a>
+            <form action="/pastas/excluir/{{ tipo.id }}" method="POST" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm" title="Excluir Pasta"
+                onclick="return confirm('Tem certeza que deseja excluir esta pasta?');">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if not tipos %}
+  <div class="alert alert-info mt-4">Nenhuma pasta cadastrada.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  function allowDrop(ev) {
+    ev.preventDefault();
+  }
+  let projetoArrastado = null;
+  function dragProjeto(ev, projetoId) {
+    projetoArrastado = projetoId;
+    ev.dataTransfer.setData("text", projetoId);
+  }
+  function dropProjetoNaPasta(ev, tipoId) {
+    ev.preventDefault();
+    const projetoId = projetoArrastado || ev.dataTransfer.getData("text");
+    if (!projetoId || !tipoId) return;
+    // AJAX para mover projeto
+    fetch(`/projetos/${projetoId}/mover_para_pasta`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo_id: tipoId })
+    })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.sucesso) {
+          // Remove o card do projeto da lista sem pasta
+          const card = document.getElementById('projeto-' + projetoId);
+          if (card) card.parentNode.removeChild(card);
+          // Opcional: atualizar contador da pasta
+          location.reload(); // Ou atualizar via JS
+        } else {
+          alert('Erro ao mover projeto: ' + (data.erro || ''));
+        }
+      })
+      .catch(() => alert('Erro ao mover projeto.'));
+  }
+</script>
+{% endblock %}

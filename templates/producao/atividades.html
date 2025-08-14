@@ -1,0 +1,253 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Atividades{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-tasks"></i> Atividades/Cronograma
+                </h1>
+                <button class="btn btn-producao" onclick="showAddAtividadeModal()">
+                    <i class="fas fa-plus me-2"></i>Nova Atividade
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Atividades -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Atividades
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="atividades-table">
+                        <p class="text-muted">Nenhuma atividade encontrada.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar/Editar Atividade -->
+<div class="modal fade" id="addAtividadeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header card-header-producao">
+                <h5 class="modal-title text-white" id="modalTitle">Nova Atividade</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAtividadeForm">
+                    <input type="hidden" id="atividadeId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="atividadeNome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Responsável</label>
+                        <input type="text" class="form-control" id="atividadeResponsavel">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Início</label>
+                        <input type="date" class="form-control" id="atividadeInicio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Término</label>
+                        <input type="date" class="form-control" id="atividadeTermino" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" id="atividadeStatus">
+                            <option value="PENDENTE">Pendente</option>
+                            <option value="EM_ANDAMENTO">Em Andamento</option>
+                            <option value="CONCLUIDA">Concluída</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-producao" onclick="saveAtividade()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadAtividades();
+});
+
+function loadAtividades() {
+    const atividades = JSON.parse(localStorage.getItem('atividades')) || [];
+    const container = document.getElementById('atividades-table');
+    
+    if (atividades.length === 0) {
+        container.innerHTML = '<p class="text-muted">Nenhuma atividade encontrada.</p>';
+        return;
+    }
+    
+    let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Responsável</th>
+                        <th>Data Início</th>
+                        <th>Data Término</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    atividades.forEach(atividade => {
+        tableHtml += `
+            <tr>
+                <td><strong>${atividade.nome}</strong></td>
+                <td>${atividade.responsavel || '-'}</td>
+                <td>${formatDate(atividade.data_inicio)}</td>
+                <td>${formatDate(atividade.data_termino)}</td>
+                <td>
+                    <span class="badge bg-${getStatusColor(atividade.status)}">
+                        ${atividade.status}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editAtividade('${atividade.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteAtividade('${atividade.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableHtml += '</tbody></table></div>';
+    container.innerHTML = tableHtml;
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'CONCLUIDA': return 'success';
+        case 'EM_ANDAMENTO': return 'warning';
+        default: return 'secondary';
+    }
+}
+
+function showAddAtividadeModal() {
+    document.getElementById('modalTitle').textContent = 'Nova Atividade';
+    document.getElementById('atividadeId').value = '';
+    document.getElementById('addAtividadeForm').reset();
+    
+    const modal = new bootstrap.Modal(document.getElementById('addAtividadeModal'));
+    modal.show();
+}
+
+function editAtividade(id) {
+    const atividades = JSON.parse(localStorage.getItem('atividades')) || [];
+    const atividade = atividades.find(a => a.id === id);
+    
+    if (!atividade) {
+        alert('Atividade não encontrada.');
+        return;
+    }
+    
+    document.getElementById('modalTitle').textContent = 'Editar Atividade';
+    document.getElementById('atividadeId').value = atividade.id;
+    document.getElementById('atividadeNome').value = atividade.nome;
+    document.getElementById('atividadeResponsavel').value = atividade.responsavel || '';
+    document.getElementById('atividadeInicio').value = atividade.data_inicio;
+    document.getElementById('atividadeTermino').value = atividade.data_termino;
+    document.getElementById('atividadeStatus').value = atividade.status || 'PENDENTE';
+    
+    const modal = new bootstrap.Modal(document.getElementById('addAtividadeModal'));
+    modal.show();
+}
+
+function saveAtividade() {
+    const id = document.getElementById('atividadeId').value;
+    const nome = document.getElementById('atividadeNome').value;
+    const responsavel = document.getElementById('atividadeResponsavel').value;
+    const inicio = document.getElementById('atividadeInicio').value;
+    const termino = document.getElementById('atividadeTermino').value;
+    const status = document.getElementById('atividadeStatus').value;
+    
+    if (!nome || !inicio || !termino) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+    
+    const atividades = JSON.parse(localStorage.getItem('atividades')) || [];
+    
+    if (id) {
+        // Editar atividade existente
+        const index = atividades.findIndex(a => a.id === id);
+        if (index !== -1) {
+            atividades[index] = {
+                ...atividades[index],
+                nome: nome,
+                responsavel: responsavel,
+                data_inicio: inicio,
+                data_termino: termino,
+                status: status
+            };
+        }
+    } else {
+        // Criar nova atividade
+        const novaAtividade = {
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+            nome: nome,
+            responsavel: responsavel,
+            data_inicio: inicio,
+            data_termino: termino,
+            status: status,
+            created_at: new Date().toISOString()
+        };
+        atividades.push(novaAtividade);
+    }
+    
+    localStorage.setItem('atividades', JSON.stringify(atividades));
+    
+    // Fechar modal e recarregar
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addAtividadeModal'));
+    modal.hide();
+    
+    // Limpar formulário
+    document.getElementById('addAtividadeForm').reset();
+    
+    // Recarregar lista
+    loadAtividades();
+    
+    alert(id ? 'Atividade atualizada com sucesso!' : 'Atividade criada com sucesso!');
+}
+
+function deleteAtividade(id) {
+    if (confirm('Tem certeza que deseja excluir esta atividade?')) {
+        const atividades = JSON.parse(localStorage.getItem('atividades')) || [];
+        const filteredAtividades = atividades.filter(a => a.id !== id);
+        localStorage.setItem('atividades', JSON.stringify(filteredAtividades));
+        
+        loadAtividades();
+        alert('Atividade excluída com sucesso!');
+    }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+}
+</script>
+{% endblock %} 

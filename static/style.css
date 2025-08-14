@@ -1,0 +1,517 @@
+/* Estilos personalizados para o Sistema de Gestão de Projetos */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.card,
+.card-body,
+.row,
+.col-12 {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-group .btn {
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Estilos para status das tarefas */
+.table-success {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+/* Hover effects */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+        margin-right: 0;
+    }
+
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Animações */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilos para ícones */
+.fas,
+.far,
+.fab {
+    margin-right: 0.5rem;
+}
+
+/* Estilos para formulários */
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Estilos para cards de estatísticas */
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stats-card h3 {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.stats-card p {
+    margin-bottom: 0;
+    opacity: 0.9;
+}
+
+/* --- Estilo para tabela de tarefas mais harmônica e moderna --- */
+.tabela-tarefas {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    table-layout: fixed;
+}
+
+.tabela-tarefas th,
+.tabela-tarefas td {
+    padding: 2px 2px !important;
+    vertical-align: middle;
+}
+
+.tabela-tarefas th {
+    background: #f7f7f7;
+    font-weight: 600;
+    color: #333;
+}
+
+.tabela-tarefas tr:last-child td {
+    border-bottom: none;
+}
+
+.tabela-tarefas tr:hover {
+    background: #f5faff;
+}
+
+.tabela-tarefas input[type='text'],
+.tabela-tarefas input[type='date'],
+.tabela-tarefas select {
+    width: 100% !important;
+    min-width: 60px !important;
+    max-width: 100% !important;
+    padding: 1px 3px !important;
+    font-size: 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+.tabela-tarefas td.duracao-col input[type='number'],
+.tabela-tarefas input[type='number'] {
+    width: 100% !important;
+    min-width: 30px !important;
+    max-width: 100% !important;
+    text-align: center;
+    padding: 1px 3px !important;
+    font-size: 12px !important;
+    margin: 0 !important;
+}
+
+.tabela-tarefas th,
+.tabela-tarefas td {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+    vertical-align: middle;
+}
+
+.tabela-tarefas .acoes {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+}
+
+.tabela-tarefas .acoes .btn,
+.tabela-tarefas .acoes button {
+    padding: 1px 4px !important;
+    font-size: 14px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tabela-tarefas .acoes .btn-salvar {
+    background: #27ae60;
+    color: #fff;
+}
+
+.tabela-tarefas .acoes .btn-salvar:hover {
+    background: #219150;
+}
+
+.tabela-tarefas .acoes .btn-excluir {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.tabela-tarefas .acoes .btn-excluir:hover {
+    background: #c0392b;
+}
+
+.container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+}
+
+.predecessoras-td {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.predecessoras-td input {
+    flex: 1 1 0;
+    margin-left: 4px;
+}
+
+.tabela-tarefas th:nth-child(3),
+.tabela-tarefas td:nth-child(3) {
+    width: 300px;
+    max-width: 350px;
+    min-width: 200px;
+}
+
+.tabela-tarefas td:nth-child(3) input[type='text'] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.tabela-tarefas th:nth-child(7),
+.tabela-tarefas td:nth-child(7) {
+    width: 60px;
+    max-width: 80px;
+    min-width: 40px;
+}
+
+.tabela-tarefas td:nth-child(7) input[type='number'] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.tabela-tarefas th:nth-child(2),
+.tabela-tarefas td:nth-child(2) {
+    width: 220px;
+    max-width: 300px;
+}
+
+#linha-nova-tarefa input,
+#linha-nova-tarefa select,
+#linha-nova-tarefa button {
+    pointer-events: auto !important;
+    z-index: 1000 !important;
+    position: relative;
+}
+
+.data-vermelha {
+    color: #e74c3c !important;
+    border-color: #e74c3c !important;
+    background: #fff0f0 !important;
+}
+
+.data-tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.motivo-data-vermelha {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff0f0;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 12px;
+    margin-left: 8px;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.08);
+    z-index: 100;
+    white-space: nowrap;
+    pointer-events: none !important;
+}
+
+/* Responsividade para cards de projetos/tarefas */
+@media (max-width: 767.98px) {
+    .row>[class*='col-'] {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    /* Preservar tamanho dos cards no carousel mesmo em telas pequenas */
+    .projetos-carousel .card,
+    .projetos-carousel .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+    }
+
+    /* Aplicar regras responsivas apenas para cards fora do carousel */
+    .card:not(.projetos-carousel .card),
+    .compact-card:not(.projetos-carousel .compact-card) {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .card-header,
+    .compact-header {
+        font-size: 1.1em;
+        padding: 0.75rem 1rem;
+    }
+
+    .card-body,
+    .compact-body {
+        padding: 1rem;
+    }
+
+    .card-footer,
+    .compact-footer {
+        padding: 0.75rem 1rem;
+    }
+
+    .task-list,
+    .compact-tasks {
+        font-size: 1em;
+    }
+}
+
+/* Navbar responsiva: aumenta área de toque e fonte */
+@media (max-width: 991.98px) {
+
+    .navbar-nav .nav-link,
+    .navbar-nav .dropdown-item {
+        font-size: 1.1em;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .navbar-toggler {
+        font-size: 1.5em;
+        padding: 0.75rem 1.25rem;
+    }
+}
+
+/* Ajuste para tabelas: rolagem horizontal no mobile */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+        min-width: 600px;
+    }
+}
+
+.projetos-carousel {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 8px;
+    scroll-behavior: smooth;
+    max-width: 100vw;
+    width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f8f9fa;
+}
+
+.projetos-carousel::-webkit-scrollbar {
+    height: 8px;
+    background: #f8f9fa;
+}
+
+.projetos-carousel::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.carousel-item {
+    flex: 0 0 auto;
+    min-width: 260px;
+    max-width: 260px;
+    width: 260px;
+}
+
+/* Revisão: Remover possíveis conflitos antigos */
+.row.projetos-carousel,
+.container.projetos-carousel {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+}
+
+/* Garante que o card não quebre dentro do carousel */
+.projetos-carousel .card {
+    min-width: 260px !important;
+    max-width: 260px !important;
+    width: 260px !important;
+}
+
+/* Garante que cards compactos no carousel mantenham o tamanho */
+.projetos-carousel .compact-card {
+    min-width: 260px !important;
+    max-width: 260px !important;
+    width: 260px !important;
+    min-height: 260px !important;
+    max-height: 260px !important;
+    height: 260px !important;
+}
+
+/* Regras de alta prioridade para garantir tamanho consistente */
+.projetos-carousel .carousel-item .card,
+.projetos-carousel .carousel-item .compact-card {
+    min-width: 260px !important;
+    max-width: 260px !important;
+    width: 260px !important;
+    min-height: 260px !important;
+    max-height: 260px !important;
+    height: 260px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Forçar tamanho mesmo em telas pequenas */
+@media (max-width: 767.98px) {
+
+    .projetos-carousel .carousel-item .card,
+    .projetos-carousel .carousel-item .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        height: 260px !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* Remove margens laterais de container-pai se houver */
+.projetos-carousel {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Opcional: responsividade para mobile */
+@media (max-width: 600px) {
+
+    .carousel-item,
+    .projetos-carousel .card {
+        min-width: 90vw;
+        max-width: 90vw;
+        width: 90vw;
+    }
+
+    .projetos-carousel {
+        gap: 8px;
+    }
+}

@@ -1,0 +1,243 @@
+<!-- novo_projeto.html -->
+{% extends "base.html" %}
+
+{% block title %}Criar Novo Projeto - Gestão de Projetos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-plus"></i> Criar Novo Projeto</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/projetos/novo" novalidate id="form-novo-projeto">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome do Projeto:</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                            <div class="invalid-feedback">O nome do projeto é obrigatório.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label">Descrição:</label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="3" required></textarea>
+                            <div class="invalid-feedback">A descrição é obrigatória.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tipo_id" class="form-label">Pasta (Tipo de Projeto)</label>
+                            <div class="input-group">
+                                <select class="form-select" id="tipo_id" name="tipo_id" required>
+                                    <option value="">Selecione...</option>
+                                    {% for tipo in tipos %}
+                                    <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{{ url_for('pastas.criar_pasta') }}" target="_blank"
+                                    class="btn btn-outline-secondary">Nova Pasta</a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="data_inicio" class="form-label">Data de Início:</label>
+                                <input type="date" class="form-control" id="data_inicio" name="data_inicio" required>
+                                <div class="invalid-feedback">A data de início é obrigatória.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="data_fim" class="form-label">Data de Término:</label>
+                                <input type="date" class="form-control" id="data_fim" name="data_fim" required>
+                                <div class="invalid-feedback">A data de término é obrigatória.</div>
+                            </div>
+                        </div>
+
+                        <!-- Seção de Tarefas Únicas -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tasks"></i> Tarefas Únicas (Opcional)
+                            </label>
+                            <div class="alert alert-info py-2">
+                                <small>
+                                    <i class="fas fa-info-circle"></i>
+                                    Selecione as tarefas e quantidades desejadas.
+                                </small>
+                            </div>
+
+                            <div class="tarefas-lista">
+                                <!-- DEBUG: Total de tarefas únicas: {{ tarefas_unicas|length }} -->
+                                {% for tarefa in tarefas_unicas %}
+                                <div class="tarefa-item mb-1 p-2 border rounded">
+                                    <div class="row align-items-center">
+                                        <div class="col-8 col-md-9">
+                                            <div class="mb-0">
+                                                <label class="form-label mb-1">
+                                                    <strong class="text-sm">{{ tarefa.nome }}</strong>
+                                                    {% if tarefa.descricao %}
+                                                    <br><small class="text-muted">{{ tarefa.descricao }}</small>
+                                                    {% endif %}
+                                                    {% if tarefa.duracao %}
+                                                    <small class="text-info">({{ tarefa.duracao }} dia(s))</small>
+                                                    {% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 col-md-3">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">Qtd</span>
+                                                <input type="number" class="form-control quantidade-input"
+                                                    name="quantidades_{{ tarefa.id }}" placeholder="1" min="0" max="100"
+                                                    value="1" data-tarefa-id="{{ tarefa.id }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Criar Projeto
+                            </button>
+                            <a href="/projetos" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar para a Lista de Projetos
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .tarefa-item {
+        background-color: #f8f9fa;
+        border-color: #dee2e6 !important;
+    }
+
+    .tarefa-item:hover {
+        background-color: #e9ecef;
+    }
+
+    .text-sm {
+        font-size: 0.875rem;
+    }
+
+    .form-check-label {
+        font-size: 0.875rem;
+        line-height: 1.2;
+    }
+
+    .input-group-sm .form-control {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .input-group-sm .input-group-text {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Estilos específicos para mobile */
+    @media (max-width: 768px) {
+        .tarefa-item {
+            padding: 0.5rem !important;
+        }
+
+        .tarefa-item .form-label {
+            margin-bottom: 0.25rem !important;
+            font-size: 0.8rem;
+        }
+
+        .tarefa-item .text-sm {
+            font-size: 0.8rem;
+        }
+
+        .tarefa-item small {
+            font-size: 0.7rem;
+        }
+
+        .input-group-sm .form-control,
+        .input-group-sm .input-group-text {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .input-group-text {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<script>
+    // Gerenciamento de tarefas únicas
+    document.addEventListener('DOMContentLoaded', function () {
+        // Gerenciar apenas as quantidades
+        const quantidadeInputs = document.querySelectorAll('.quantidade-input');
+
+        // Quando quantidade é alterada
+        quantidadeInputs.forEach(input => {
+            input.addEventListener('change', function () {
+                const quantidade = parseInt(this.value) || 0;
+
+                // Garantir que a quantidade seja um número válido
+                if (quantidade < 0) {
+                    this.value = 0;
+                }
+            });
+        });
+    });
+
+    // Validação visual do formulário de novo projeto
+    const formNovoProjeto = document.getElementById('form-novo-projeto');
+    formNovoProjeto.addEventListener('submit', function (e) {
+        let valido = true;
+        // Nome
+        const nome = document.getElementById('nome');
+        if (!nome.value.trim()) {
+            nome.classList.add('is-invalid');
+            valido = false;
+        } else {
+            nome.classList.remove('is-invalid');
+        }
+        // Descrição
+        const descricao = document.getElementById('descricao');
+        if (!descricao.value.trim()) {
+            descricao.classList.add('is-invalid');
+            valido = false;
+        } else {
+            descricao.classList.remove('is-invalid');
+        }
+        // Tipo de Projeto
+        const tipoProjeto = document.getElementById('tipo_id');
+        if (tipoProjeto.value === "") {
+            tipoProjeto.classList.add('is-invalid');
+            valido = false;
+        } else {
+            tipoProjeto.classList.remove('is-invalid');
+        }
+        // Data início
+        const dataInicio = document.getElementById('data_inicio');
+        if (!dataInicio.value) {
+            dataInicio.classList.add('is-invalid');
+            valido = false;
+        } else {
+            dataInicio.classList.remove('is-invalid');
+        }
+        // Data fim
+        const dataFim = document.getElementById('data_fim');
+        if (!dataFim.value) {
+            dataFim.classList.add('is-invalid');
+            valido = false;
+        } else {
+            dataFim.classList.remove('is-invalid');
+        }
+        if (!valido) {
+            e.preventDefault();
+            e.stopPropagation();
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

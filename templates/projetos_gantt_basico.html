@@ -1,0 +1,2778 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h1 class="mb-0">
+            {% if nome_pasta.lower() == 'calendarios' %}
+            <i class="fas fa-calendar-alt"></i>
+            {% else %}
+            <i class="fas fa-project-diagram"></i>
+            {% endif %}
+            {{ nome_pasta }}
+        </h1>
+        <!-- Botão de menu para filtros -->
+        <button id="btn-abrir-filtros-desktop" type="button" class="btn btn-primary"
+            style="border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+            <i class="fas fa-filter"></i> Filtros
+        </button>
+    </div>
+    <!-- Cards de 'Calendarios' e 'Tarefas Diarias' removidos -->
+
+    <!-- Barra de navegação visual de pastas (tipos de projeto) -->
+    <div class="tipos-scroll mb-4">
+        {% for tipo in tipos %}
+        <div class="tipo-card">
+            <a href="/projetos?tipo_id={{ tipo.id }}" class="text-decoration-none w-100 h-100">
+                <div class="card shadow-sm folder-card h-100 {% if request.args.get('tipo_id') == tipo.id|string %}border-primary bg-light{% endif %}"
+                    style="cursor:pointer;">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
+                        <i class="fas fa-folder fa-2x mb-1 text-warning"></i>
+                        <span class="fw-bold text-center">{{ tipo.nome }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <style>
+        .tipos-scroll {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 16px;
+            overflow-x: auto !important;
+            overflow-y: hidden;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .tipo-card {
+            flex: 0 0 160px !important;
+            max-width: 180px;
+            min-width: 140px;
+            margin-bottom: 0 !important;
+        }
+
+        @media (min-width: 992px) {
+            .tipos-scroll {
+                flex-wrap: wrap !important;
+                overflow-x: visible !important;
+                justify-content: flex-start;
+            }
+
+            .tipo-card {
+                flex: 0 0 180px !important;
+            }
+        }
+    </style>
+
+    <!-- Filtros removidos - agora usando painel lateral -->
+    <!-- Os filtros estão no painel lateral que abre com o botão "Filtros" -->
+
+    {% if projetos and gantt_geral_data|length == 0 %}
+    <div class="alert alert-info text-center" style="background: #d2f6fd;">
+        <i class="fas fa-info-circle fa-2x mb-3"></i>
+        <h5>Nenhuma tarefa encontrada</h5>
+        <p>Não há tarefas para exibir no gráfico. Ajuste os filtros ou cadastre novas tarefas.</p>
+    </div>
+    {% endif %}
+
+    <!-- Carousel de projetos SEM condicional -->
+    <div class="projetos-carousel-wrapper mb-4">
+        <button class="carousel-arrow left" type="button" aria-label="Anterior"><i
+                class="fas fa-chevron-left"></i></button>
+        <div class="projetos-carousel" id="projetos-carousel-js"></div>
+        <script>
+            window.projetosData = {{ projetos | tojson | safe }};
+        </script>
+        <button class="carousel-arrow right" type="button" aria-label="Próximo"><i
+                class="fas fa-chevron-right"></i></button>
+
+    </div>
+    <!-- Indicadores do carousel -->
+    <div class="carousel-indicators mt-3 mb-2 d-flex justify-content-center align-items-center" style="gap: 8px;"></div>
+
+    <!-- Painel lateral de filtros para Desktop -->
+    <div id="offcanvas-filtros-desktop"
+        style="position: fixed; top: 0; left: 0; height: 100vh; width: 400px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);">
+        <!-- Cabeçalho fixo -->
+        <div id="filtros-header-desktop"
+            style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
+            <span style="display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
+                <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
+            </span>
+            <button id="btn-fechar-filtros-desktop" type="button"
+                style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Área de scroll para os filtros -->
+        <div class="filtros-scroll-area" style="flex: 1; overflow-y: auto; padding: 18px;">
+            <form id="filtros-desktop" method="GET" action="/projetos"
+                style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+                <!-- Filtro Projeto -->
+                <div style="position: relative;">
+                    <label for="nome-desktop"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-search"></i> Projeto</span>
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="limparSelect('nome-desktop'); event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <select id="nome-desktop" name="nome" multiple class="form-control"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        onchange="mostrarSelecoes('nome-desktop', 'nome-display')"
+                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('nome-display').style.display = 'flex'; }, 200);">
+                        <option value="">Selecione o Projeto</option>
+                        {% for projeto in projetos %}
+                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome
+                            %}selected{% endif %}>{{ projeto.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="nome-display" class="form-control"
+                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                        onclick="toggleSelect('nome-desktop')">
+                        <span id="nome-text">Selecione o Projeto</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <!-- Filtro Status -->
+                <div style="position: relative;">
+                    <label for="status-desktop"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-tasks"></i> Status</span>
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="limparSelect('status-desktop'); event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <select id="status-desktop" name="status" multiple class="form-control"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        onchange="mostrarSelecoes('status-desktop', 'status-display')"
+                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('status-display').style.display = 'flex'; }, 200);">
+                        <option value="">Selecione o Status</option>
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif
+                            %}>Pendente</option>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{%
+                            endif %}>Em Progresso</option>
+                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif
+                            %}>Concluída</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif
+                            %}>Atrasado</option>
+                    </select>
+                    <div id="status-display" class="form-control"
+                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                        onclick="toggleSelect('status-desktop')">
+                        <span id="status-text">Selecione o Status</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <!-- Filtro Coleção -->
+                <div style="position: relative;">
+                    <label for="colecao-desktop"
+                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-layer-group"></i> Coleção</span>
+                        <button type="button" class="btn btn-link p-0 m-0"
+                            onclick="limparSelect('colecao-desktop'); event.preventDefault();"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    <select id="colecao-desktop" name="colecao" multiple class="form-control"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        onchange="mostrarSelecoes('colecao-desktop', 'colecao-display')"
+                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('colecao-display').style.display = 'flex'; }, 200);">
+                        <option value="">Selecione a Coleção</option>
+                        {% if colecoes and colecoes|length > 0 %}
+                        {% for colecao in colecoes %}
+                        <option value="{{ colecao }}">{{ colecao }}</option>
+                        {% endfor %}
+                        {% else %}
+                        <option disabled>Nenhuma coleção disponível</option>
+                        {% endif %}
+                    </select>
+                    <div id="colecao-display" class="form-control"
+                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                        onclick="toggleSelect('colecao-desktop')">
+                        <span id="colecao-text">Selecione a Coleção</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <!-- Filtros de datas na mesma linha -->
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex: 1; position: relative;">
+                        <label for="data_inicio-desktop"
+                            style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-calendar"></i> Início</span>
+                            <button type="button" class="btn btn-link p-0 m-0"
+                                onclick="document.getElementById('data_inicio-desktop').value = ''; event.preventDefault();"
+                                style="color: #b0b0b0; font-size: 1.1em;">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </label>
+                        <input type="date" id="data_inicio-desktop" name="data_inicio" class="form-control"
+                            style="min-height: 48px; border-radius: 10px;"
+                            value="{{ request.args.get('data_inicio', '') }}">
+                    </div>
+                    <div style="flex: 1; position: relative;">
+                        <label for="data_fim-desktop"
+                            style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-calendar-check"></i> Fim</span>
+                            <button type="button" class="btn btn-link p-0 m-0"
+                                onclick="document.getElementById('data_fim-desktop').value = ''; event.preventDefault();"
+                                style="color: #b0b0b0; font-size: 1.1em;">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </label>
+                        <input type="date" id="data_fim-desktop" name="data_fim" class="form-control"
+                            style="min-height: 48px; border-radius: 10px;"
+                            value="{{ request.args.get('data_fim', '') }}">
+                    </div>
+                </div>
+
+                <!-- Botões de ação -->
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button type="submit" class="btn btn-primary"
+                        style="flex: 1; min-height: 48px; border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="limpar-filtros-desktop"
+                        style="flex: 1; min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; color: #6c757d;">
+                        <i class="fas fa-eraser"></i> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backdrop para fechar o painel -->
+    <div id="filtros-backdrop-desktop"
+        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9998; display: none;">
+    </div>
+
+    <!-- Gantt agrupado estilo teste_agrupamento_gantt.html -->
+    <div class="card mb-4 mt-5">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-chart-bar"></i> Cronograma de Tarefas
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
+                <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
+                    style="font-size: 1.2em;">-</button>
+                <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
+                <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Aumentar Zoom"
+                    style="font-size: 1.2em;">+</button>
+            </div>
+            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+                <div style="display: flex; flex-direction: column;">
+                    <div style="display: flex;">
+
+                    </div>
+                </div>
+                <div id="gantt-cronograma-area" style="position: relative;">
+                    <div id="gantt-hoje-container"></div>
+                    <table style="border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th
+                                    style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                    Tarefa
+                                </th>
+                                {% for mes in meses %}
+                                <th colspan="{{ mes.dias }}" style="text-align: center;">{{ mes.nome }}</th>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <th></th>
+                                {% for dia in dias %}
+                                <th style="text-align: center;">{{ dia }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody id="gantt-body">
+                            <!-- Linhas das tarefas geradas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Legenda colorida por projeto -->
+            <div class="legend mt-3"
+                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                <div style="width: 100%; text-align: center; margin-bottom: 12px;">
+                    <h6 style="margin: 0; color: #495057; font-weight: 600;">
+                        <i class="fas fa-palette"></i> Cores dos Projetos
+                    </h6>
+                </div>
+                {% for projeto, cor in projects_colors.items() %}
+                <div class="legend-item"
+                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease; border: 1px solid transparent;"
+                    data-projeto="{{ projeto }}">
+                    <div class="legend-color"
+                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }}; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    <span style="font-weight: 500;">{{ projeto }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Estatísticas dos projetos selecionados -->
+            <div id="estatisticas-projetos" class="mt-3"
+                style="display: none; padding: 12px; background: #e3f2fd; border-radius: 8px; border: 1px solid #bbdefb;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <i class="fas fa-chart-bar" style="color: #1976d2;"></i>
+                    <span style="font-weight: 600; color: #1976d2;">Estatísticas dos Projetos Selecionados</span>
+                </div>
+                <div id="estatisticas-conteudo" style="font-size: 13px; color: #424242;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<!-- Select2 para o campo de nome do projeto -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        console.log('Lazy rendering iniciado');
+        const projetos = window.projetosData || [];
+        const carousel = document.getElementById('projetos-carousel-js');
+        const leftArrow = document.querySelector('.carousel-arrow.left');
+        const rightArrow = document.querySelector('.carousel-arrow.right');
+        const indicators = document.querySelector('.carousel-indicators');
+        if (!carousel) { console.log('Container do carousel não encontrado'); return; }
+        if (!projetos.length) { console.log('Nenhum projeto encontrado em window.projetosData'); }
+
+        // Configurações
+        const CARD_WIDTH = 260;
+        const CARD_GAP = 18;
+        const BUFFER = 2; // Quantos cards extras renderizar antes/depois
+
+        // --- NOVO: variáveis de permissão ---
+        const podeCriarProjeto = {{ pode_criar_projeto| tojson
+    }};
+    const podeEditarProjeto = {{ pode_editar_projeto| tojson }};
+    const podeExcluirProjeto = {{ pode_excluir_projeto| tojson }};
+    const alertasProjetos = {{ alertas_projetos| tojson }};
+
+    // Renderiza o card de "Novo Projeto" somente se permitido
+    function renderNovoProjetoCard() {
+        if (!podeCriarProjeto) return '';
+        return `<div class="carousel-item">
+            <div class="card compact-card shadow-sm h-100 d-flex align-items-center justify-content-center"
+                style="min-height: 180px; border: 2px dashed #28a745; background: #f8fff8; cursor: pointer; min-width: 260px; max-width: 260px;">
+                <a href="/projetos/novo"
+                    class="d-flex flex-column align-items-center justify-content-center text-success text-decoration-none w-100 h-100"
+                    style="height: 100%;">
+                    <div style="font-size: 2.5em; margin-bottom: 0.3em;"><i class="fas fa-plus-circle"></i></div>
+                    <span style="font-size: 1.1em; font-weight: 600;">Novo Projeto</span>
+                </a>
+            </div>
+        </div>`;
+    }
+
+    // Renderiza um card de projeto
+    function renderProjetoCard(projeto) {
+        try {
+            console.log('Renderizando projeto:', projeto);
+            if (!projeto) {
+                console.error('Projeto inválido:', projeto);
+                return '';
+            }
+
+            // Verificar se há alertas para este projeto
+            const alerta = alertasProjetos[projeto.id];
+            console.log('Alerta para projeto', projeto.id, ':', alerta);
+
+            let tarefasHtml = '';
+            if (projeto.tarefas && projeto.tarefas.length > 0) {
+                // Filtrar tarefas baseado no status do projeto
+                let tarefasFiltradas = [];
+                if (alerta) {
+                    if (alerta.tipo === 'atrasado') {
+                        // Mostrar apenas tarefas atrasadas usando a mesma lógica do backend
+                        tarefasFiltradas = projeto.tarefas.filter(tarefa => {
+                            const status = tarefa.status?.toLowerCase();
+                            const dataFim = tarefa.data_fim || tarefa.data_fim_tarefa;
+                            const dataInicio = tarefa.data_inicio || tarefa.data_inicio_tarefa;
+                            const hoje = new Date();
+
+                            // LÓGICA 1: Tarefa pendente com data de início passada
+                            if (status === 'pendente' && dataInicio) {
+                                try {
+                                    const dataInicioObj = new Date(dataInicio.split('T')[0]);
+                                    if (dataInicioObj < hoje) {
+                                        return true;
+                                    }
+                                } catch (e) {
+                                    // Ignorar erro de parsing
+                                }
+                            }
+
+                            // LÓGICA 2: Tarefa não concluída com data de fim passada
+                            if (dataFim) {
+                                try {
+                                    const dataFimObj = new Date(dataFim.split('T')[0]);
+                                    if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') {
+                                        return true;
+                                    }
+                                } catch (e) {
+                                    // Ignorar erro de parsing
+                                }
+                            }
+
+                            return false;
+                        });
+                    } else if (alerta.tipo === 'pendente') {
+                        // Mostrar apenas tarefas pendentes
+                        tarefasFiltradas = projeto.tarefas.filter(tarefa =>
+                            tarefa.status === 'pendente' ||
+                            tarefa.status === 'em progresso'
+                        );
+                    } else {
+                        // Para projetos normais, mostrar todas as tarefas
+                        tarefasFiltradas = projeto.tarefas;
+                    }
+                } else {
+                    // Para projetos sem alerta, mostrar todas as tarefas
+                    tarefasFiltradas = projeto.tarefas;
+                }
+
+                console.log('Tarefas filtradas:', tarefasFiltradas.length);
+
+                if (tarefasFiltradas.length > 0) {
+                    tarefasHtml += `<small><strong>Tarefas ${alerta ? `(${alerta.tipo})` : ''} (${tarefasFiltradas.length}):</strong></small><div class="task-list">`;
+                    tarefasFiltradas.slice(0, 3).forEach(tarefa => {
+                        tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
+                        <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
+                        <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
+                            ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
+                        </span>
+                    </div>`;
+                    });
+                    if (tarefasFiltradas.length > 3) {
+                        tarefasHtml += `<div class="text-muted small expand-tasks-btn" data-projeto-id="${projeto.id}" style="cursor: pointer; color: #007bff;">
+                        <i class="fas fa-chevron-down"></i> +${tarefasFiltradas.length - 3} tarefas
+                    </div>`;
+                        tarefasHtml += `<div class="hidden-tasks" id="hidden-tasks-${projeto.id}" style="display: none;">`;
+                        tarefasFiltradas.slice(3).forEach(tarefa => {
+                            tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
+                            <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
+                            <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
+                                ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
+                            </span>
+                        </div>`;
+                        });
+                        tarefasHtml += `</div>`;
+                    }
+                    tarefasHtml += `</div>`;
+                } else {
+                    tarefasHtml = `<div class="text-muted small">Nenhuma tarefa ${alerta ? alerta.tipo : ''} encontrada.</div>`;
+                }
+            } else {
+                tarefasHtml = '<div class="text-muted small">Nenhuma tarefa encontrada.</div>';
+            }
+
+            let alertaHtml = '';
+            let cardStyle = '';
+
+            // Determinar status do projeto baseado nos alertas (igual ao sistema de bordas)
+            let statusProjeto = 'normal';
+            let statusText = 'NORMAL';
+            let statusColor = '#6c757d';
+
+            if (alerta) {
+                if (alerta.tipo === 'atrasado') {
+                    cardStyle = 'border-left: 4px solid #dc3545;';
+                    statusProjeto = 'atrasado';
+                    statusText = 'ATRASADO';
+                    statusColor = '#dc3545';
+                } else if (alerta.tipo === 'pendente') {
+                    cardStyle = 'border-left: 4px solid #e0a800;';
+                    statusProjeto = 'pendente';
+                    statusText = 'PENDENTE';
+                    statusColor = '#e0a800';
+                }
+            }
+
+            console.log('HTML do card gerado com sucesso');
+            return `<div class="carousel-item">
+            <div class="card compact-card shadow-sm projeto-card-with-watermark" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; overflow: hidden;">
+                <!-- Marca d'água diagonal - estilo carimbo -->
+                <div class="projeto-watermark status-${statusProjeto}" style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) rotate(-45deg);
+                    font-size: 24px;
+                    font-weight: 900;
+                    color: ${statusColor};
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    white-space: nowrap;
+                    pointer-events: none;
+                    z-index: 1;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    border: 5px solid ${statusColor};
+                    background: rgba(255, 255, 255, 0.95);
+                    box-shadow: 
+                        0 4px 8px rgba(0, 0, 0, 0.2),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.8),
+                        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+                ">${statusText}</div>
+                
+                <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="position: relative; z-index: 2;">
+                    <h6 class="mb-0">
+                        ${alerta && alerta.tipo === 'atrasado' ?
+                    `<i class="fas fa-exclamation-triangle text-danger me-1" title="${alerta.quantidade} tarefa(s) atrasada(s)"></i>` :
+                    alerta && alerta.tipo === 'pendente' ?
+                        `<i class="fas fa-clock text-warning me-1" title="${alerta.quantidade} tarefa(s) pendente(s)"></i>` :
+                        '<i class="fas fa-project-diagram"></i>'} 
+                        ${projeto.nome}
+                    </h6>
+                </div>
+                <div class="card-body compact-body py-2" style="position: relative; z-index: 2;">
+                    <div class="mb-1">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> ${projeto.data_inicio ? (projeto.data_inicio.includes('-') ? projeto.data_inicio.split('-').reverse().join('/') : projeto.data_inicio) : 'Não definida'} - ${projeto.data_fim ? (projeto.data_fim.includes('-') ? projeto.data_fim.split('-').reverse().join('/') : projeto.data_fim) : 'Não definida'}
+                        </small>
+                    </div>
+                    <div class="compact-tasks">${tarefasHtml}</div>
+                </div>
+                <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-center py-2" style="position: relative; z-index: 2;">
+                    <div class="btn-group" role="group">
+                        <a href="/projetos/${projeto.id}" class="btn btn-info btn-sm" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
+                        ${podeEditarProjeto ? `<a href="/projetos/editar/${projeto.id}" class="btn btn-warning btn-sm" title="Editar"><i class="fas fa-edit"></i></a>` : ''}
+                        ${podeExcluirProjeto ? `<form action="/projetos/excluir/${projeto.id}" method="POST" style="display:inline;">
+                            <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto" data-projeto-id="${projeto.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </form>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        } catch (error) {
+            console.error('Erro ao renderizar card do projeto:', projeto, error);
+            return '';
+        }
+    }
+
+    // Renderiza todos os cards
+    function renderCards() {
+        try {
+            console.log('Iniciando renderCards...');
+            console.log('Projetos disponíveis:', projetos.length);
+            console.log('Carousel:', carousel);
+
+            let html = renderNovoProjetoCard();
+            console.log('Card novo projeto gerado');
+
+            // Renderizar todos os projetos
+            for (let i = 0; i < projetos.length; i++) {
+                if (projetos[i]) {
+                    console.log('Renderizando projeto', i, ':', projetos[i].nome);
+                    html += renderProjetoCard(projetos[i]);
+                }
+            }
+
+            console.log('HTML final gerado, aplicando ao carousel...');
+            carousel.innerHTML = html;
+            console.log('HTML aplicado com sucesso');
+
+            // Reaplicar eventos de expandir tarefas
+            document.querySelectorAll('.expand-tasks-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const projetoId = btn.getAttribute('data-projeto-id');
+                    const hiddenTasks = document.getElementById('hidden-tasks-' + projetoId);
+                    const icon = btn.querySelector('i');
+                    if (hiddenTasks.style.display === 'none') {
+                        hiddenTasks.style.display = 'block';
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                        btn.style.color = '#dc3545';
+                    } else {
+                        hiddenTasks.style.display = 'none';
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                        btn.style.color = '#007bff';
+                    }
+                });
+            });
+            atualizarIndicadoresCarousel();
+        } catch (error) {
+            console.error('Erro ao renderizar cards:', error);
+            carousel.innerHTML = '<div class="alert alert-danger">Erro ao carregar projetos</div>';
+        }
+    }
+
+    // Indicadores (bolinhas)
+    function atualizarIndicadoresCarousel() {
+        if (!indicators) return;
+        const items = projetos.length;
+        const visibleWidth = carousel.clientWidth;
+        const itemsPerPage = Math.max(1, Math.floor(visibleWidth / (CARD_WIDTH + CARD_GAP)));
+        const totalPages = Math.ceil(items / itemsPerPage);
+        indicators.innerHTML = '';
+        for (let i = 0; i < totalPages; i++) {
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'carousel-dot';
+            dot.setAttribute('aria-label', 'Ir para página ' + (i + 1));
+            dot.style.width = '12px';
+            dot.style.height = '12px';
+            dot.style.borderRadius = '50%';
+            dot.style.border = 'none';
+            dot.style.background = '#bbb';
+            dot.style.margin = '0 3px';
+            dot.style.outline = 'none';
+            dot.style.transition = 'background 0.2s';
+            dot.addEventListener('click', function () {
+                carousel.scrollTo({ left: i * visibleWidth, behavior: 'smooth' });
+            });
+            indicators.appendChild(dot);
+        }
+        atualizarBolinhasAtivas();
+    }
+    function atualizarBolinhasAtivas() {
+        if (!indicators) return;
+        const dots = indicators.querySelectorAll('.carousel-dot');
+        const visibleWidth = carousel.clientWidth;
+        const scrollLeft = carousel.scrollLeft;
+        const itemsPerPage = Math.max(1, Math.floor(visibleWidth / (CARD_WIDTH + CARD_GAP)));
+        const page = Math.round(scrollLeft / visibleWidth);
+        dots.forEach((dot, idx) => {
+            dot.style.background = (idx === page) ? '#007bff' : '#bbb';
+        });
+    }
+
+    // Setas
+    if (leftArrow && rightArrow) {
+        leftArrow.addEventListener('click', function () {
+            carousel.scrollBy({ left: -(CARD_WIDTH + CARD_GAP), behavior: 'smooth' });
+        });
+        rightArrow.addEventListener('click', function () {
+            carousel.scrollBy({ left: (CARD_WIDTH + CARD_GAP), behavior: 'smooth' });
+        });
+    }
+    carousel.addEventListener('scroll', atualizarBolinhasAtivas);
+    window.addEventListener('resize', function () {
+        renderCards();
+        atualizarIndicadoresCarousel();
+    });
+
+    // Inicializa
+    console.log('Iniciando renderização dos cards...');
+    console.log('Projetos disponíveis:', projetos.length);
+    renderCards();
+
+    // Garantir que o carousel funcione corretamente
+    function garantirCarouselFuncional() {
+        const carousel = document.getElementById('projetos-carousel-js');
+        if (carousel) {
+            // Forçar recálculo do layout
+            carousel.style.display = 'none';
+            carousel.offsetHeight; // Trigger reflow
+            carousel.style.display = 'flex';
+
+            // Verificar se há scroll horizontal
+            const temScroll = carousel.scrollWidth > carousel.clientWidth;
+            console.log('Carousel scrollWidth:', carousel.scrollWidth, 'clientWidth:', carousel.clientWidth, 'Tem scroll:', temScroll);
+
+            // Debug: mostrar informações do carousel
+            console.log('Carousel CSS:', {
+                display: getComputedStyle(carousel).display,
+                flexDirection: getComputedStyle(carousel).flexDirection,
+                overflowX: getComputedStyle(carousel).overflowX,
+                width: getComputedStyle(carousel).width,
+                maxWidth: getComputedStyle(carousel).maxWidth
+            });
+
+            // Mostrar/ocultar setas baseado no scroll
+            const leftArrow = document.querySelector('.carousel-arrow.left');
+            const rightArrow = document.querySelector('.carousel-arrow.right');
+            if (leftArrow && rightArrow) {
+                if (temScroll) {
+                    leftArrow.style.display = 'flex';
+                    rightArrow.style.display = 'flex';
+                } else {
+                    leftArrow.style.display = 'none';
+                    rightArrow.style.display = 'none';
+                }
+            }
+
+            // Forçar scroll se necessário
+            if (temScroll && carousel.scrollLeft === 0) {
+                carousel.scrollLeft = 0;
+            }
+        }
+    }
+
+    // Executar após renderização
+    setTimeout(garantirCarouselFuncional, 100);
+
+    // Re-executar em resize
+    window.addEventListener('resize', function () {
+        setTimeout(garantirCarouselFuncional, 100);
+    });
+
+
+
+    if ($('#colecao').length) {
+        console.log('Inicializando Select2 para coleção...');
+        try {
+            if ($.fn.select2 && $('#colecao').data('select2')) {
+                $('#colecao').select2('destroy');
+            }
+            $('#colecao').select2({
+                placeholder: 'Filtrar por coleção',
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5',
+                closeOnSelect: false,
+                dropdownAutoWidth: true,
+                minimumResultsForSearch: -1,
+                dropdownParent: $('body')
+            });
+            console.log('Select2 inicializado com sucesso');
+        } catch (error) {
+            console.error('Erro ao inicializar Select2:', error);
+        }
+    } else {
+        console.log('Campo coleção não encontrado');
+    }
+
+    if ($('#status').length) {
+        console.log('Inicializando Select2 para status...');
+        try {
+            if ($.fn.select2 && $('#status').data('select2')) {
+                $('#status').select2('destroy');
+            }
+            $('#status').select2({
+                placeholder: 'Filtrar por status',
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5',
+                closeOnSelect: false,
+                dropdownAutoWidth: true,
+                minimumResultsForSearch: -1,
+                dropdownParent: $('body')
+            });
+            console.log('Select2 inicializado com sucesso');
+        } catch (error) {
+            console.error('Erro ao inicializar Select2:', error);
+        }
+    } else {
+        console.log('Campo status não encontrado');
+    }
+    });
+</script>
+<style>
+    .projetos-carousel-wrapper {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        position: relative;
+        min-height: 220px;
+        margin-bottom: 24px;
+        background: none;
+        overflow: hidden !important;
+    }
+
+    .projetos-carousel {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 18px;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-behavior: smooth;
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px 0;
+        min-height: 220px;
+        background: none;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        word-wrap: normal !important;
+        word-break: normal !important;
+        position: relative;
+    }
+
+    /* Remover overflow global que atrapalha o scroll do carousel */
+    body,
+    html,
+    .container,
+    .row {
+        overflow: unset !important;
+    }
+
+    /* Garantir que o carousel funcione corretamente */
+    .projetos-carousel-wrapper {
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .projetos-carousel {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Forçar que os cards não quebrem linha */
+    .carousel-item {
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        display: block !important;
+    }
+
+    /* Garantir compatibilidade com Safari e outros navegadores */
+    .projetos-carousel {
+        -webkit-overflow-scrolling: touch !important;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+        scrollbar-width: thin;
+        scrollbar-color: #ccc #f8f9fa;
+    }
+
+    .projetos-carousel::-webkit-scrollbar {
+        height: 8px;
+        background: #f8f9fa;
+    }
+
+    .projetos-carousel::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+    .projetos-carousel::-webkit-scrollbar-track {
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+
+    /* Forçar que o container pai não interfira */
+    .projetos-carousel-wrapper {
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        position: relative !important;
+    }
+
+    /* Garantir que não há quebra de linha */
+    .projetos-carousel>* {
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+    }
+
+    /* Forçar comportamento de scroll horizontal */
+    #projetos-carousel-js {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-behavior: smooth !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Garantir que os cards não quebrem */
+    #projetos-carousel-js .carousel-item {
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        display: block !important;
+    }
+
+    /* Estilos para marca d'água dos projetos */
+    .projeto-card-with-watermark {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .projeto-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 24px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.25;
+        transition: all 0.3s ease;
+        animation: watermark-fade-in 0.5s ease-in-out;
+
+        /* Estilo de carimbo */
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 5px solid;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow:
+            0 4px 8px rgba(0, 0, 0, 0.2),
+            inset 0 2px 4px rgba(255, 255, 255, 0.8),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+
+        /* Textura desgastada */
+        background-image:
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+            radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+        background-size: 4px 4px, 6px 6px;
+
+        /* Efeito de desgaste */
+        filter: contrast(1.2) brightness(1.1);
+
+        /* Fonte mais grossa */
+        font-stretch: condensed;
+        text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes watermark-fade-in {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(0.8);
+        }
+
+        to {
+            opacity: 0.2;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+        }
+    }
+
+    .projeto-card-with-watermark:hover .projeto-watermark {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) rotate(-45deg) scale(1.05);
+        box-shadow:
+            0 6px 12px rgba(0, 0, 0, 0.3),
+            inset 0 2px 4px rgba(255, 255, 255, 0.9),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Cores específicas para cada status - estilo carimbo */
+    .projeto-watermark.status-normal {
+        color: #6c757d !important;
+        border-color: #6c757d !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-pendente {
+        color: #e0a800 !important;
+        border-color: #e0a800 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-atrasado {
+        color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .carousel-item {
+        flex: 0 0 auto;
+        flex-shrink: 0;
+        min-width: 260px;
+        max-width: 260px;
+        margin-right: 0;
+        border: none;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        display: block;
+        position: relative;
+        transition: box-shadow 0.2s;
+    }
+
+    .carousel-item:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+        z-index: 2;
+    }
+
+    .carousel-arrow {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3em;
+        color: #333;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 20;
+        transition: background 0.2s, opacity 0.2s;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .carousel-arrow.left {
+        left: 8px;
+    }
+
+    .carousel-arrow.right {
+        right: 8px;
+    }
+
+    .projetos-carousel-wrapper:hover .carousel-arrow {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .carousel-arrow:hover {
+        background: #f0f0f0;
+    }
+
+    .carousel-arrow i {
+        width: 90%;
+        height: 90%;
+        font-size: 0.8em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        line-height: 1;
+        transform: translateY(2%);
+    }
+
+    @media (max-width: 900px) {
+        .carousel-item {
+            min-width: 48vw;
+            max-width: 48vw;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .carousel-item {
+            min-width: 90vw;
+            max-width: 90vw;
+        }
+
+        .carousel-arrow.left,
+        .carousel-arrow.right {
+            display: none;
+        }
+
+        .projetos-carousel {
+            gap: 8px;
+            padding-left: 2vw;
+            padding-right: 2vw;
+        }
+    }
+
+    /* Estilos para filtros customizados idênticos e centralizados */
+    .filters-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 24px 0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        justify-content: center;
+    }
+
+    .filters-form {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-group,
+    .filter-actions {
+        flex: 0 0 210px;
+        min-width: 210px;
+        max-width: 210px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .filter-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #4a47a3;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 7px;
+        width: 100%;
+        text-align: left;
+    }
+
+    .filter-label i {
+        margin-right: 5px;
+        opacity: 0.9;
+    }
+
+    .filter-select,
+    .filter-input,
+    .select2-container--default .select2-selection--single,
+    .select2-container--default .select2-selection--multiple {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        min-height: 48px !important;
+        padding: 8px 16px !important;
+        border: 1px solid #e9ecef !important;
+        border-radius: 10px !important;
+        background: #fff !important;
+        font-size: 1rem !important;
+        color: #333 !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+        box-sizing: border-box;
+        transition: all 0.3s;
+    }
+
+    .select2-selection__rendered {
+        line-height: 28px !important;
+        color: #333 !important;
+    }
+
+    .filter-select:focus,
+    .filter-input:focus,
+    .select2-container--default .select2-selection--single:focus,
+    .select2-container--default .select2-selection--multiple:focus {
+        outline: none !important;
+        background: #fff !important;
+        border-color: #4a47a3 !important;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25) !important;
+    }
+
+    .filter-actions {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        min-width: 210px;
+        max-width: 210px;
+    }
+
+    .btn-filter,
+    .btn-clear {
+        width: 100%;
+        height: 48px;
+        padding: 0;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        text-decoration: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        background: #fff;
+        color: #333;
+        border: 1px solid #e9ecef;
+    }
+
+    .btn-filter {
+        background: #4a47a3;
+        color: white;
+        border: 1px solid #4a47a3;
+    }
+
+    .btn-filter:hover {
+        background: #3d3a8a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(74, 71, 163, 0.3);
+    }
+
+    .btn-clear {
+        border: 1px solid #e9ecef;
+        background: #fff;
+        color: #6c757d;
+    }
+
+    .btn-clear:hover {
+        background: #f8f9fa;
+        color: #495057;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Responsividade */
+    @media (max-width: 1200px) {
+        .filters-row {
+            gap: 10px;
+        }
+
+        .filter-group,
+        .filter-actions {
+            min-width: 150px;
+            max-width: 150px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .filters-row {
+            flex-direction: row;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            width: 100%;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-group,
+        .filter-actions {
+            min-width: 180px;
+            max-width: 220px;
+            flex: 0 0 180px;
+            box-sizing: border-box;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .filters-row {
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            overflow-y: hidden;
+            gap: 8px;
+            width: 100%;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-group,
+        .filter-actions {
+            min-width: 160px;
+            max-width: 220px;
+            flex: 0 0 160px;
+            box-sizing: border-box;
+        }
+    }
+
+    /* Estilos para cards compactos */
+    .compact-card {
+        max-height: 280px;
+        overflow: hidden;
+    }
+
+    /* Garantir que cards no carousel mantenham tamanho consistente */
+    .projetos-carousel .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        height: 260px !important;
+    }
+
+    /* Regras de alta prioridade para carousel items */
+    .projetos-carousel .carousel-item {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .projetos-carousel .carousel-item .card,
+    .projetos-carousel .carousel-item .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        height: 260px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Forçar tamanho mesmo em telas pequenas */
+    @media (max-width: 767.98px) {
+        .projetos-carousel .carousel-item {
+            min-width: 260px !important;
+            max-width: 260px !important;
+            width: 260px !important;
+        }
+
+        .projetos-carousel .carousel-item .card,
+        .projetos-carousel .carousel-item .compact-card {
+            min-width: 260px !important;
+            max-width: 260px !important;
+            width: 260px !important;
+            min-height: 260px !important;
+            max-height: 260px !important;
+            height: 260px !important;
+        }
+    }
+
+    .compact-header {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .compact-header h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .compact-body {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .compact-footer {
+        padding: 0.5rem 1rem;
+    }
+
+    .task-list {
+        max-height: 120px;
+        overflow-y: auto;
+    }
+
+    .task-item {
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.8rem;
+    }
+
+    .task-item:last-child {
+        border-bottom: none;
+    }
+
+    .task-name {
+        max-width: 70%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .expand-tasks-btn {
+        transition: color 0.2s ease;
+        font-weight: 500;
+    }
+
+    .expand-tasks-btn:hover {
+        color: #0056b3 !important;
+        text-decoration: underline;
+    }
+
+    .hidden-tasks {
+        border-top: 1px solid #e9ecef;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+    }
+
+    /* Estilos do Gantt */
+    .gantt-header {
+        display: flex;
+        border-bottom: 2px solid #dee2e6;
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .gantt-header-cell {
+        padding: 10px;
+        text-align: center;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-controls .btn-group {
+        margin-left: 5px;
+    }
+
+    .gantt-controls .btn {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .gantt-controls .btn.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .gantt-row {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        min-height: 40px;
+    }
+
+    .gantt-row:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .gantt-task-name,
+    td[style*='min-width: 200px'] {
+        font-size: 13px !important;
+    }
+
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
+
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
+
+    /* Tooltip personalizado */
+    .gantt-tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 9999;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid rgba(0, 0, 0, 0.9);
+    }
+
+    .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .gantt-tooltip-project {
+        color: #ffd700;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+
+    .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-tooltip-days {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip-days .gantt-tooltip-info {
+        margin-bottom: 2px;
+    }
+
+    .gantt-task-bar.pendente {
+        background: #ffc107;
+    }
+
+    .gantt-task-bar.em-progresso {
+        background: #17a2b8;
+    }
+
+    .gantt-task-bar.concluida {
+        background: #28a745;
+    }
+
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+    }
+
+    .gantt-today {
+        background: rgba(255, 193, 7, 0.2);
+        font-weight: bold;
+    }
+
+    .gantt-weekend {
+        background: rgba(220, 53, 69, 0.1);
+    }
+
+    #gantt-timeline {
+        position: relative;
+        min-width: 800px;
+        background: #fff;
+        overflow: visible;
+    }
+
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
+
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
+
+    /* Coluna fixa para Tarefa */
+    #gantt-custom th:first-child,
+    #gantt-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 50;
+        /* aumentado para garantir sobreposição */
+        width: 320px;
+        min-width: 320px;
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Cabeçalho de meses e dias do Gantt */
+    #gantt-date-header {
+        font-family: inherit;
+    }
+
+    /* CSS extra para centralizar e aumentar altura do cabeçalho */
+    .gantt-dia-cell {
+        font-size: 11px;
+        color: #888;
+        background: #f8f9fa;
+        border-right: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 20px;
+    }
+
+    .gantt-hoje-linha {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: repeating-linear-gradient(to bottom,
+                #e74c3c 0px, #e74c3c 8px,
+                transparent 8px, transparent 16px);
+        z-index: 5;
+        /* reduzido para ficar atrás da coluna fixa */
+        pointer-events: none;
+    }
+
+    #gantt-hoje-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
+
+    #gantt-cronograma-area {
+        position: relative;
+    }
+
+    .gantt-row-compact {
+        height: 16px !important;
+    }
+
+    .gantt-bar-compact {
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+    }
+
+    .gantt-tooltip-detalhado {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-row-compact td,
+    .gantt-row-compact th {
+        height: 16px !important;
+        min-height: 16px !important;
+        max-height: 24px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 13px !important;
+    }
+
+    .gantt-h-linha {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #dee2e6;
+        z-index: 0;
+        /* reduzido para ficar atrás da coluna fixa */
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: none !important;
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+    }
+
+    #gantt-custom.dragging {
+        cursor: grabbing !important;
+        user-select: none !important;
+    }
+
+    .form-row.align-items-end.mb-4 {
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 44px !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        border-radius: 12px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        font-size: 1rem !important;
+        color: #333 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        box-sizing: border-box;
+        transition: all 0.3s;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        line-height: 28px !important;
+        color: #333 !important;
+        padding: 0 !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        display: flex !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    /* Mantém apenas esta regra para o campo de busca do Select2 do filtro de coleção */
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        line-height: 44px !important;
+        padding: 0 8px !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        resize: none !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline {
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        text-align: center !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        line-height: 44px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple {
+        display: flex !important;
+        align-items: center !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        justify-content: center !important;
+        align-items: center !important;
+        display: flex !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple,
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered,
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline,
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        padding: 0 !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: flex !important;
+        align-items: center !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        overflow-x: hidden !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        min-width: 0 !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+        max-width: none !important;
+        min-width: 0 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: initial !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: 0.85em !important;
+        padding: 1px 8px 1px 6px !important;
+        border-radius: 10px !important;
+        margin: 2px 3px 2px 0 !important;
+        min-height: 20px !important;
+        line-height: 18px !important;
+        height: 22px !important;
+    }
+
+    .carousel-indicators {
+        min-height: 20px;
+        position: static !important;
+        z-index: 1;
+        margin-top: 32px;
+        margin-bottom: 24px;
+    }
+
+    /* Opções do dropdown */
+    .select2-container--bootstrap-5 .select2-results__option {
+        padding: 10px 18px;
+        font-size: 1.08em;
+        border-radius: 8px;
+        margin: 2px 0;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background: #e9f5ff;
+        color: #007bff;
+    }
+
+    /* Ícone de pasta nas opções */
+    .select2-container--bootstrap-5 .select2-results__option:before {
+        content: '\f07b';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        margin-right: 8px;
+        color: #ffc107;
+        font-size: 1.1em;
+    }
+
+    /* Coleções selecionadas como badges */
+    .select2-container--bootstrap-5 .select2-selection__choice {
+        color: #007bff !important;
+        font-size: 0.85em !important;
+        font-weight: 500 !important;
+        background: #e9f5ff !important;
+        border-radius: 10px !important;
+        padding: 1px 8px 1px 6px !important;
+        margin: 2px 3px 2px 0 !important;
+        border: 1px solid #b6e0fe !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        display: flex !important;
+        align-items: center !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        min-height: 20px !important;
+        line-height: 18px !important;
+        height: 22px !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__choice__remove {
+        color: #dc3545 !important;
+        margin-left: 4px !important;
+        font-size: 1em !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+    }
+
+    /* Placeholder */
+    .select2-container--bootstrap-5 .select2-selection__placeholder {
+        color: #888;
+        font-size: 1.05em;
+        font-style: italic;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__rendered {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        min-height: 28px !important;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__choice {
+        max-width: 200px !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__choice__display {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        display: inline-block !important;
+        max-width: 160px !important;
+        vertical-align: middle !important;
+    }
+
+    /* Estilos para o scroll dos filtros */
+    #offcanvas-filtros-novo .filtros-scroll-area {
+        scrollbar-width: thin;
+        scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Estilos para o carimbo no mobile */
+    .projeto-watermark {
+        transition: all 0.3s ease;
+    }
+
+    /* Estilos para os selects nativos - não abrir automaticamente */
+    #offcanvas-filtros-desktop select,
+    #offcanvas-filtros-novo select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 16px;
+        padding-right: 32px;
+    }
+
+    /* Prevenir que o select abra automaticamente */
+    #offcanvas-filtros-desktop select:focus,
+    #offcanvas-filtros-novo select:focus {
+        outline: none;
+        border-color: #4a47a3;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25);
+    }
+
+    .legend-item:hover {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: #dee2e6;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Melhorar a aparência das barras do Gantt */
+    .gantt-bar-compact {
+        position: absolute;
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .gantt-bar-compact:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        z-index: 25;
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
+        transform: scale(1.05);
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+</style>
+
+<script>
+    window.ganttData = {{ gantt_geral_data | tojson | safe }};
+</script>
+
+<script>
+    const larguraBase = 4; // 100% = 4px
+    let larguraDia = larguraBase;
+    const larguraMin = 1;
+    const larguraMax = 32;
+    const ROW_HEIGHT = 32; // altura de cada linha (ajuste conforme seu CSS)
+    const VISIBLE_ROWS = 18; // quantas linhas mostrar de cada vez (ajuste conforme altura do container)
+    let tarefas = [];
+    let nomesOrdenados = [];
+    let grupos = {};
+    let periodo = { min: null, max: null };
+    let diasTotais = 0;
+
+    // Função utilitária para agrupar tarefas por nome
+    function agruparTarefasPorNome(tarefas) {
+        const grupos = {};
+        tarefas.forEach(tarefa => {
+            if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+            grupos[tarefa.name].push(tarefa);
+        });
+        return grupos;
+    }
+
+    // Função para obter datas mínimas e máximas
+    function obterPeriodo(tarefas) {
+        let min = null, max = null;
+        tarefas.forEach(t => {
+            // Criar datas no fuso horário local para evitar problemas de UTC
+            const ini = new Date(t.start + 'T00:00:00');
+            const fim = new Date(t.end + 'T00:00:00');
+            if (!min || ini < min) min = ini;
+            if (!max || fim > max) max = fim;
+        });
+        return { min, max };
+    }
+
+    // Função para calcular dias entre datas
+    function diasEntre(a, b) {
+        // Usar datas no fuso horário local para cálculo preciso
+        const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+        const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
+    }
+
+    // Função para cor de status
+    function corStatus(tarefa) {
+        if (tarefa.bar_color) return tarefa.bar_color;
+        if (tarefa.status === 'concluida') return '#28a745';
+        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+        return '#ffc107';
+    }
+
+    // Função para cor da borda baseada no status
+    function corBordaStatus(tarefa) {
+        console.log('Status da tarefa:', tarefa.status, 'Nome:', tarefa.name);
+        if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
+        if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
+        if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
+        if (tarefa.status === 'atrasada') return '#dc3545'; // Vermelho
+        return '#6c757d'; // Cinza padrão
+    }
+
+    // Função para tooltip
+    function tooltipBarra(tarefa) {
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const ini = new Date(tarefa.start + 'T00:00:00').toLocaleDateString('pt-BR');
+        const fim = new Date(tarefa.end + 'T00:00:00').toLocaleDateString('pt-BR');
+        return `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
+    }
+
+    function calcularDiasUteis(dataInicio, dataFim) {
+        let diasUteis = 0;
+        const dataAtual = new Date(dataInicio);
+        while (dataAtual <= dataFim) {
+            if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+                diasUteis++;
+            }
+            dataAtual.setDate(dataAtual.getDate() + 1);
+        }
+        return diasUteis;
+    }
+
+    function mostrarTooltipDetalhado(event, barra) {
+        esconderTooltipDetalhado();
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const startDate = new Date(barra.start + 'T00:00:00');
+        const endDate = new Date(barra.end + 'T00:00:00');
+        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        const diasUteis = calcularDiasUteis(startDate, endDate);
+        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+        const tooltip = document.createElement('div');
+        tooltip.className = 'gantt-tooltip-detalhado';
+        tooltip.id = 'gantt-tooltip-detalhado';
+        const dataInicio = startDate.toLocaleDateString('pt-BR');
+        const dataFim = endDate.toLocaleDateString('pt-BR');
+        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+        tooltip.innerHTML = `
+            <div class=\"gantt-tooltip-title\">${barra.name || 'Tarefa sem nome'}</div>
+            <div style=\"color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;\">${nomeProjeto}</div>
+            <div style=\"color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;\"><b>Coleção:</b> ${barra.colecao || '-'} </div>
+            <div class=\"gantt-tooltip-info\" style=\"gap: 12px;\">
+                <span class=\"gantt-tooltip-label\">🏁 Início:</span>
+                <span class=\"gantt-tooltip-value\">${dataInicio}</span>
+                <span class=\"gantt-tooltip-label\">🎯 Fim:</span>
+                <span class=\"gantt-tooltip-value\">${dataFim}</span>
+            </div>
+            <div class=\"gantt-tooltip-info\">
+                <span class=\"gantt-tooltip-label\">📆 Dias Corridos:</span>
+                <span class=\"gantt-tooltip-value\">${diasCorridos} dias</span>
+            </div>
+            <div class=\"gantt-tooltip-info\">
+                <span class=\"gantt-tooltip-label\">📆 Dias Úteis:</span>
+                <span class=\"gantt-tooltip-value\">${diasUteis} ${diasUteisTexto}</span>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
+        atualizarPosicaoTooltipDetalhado(event);
+    }
+
+    function esconderTooltipDetalhado() {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) tooltip.remove();
+    }
+
+    function atualizarPosicaoTooltipDetalhado(event) {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = event.clientX + 12;
+            let top = event.clientY + 12;
+            if (left + tooltipRect.width > window.innerWidth) {
+                left = window.innerWidth - tooltipRect.width - 8;
+            }
+            if (top + tooltipRect.height > window.innerHeight) {
+                top = window.innerHeight - tooltipRect.height - 8;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+    }
+
+    // Função principal para montar o Gantt (sem virtualização)
+    function montarGanttAgrupado() {
+        const dados = window.ganttData || [];
+        const body = document.getElementById('gantt-body');
+        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+        if (!dados.length) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+            return;
+        }
+        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        console.log('DEBUG: Tarefas antes da ordenação:', tarefas.map(t => ({ nome: t.name, ordem: t.ordem })));
+        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        console.log('DEBUG: Tarefas depois da ordenação:', tarefas.map(t => ({ nome: t.name, ordem: t.ordem })));
+        const grupos = agruparTarefasPorNome(tarefas);
+        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+            return ordemA - ordemB;
+        });
+        console.log('DEBUG: Nomes ordenados:', nomesOrdenados);
+        const periodo = obterPeriodo(tarefas);
+        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+            return;
+        }
+        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+        // Linha de hoje, cabeçalhos, etc (igual ao seu código)
+        const hojeContainer = document.getElementById('gantt-hoje-container');
+        if (hojeContainer) {
+            hojeContainer.innerHTML = '';
+            hojeContainer.style.position = 'absolute';
+            hojeContainer.style.top = '0';
+            hojeContainer.style.left = '0';
+            hojeContainer.style.bottom = '0';
+            hojeContainer.style.right = '0';
+            hojeContainer.style.zIndex = '10';
+            hojeContainer.style.pointerEvents = 'none';
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            if (hoje >= periodo.min && hoje <= periodo.max) {
+                const offset = diasEntre(periodo.min, hoje);
+                const left = 320 + (offset * larguraDia); // 320px da coluna tarefa
+                const linhaHoje = document.createElement('div');
+                linhaHoje.className = 'gantt-hoje-linha';
+                linhaHoje.style.left = left + 'px';
+                linhaHoje.style.height = '100%';
+                hojeContainer.appendChild(linhaHoje);
+                // Adicionar label com a data
+                const hojeLabel = document.createElement('div');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+                hojeLabel.style.position = 'absolute';
+                hojeLabel.style.top = '0px';
+                hojeLabel.style.left = (left + 6) + 'px'; // 6px à direita da linha
+                hojeLabel.style.transform = 'none';
+                hojeLabel.style.fontSize = '12px';
+                hojeLabel.style.color = '#e74c3c';
+                hojeLabel.style.fontWeight = 'bold';
+                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
+                hojeLabel.style.padding = '2px 6px';
+                hojeLabel.style.borderRadius = '4px';
+                hojeLabel.style.zIndex = '20';
+                hojeContainer.appendChild(hojeLabel);
+            }
+        }
+        // Cabeçalho de datas de um nível (apenas dias)
+        const dateHeader = document.getElementById('gantt-date-header');
+        if (dateHeader) {
+            dateHeader.innerHTML = '';
+            // Espaço à esquerda para alinhar com a coluna Tarefa
+            const espacoTarefa = document.createElement('div');
+            espacoTarefa.style.width = '320px';
+            espacoTarefa.style.minWidth = '320px';
+            espacoTarefa.style.maxWidth = '320px';
+            espacoTarefa.style.display = 'inline-block';
+            espacoTarefa.style.height = '19px';
+            espacoTarefa.style.background = 'transparent';
+            dateHeader.appendChild(espacoTarefa);
+            // Não renderizar mais os dias
+        }
+        // Renderizar todas as linhas de uma vez
+        body.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        nomesOrdenados.forEach((nome, idx) => {
+            const barras = grupos[nome];
+            const tr = document.createElement('tr');
+            tr.className = 'gantt-row-compact';
+            // Nome da tarefa
+            const tdNome = document.createElement('td');
+            tdNome.textContent = nome;
+            tdNome.title = nome;
+            tdNome.style.padding = "2px 8px";
+            tdNome.style.whiteSpace = "nowrap";
+            tdNome.style.overflow = "hidden";
+            tdNome.style.textOverflow = "ellipsis";
+            tdNome.style.height = "16px";
+            tdNome.style.fontSize = "13px";
+            tr.appendChild(tdNome);
+            // Cronograma
+            const tdCrono = document.createElement('td');
+            tdCrono.style.position = "relative";
+            tdCrono.style.height = "16px";
+            tdCrono.style.background = "#f8f9fa";
+            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+            // Adicionar linha horizontal de grade
+            const linhaH = document.createElement('div');
+            linhaH.className = 'gantt-h-linha';
+            linhaH.style.position = 'absolute';
+            linhaH.style.left = '0';
+            linhaH.style.right = '0';
+            linhaH.style.bottom = '0';
+            linhaH.style.height = '1px';
+            linhaH.style.background = '#dee2e6';
+            linhaH.style.zIndex = '1';
+            tdCrono.appendChild(linhaH);
+            barras.forEach((barra, idx) => {
+                // Criar datas no fuso horário local para evitar problemas de UTC
+                const inicio = new Date(barra.start + 'T00:00:00');
+                const fim = new Date(barra.end + 'T00:00:00');
+                const offset = diasEntre(periodo.min, inicio);
+                const largura = diasEntre(inicio, fim) + 1;
+                const div = document.createElement('div');
+                div.className = 'gantt-bar-compact';
+                div.style.position = "absolute";
+                div.style.left = (offset * larguraDia) + "px";
+                div.style.top = "2px";
+                div.style.height = "12px";
+                div.style.width = (largura * larguraDia) + "px";
+                div.style.background = barra.bar_color || corStatus(barra);
+                div.style.borderRadius = "4px";
+                div.style.textAlign = "center";
+                div.style.color = "#fff";
+                div.style.fontSize = "10px";
+                div.style.lineHeight = "12px";
+                div.style.cursor = "pointer";
+                div.style.fontWeight = "500";
+                div.style.textShadow = "0 1px 2px rgba(0,0,0,0.3)";
+                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                div.setAttribute('data-tarefa', barra.name || '');
+                div.setAttribute('title', `${barra.name} - ${barra.projeto_origem || barra.projeto_nome || 'Projeto'}`);
+                tdCrono.appendChild(div);
+                div.onmouseenter = function (e) {
+                    mostrarTooltipDetalhado(e, barra);
+                    this._mousemoveHandler = function (ev) {
+                        atualizarPosicaoTooltipDetalhado(ev);
+                    };
+                    this.addEventListener('mousemove', this._mousemoveHandler);
+                };
+                div.onmouseleave = function () {
+                    esconderTooltipDetalhado();
+                    if (this._mousemoveHandler) {
+                        this.removeEventListener('mousemove', this._mousemoveHandler);
+                        this._mousemoveHandler = null;
+                    }
+                };
+            });
+            tr.appendChild(tdCrono);
+            fragment.appendChild(tr);
+        });
+        body.appendChild(fragment);
+    }
+
+    // Evento de scroll para atualizar as linhas visíveis
+    document.addEventListener('DOMContentLoaded', function () {
+        montarGanttAgrupado();
+        function atualizarZoomLabel() {
+            const zoomLabel = document.getElementById('zoom-label');
+            if (zoomLabel) {
+                const percent = Math.round((larguraDia / larguraBase) * 100);
+                zoomLabel.textContent = percent + '%';
+            }
+        }
+        atualizarZoomLabel();
+        document.getElementById('zoom-in').onclick = function () {
+            if (larguraDia < larguraMax) {
+                larguraDia += larguraBase * 0.1;
+                if (larguraDia > larguraMax) larguraDia = larguraMax;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+        document.getElementById('zoom-out').onclick = function () {
+            if (larguraDia > larguraMin) {
+                larguraDia -= larguraBase * 0.1;
+                if (larguraDia < larguraMin) larguraDia = larguraMin;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+
+        // Evidenciar barras ao clicar na legenda (agora com seleção múltipla via Ctrl)
+        let projetosSelecionados = [];
+        document.querySelectorAll('.legend-item[data-projeto]').forEach(item => {
+            item.addEventListener('click', function (e) {
+                const projeto = this.getAttribute('data-projeto');
+                const ctrl = e.ctrlKey || e.metaKey; // metaKey para Mac
+
+                if (ctrl) {
+                    // Seleção múltipla
+                    if (projetosSelecionados.includes(projeto)) {
+                        projetosSelecionados = projetosSelecionados.filter(p => p !== projeto);
+                    } else {
+                        projetosSelecionados.push(projeto);
+                    }
+                } else {
+                    // Seleção única
+                    if (projetosSelecionados.length === 1 && projetosSelecionados[0] === projeto) {
+                        projetosSelecionados = [];
+                    } else {
+                        projetosSelecionados = [projeto];
+                    }
+                }
+
+                // Atualizar barras
+                if (projetosSelecionados.length === 0) {
+                    // Mostrar todas as barras
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        bar.classList.remove('evidencia', 'apagada');
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => l.classList.remove('selecionada'));
+                } else {
+                    // Destacar apenas os projetos selecionados
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        const barProjeto = bar.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(barProjeto)) {
+                            bar.classList.add('evidencia');
+                            bar.classList.remove('apagada');
+                        } else {
+                            bar.classList.remove('evidencia');
+                            bar.classList.add('apagada');
+                        }
+                    });
+
+                    // Atualizar legenda
+                    document.querySelectorAll('.legend-item').forEach(l => {
+                        const p = l.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(p)) {
+                            l.classList.add('selecionada');
+                        } else {
+                            l.classList.remove('selecionada');
+                        }
+                    });
+                }
+
+                // Adicionar feedback visual
+                if (projetosSelecionados.length > 0) {
+                    console.log(`Projetos selecionados: ${projetosSelecionados.join(', ')}`);
+                    mostrarEstatisticasProjetos(projetosSelecionados);
+                } else {
+                    console.log('Nenhum projeto selecionado - mostrando todos');
+                    esconderEstatisticasProjetos();
+                }
+            });
+        });
+
+        // Limpar filtros
+        $('#limpar-filtros').on('click', function () {
+            // Limpa todos os campos do formulário
+            $(this).closest('form')[0].reset();
+            // Limpa o select2 do nome
+            $('#nome').val('').trigger('change');
+            // Limpa o select2 do status
+            $('#status').val(null).trigger('change');
+            // Limpa o select2 do colecao, mesmo se não houver opções
+            $('#colecao').val(null).trigger('change');
+            // Redireciona para a URL base, removendo filtros
+            window.location = window.location.pathname;
+        });
+
+        // Controle do painel lateral de filtros para Desktop
+        const btnAbrirFiltrosDesktop = document.getElementById('btn-abrir-filtros-desktop');
+        const btnFecharFiltrosDesktop = document.getElementById('btn-fechar-filtros-desktop');
+        const offcanvasFiltrosDesktop = document.getElementById('offcanvas-filtros-desktop');
+        const backdropFiltrosDesktop = document.getElementById('filtros-backdrop-desktop');
+
+        if (btnAbrirFiltrosDesktop && offcanvasFiltrosDesktop) {
+            btnAbrirFiltrosDesktop.addEventListener('click', function () {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(0)';
+                backdropFiltrosDesktop.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (btnFecharFiltrosDesktop && offcanvasFiltrosDesktop) {
+            btnFecharFiltrosDesktop.addEventListener('click', function () {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
+                backdropFiltrosDesktop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+
+        if (backdropFiltrosDesktop && offcanvasFiltrosDesktop) {
+            backdropFiltrosDesktop.addEventListener('click', function () {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
+                backdropFiltrosDesktop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+
+        // Limpar filtros do painel lateral
+        const btnLimparFiltrosDesktop = document.getElementById('limpar-filtros-desktop');
+        if (btnLimparFiltrosDesktop) {
+            btnLimparFiltrosDesktop.addEventListener('click', function () {
+                // Limpa todos os campos do formulário do painel lateral
+                document.getElementById('filtros-desktop').reset();
+                // Limpa os selects múltiplos - desmarca todas as opções
+                const selects = document.querySelectorAll('#offcanvas-filtros-desktop select[multiple]');
+                selects.forEach(select => {
+                    for (let i = 0; i < select.options.length; i++) {
+                        select.options[i].selected = false;
+                    }
+                });
+                // Resetar os displays
+                document.getElementById('nome-text').textContent = 'Selecione o Projeto';
+                document.getElementById('status-text').textContent = 'Selecione o Status';
+                document.getElementById('colecao-text').textContent = 'Selecione a Coleção';
+                // Limpa os campos de data
+                document.getElementById('data_inicio-desktop').value = '';
+                document.getElementById('data_fim-desktop').value = '';
+                // Redireciona para a URL base, removendo filtros
+                window.location = window.location.pathname;
+            });
+        }
+
+        // Função para limpar selects individuais
+        window.limparSelect = function (selectId) {
+            const select = document.getElementById(selectId);
+            if (select) {
+                for (let i = 0; i < select.options.length; i++) {
+                    select.options[i].selected = false;
+                }
+                // Atualizar o display
+                const displayId = selectId.replace('-desktop', '-display');
+                const textId = selectId.replace('-desktop', '-text');
+                document.getElementById(displayId).style.display = 'flex';
+                document.getElementById(textId).textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
+            }
+        };
+
+        // Função para alternar a visibilidade do select
+        window.toggleSelect = function (selectId) {
+            const select = document.getElementById(selectId);
+            const displayId = selectId.replace('-desktop', '-display');
+            const display = document.getElementById(displayId);
+
+            if (select.style.display === 'none' || select.style.display === '') {
+                select.style.display = 'block';
+                select.style.position = 'absolute';
+                select.style.zIndex = '1000';
+                select.style.width = '100%';
+                select.style.maxHeight = '120px';
+                select.style.overflow = 'auto';
+                select.style.backgroundColor = '#fff';
+                select.style.border = '1px solid #e9ecef';
+                select.style.borderRadius = '10px';
+                select.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                display.style.display = 'none';
+                select.focus();
+            } else {
+                select.style.display = 'none';
+                display.style.display = 'flex';
+            }
+        };
+
+        // Função para mostrar as seleções no display
+        window.mostrarSelecoes = function (selectId, displayId) {
+            const select = document.getElementById(selectId);
+            const textId = selectId.replace('-desktop', '-text');
+            const textElement = document.getElementById(textId);
+
+            const selecoes = [];
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].selected && select.options[i].value !== '') {
+                    selecoes.push(select.options[i].text);
+                }
+            }
+
+            if (selecoes.length > 0) {
+                textElement.textContent = selecoes.join(', ');
+            } else {
+                textElement.textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
+            }
+
+            // Não fechar automaticamente - deixar o usuário selecionar múltiplas opções
+            // O select só fecha quando perder o foco (onblur)
+        };
+
+        // Controlar comportamento dos selects para não abrir automaticamente
+        const selectsDesktop = document.querySelectorAll('#offcanvas-filtros-desktop select');
+        selectsDesktop.forEach(select => {
+            // Prevenir que o select abra automaticamente ao focar
+            select.addEventListener('focus', function (e) {
+                // Não fazer nada - deixar o usuário clicar para abrir
+            });
+
+            // Garantir que o select só abra quando clicado
+            select.addEventListener('click', function (e) {
+                // Permitir que o select abra apenas quando clicado
+            });
+
+            // Prevenir que o select abra ao pressionar Tab
+            select.addEventListener('keydown', function (e) {
+                if (e.key === 'Tab') {
+                    // Permitir navegação com Tab
+                    return;
+                }
+                // Para outras teclas, não abrir automaticamente
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                }
+            });
+
+            // Permitir múltipla seleção com Ctrl+clique
+            select.addEventListener('mousedown', function (e) {
+                // Permitir seleção múltipla
+                if (e.ctrlKey || e.metaKey) {
+                    // Permitir seleção múltipla com Ctrl/Cmd
+                    return;
+                }
+            });
+        });
+    });
+
+    // Sincronizar scroll horizontal do cabeçalho e do corpo do Gantt
+    const ganttCustom = document.getElementById('gantt-custom');
+    const dateHeader = document.getElementById('gantt-date-header');
+    const cronogramaArea = document.getElementById('gantt-cronograma-area');
+    if (ganttCustom && dateHeader && cronogramaArea) {
+        ganttCustom.addEventListener('scroll', function () {
+            dateHeader.scrollLeft = ganttCustom.scrollLeft;
+            cronogramaArea.scrollLeft = ganttCustom.scrollLeft;
+        });
+    }
+
+    // Pan/drag horizontal no Gantt
+    (function () {
+        const ganttCustom = document.getElementById('gantt-custom');
+        let isDown = false;
+        let startX, scrollLeft;
+        if (ganttCustom) {
+            ganttCustom.addEventListener('mousedown', function (e) {
+                if (e.button !== 0) return; // só botão esquerdo
+                isDown = true;
+                ganttCustom.classList.add('dragging');
+                startX = e.pageX - ganttCustom.offsetLeft;
+                scrollLeft = ganttCustom.scrollLeft;
+                document.body.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function (e) {
+                if (!isDown) return;
+                const x = e.pageX - ganttCustom.offsetLeft;
+                const walk = (x - startX) * -1; // sentido inverso
+                ganttCustom.scrollLeft = scrollLeft + walk;
+            });
+            document.addEventListener('mouseup', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+            // Evita seleção de texto durante o drag
+            ganttCustom.addEventListener('mouseleave', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+        }
+    })();
+
+    // Função para mostrar estatísticas dos projetos selecionados
+    function mostrarEstatisticasProjetos(projetosSelecionados) {
+        const estatisticasDiv = document.getElementById('estatisticas-projetos');
+        const conteudoDiv = document.getElementById('estatisticas-conteudo');
+
+        if (!estatisticasDiv || !conteudoDiv) return;
+
+        const dados = window.ganttData || [];
+        const tarefasSelecionadas = dados.filter(t =>
+            projetosSelecionados.includes(t.projeto_origem || t.projeto_nome || '')
+        );
+
+        const totalTarefas = tarefasSelecionadas.length;
+        const projetosUnicos = [...new Set(tarefasSelecionadas.map(t => t.projeto_origem || t.projeto_nome || ''))];
+
+        let estatisticas = `
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Projetos:</strong> ${projetosUnicos.length}
+                </div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Tarefas:</strong> ${totalTarefas}
+                </div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Projetos:</strong> ${projetosSelecionados.join(', ')}
+                </div>
+            </div>
+        `;
+
+        conteudoDiv.innerHTML = estatisticas;
+        estatisticasDiv.style.display = 'block';
+    }
+
+    // Função para esconder estatísticas
+    function esconderEstatisticasProjetos() {
+        const estatisticasDiv = document.getElementById('estatisticas-projetos');
+        if (estatisticasDiv) {
+            estatisticasDiv.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
+
+<!-- Modal de confirmação de exclusão de projeto -->
+<div class="modal fade" id="modalConfirmarExclusaoProjeto" tabindex="-1"
+    aria-labelledby="modalConfirmarExclusaoProjetoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalConfirmarExclusaoProjetoLabel"><i class="fas fa-trash"></i> Confirmar
+                    Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoProjeto"><i
+                        class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Modal de confirmação de exclusão de projeto
+    let projetoIdParaExcluir = null;
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-excluir-projeto').forEach(btn => {
+            btn.addEventListener('click', function () {
+                projetoIdParaExcluir = this.getAttribute('data-projeto-id');
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmarExclusaoProjeto'));
+                modal.show();
+            });
+        });
+        document.getElementById('btnConfirmarExclusaoProjeto').addEventListener('click', function () {
+            if (!projetoIdParaExcluir) return;
+            const form = document.querySelector(`.btn-excluir-projeto[data-projeto-id='${projetoIdParaExcluir}']`).closest('form');
+            if (!form) return;
+            form.submit();
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusaoProjeto'));
+            if (modal) modal.hide();
+            projetoIdParaExcluir = null;
+        });
+    });
+</script>

@@ -1,0 +1,233 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Dashboard{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-industry"></i> Dashboard de Produção
+            </h1>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 id="total-colecoes">0</h3>
+                        <p class="mb-0">Coleções</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 id="total-projecoes">0</h3>
+                        <p class="mb-0">Projeções</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 id="total-atividades">0</h3>
+                        <p class="mb-0">Atividades</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 id="total-eventos">0</h3>
+                        <p class="mb-0">Eventos</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Atividades Recentes -->
+        <div class="col-md-6">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks"></i> Atividades Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="atividades-recentes">
+                        <p class="text-muted">Nenhuma atividade encontrada.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eventos do Calendário -->
+        <div class="col-md-6">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Próximos Eventos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="proximos-eventos">
+                        <p class="text-muted">Nenhum evento encontrado.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_colecoes') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-plus me-2"></i>Nova Coleção
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_calendario') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-calendar-plus me-2"></i>Novo Evento
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_atividades') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-tasks me-2"></i>Nova Atividade
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_projecoes') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-chart-line me-2"></i>Nova Projeção
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Carregar dados do dashboard
+        loadDashboardData();
+    });
+
+    function loadDashboardData() {
+        // Carregar estatísticas
+        const colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+        const projecoes = JSON.parse(localStorage.getItem('projecoes')) || [];
+        const atividades = JSON.parse(localStorage.getItem('atividades')) || [];
+        const eventos = JSON.parse(localStorage.getItem('eventos')) || [];
+
+        // Atualizar contadores
+        document.getElementById('total-colecoes').textContent = colecoes.length;
+        document.getElementById('total-projecoes').textContent = projecoes.length;
+        document.getElementById('total-atividades').textContent = atividades.length;
+        document.getElementById('total-eventos').textContent = eventos.length;
+
+        // Carregar atividades recentes
+        loadAtividadesRecentes(atividades);
+
+        // Carregar próximos eventos
+        loadProximosEventos(eventos);
+    }
+
+    function loadAtividadesRecentes(atividades) {
+        const container = document.getElementById('atividades-recentes');
+
+        if (atividades.length === 0) {
+            container.innerHTML = '<p class="text-muted">Nenhuma atividade encontrada.</p>';
+            return;
+        }
+
+        const atividadesRecentes = atividades
+            .sort((a, b) => new Date(b.data_inicio) - new Date(a.data_inicio))
+            .slice(0, 5);
+
+        const html = atividadesRecentes.map(atividade => `
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <div>
+                <strong>${atividade.nome}</strong>
+                <br>
+                <small class="text-muted">${atividade.responsavel || 'N/A'} - ${formatDate(atividade.data_inicio)}</small>
+            </div>
+            <span class="badge bg-${atividade.status === 'CONCLUIDA' ? 'success' : 'warning'}">${atividade.status}</span>
+        </div>
+    `).join('');
+
+        container.innerHTML = html;
+    }
+
+    function loadProximosEventos(eventos) {
+        const container = document.getElementById('proximos-eventos');
+
+        if (eventos.length === 0) {
+            container.innerHTML = '<p class="text-muted">Nenhum evento encontrado.</p>';
+            return;
+        }
+
+        const hoje = new Date();
+        const proximosEventos = eventos
+            .filter(evento => new Date(evento.data) >= hoje)
+            .sort((a, b) => new Date(a.data) - new Date(b.data))
+            .slice(0, 5);
+
+        if (proximosEventos.length === 0) {
+            container.innerHTML = '<p class="text-muted">Nenhum evento próximo encontrado.</p>';
+            return;
+        }
+
+        const html = proximosEventos.map(evento => `
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <div>
+                <strong>${evento.colecao}</strong>
+                <br>
+                <small class="text-muted">${formatDate(evento.data)} - ${evento.quantidade} unidades</small>
+            </div>
+            <span class="badge bg-primary">${evento.status}</span>
+        </div>
+    `).join('');
+
+        container.innerHTML = html;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+</script>
+{% endblock %}
