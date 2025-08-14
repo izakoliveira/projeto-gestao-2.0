@@ -95,6 +95,7 @@
         margin-right: 5px;
         font-size: 12px;
     }
+<<<<<<< HEAD
 
     /* Estilos para datas calculadas por predecessoras */
     .data-calculada {
@@ -119,6 +120,8 @@
         border-color: #ffc107 !important;
         box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
     }
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
 </style>
 
 {% set numero_para_id = {} %}
@@ -264,8 +267,12 @@
                                         <input type="text" class="form-control form-control-sm"
                                             value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}"
                                             name="predecessoras" placeholder="Ex: 2FS+2d"
+<<<<<<< HEAD
                                             onchange="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)"
                                             onkeyup="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)">
+=======
+                                            onchange="onPredecessorasEdit(this)" onkeyup="onPredecessorasEdit(this)">
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                                     </td>
                                     {% endif %}
                                     <td><input type="date" class="form-control form-control-sm"
@@ -336,9 +343,14 @@
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
                                             onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
                                         <input type="text" class="form-control form-control-sm" name="predecessoras"
+<<<<<<< HEAD
                                             value="" placeholder="Ex: 2FS+2d"
                                             onchange="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)"
                                             onkeyup="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)">
+=======
+                                            value="" placeholder="Ex: 2FS+2d" onchange="onPredecessorasEdit(this)"
+                                            onkeyup="onPredecessorasEdit(this)">
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                                     </td>
                                     {% endif %}
                                     <td><input type="date" class="form-control form-control-sm" name="data_inicio"
@@ -407,6 +419,23 @@
                             </div>
                         </div>
                         <div class="card-body">
+<<<<<<< HEAD
+=======
+                            <!-- DEBUG: Mostrar permissões do usuário -->
+                            <div
+                                style="background: #f8f9fa; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-size: 12px;">
+                                <strong>DEBUG - Permissões do usuário:</strong><br>
+                                Pode criar tarefa: {{ pode_criar_tarefa }}<br>
+                                Pode editar tarefa: {{ pode_editar_tarefa }}<br>
+                                Pode excluir tarefa: {{ pode_excluir_tarefa }}<br>
+                                Pode editar projeto: {{ pode_editar_projeto }}<br>
+                                Pode editar responsável: {{ pode_editar_responsavel }}<br>
+                                Pode editar duração: {{ pode_editar_duracao }}<br>
+                                Pode editar datas: {{ pode_editar_data_inicio }}<br>
+                                Pode editar predecessoras: {{ pode_editar_predecessoras }}<br>
+                                Pode editar nome tarefa: {{ pode_editar_nome_tarefa }}
+                            </div>
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                             <div
                                 style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
                                 <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
@@ -1002,21 +1031,33 @@
 
     // Função para verificar se tarefa está atrasada
     function tarefaAtrasada(tarefa) {
+<<<<<<< HEAD
         // Usar apenas a data (sem hora) para comparação
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0); // Zerar hora, minuto, segundo e milissegundos
 
+=======
+        const hoje = new Date();
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
         const status = tarefa.status?.toLowerCase();
         const dataFim = tarefa.end;
         const dataInicio = tarefa.start;
 
         console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim, 'Data início:', dataInicio);
 
+<<<<<<< HEAD
         // LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
         if (status === 'pendente' && dataInicio) {
             try {
                 const dataInicioObj = new Date(dataInicio + 'T00:00:00');
                 if (dataInicioObj < hoje) { // Apenas datas ANTERIORES a hoje
+=======
+        // LÓGICA 1: Tarefa pendente com data de início passada
+        if (status === 'pendente' && dataInicio) {
+            try {
+                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
+                if (dataInicioObj < hoje) {
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                     return true;
                 }
             } catch (e) {
@@ -1024,11 +1065,19 @@
             }
         }
 
+<<<<<<< HEAD
         // LÓGICA 2: Tarefa não concluída com data de fim passada (excluindo hoje)
         if (dataFim) {
             try {
                 const dataFimObj = new Date(dataFim + 'T00:00:00');
                 if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') { // Apenas datas ANTERIORES a hoje
+=======
+        // LÓGICA 2: Tarefa não concluída com data de fim passada
+        if (dataFim) {
+            try {
+                const dataFimObj = new Date(dataFim + 'T00:00:00');
+                if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') {
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                     return true;
                 }
             } catch (e) {
@@ -1628,11 +1677,17 @@
     function marcarDatasCalculadasPorPredecessora() {
         document.querySelectorAll('input[name="data_inicio"], input[name="data_fim"]').forEach(input => {
             if (input.dataset.calculada === '1') {
+<<<<<<< HEAD
                 input.style.background = '#fffbe6 !important';
                 input.classList.add('data-calculada');
             } else {
                 input.style.background = '';
                 input.classList.remove('data-calculada');
+=======
+                input.style.background = '#fffbe6';
+            } else {
+                input.style.background = '';
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             }
         });
     }
@@ -2190,13 +2245,19 @@
                 dataInicioInput.readOnly = false;
                 dataInicioInput.dataset.calculada = '';
                 dataInicioInput.style.background = '';
+<<<<<<< HEAD
                 dataInicioInput.classList.remove('data-calculada');
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             }
             if (dataFimInput) {
                 dataFimInput.readOnly = false;
                 dataFimInput.dataset.calculada = '';
                 dataFimInput.style.background = '';
+<<<<<<< HEAD
                 dataFimInput.classList.remove('data-calculada');
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             }
             return;
         }
@@ -2287,16 +2348,24 @@
             dataInicioInput.value = dataInicioFinal.toISOString().split('T')[0];
             dataInicioInput.dataset.calculada = '1';
             dataInicioInput.readOnly = true;
+<<<<<<< HEAD
             dataInicioInput.style.background = '#fffbe6 !important';
             dataInicioInput.classList.add('data-calculada');
+=======
+            dataInicioInput.style.background = '#fffbe6';
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             console.log('✅ Data de início calculada e bloqueada');
         }
         if (dataFimFinal && dataFimInput) {
             dataFimInput.value = dataFimFinal.toISOString().split('T')[0];
             dataFimInput.dataset.calculada = '1';
             dataFimInput.readOnly = true;
+<<<<<<< HEAD
             dataFimInput.style.background = '#fffbe6 !important';
             dataFimInput.classList.add('data-calculada');
+=======
+            dataFimInput.style.background = '#fffbe6';
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             console.log('✅ Data de fim calculada e bloqueada');
         }
 
@@ -2305,14 +2374,20 @@
             dataInicioInput.readOnly = false;
             dataInicioInput.dataset.calculada = '';
             dataInicioInput.style.background = '';
+<<<<<<< HEAD
             dataInicioInput.classList.remove('data-calculada');
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             console.log('🔓 Data de início liberada para edição');
         }
         if (!dataFimFinal && dataFimInput) {
             dataFimInput.readOnly = false;
             dataFimInput.dataset.calculada = '';
             dataFimInput.style.background = '';
+<<<<<<< HEAD
             dataFimInput.classList.remove('data-calculada');
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             console.log('🔓 Data de fim liberada para edição');
         }
 
@@ -2322,6 +2397,7 @@
     // Garante que datas calculadas por predecessora fiquem com a cor correta ao carregar a página
     document.addEventListener('DOMContentLoaded', function () {
         console.log('🔍 DOMContentLoaded - Iniciando validação de predecessoras');
+<<<<<<< HEAD
 
         // Aguardar um pouco mais para garantir que todos os scripts estejam carregados
         setTimeout(() => {
@@ -2348,6 +2424,13 @@
         function executarValidacaoPredecessoras() {
             marcarDatasCalculadasPorPredecessora();
 
+=======
+        marcarDatasCalculadasPorPredecessora();
+
+        // Executar validação de predecessoras para todas as tarefas ao carregar a página
+        setTimeout(() => {
+            console.log('🔍 Executando validação de predecessoras após timeout');
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
             const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
             console.log(`📋 Encontrados ${predecessorasInputs.length} campos de predecessoras`);
 
@@ -2362,17 +2445,30 @@
                 if (valor) {
                     console.log(`✅ Executando validação para predecessora: ${valor}`);
                     try {
+<<<<<<< HEAD
                         onPredecessorasEdit(input);
+=======
+                        if (typeof onPredecessorasEdit === 'function') {
+                            onPredecessorasEdit(input);
+                        } else {
+                            console.error('❌ Função onPredecessorasEdit não encontrada');
+                        }
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                     } catch (error) {
                         console.error('❌ Erro ao executar validação de predecessoras:', error);
                     }
                 }
             });
+<<<<<<< HEAD
         }
+=======
+        }, 1000);
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
     });
 
     document.addEventListener('DOMContentLoaded', function () {
         setTimeout(marcarDatasVermelhas, 10);
+<<<<<<< HEAD
 
         // Adicionar event listeners para mudanças nas predecessoras
         setTimeout(() => {
@@ -2405,6 +2501,8 @@
                 });
             });
         }, 2000);
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
     });
 
     // Função para focar o campo nome da linha de nova tarefa
@@ -2613,6 +2711,7 @@
 
     // Exportar função para escopo global
     window.onPredecessorasEdit = onPredecessorasEdit;
+<<<<<<< HEAD
 
     // Função de inicialização robusta para predecessoras
     function inicializarPredecessoras() {
@@ -2897,12 +2996,15 @@
     };
 
     console.log('💪 Para testar manualmente, use: testarPredecessorasForcado()');
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
 </script>
 
 <!-- jQuery e Select2 JS (carregados no final para garantir ordem) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+<<<<<<< HEAD
 <!-- ARQUIVO DE PREDECESSORAS SEPARADO -->
 <script src="{{ url_for('static', filename='js/predecessoras.js') }}"></script>
 
@@ -3126,4 +3228,6 @@
     console.log('🚀 SCRIPT DEFINITIVO ATIVO!');
 </script>
 
+=======
+>>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
 {% endblock %}

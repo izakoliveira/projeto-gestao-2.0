@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Predecessoras</title>
+    <style>
+        .calculada {
+            background-color: #fffbe6 !important;
+        }
+        .readonly {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Validação de Predecessoras</h1>
+    
+    <table id="tabela-tarefas-inline">
+        <thead>
+            <tr>
+                <th>Ordem</th>
+                <th>Nome</th>
+                <th>Predecessoras</th>
+                <th>Data Início</th>
+                <th>Data Fim</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="numero-tarefa">1</td>
+                <td>Tarefa 1</td>
+                <td>
+                    <input type="text" name="predecessoras" value="" placeholder="Ex: 2FS+2d">
+                </td>
+                <td>
+                    <input type="date" name="data_inicio" value="2024-01-01">
+                </td>
+                <td>
+                    <input type="date" name="data_fim" value="2024-01-05">
+                </td>
+            </tr>
+            <tr>
+                <td class="numero-tarefa">2</td>
+                <td>Tarefa 2</td>
+                <td>
+                    <input type="text" name="predecessoras" value="1FS" placeholder="Ex: 2FS+2d">
+                </td>
+                <td>
+                    <input type="date" name="data_inicio" value="">
+                </td>
+                <td>
+                    <input type="date" name="data_fim" value="">
+                </td>
+            </tr>
+            <tr>
+                <td class="numero-tarefa">3</td>
+                <td>Tarefa 3</td>
+                <td>
+                    <input type="text" name="predecessoras" value="2SS+1d" placeholder="Ex: 2FS+2d">
+                </td>
+                <td>
+                    <input type="date" name="data_inicio" value="">
+                </td>
+                <td>
+                    <input type="date" name="data_fim" value="">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        function onPredecessorasEdit(input) {
+            console.log('🔧 onPredecessorasEdit chamada para:', input.value);
+            const tr = input.closest('tr');
+            const predecessorasStr = input.value.trim();
+            const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+            const dataFimInput = tr.querySelector('input[name="data_fim"]');
+            
+            console.log('📅 Campos encontrados:', {
+                dataInicioInput: !!dataInicioInput,
+                dataFimInput: !!dataFimInput,
+                predecessorasStr: predecessorasStr
+            });
+            
+            // Se não há predecessoras, liberar edição manual
+            if (!predecessorasStr) {
+                console.log('❌ Sem predecessoras, liberando edição manual');
+                if (dataInicioInput) {
+                    dataInicioInput.readOnly = false;
+                    dataInicioInput.dataset.calculada = '';
+                    dataInicioInput.style.background = '';
+                }
+                if (dataFimInput) {
+                    dataFimInput.readOnly = false;
+                    dataFimInput.dataset.calculada = '';
+                    dataFimInput.style.background = '';
+                }
+                return;
+            }
+            
+            const preds = predecessorasStr.split(';').map(s => s.trim()).filter(Boolean);
+            console.log('🔗 Predecessoras processadas:', preds);
+            
+            if (preds.length === 0) return;
+            
+            // Mapear número de ordem para linha da tabela
+            const linhas = Array.from(document.querySelectorAll('#tabela-tarefas-inline tbody tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+            const ordemParaLinha = {};
+            linhas.forEach(trLinha => {
+                const ordem = trLinha.querySelector('.numero-tarefa')?.textContent?.trim();
+                if (ordem) ordemParaLinha[ordem] = trLinha;
+            });
+            
+            console.log('📊 Ordem para linha mapeada:', ordemParaLinha);
+            
+            // Para cada predecessora, calcular a data alvo
+            let datasInicio = [];
+            let datasFim = [];
+            preds.forEach(pred => {
+                // Ex: 2FS+2d, 3SS-1d
+                const m = pred.match(/^(\d+)(FS|SS|FF|SF)?([+-]\d+d)?$/);
+                if (!m) {
+                    console.log(`⚠️ Predecessora inválida: ${pred}`);
+                    return;
+                }
+                const ordemPred = m[1];
+                const tipo = m[2] || 'FS';
+                const desloc = m[3] || '';
+                const linhaPred = ordemParaLinha[ordemPred];
+                
+                console.log(`🔍 Processando predecessora: ${pred} (ordem: ${ordemPred}, tipo: ${tipo}, desloc: ${desloc})`);
+                
+                if (!linhaPred) {
+                    console.log(`❌ Linha predecessora não encontrada para ordem: ${ordemPred}`);
+                    return;
+                }
+                
+                const dataInicioPred = linhaPred.querySelector('input[name="data_inicio"]').value;
+                const dataFimPred = linhaPred.querySelector('input[name="data_fim"]').value;
+                
+                console.log(`📅 Datas da predecessora: início=${dataInicioPred}, fim=${dataFimPred}`);
+                
+                let baseDate = null;
+                if (tipo === 'FS') baseDate = dataFimPred;
+                else if (tipo === 'SS') baseDate = dataInicioPred;
+                else if (tipo === 'FF') baseDate = dataFimPred;
+                else if (tipo === 'SF') baseDate = dataInicioPred;
+                
+                if (!baseDate) {
+                    console.log(`❌ Data base não encontrada para tipo: ${tipo}`);
+                    return;
+                }
+                
+                let data = new Date(baseDate);
+                if (desloc) {
+                    const matchDesloc = desloc.match(/([+-])(\d+)d/);
+                    if (matchDesloc) {
+                        const sinal = matchDesloc[1] === '+' ? 1 : -1;
+                        const dias = parseInt(matchDesloc[2], 10);
+                        data.setDate(data.getDate() + sinal * dias);
+                        console.log(`📅 Data ajustada: ${data.toISOString().split('T')[0]} (${sinal * dias} dias)`);
+                    }
+                }
+                
+                if (tipo === 'FS' || tipo === 'SS') datasInicio.push(data);
+                else if (tipo === 'FF' || tipo === 'SF') datasFim.push(data);
+            });
+            
+            console.log('📊 Datas calculadas:', { datasInicio: datasInicio.length, datasFim: datasFim.length });
+            
+            // Para múltiplas predecessoras: para datas de início, usar a MAIOR; para datas de fim, usar a MAIOR
+            let dataInicioFinal = null;
+            let dataFimFinal = null;
+            datasInicio.forEach(d => { if (!dataInicioFinal || d > dataInicioFinal) dataInicioFinal = d; });
+            datasFim.forEach(d => { if (!dataFimFinal || d > dataFimFinal) dataFimFinal = d; });
+            
+            console.log('🎯 Datas finais:', {
+                dataInicioFinal: dataInicioFinal ? dataInicioFinal.toISOString().split('T')[0] : null,
+                dataFimFinal: dataFimFinal ? dataFimFinal.toISOString().split('T')[0] : null
+            });
+            
+            // Preencher e bloquear os campos conforme o tipo
+            if (dataInicioFinal && dataInicioInput) {
+                dataInicioInput.value = dataInicioFinal.toISOString().split('T')[0];
+                dataInicioInput.dataset.calculada = '1';
+                dataInicioInput.readOnly = true;
+                dataInicioInput.style.background = '#fffbe6';
+                console.log('✅ Data de início calculada e bloqueada');
+            }
+            if (dataFimFinal && dataFimInput) {
+                dataFimInput.value = dataFimFinal.toISOString().split('T')[0];
+                dataFimInput.dataset.calculada = '1';
+                dataFimInput.readOnly = true;
+                dataFimInput.style.background = '#fffbe6';
+                console.log('✅ Data de fim calculada e bloqueada');
+            }
+            
+            // Se não houver predecessora para um dos campos, liberar edição
+            if (!dataInicioFinal && dataInicioInput) {
+                dataInicioInput.readOnly = false;
+                dataInicioInput.dataset.calculada = '';
+                dataInicioInput.style.background = '';
+                console.log('🔓 Data de início liberada para edição');
+            }
+            if (!dataFimFinal && dataFimInput) {
+                dataFimInput.readOnly = false;
+                dataFimInput.dataset.calculada = '';
+                dataFimInput.style.background = '';
+                console.log('🔓 Data de fim liberada para edição');
+            }
+        }
+
+        // Executar validação quando a página carrega
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🔍 Inicializando validação de predecessoras...');
+            const predecessorasInputs = document.querySelectorAll('input[name="predecessoras"]');
+            console.log(`📋 Encontrados ${predecessorasInputs.length} campos de predecessoras`);
+            
+            predecessorasInputs.forEach((input, index) => {
+                const valor = input.value.trim();
+                console.log(`📝 Predecessora ${index + 1}: "${valor}"`);
+                if (valor) {
+                    console.log(`✅ Executando validação para predecessora: ${valor}`);
+                    onPredecessorasEdit(input);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
