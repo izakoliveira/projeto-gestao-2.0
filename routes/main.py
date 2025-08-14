@@ -329,7 +329,14 @@ def detalhes_projeto(projeto_id):
         'pode_editar_nome_tarefa': pode_editar_nome_tarefa
     }
     
-    return render_template('detalhes_projeto.html', **template_vars)
+    # Detectar se é dispositivo mobile
+    user_agent = request.headers.get('User-Agent', '')
+    is_mobile = is_mobile_device(user_agent)
+    
+    # Escolher template baseado no dispositivo
+    template_name = 'detalhes_projeto_mobile.html' if is_mobile else 'detalhes_projeto.html'
+    
+    return render_template(template_name, **template_vars)
 
 @main_bp.route('/projetos/editar/<uuid:projeto_id>', methods=['GET', 'POST'])
 @login_required

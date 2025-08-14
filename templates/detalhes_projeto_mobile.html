@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+
+{% block title %}{{ projeto.nome }} - Detalhes{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos específicos para mobile */
+    .mobile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 15px;
+        margin: -15px -15px 20px -15px;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .mobile-header h1 {
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .mobile-header .projeto-meta {
+        margin-top: 15px;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .mobile-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: none;
+    }
+    
+    .mobile-card h3 {
+        color: #333;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .mobile-card h3 i {
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+    
+    .mobile-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        border-left: 4px solid #667eea;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .mobile-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .mobile-actions .btn {
+        flex: 1;
+        min-width: 120px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        padding: 12px 20px;
+        border: none;
+        font-weight: 500;
+    }
+    
+    .mobile-actions .btn i {
+        margin-right: 8px;
+    }
+    
+    .tarefa-item {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .tarefa-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .tarefa-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+    
+    .tarefa-nome {
+        font-weight: 600;
+        color: #333;
+        font-size: 1rem;
+        line-height: 1.3;
+        flex: 1;
+        margin-right: 10px;
+    }
+    
+    .tarefa-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pendente { background: #fff3cd; color: #856404; }
+    .status-em-progresso { background: #d1ecf1; color: #0c5460; }
+    .status-concluida { background: #d4edda; color: #155724; }
+    .status-atrasado { background: #f8d7da; color: #721c24; }
+    
+    .tarefa-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #666;
+    }
+    
+    .detail-item i {
+        color: #667eea;
+        font-size: 0.8rem;
+    }
+    
+    .tarefa-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    
+    .tarefa-actions .btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        border-radius: 20px;
+        border: none;
+    }
+    
+    .gantt-container {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .gantt-title {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .no-tarefas {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+    
+    .no-tarefas i {
+        font-size: 3rem;
+        color: #ddd;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .mobile-fab {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background: #667eea;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+    
+    .mobile-fab:active {
+        transform: scale(0.95);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 480px) {
+        .mobile-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .tarefa-details {
+            grid-template-columns: 1fr;
+        }
+        
+        .mobile-actions .btn {
+            min-width: 100px;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+
+<!-- Header Mobile -->
+<div class="mobile-header">
+    <h1><i class="fas fa-project-diagram"></i> {{ projeto.nome }}</h1>
+    <div class="projeto-meta">
+        <div><i class="fas fa-calendar"></i> {{ projeto.data_inicio }} - {{ projeto.data_fim }}</div>
+        {% if projeto.descricao %}
+        <div style="margin-top: 8px; opacity: 0.8;">{{ projeto.descricao[:100] }}{% if projeto.descricao|length > 100 %}...{% endif %}</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container-fluid" style="padding: 0 15px;">
+    <!-- Estatísticas do Projeto -->
+    <div class="mobile-card">
+        <h3><i class="fas fa-chart-bar"></i> Resumo do Projeto</h3>
+        <div class="mobile-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ tarefas|length }}</span>
+                <span class="stat-label">Total de Tarefas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ tarefas|selectattr('status', 'equalto', 'pendente')|list|length }}</span>
+                <span class="stat-label">Pendentes</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ tarefas|selectattr('status', 'equalto', 'em progresso')|list|length }}</span>
+                <span class="stat-label">Em Progresso</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ tarefas|selectattr('status', 'equalto', 'concluída')|list|length + tarefas|selectattr('status', 'equalto', 'concluida')|list|length }}</span>
+                <span class="stat-label">Concluídas</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações do Projeto -->
+    <div class="mobile-card">
+        <h3><i class="fas fa-tools"></i> Ações</h3>
+        <div class="mobile-actions">
+            {% if pode_editar_projeto %}
+            <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            {% endif %}
+            {% if pode_criar_tarefa %}
+            <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nova Tarefa
+            </a>
+            {% endif %}
+            <a href="/projetos" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Tarefas -->
+    <div class="mobile-card">
+        <h3><i class="fas fa-tasks"></i> Tarefas ({{ tarefas|length }})</h3>
+        
+        {% if tarefas %}
+            {% for tarefa in tarefas %}
+            <div class="tarefa-item {% if tarefa.atrasada %}tarefa-atrasada{% endif %}">
+                <div class="tarefa-header">
+                    <div class="tarefa-nome">{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}</div>
+                    <span class="tarefa-status status-{{ tarefa.status|replace(' ', '-')|lower }}">
+                        {{ tarefa.status|title if tarefa.status else 'Sem status' }}
+                    </span>
+                </div>
+                
+                <div class="tarefa-details">
+                    {% if tarefa.data_inicio %}
+                    <div class="detail-item">
+                        <i class="fas fa-play"></i>
+                        <span>{{ tarefa.data_inicio }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if tarefa.data_fim %}
+                    <div class="detail-item">
+                        <i class="fas fa-flag-checkered"></i>
+                        <span>{{ tarefa.data_fim }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if tarefa.duracao %}
+                    <div class="detail-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ tarefa.duracao }} dias</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if tarefa.responsavel %}
+                    <div class="detail-item">
+                        <i class="fas fa-user"></i>
+                        <span>{{ tarefa.responsavel }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if tarefa.predecessoras %}
+                <div style="margin-bottom: 10px; font-size: 0.8rem; color: #666;">
+                    <i class="fas fa-link"></i> Predecessoras: {{ tarefa.predecessoras }}
+                </div>
+                {% endif %}
+                
+                <div class="tarefa-actions">
+                    {% if pode_editar_tarefa %}
+                    <a href="/tarefas/editar/{{ tarefa.id }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% if pode_excluir_tarefa %}
+                    <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="{{ tarefa.id }}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-tarefas">
+                <i class="fas fa-tasks"></i>
+                <div>Nenhuma tarefa encontrada</div>
+                <div style="font-size: 0.9rem; margin-top: 10px;">
+                    {% if pode_criar_tarefa %}
+                    <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Criar Primeira Tarefa
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Gráfico Gantt -->
+    {% if gantt_geral_data %}
+    <div class="gantt-container">
+        <h3 class="gantt-title"><i class="fas fa-chart-line"></i> Cronograma do Projeto</h3>
+        <div id="gantt-chart" style="height: 300px;"></div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- FAB para criar tarefa -->
+{% if pode_criar_tarefa %}
+<a href="/tarefas/criar/{{ projeto.id }}" class="mobile-fab" title="Criar Nova Tarefa">
+    <i class="fas fa-plus"></i>
+</a>
+{% endif %}
+
+<!-- Modal de confirmação para exclusão -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir esta tarefa?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar botões de exclusão
+    const deleteButtons = document.querySelectorAll('.btn-excluir-tarefa');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tarefaId = this.getAttribute('data-tarefa-id');
+            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            modal.show();
+            
+            document.getElementById('confirmDeleteBtn').onclick = function() {
+                fetch(`/tarefas/excluir/${tarefaId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Erro ao excluir tarefa: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao excluir tarefa');
+                });
+                
+                modal.hide();
+            };
+        });
+    });
+
+    // Gráfico Gantt simples (se houver dados)
+    {% if gantt_geral_data %}
+    const ganttData = {{ gantt_geral_data|tojson }};
+    if (ganttData.length > 0) {
+        renderGanttChart(ganttData);
+    }
+    {% endif %}
+});
+
+function renderGanttChart(data) {
+    const container = document.getElementById('gantt-chart');
+    if (!container) return;
+    
+    // Implementação simples do gráfico Gantt
+    const width = container.clientWidth;
+    const height = 300;
+    const margin = { top: 20, right: 20, bottom: 40, left: 80 };
+    
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
+    // Escalas
+    const xScale = d3.scaleTime()
+        .domain(d3.extent(data, d => new Date(d.start)))
+        .range([margin.left, width - margin.right]);
+    
+    const yScale = d3.scaleBand()
+        .domain(data.map(d => d.name))
+        .range([margin.top, height - margin.bottom])
+        .padding(0.1);
+    
+    // Barras do Gantt
+    svg.selectAll('.gantt-bar')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('class', 'gantt-bar')
+        .attr('x', d => xScale(new Date(d.start)))
+        .attr('y', d => yScale(d.name))
+        .attr('width', d => {
+            const start = new Date(d.start);
+            const end = new Date(d.end);
+            return xScale(end) - xScale(start);
+        })
+        .attr('height', yScale.bandwidth())
+        .attr('fill', d => d.bar_color || '#667eea')
+        .attr('rx', 3);
+    
+    // Eixos
+    const xAxis = d3.axisBottom(xScale);
+    const yAxis = d3.axisLeft(yScale);
+    
+    svg.append('g')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(xAxis);
+    
+    svg.append('g')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(yAxis);
+}
+</script>
+{% endblock %}
