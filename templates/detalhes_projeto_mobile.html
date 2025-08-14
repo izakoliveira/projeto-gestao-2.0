@@ -98,165 +98,181 @@
         margin-right: 8px;
     }
     
-              /* Layout de cards para tarefas */
-     .tarefa-card {
-         background: white;
-         border: 1px solid #e9ecef;
-         border-radius: 12px;
-         margin-bottom: 16px;
-         overflow: hidden;
-         transition: all 0.3s ease;
-         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-     }
-     
-     .tarefa-card:hover {
-         transform: translateY(-2px);
-         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-     }
-     
-     .tarefa-card.tarefa-atrasada {
-         border-left: 4px solid #dc2626;
-         background: #fff5f5;
-     }
-     
-     /* Cabeçalho da tarefa */
-     .tarefa-header {
-         display: flex;
-         align-items: center;
-         padding: 16px;
-         background: #f8f9fa;
-         border-bottom: 1px solid #e9ecef;
-         gap: 12px;
-     }
-     
-     .tarefa-numero {
-         background: #667eea;
-         color: white;
-         width: 32px;
-         height: 32px;
-         border-radius: 50%;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         font-size: 0.9rem;
-         font-weight: 600;
-         flex-shrink: 0;
-     }
-     
-     .tarefa-info {
-         flex: 1;
-         min-width: 0;
-     }
-     
-     .tarefa-nome {
-         font-weight: 600;
-         color: #333;
-         font-size: 1rem;
-         line-height: 1.3;
-         margin-bottom: 4px;
-     }
-     
-     .tarefa-status {
-         display: flex;
-         align-items: center;
-     }
-     
-     .status-badge {
-         padding: 4px 8px;
-         border-radius: 12px;
-         font-size: 0.7rem;
-         font-weight: 500;
-         text-transform: uppercase;
-         letter-spacing: 0.5px;
-         display: inline-block;
-     }
-     
-     .status-pendente { background: #fff3cd; color: #856404; }
-     .status-em-progresso { background: #d1ecf1; color: #0c5460; }
-     .status-concluida { background: #d4edda; color: #155724; }
-     .status-atrasado { background: #f8d7da; color: #721c24; }
-     
-     .tarefa-actions {
-         display: flex;
-         gap: 6px;
-         flex-shrink: 0;
-     }
-     
-     .tarefa-actions .btn {
-         padding: 6px 10px;
-         font-size: 0.8rem;
-         border-radius: 8px;
-         border: none;
-         min-width: 32px;
-         height: 32px;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-     }
-     
-           /* Detalhes da tarefa */
-      .tarefa-details {
+                             /* Layout de tabela para tarefas */
+      .table-header {
+          background: #f8f9fa;
+          border-radius: 12px 12px 0 0;
+          margin-bottom: 0;
+          border: 1px solid #e9ecef;
+          border-bottom: none;
+      }
+      
+      .table-header-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr 1fr;
+          gap: 16px;
           padding: 16px;
       }
       
-       /* Layout tipo tabela com colunas fixas */
-       .detail-table-layout {
-           display: grid;
-           grid-template-columns: 1fr 1fr 1fr 1fr;
-           gap: 16px;
-           padding: 8px 0;
-       }
-       
-       .detail-column {
-           display: flex;
-           flex-direction: column;
-           gap: 8px;
-       }
-       
-       .column-header {
-           display: flex;
-           align-items: center;
-           gap: 6px;
-           font-weight: 600;
-           color: #495057;
-           font-size: 0.8rem;
-           padding: 4px 8px;
-           background: #f8f9fa;
-           border-radius: 6px;
-           border-left: 3px solid #667eea;
-       }
-       
-       .column-header i {
-           color: #667eea;
-           font-size: 0.75rem;
-       }
-       
-       .column-content {
-           padding: 0 4px;
-       }
-       
-       .data-row {
-           display: flex;
-           align-items: center;
-           gap: 6px;
-           margin-bottom: 4px;
-       }
-       
-       .data-row:last-child {
-           margin-bottom: 0;
-       }
-       
-       .data-label {
-           font-size: 0.7rem;
-           color: #666;
-           font-weight: 500;
-           min-width: 35px;
-       }
-       
-       .field-value {
-           font-size: 0.8rem;
-           color: #333;
-       }
+      .header-cell {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-weight: 600;
+          color: #495057;
+          font-size: 0.85rem;
+          padding: 8px 12px;
+          background: #e9ecef;
+          border-radius: 8px;
+          border-left: 3px solid #667eea;
+          text-align: center;
+          justify-content: center;
+      }
+      
+      .header-cell i {
+          color: #667eea;
+          font-size: 0.8rem;
+      }
+      
+      .tarefa-row {
+          background: white;
+          border: 1px solid #e9ecef;
+          border-top: none;
+          transition: all 0.3s ease;
+      }
+      
+      .tarefa-row:last-child {
+          border-radius: 0 0 12px 12px;
+      }
+      
+      .tarefa-row:hover {
+          background: #f8f9fa;
+      }
+      
+      .tarefa-row.tarefa-atrasada {
+          border-left: 4px solid #dc2626;
+          background: #fff5f5;
+      }
+      
+      .tarefa-row.tarefa-atrasada:hover {
+          background: #fef2f2;
+      }
+      
+      /* Cabeçalho da tarefa */
+      .tarefa-info-header {
+          display: flex;
+          align-items: center;
+          padding: 16px;
+          background: #f8f9fa;
+          border-bottom: 1px solid #e9ecef;
+          gap: 12px;
+      }
+      
+      .tarefa-numero {
+          background: #667eea;
+          color: white;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9rem;
+          font-weight: 600;
+          flex-shrink: 0;
+      }
+      
+      .tarefa-info {
+          flex: 1;
+          min-width: 0;
+      }
+      
+      .tarefa-nome {
+          font-weight: 600;
+          color: #333;
+          font-size: 1rem;
+          line-height: 1.3;
+          margin-bottom: 4px;
+      }
+      
+      .tarefa-status {
+          display: flex;
+          align-items: center;
+      }
+      
+      .status-badge {
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 0.7rem;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: inline-block;
+      }
+      
+      .status-pendente { background: #fff3cd; color: #856404; }
+      .status-em-progresso { background: #d1ecf1; color: #0c5460; }
+      .status-concluida { background: #d4edda; color: #155724; }
+      .status-atrasado { background: #f8d7da; color: #721c24; }
+      
+      .tarefa-actions {
+          display: flex;
+          gap: 6px;
+          flex-shrink: 0;
+      }
+      
+      .tarefa-actions .btn {
+          padding: 6px 10px;
+          font-size: 0.8rem;
+          border-radius: 8px;
+          border: none;
+          min-width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+      
+      /* Linha de dados da tarefa */
+      .tarefa-data-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr 1fr;
+          gap: 16px;
+          padding: 16px;
+      }
+      
+      .data-cell, .duracao-cell, .responsavel-cell, .predecessoras-cell {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          align-items: center;
+          justify-content: center;
+          min-height: 60px;
+      }
+      
+      .data-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 4px;
+      }
+      
+      .data-item:last-child {
+          margin-bottom: 0;
+      }
+      
+      .data-label {
+          font-size: 0.7rem;
+          color: #666;
+          font-weight: 500;
+          min-width: 35px;
+      }
+      
+      .field-value {
+          font-size: 0.8rem;
+          color: #333;
+          text-align: center;
+      }
       
        .data-input {
            width: 100% !important;
@@ -381,51 +397,47 @@
              font-size: 0.8rem;
          }
          
-                   /* Cards responsivos para telas pequenas */
-          .tarefa-card {
-              margin-bottom: 12px;
-          }
-          
-          .tarefa-header {
-              padding: 12px;
-              gap: 8px;
-          }
-          
-          .tarefa-numero {
-              width: 28px;
-              height: 28px;
-              font-size: 0.8rem;
-          }
-          
-          .tarefa-nome {
-              font-size: 0.9rem;
-          }
-          
-          .status-badge {
-              padding: 3px 6px;
-              font-size: 0.65rem;
-          }
-          
-          .tarefa-actions .btn {
-              min-width: 28px;
-              height: 28px;
-              padding: 4px 8px;
-          }
-          
-          .tarefa-details {
-              padding: 12px;
-          }
-          
-          .detail-table-layout {
-              grid-template-columns: 1fr 1fr 1fr 1fr;
-              gap: 12px;
-              padding: 6px 0;
-          }
-          
-          .column-header {
-              font-size: 0.75rem;
-              padding: 3px 6px;
-          }
+                                       /* Tabela responsiva para telas pequenas */
+           .table-header-row {
+               gap: 12px;
+               padding: 12px;
+           }
+           
+           .header-cell {
+               font-size: 0.75rem;
+               padding: 6px 8px;
+           }
+           
+           .tarefa-info-header {
+               padding: 12px;
+               gap: 8px;
+           }
+           
+           .tarefa-numero {
+               width: 28px;
+               height: 28px;
+               font-size: 0.8rem;
+           }
+           
+           .tarefa-nome {
+               font-size: 0.9rem;
+           }
+           
+           .status-badge {
+               padding: 3px 6px;
+               font-size: 0.65rem;
+           }
+           
+           .tarefa-actions .btn {
+               min-width: 28px;
+               height: 28px;
+               padding: 4px 8px;
+           }
+           
+           .tarefa-data-row {
+               gap: 12px;
+               padding: 12px;
+           }
           
           .data-input {
               height: 26px !important;
@@ -450,50 +462,46 @@
      }
      
            @media (max-width: 360px) {
-          .tarefa-card {
-              margin-bottom: 10px;
-          }
+                    .table-header-row {
+               gap: 8px;
+               padding: 10px;
+           }
           
-          .tarefa-header {
-              padding: 10px;
-              gap: 6px;
-          }
+          .header-cell {
+               font-size: 0.7rem;
+               padding: 4px 6px;
+           }
+          
+          .tarefa-info-header {
+               padding: 10px;
+               gap: 6px;
+           }
           
           .tarefa-numero {
-              width: 24px;
-              height: 24px;
-              font-size: 0.7rem;
-          }
+               width: 24px;
+               height: 24px;
+               font-size: 0.7rem;
+           }
           
           .tarefa-nome {
-              font-size: 0.8rem;
-          }
+               font-size: 0.8rem;
+           }
           
           .status-badge {
-              padding: 2px 4px;
-              font-size: 0.6rem;
-          }
+               padding: 2px 4px;
+               font-size: 0.6rem;
+           }
           
           .tarefa-actions .btn {
-              min-width: 24px;
-              height: 24px;
-              padding: 2px 6px;
-          }
+               min-width: 24px;
+               height: 24px;
+               padding: 2px 6px;
+           }
           
-          .tarefa-details {
-              padding: 10px;
-          }
-          
-          .detail-table-layout {
-              grid-template-columns: 1fr 1fr 1fr 1fr;
-              gap: 8px;
-              padding: 4px 0;
-          }
-          
-          .column-header {
-              font-size: 0.7rem;
-              padding: 2px 4px;
-          }
+          .tarefa-data-row {
+               gap: 8px;
+               padding: 10px;
+           }
           
           .data-input {
               height: 24px !important;
@@ -573,159 +581,153 @@
         </div>
     </div>
 
-              <!-- Lista de Tarefas -->
-     <div class="mobile-card">
-         <h3><i class="fas fa-tasks"></i> Tarefas ({{ tarefas|length }})</h3>
-         
-         {% if tarefas %}
-             {% for tarefa in tarefas %}
-             <div class="tarefa-card {% if tarefa.atrasada %}tarefa-atrasada{% endif %}" data-tarefa-id="{{ tarefa.id }}">
-                 <!-- Cabeçalho da tarefa -->
-                 <div class="tarefa-header">
-                     <div class="tarefa-numero">{{ loop.index }}</div>
-                     <div class="tarefa-info">
-                         <div class="tarefa-nome">
-                             {% if pode_editar_nome_tarefa %}
-                             <input type="text" class="form-control form-control-sm nome-tarefa-input" 
-                                    data-tarefa-id="{{ tarefa.id }}" 
-                                    value="{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}"
-                                    placeholder="Nome da tarefa">
-                             {% else %}
-                             <span>{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}</span>
-                             {% endif %}
-                         </div>
-                         <div class="tarefa-status">
-                             <span class="status-badge status-{{ tarefa.status|replace(' ', '-')|lower }}">
-                                 {{ tarefa.status|title if tarefa.status else 'Sem status' }}
-                             </span>
-                         </div>
-                     </div>
-                     <div class="tarefa-actions">
-                         {% if pode_editar_tarefa %}
-                         <a href="/tarefas/editar/{{ tarefa.id }}" class="btn btn-warning btn-sm" title="Editar">
-                             <i class="fas fa-edit"></i>
-                         </a>
-                         {% endif %}
-                         
-                         {% if pode_excluir_tarefa %}
-                         <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="{{ tarefa.id }}" title="Excluir">
-                             <i class="fas fa-trash"></i>
-                         </button>
-                         {% endif %}
-                     </div>
-                 </div>
-                 
-                                   <!-- Detalhes da tarefa -->
-                  <div class="tarefa-details">
-                      <!-- Layout tipo tabela com colunas fixas -->
-                      <div class="detail-table-layout">
-                          <!-- Datas -->
-                          <div class="detail-column">
-                              <div class="column-header">
-                                  <i class="fas fa-calendar"></i> Datas
-                              </div>
-                              <div class="column-content">
-                                  {% if tarefa.data_inicio %}
-                                  <div class="data-row">
-                                      <span class="data-label">Início:</span>
-                                      {% if pode_editar_data_inicio %}
-                                      <input type="date" class="form-control form-control-sm data-input" 
-                                             data-tarefa-id="{{ tarefa.id }}" 
-                                             data-campo="data_inicio" 
-                                             value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
-                                      {% else %}
-                                      <span class="field-value">{{ tarefa.data_inicio }}</span>
-                                      {% endif %}
-                                  </div>
-                                  {% endif %}
-                                  
-                                  {% if tarefa.data_fim %}
-                                  <div class="data-row">
-                                      <span class="data-label">Fim:</span>
-                                      {% if pode_editar_data_termino %}
-                                      <input type="date" class="form-control form-control-sm data-input" 
-                                             data-tarefa-id="{{ tarefa.id }}" 
-                                             data-campo="data_fim" 
-                                             value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
-                                      {% else %}
-                                      <span class="field-value">{{ tarefa.data_fim }}</span>
-                                      {% endif %}
-                                  </div>
-                                  {% endif %}
-                              </div>
+                             <!-- Lista de Tarefas -->
+      <div class="mobile-card">
+          <h3><i class="fas fa-tasks"></i> Tarefas ({{ tarefas|length }})</h3>
+          
+          {% if tarefas %}
+              <!-- Cabeçalho fixo das colunas -->
+              <div class="table-header">
+                  <div class="table-header-row">
+                      <div class="header-cell">
+                          <i class="fas fa-calendar"></i> Datas
+                      </div>
+                      <div class="header-cell">
+                          <i class="fas fa-clock"></i> Duração
+                      </div>
+                      <div class="header-cell">
+                          <i class="fas fa-user"></i> Responsável
+                      </div>
+                      <div class="header-cell">
+                          <i class="fas fa-link"></i> Predecessoras
+                      </div>
+                  </div>
+              </div>
+              
+              <!-- Lista de tarefas -->
+              {% for tarefa in tarefas %}
+              <div class="tarefa-row {% if tarefa.atrasada %}tarefa-atrasada{% endif %}" data-tarefa-id="{{ tarefa.id }}">
+                  <!-- Nome e status da tarefa -->
+                  <div class="tarefa-info-header">
+                      <div class="tarefa-numero">{{ loop.index }}</div>
+                      <div class="tarefa-info">
+                          <div class="tarefa-nome">
+                              {% if pode_editar_nome_tarefa %}
+                              <input type="text" class="form-control form-control-sm nome-tarefa-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     value="{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}"
+                                     placeholder="Nome da tarefa">
+                              {% else %}
+                              <span>{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}</span>
+                              {% endif %}
                           </div>
+                          <div class="tarefa-status">
+                              <span class="status-badge status-{{ tarefa.status|replace(' ', '-')|lower }}">
+                                  {{ tarefa.status|title if tarefa.status else 'Sem status' }}
+                              </span>
+                          </div>
+                      </div>
+                      <div class="tarefa-actions">
+                          {% if pode_editar_tarefa %}
+                          <a href="/tarefas/editar/{{ tarefa.id }}" class="btn btn-warning btn-sm" title="Editar">
+                              <i class="fas fa-edit"></i>
+                          </a>
+                          {% endif %}
                           
-                          <!-- Duração -->
-                          <div class="detail-column">
-                              <div class="column-header">
-                                  <i class="fas fa-clock"></i> Duração
-                              </div>
-                              <div class="column-content">
-                                  {% if pode_editar_duracao %}
-                                  <input type="number" class="form-control form-control-sm duracao-input" 
-                                         data-tarefa-id="{{ tarefa.id }}" 
-                                         value="{{ tarefa.duracao }}"
-                                         min="1" max="365">
-                                  <span class="duracao-label">dias</span>
-                                  {% else %}
-                                  <span class="field-value">{{ tarefa.duracao }} dias</span>
-                                  {% endif %}
-                              </div>
-                          </div>
-                          
-                          <!-- Responsável -->
-                          <div class="detail-column">
-                              <div class="column-header">
-                                  <i class="fas fa-user"></i> Responsável
-                              </div>
-                              <div class="column-content">
-                                  {% if pode_editar_responsavel %}
-                                  <input type="text" class="form-control form-control-sm responsavel-input" 
-                                         data-tarefa-id="{{ tarefa.id }}" 
-                                         value="{{ tarefa.responsavel }}"
-                                         placeholder="Responsável">
-                                  {% else %}
-                                  <span class="field-value">{{ tarefa.responsavel or '-' }}</span>
-                                  {% endif %}
-                              </div>
-                          </div>
-                          
-                          <!-- Predecessoras -->
-                          {% if tarefa.predecessoras or pode_editar_predecessoras %}
-                          <div class="detail-column">
-                              <div class="column-header">
-                                  <i class="fas fa-link"></i> Predecessoras
-                              </div>
-                              <div class="column-content">
-                                  {% if pode_editar_predecessoras %}
-                                  <input type="text" class="form-control form-control-sm predecessoras-input" 
-                                         data-tarefa-id="{{ tarefa.id }}" 
-                                         value="{{ tarefa.predecessoras or '' }}"
-                                         placeholder="Ex: 1;2FS3;4SS5">
-                                  {% else %}
-                                  <span class="field-value">{{ tarefa.predecessoras or 'Nenhuma' }}</span>
-                                  {% endif %}
-                              </div>
-                          </div>
+                          {% if pode_excluir_tarefa %}
+                          <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="{{ tarefa.id }}" title="Excluir">
+                              <i class="fas fa-trash"></i>
+                          </button>
                           {% endif %}
                       </div>
                   </div>
-             </div>
-             {% endfor %}
-         {% else %}
-             <div class="no-tarefas">
-                 <i class="fas fa-tasks"></i>
-                 <div>Nenhuma tarefa encontrada</div>
-                 <div style="font-size: 0.9rem; margin-top: 10px;">
-                     {% if pode_criar_tarefa %}
-                     <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success btn-sm">
-                         <i class="fas fa-plus"></i> Criar Primeira Tarefa
-                     </a>
-                     {% endif %}
-                 </div>
-             </div>
-         {% endif %}
-     </div>
+                  
+                  <!-- Linha de dados da tarefa -->
+                  <div class="tarefa-data-row">
+                      <!-- Coluna Datas -->
+                      <div class="data-cell">
+                          {% if tarefa.data_inicio %}
+                          <div class="data-item">
+                              <span class="data-label">Início:</span>
+                              {% if pode_editar_data_inicio %}
+                              <input type="date" class="form-control form-control-sm data-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     data-campo="data_inicio" 
+                                     value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
+                              {% else %}
+                              <span class="field-value">{{ tarefa.data_inicio }}</span>
+                              {% endif %}
+                          </div>
+                          {% endif %}
+                          
+                          {% if tarefa.data_fim %}
+                          <div class="data-item">
+                              <span class="data-label">Fim:</span>
+                              {% if pode_editar_data_termino %}
+                              <input type="date" class="form-control form-control-sm data-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     data-campo="data_fim" 
+                                     value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
+                              {% else %}
+                              <span class="field-value">{{ tarefa.data_fim }}</span>
+                              {% endif %}
+                          </div>
+                          {% endif %}
+                      </div>
+                      
+                      <!-- Coluna Duração -->
+                      <div class="duracao-cell">
+                          {% if pode_editar_duracao %}
+                          <input type="number" class="form-control form-control-sm duracao-input" 
+                                 data-tarefa-id="{{ tarefa.id }}" 
+                                 value="{{ tarefa.duracao }}"
+                                 min="1" max="365">
+                          <span class="duracao-label">dias</span>
+                          {% else %}
+                          <span class="field-value">{{ tarefa.duracao }} dias</span>
+                          {% endif %}
+                      </div>
+                      
+                      <!-- Coluna Responsável -->
+                      <div class="responsavel-cell">
+                          {% if pode_editar_responsavel %}
+                          <input type="text" class="form-control form-control-sm responsavel-input" 
+                                 data-tarefa-id="{{ tarefa.id }}" 
+                                 value="{{ tarefa.responsavel }}"
+                                 placeholder="Responsável">
+                          {% else %}
+                          <span class="field-value">{{ tarefa.responsavel or '-' }}</span>
+                          {% endif %}
+                      </div>
+                      
+                      <!-- Coluna Predecessoras -->
+                      <div class="predecessoras-cell">
+                          {% if pode_editar_predecessoras %}
+                          <input type="text" class="form-control form-control-sm predecessoras-input" 
+                                 data-tarefa-id="{{ tarefa.id }}" 
+                                 value="{{ tarefa.predecessoras or '' }}"
+                                 placeholder="Ex: 1;2FS3;4SS5">
+                          {% else %}
+                          <span class="field-value">{{ tarefa.predecessoras or 'Nenhuma' }}</span>
+                          {% endif %}
+                      </div>
+                  </div>
+              </div>
+              {% endfor %}
+          {% else %}
+              <div class="no-tarefas">
+                  <i class="fas fa-tasks"></i>
+                  <div>Nenhuma tarefa encontrada</div>
+                  <div style="font-size: 0.9rem; margin-top: 10px;">
+                      {% if pode_criar_tarefa %}
+                      <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success btn-sm">
+                          <i class="fas fa-plus"></i> Criar Primeira Tarefa
+                      </a>
+                      {% endif %}
+                  </div>
+              </div>
+          {% endif %}
+      </div>
 
     <!-- Gráfico Gantt -->
     {% if gantt_geral_data %}
