@@ -199,94 +199,76 @@
           padding: 16px;
       }
       
-      /* Layout de uma linha para todos os campos */
-      .detail-row-all {
-          display: flex;
-          align-items: flex-start;
-          gap: 20px;
-          flex-wrap: wrap;
-      }
+             /* Layout de uma linha horizontal para todos os campos */
+       .detail-single-line {
+           display: flex;
+           align-items: center;
+           gap: 16px;
+           flex-wrap: nowrap;
+           overflow-x: auto;
+           padding: 8px 0;
+       }
+       
+       .detail-field {
+           display: flex;
+           align-items: center;
+           gap: 6px;
+           flex-shrink: 0;
+           white-space: nowrap;
+       }
+       
+       .detail-field i {
+           color: #667eea;
+           font-size: 0.8rem;
+       }
+       
+       .field-label {
+           font-size: 0.75rem;
+           color: #666;
+           font-weight: 500;
+       }
+       
+       .field-value {
+           font-size: 0.8rem;
+           color: #333;
+       }
       
-      .detail-item {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          min-width: 0;
-          flex: 1;
-      }
-      
-      .detail-label {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-weight: 600;
-          color: #495057;
-          font-size: 0.85rem;
-          flex-shrink: 0;
-      }
-      
-      .detail-label i {
-          color: #667eea;
-          font-size: 0.8rem;
-      }
-      
-      .detail-content {
-          min-width: 0;
-      }
-     
-           /* Campos de data */
-      .datas-container {
-          display: flex;
-          flex-direction: row;
-          gap: 16px;
-          align-items: center;
-      }
-      
-      .data-field {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-      }
-      
-      .data-label {
-          font-size: 0.8rem;
-          color: #666;
-          min-width: 45px;
-          flex-shrink: 0;
-      }
-      
-            .data-input {
-          width: 90px !important;
-          font-size: 0.8rem !important;
-          padding: 4px 8px !important;
-      }
-      
-      /* Campo de duração */
-      .duracao-input {
-          width: 60px !important;
-          font-size: 0.8rem !important;
-          padding: 4px 8px !important;
-      }
-      
-      .duracao-label {
-          font-size: 0.8rem;
-          color: #666;
-          margin-left: 4px;
-      }
-      
-      /* Campo de responsável */
-      .responsavel-input {
-          width: 100px !important;
-          font-size: 0.8rem !important;
-          padding: 4px 8px !important;
-      }
-      
-      /* Campo de predecessoras */
-      .predecessoras-input {
-          width: 120px !important;
-          font-size: 0.8rem !important;
-          padding: 4px 8px !important;
-      }
+                   .data-input {
+           width: 80px !important;
+           font-size: 0.75rem !important;
+           padding: 3px 6px !important;
+           height: 28px !important;
+       }
+       
+       /* Campo de duração */
+       .duracao-input {
+           width: 50px !important;
+           font-size: 0.75rem !important;
+           padding: 3px 6px !important;
+           height: 28px !important;
+       }
+       
+       .duracao-label {
+           font-size: 0.75rem;
+           color: #666;
+           margin-left: 3px;
+       }
+       
+       /* Campo de responsável */
+       .responsavel-input {
+           width: 80px !important;
+           font-size: 0.75rem !important;
+           padding: 3px 6px !important;
+           height: 28px !important;
+       }
+       
+       /* Campo de predecessoras */
+       .predecessoras-input {
+           width: 90px !important;
+           font-size: 0.75rem !important;
+           padding: 3px 6px !important;
+           height: 28px !important;
+       }
      
      /* Estilos para campos editáveis */
      .data-input, .duracao-input, .responsavel-input, .nome-tarefa-input, .predecessoras-input {
@@ -409,36 +391,41 @@
               padding: 12px;
           }
           
-          .detail-row-all {
-              gap: 16px;
+          .detail-single-line {
+              gap: 12px;
+              padding: 6px 0;
           }
           
-          .detail-label {
-              font-size: 0.8rem;
+          .detail-field {
+              gap: 4px;
           }
           
-          .datas-container {
-              gap: 10px;
+          .field-label {
+              font-size: 0.7rem;
           }
           
           .data-input {
-              width: 80px !important;
-              font-size: 0.75rem !important;
+              width: 70px !important;
+              font-size: 0.7rem !important;
+              height: 26px !important;
           }
           
           .duracao-input {
-              width: 50px !important;
-              font-size: 0.75rem !important;
+              width: 45px !important;
+              font-size: 0.7rem !important;
+              height: 26px !important;
           }
           
           .responsavel-input {
-              width: 90px !important;
-              font-size: 0.75rem !important;
+              width: 70px !important;
+              font-size: 0.7rem !important;
+              height: 26px !important;
           }
           
           .predecessoras-input {
-              width: 100px !important;
-              font-size: 0.75rem !important;
+              width: 80px !important;
+              font-size: 0.7rem !important;
+              height: 26px !important;
           }
      }
      
@@ -477,36 +464,41 @@
               padding: 10px;
           }
           
-          .detail-row-all {
-              gap: 12px;
+          .detail-single-line {
+              gap: 8px;
+              padding: 4px 0;
           }
           
-          .detail-label {
-              font-size: 0.75rem;
+          .detail-field {
+              gap: 3px;
           }
           
-          .datas-container {
-              gap: 6px;
+          .field-label {
+              font-size: 0.65rem;
           }
           
           .data-input {
-              width: 70px !important;
-              font-size: 0.7rem !important;
+              width: 60px !important;
+              font-size: 0.65rem !important;
+              height: 24px !important;
           }
           
           .duracao-input {
-              width: 45px !important;
-              font-size: 0.7rem !important;
+              width: 40px !important;
+              font-size: 0.65rem !important;
+              height: 24px !important;
           }
           
           .responsavel-input {
-              width: 80px !important;
-              font-size: 0.7rem !important;
+              width: 60px !important;
+              font-size: 0.65rem !important;
+              height: 24px !important;
           }
           
           .predecessoras-input {
-              width: 90px !important;
-              font-size: 0.7rem !important;
+              width: 70px !important;
+              font-size: 0.65rem !important;
+              height: 24px !important;
           }
       }
 </style>
@@ -610,95 +602,78 @@
                  
                                    <!-- Detalhes da tarefa -->
                   <div class="tarefa-details">
-                      <!-- Todos os campos em uma linha -->
-                      <div class="detail-row-all">
+                      <!-- Todos os campos em uma linha horizontal -->
+                      <div class="detail-single-line">
                           <!-- Datas -->
-                          <div class="detail-item">
-                              <div class="detail-label">
-                                  <i class="fas fa-calendar"></i> Datas
-                              </div>
-                              <div class="detail-content datas-container">
-                                  {% if tarefa.data_inicio %}
-                                  <div class="data-field">
-                                      <span class="data-label">Início:</span>
-                                      {% if pode_editar_data_inicio %}
-                                      <input type="date" class="form-control form-control-sm data-input" 
-                                             data-tarefa-id="{{ tarefa.id }}" 
-                                             data-campo="data_inicio" 
-                                             value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
-                                      {% else %}
-                                      <span>{{ tarefa.data_inicio }}</span>
-                                      {% endif %}
-                                  </div>
-                                  {% endif %}
-                                  
-                                  {% if tarefa.data_fim %}
-                                  <div class="data-field">
-                                      <span class="data-label">Fim:</span>
-                                      {% if pode_editar_data_termino %}
-                                      <input type="date" class="form-control form-control-sm data-input" 
-                                             data-tarefa-id="{{ tarefa.id }}" 
-                                             data-campo="data_fim" 
-                                             value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
-                                      {% else %}
-                                      <span>{{ tarefa.data_fim }}</span>
-                                      {% endif %}
-                                  </div>
-                                  {% endif %}
-                              </div>
+                          <div class="detail-field">
+                              <i class="fas fa-calendar"></i>
+                              {% if tarefa.data_inicio %}
+                              <span class="field-label">Início:</span>
+                              {% if pode_editar_data_inicio %}
+                              <input type="date" class="form-control form-control-sm data-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     data-campo="data_inicio" 
+                                     value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
+                              {% else %}
+                              <span class="field-value">{{ tarefa.data_inicio }}</span>
+                              {% endif %}
+                              {% endif %}
+                              
+                              {% if tarefa.data_fim %}
+                              <span class="field-label">Fim:</span>
+                              {% if pode_editar_data_termino %}
+                              <input type="date" class="form-control form-control-sm data-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     data-campo="data_fim" 
+                                     value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
+                              {% else %}
+                              <span class="field-value">{{ tarefa.data_fim }}</span>
+                              {% endif %}
+                              {% endif %}
                           </div>
                           
                           <!-- Duração -->
-                          <div class="detail-item">
-                              <div class="detail-label">
-                                  <i class="fas fa-clock"></i> Duração
-                              </div>
-                              <div class="detail-content">
-                                  {% if pode_editar_duracao %}
-                                  <input type="number" class="form-control form-control-sm duracao-input" 
-                                         data-tarefa-id="{{ tarefa.id }}" 
-                                         value="{{ tarefa.duracao }}"
-                                         min="1" max="365">
-                                  <span class="duracao-label">dias</span>
-                                  {% else %}
-                                  <span>{{ tarefa.duracao }} dias</span>
-                                  {% endif %}
-                              </div>
+                          <div class="detail-field">
+                              <i class="fas fa-clock"></i>
+                              <span class="field-label">Duração:</span>
+                              {% if pode_editar_duracao %}
+                              <input type="number" class="form-control form-control-sm duracao-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     value="{{ tarefa.duracao }}"
+                                     min="1" max="365">
+                              <span class="duracao-label">dias</span>
+                              {% else %}
+                              <span class="field-value">{{ tarefa.duracao }} dias</span>
+                              {% endif %}
                           </div>
                           
                           <!-- Responsável -->
-                          <div class="detail-item">
-                              <div class="detail-label">
-                                  <i class="fas fa-user"></i> Responsável
-                              </div>
-                              <div class="detail-content">
-                                  {% if pode_editar_responsavel %}
-                                  <input type="text" class="form-control form-control-sm responsavel-input" 
-                                         data-tarefa-id="{{ tarefa.id }}" 
-                                         value="{{ tarefa.responsavel }}"
-                                         placeholder="Responsável">
-                                  {% else %}
-                                  <span>{{ tarefa.responsavel or '-' }}</span>
-                                  {% endif %}
-                              </div>
+                          <div class="detail-field">
+                              <i class="fas fa-user"></i>
+                              <span class="field-label">Responsável:</span>
+                              {% if pode_editar_responsavel %}
+                              <input type="text" class="form-control form-control-sm responsavel-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     value="{{ tarefa.responsavel }}"
+                                     placeholder="Responsável">
+                              {% else %}
+                              <span class="field-value">{{ tarefa.responsavel or '-' }}</span>
+                              {% endif %}
                           </div>
                           
                           <!-- Predecessoras -->
                           {% if tarefa.predecessoras or pode_editar_predecessoras %}
-                          <div class="detail-item">
-                              <div class="detail-label">
-                                  <i class="fas fa-link"></i> Predecessoras
-                              </div>
-                              <div class="detail-content">
-                                  {% if pode_editar_predecessoras %}
-                                  <input type="text" class="form-control form-control-sm predecessoras-input" 
-                                         data-tarefa-id="{{ tarefa.id }}" 
-                                         value="{{ tarefa.predecessoras or '' }}"
-                                         placeholder="Ex: 1;2FS3;4SS5">
-                                  {% else %}
-                                  <span>{{ tarefa.predecessoras or 'Nenhuma' }}</span>
-                                  {% endif %}
-                              </div>
+                          <div class="detail-field">
+                              <i class="fas fa-link"></i>
+                              <span class="field-label">Predecessoras:</span>
+                              {% if pode_editar_predecessoras %}
+                              <input type="text" class="form-control form-control-sm predecessoras-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     value="{{ tarefa.predecessoras or '' }}"
+                                     placeholder="Ex: 1;2FS3;4SS5">
+                              {% else %}
+                              <span class="field-value">{{ tarefa.predecessoras or 'Nenhuma' }}</span>
+                              {% endif %}
                           </div>
                           {% endif %}
                       </div>
