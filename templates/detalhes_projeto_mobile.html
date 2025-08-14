@@ -195,25 +195,34 @@
          min-width: 0;
      }
      
-     .datas-container {
-         display: flex;
-         flex-direction: column;
-         gap: 4px;
-     }
-     
-     .data-item {
-         display: flex;
-         align-items: center;
-         gap: 4px;
-         font-size: 0.75rem;
-         color: #666;
-     }
-     
-     .data-item i {
-         color: #667eea;
-         font-size: 0.7rem;
-         min-width: 12px;
-     }
+           .datas-container {
+          display: flex;
+          flex-direction: row;
+          gap: 8px;
+          align-items: center;
+          justify-content: center;
+      }
+      
+      .data-item {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.75rem;
+          color: #666;
+          min-width: 0;
+      }
+      
+      .data-item i {
+          color: #667eea;
+          font-size: 0.7rem;
+          min-width: 12px;
+      }
+      
+      .data-input {
+          width: 90px !important;
+          font-size: 0.7rem !important;
+          padding: 2px 4px !important;
+      }
      
      .tarefa-col-duracao {
          text-align: center;
@@ -389,13 +398,18 @@
              min-width: 50px;
          }
          
-         .data-item {
-             font-size: 0.7rem;
-         }
-         
-         .data-item i {
-             font-size: 0.65rem;
-         }
+                   .data-item {
+              font-size: 0.7rem;
+          }
+          
+          .data-item i {
+              font-size: 0.65rem;
+          }
+          
+          .data-input {
+              width: 80px !important;
+              font-size: 0.65rem !important;
+          }
          
          .tarefa-actions .btn {
              min-width: 24px;
@@ -409,38 +423,43 @@
          }
      }
      
-     @media (max-width: 360px) {
-         .tarefas-table-header,
-         .tarefa-row {
-             grid-template-columns: 25px 1.2fr 0.7fr 0.9fr 0.7fr 0.7fr 50px;
-             gap: 2px;
-             padding: 6px 2px;
-             font-size: 0.7rem;
-         }
-         
-         .tarefa-numero {
-             width: 18px;
-             height: 18px;
-             font-size: 0.65rem;
-         }
-         
-         .tarefa-status {
-             padding: 1px 4px;
-             font-size: 0.6rem;
-             min-width: 45px;
-         }
-         
-         .tarefa-actions .btn {
-             min-width: 22px;
-             height: 22px;
-             padding: 1px 3px;
-         }
-         
-         .tarefa-predecessoras-row {
-             margin-left: 27px;
-             padding: 4px 6px;
-         }
-     }
+           @media (max-width: 360px) {
+          .tarefas-table-header,
+          .tarefa-row {
+              grid-template-columns: 25px 1.2fr 0.7fr 0.9fr 0.7fr 0.7fr 50px;
+              gap: 2px;
+              padding: 6px 2px;
+              font-size: 0.7rem;
+          }
+          
+          .tarefa-numero {
+              width: 18px;
+              height: 18px;
+              font-size: 0.65rem;
+          }
+          
+          .tarefa-status {
+              padding: 1px 4px;
+              font-size: 0.6rem;
+              min-width: 45px;
+          }
+          
+          .data-input {
+              width: 70px !important;
+              font-size: 0.6rem !important;
+          }
+          
+          .tarefa-actions .btn {
+              min-width: 22px;
+              height: 22px;
+              padding: 1px 3px;
+          }
+          
+          .tarefa-predecessoras-row {
+              margin-left: 27px;
+              padding: 4px 6px;
+          }
+      }
 </style>
 
 <!-- Header Mobile -->
@@ -541,38 +560,38 @@
                      </span>
                  </div>
                  
-                 <!-- Coluna Datas -->
-                 <div class="tarefa-col-datas">
-                     <div class="datas-container">
-                         {% if tarefa.data_inicio %}
-                         <div class="data-item">
-                             <i class="fas fa-play"></i>
-                             {% if pode_editar_data_inicio %}
-                             <input type="date" class="form-control form-control-sm data-input" 
-                                    data-tarefa-id="{{ tarefa.id }}" 
-                                    data-campo="data_inicio" 
-                                    value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
-                             {% else %}
-                             <span>{{ tarefa.data_inicio }}</span>
-                             {% endif %}
-                         </div>
-                         {% endif %}
-                         
-                         {% if tarefa.data_fim %}
-                         <div class="data-item">
-                             <i class="fas fa-flag-checkered"></i>
-                             {% if pode_editar_data_termino %}
-                             <input type="date" class="form-control form-control-sm data-input" 
-                                    data-tarefa-id="{{ tarefa.id }}" 
-                                    data-campo="data_fim" 
-                                    value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
-                             {% else %}
-                             <span>{{ tarefa.data_fim }}</span>
-                             {% endif %}
-                         </div>
-                         {% endif %}
-                     </div>
-                 </div>
+                                   <!-- Coluna Datas -->
+                  <div class="tarefa-col-datas">
+                      <div class="datas-container">
+                          {% if tarefa.data_inicio %}
+                          <div class="data-item">
+                              <i class="fas fa-calendar"></i>
+                              {% if pode_editar_data_inicio %}
+                              <input type="date" class="form-control form-control-sm data-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     data-campo="data_inicio" 
+                                     value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
+                              {% else %}
+                              <span>{{ tarefa.data_inicio }}</span>
+                              {% endif %}
+                          </div>
+                          {% endif %}
+                          
+                          {% if tarefa.data_fim %}
+                          <div class="data-item">
+                              <i class="fas fa-calendar"></i>
+                              {% if pode_editar_data_termino %}
+                              <input type="date" class="form-control form-control-sm data-input" 
+                                     data-tarefa-id="{{ tarefa.id }}" 
+                                     data-campo="data_fim" 
+                                     value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
+                              {% else %}
+                              <span>{{ tarefa.data_fim }}</span>
+                              {% endif %}
+                          </div>
+                          {% endif %}
+                      </div>
+                  </div>
                  
                  <!-- Coluna Duração -->
                  <div class="tarefa-col-duracao">
