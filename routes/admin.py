@@ -11,7 +11,6 @@ admin_bp = Blueprint('admin', __name__)
 @login_required
 def admin_restricoes():
     """Página de administração de restrições"""
-<<<<<<< HEAD
     # Verificar se é uma requisição AJAX
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     if request.method == 'POST':
