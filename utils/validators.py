@@ -62,13 +62,8 @@ def is_mobile_device(user_agent):
 def verificar_tarefa_atrasada(tarefa):
     """
     Verifica se uma tarefa está atrasada usando ambas as lógicas:
-<<<<<<< HEAD
     - Lógica 1: Tarefa pendente com data de início passada (excluindo hoje)
     - Lógica 2: Tarefa não concluída com data de fim passada (excluindo hoje)
-=======
-    - Lógica 1: Tarefa pendente com data de início passada
-    - Lógica 2: Tarefa não concluída com data de fim passada
->>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
     
     Args:
         tarefa (dict): Dicionário com dados da tarefa
@@ -79,7 +74,6 @@ def verificar_tarefa_atrasada(tarefa):
     status = tarefa.get('status', '').lower()
     data_fim = tarefa.get('data_fim') or tarefa.get('data_fim_tarefa')
     data_inicio = tarefa.get('data_inicio') or tarefa.get('data_inicio_tarefa')
-<<<<<<< HEAD
     
     # Usar apenas a data (sem hora) para comparação
     hoje = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -89,32 +83,15 @@ def verificar_tarefa_atrasada(tarefa):
         try:
             data_inicio_obj = datetime.strptime(data_inicio.split('T')[0], '%Y-%m-%d')
             if data_inicio_obj < hoje:  # Apenas datas ANTERIORES a hoje
-=======
-    hoje = datetime.now()
-    
-    # LÓGICA 1: Tarefa pendente com data de início passada
-    if status == 'pendente' and data_inicio:
-        try:
-            data_inicio_obj = datetime.strptime(data_inicio.split('T')[0], '%Y-%m-%d')
-            if data_inicio_obj < hoje:
->>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                 return True
         except:
             pass
     
-<<<<<<< HEAD
     # LÓGICA 2: Tarefa não concluída com data de fim passada (excluindo hoje)
     if data_fim:
         try:
             data_fim_obj = datetime.strptime(data_fim.split('T')[0], '%Y-%m-%d')
             if data_fim_obj < hoje and status not in ['concluída', 'concluida']:  # Apenas datas ANTERIORES a hoje
-=======
-    # LÓGICA 2: Tarefa não concluída com data de fim passada
-    if data_fim:
-        try:
-            data_fim_obj = datetime.strptime(data_fim.split('T')[0], '%Y-%m-%d')
-            if data_fim_obj < hoje and status not in ['concluída', 'concluida']:
->>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
                 return True
         except:
             pass

@@ -14,8 +14,6 @@ def admin_restricoes():
 <<<<<<< HEAD
     # Verificar se é uma requisição AJAX
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-=======
->>>>>>> 698d000a8693e7182ddc0758b886033e51767c3f
     if request.method == 'POST':
         # Processar formulário de restrições
         restricoes = carregar_restricoes()
