@@ -231,30 +231,32 @@
          min-width: 0;
      }
      
-     /* Campos de data */
-     .data-field {
-         display: flex;
-         align-items: center;
-         gap: 8px;
-         margin-bottom: 6px;
-     }
-     
-     .data-field:last-child {
-         margin-bottom: 0;
-     }
-     
-     .data-label {
-         font-size: 0.8rem;
-         color: #666;
-         min-width: 45px;
-         flex-shrink: 0;
-     }
-     
-     .data-input {
-         width: 120px !important;
-         font-size: 0.8rem !important;
-         padding: 4px 8px !important;
-     }
+           /* Campos de data */
+      .datas-container {
+          display: flex;
+          flex-direction: row;
+          gap: 16px;
+          align-items: center;
+      }
+      
+      .data-field {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+      }
+      
+      .data-label {
+          font-size: 0.8rem;
+          color: #666;
+          min-width: 45px;
+          flex-shrink: 0;
+      }
+      
+      .data-input {
+          width: 110px !important;
+          font-size: 0.8rem !important;
+          padding: 4px 8px !important;
+      }
      
      /* Campo de duração */
      .duracao-input {
@@ -414,8 +416,12 @@
               min-width: 70px;
           }
           
+          .datas-container {
+              gap: 12px;
+          }
+          
           .data-input {
-              width: 100px !important;
+              width: 90px !important;
               font-size: 0.75rem !important;
           }
           
@@ -475,8 +481,12 @@
               min-width: 60px;
           }
           
+          .datas-container {
+              gap: 8px;
+          }
+          
           .data-input {
-              width: 90px !important;
+              width: 80px !important;
               font-size: 0.7rem !important;
           }
           
@@ -591,41 +601,41 @@
                  
                  <!-- Detalhes da tarefa -->
                  <div class="tarefa-details">
-                     <!-- Datas -->
-                     <div class="detail-row">
-                         <div class="detail-label">
-                             <i class="fas fa-calendar"></i> Datas
-                         </div>
-                         <div class="detail-content">
-                             {% if tarefa.data_inicio %}
-                             <div class="data-field">
-                                 <span class="data-label">Início:</span>
-                                 {% if pode_editar_data_inicio %}
-                                 <input type="date" class="form-control form-control-sm data-input" 
-                                        data-tarefa-id="{{ tarefa.id }}" 
-                                        data-campo="data_inicio" 
-                                        value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
-                                 {% else %}
-                                 <span>{{ tarefa.data_inicio }}</span>
-                                 {% endif %}
-                             </div>
-                             {% endif %}
-                             
-                             {% if tarefa.data_fim %}
-                             <div class="data-field">
-                                 <span class="data-label">Fim:</span>
-                                 {% if pode_editar_data_termino %}
-                                 <input type="date" class="form-control form-control-sm data-input" 
-                                        data-tarefa-id="{{ tarefa.id }}" 
-                                        data-campo="data_fim" 
-                                        value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
-                                 {% else %}
-                                 <span>{{ tarefa.data_fim }}</span>
-                                 {% endif %}
-                             </div>
-                             {% endif %}
-                         </div>
-                     </div>
+                                           <!-- Datas -->
+                      <div class="detail-row">
+                          <div class="detail-label">
+                              <i class="fas fa-calendar"></i> Datas
+                          </div>
+                          <div class="detail-content datas-container">
+                              {% if tarefa.data_inicio %}
+                              <div class="data-field">
+                                  <span class="data-label">Início:</span>
+                                  {% if pode_editar_data_inicio %}
+                                  <input type="date" class="form-control form-control-sm data-input" 
+                                         data-tarefa-id="{{ tarefa.id }}" 
+                                         data-campo="data_inicio" 
+                                         value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
+                                  {% else %}
+                                  <span>{{ tarefa.data_inicio }}</span>
+                                  {% endif %}
+                              </div>
+                              {% endif %}
+                              
+                              {% if tarefa.data_fim %}
+                              <div class="data-field">
+                                  <span class="data-label">Fim:</span>
+                                  {% if pode_editar_data_termino %}
+                                  <input type="date" class="form-control form-control-sm data-input" 
+                                         data-tarefa-id="{{ tarefa.id }}" 
+                                         data-campo="data_fim" 
+                                         value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
+                                  {% else %}
+                                  <span>{{ tarefa.data_fim }}</span>
+                                  {% endif %}
+                              </div>
+                              {% endif %}
+                          </div>
+                      </div>
                      
                      <!-- Duração e Responsável -->
                      <div class="detail-row">
