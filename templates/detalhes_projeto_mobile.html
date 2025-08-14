@@ -168,12 +168,46 @@
         justify-content: flex-end;
     }
     
-    .tarefa-actions .btn {
-        padding: 6px 12px;
-        font-size: 0.8rem;
-        border-radius: 20px;
-        border: none;
-    }
+         .tarefa-actions .btn {
+         padding: 6px 12px;
+         font-size: 0.8rem;
+         border-radius: 20px;
+         border: none;
+     }
+     
+     /* Estilos para campos editáveis */
+     .data-input, .duracao-input, .responsavel-input, .nome-tarefa-input, .predecessoras-input {
+         border: 1px solid #ddd;
+         border-radius: 6px;
+         transition: all 0.3s ease;
+     }
+     
+     .data-input:focus, .duracao-input:focus, .responsavel-input:focus, 
+     .nome-tarefa-input:focus, .predecessoras-input:focus {
+         border-color: #667eea;
+         box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+         outline: none;
+     }
+     
+     .data-input:hover, .duracao-input:hover, .responsavel-input:hover, 
+     .nome-tarefa-input:hover, .predecessoras-input:hover {
+         border-color: #667eea;
+     }
+     
+     /* Indicador de campo editável */
+     .detail-item:has(input) {
+         position: relative;
+     }
+     
+     .detail-item:has(input)::after {
+         content: "✏️";
+         position: absolute;
+         right: -20px;
+         top: 50%;
+         transform: translateY(-50%);
+         font-size: 0.7rem;
+         opacity: 0.7;
+     }
     
     .gantt-container {
         background: #f8f9fa;
@@ -308,48 +342,101 @@
         {% if tarefas %}
             {% for tarefa in tarefas %}
             <div class="tarefa-item {% if tarefa.atrasada %}tarefa-atrasada{% endif %}">
-                <div class="tarefa-header">
-                    <div class="tarefa-nome">{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}</div>
-                    <span class="tarefa-status status-{{ tarefa.status|replace(' ', '-')|lower }}">
-                        {{ tarefa.status|title if tarefa.status else 'Sem status' }}
-                    </span>
-                </div>
+                                 <div class="tarefa-header">
+                     <div class="tarefa-nome">
+                         {% if pode_editar_nome_tarefa %}
+                         <input type="text" class="form-control form-control-sm nome-tarefa-input" 
+                                data-tarefa-id="{{ tarefa.id }}" 
+                                value="{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}"
+                                placeholder="Nome da tarefa"
+                                style="width: 100%; font-size: 0.9rem; font-weight: 600;">
+                         {% else %}
+                         {{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}
+                         {% endif %}
+                     </div>
+                     <span class="tarefa-status status-{{ tarefa.status|replace(' ', '-')|lower }}">
+                         {{ tarefa.status|title if tarefa.status else 'Sem status' }}
+                     </span>
+                 </div>
                 
-                <div class="tarefa-details">
-                    {% if tarefa.data_inicio %}
-                    <div class="detail-item">
-                        <i class="fas fa-play"></i>
-                        <span>{{ tarefa.data_inicio }}</span>
-                    </div>
-                    {% endif %}
-                    
-                    {% if tarefa.data_fim %}
-                    <div class="detail-item">
-                        <i class="fas fa-flag-checkered"></i>
-                        <span>{{ tarefa.data_fim }}</span>
-                    </div>
-                    {% endif %}
-                    
-                    {% if tarefa.duracao %}
-                    <div class="detail-item">
-                        <i class="fas fa-clock"></i>
-                        <span>{{ tarefa.duracao }} dias</span>
-                    </div>
-                    {% endif %}
-                    
-                    {% if tarefa.responsavel %}
-                    <div class="detail-item">
-                        <i class="fas fa-user"></i>
-                        <span>{{ tarefa.responsavel }}</span>
-                    </div>
-                    {% endif %}
-                </div>
+                                 <div class="tarefa-details">
+                     {% if tarefa.data_inicio %}
+                     <div class="detail-item">
+                         <i class="fas fa-play"></i>
+                         {% if pode_editar_data_inicio %}
+                         <input type="date" class="form-control form-control-sm data-input" 
+                                data-tarefa-id="{{ tarefa.id }}" 
+                                data-campo="data_inicio" 
+                                value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}"
+                                style="width: 120px; font-size: 0.8rem;">
+                         {% else %}
+                         <span>{{ tarefa.data_inicio }}</span>
+                         {% endif %}
+                     </div>
+                     {% endif %}
+                     
+                     {% if tarefa.data_fim %}
+                     <div class="detail-item">
+                         <i class="fas fa-flag-checkered"></i>
+                         {% if pode_editar_data_termino %}
+                         <input type="date" class="form-control form-control-sm data-input" 
+                                data-tarefa-id="{{ tarefa.id }}" 
+                                data-campo="data_fim" 
+                                value="{{ tarefa.data_fim_iso or tarefa.data_fim }}"
+                                style="width: 120px; font-size: 0.8rem;">
+                         {% else %}
+                         <span>{{ tarefa.data_fim }}</span>
+                         {% endif %}
+                     </div>
+                     {% endif %}
+                     
+                     {% if tarefa.duracao %}
+                     <div class="detail-item">
+                         <i class="fas fa-clock"></i>
+                         {% if pode_editar_duracao %}
+                         <input type="number" class="form-control form-control-sm duracao-input" 
+                                data-tarefa-id="{{ tarefa.id }}" 
+                                value="{{ tarefa.duracao }}"
+                                min="1" max="365"
+                                style="width: 80px; font-size: 0.8rem;">
+                         <span style="font-size: 0.7rem; color: #999;">dias</span>
+                         {% else %}
+                         <span>{{ tarefa.duracao }} dias</span>
+                         {% endif %}
+                     </div>
+                     {% endif %}
+                     
+                     {% if tarefa.responsavel %}
+                     <div class="detail-item">
+                         <i class="fas fa-user"></i>
+                         {% if pode_editar_responsavel %}
+                         <input type="text" class="form-control form-control-sm responsavel-input" 
+                                data-tarefa-id="{{ tarefa.id }}" 
+                                value="{{ tarefa.responsavel }}"
+                                placeholder="Responsável"
+                                style="width: 120px; font-size: 0.8rem;">
+                         {% else %}
+                         <span>{{ tarefa.responsavel }}</span>
+                         {% endif %}
+                     </div>
+                     {% endif %}
+                 </div>
                 
-                {% if tarefa.predecessoras %}
-                <div style="margin-bottom: 10px; font-size: 0.8rem; color: #666;">
-                    <i class="fas fa-link"></i> Predecessoras: {{ tarefa.predecessoras }}
-                </div>
-                {% endif %}
+                                 {% if tarefa.predecessoras or pode_editar_predecessoras %}
+                 <div style="margin-bottom: 10px; font-size: 0.8rem; color: #666;">
+                     <i class="fas fa-link"></i> 
+                     {% if pode_editar_predecessoras %}
+                     <input type="text" class="form-control form-control-sm predecessoras-input" 
+                            data-tarefa-id="{{ tarefa.id }}" 
+                            value="{{ tarefa.predecessoras or '' }}"
+                            placeholder="Ex: 1;2FS3;4SS5"
+                            style="width: 100%; font-size: 0.8rem;">
+                     <small class="text-muted">Formato: número;númeroFSnúmero;númeroSSnúmero</small>
+                     {% else %}
+                     Predecessoras: {{ tarefa.predecessoras }}
+                     {% endif %}
+                 </div>
+                 {% endif %}
                 
                 <div class="tarefa-actions">
                     {% if pode_editar_tarefa %}
@@ -421,47 +508,169 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Configurar botões de exclusão
-    const deleteButtons = document.querySelectorAll('.btn-excluir-tarefa');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const tarefaId = this.getAttribute('data-tarefa-id');
-            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-            modal.show();
-            
-            document.getElementById('confirmDeleteBtn').onclick = function() {
-                fetch(`/tarefas/excluir/${tarefaId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Erro ao excluir tarefa: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('Erro ao excluir tarefa');
-                });
-                
-                modal.hide();
-            };
-        });
-    });
+     // Configurar campos editáveis inline
+     setupInlineEditing();
+     
+     // Configurar botões de exclusão
+     const deleteButtons = document.querySelectorAll('.btn-excluir-tarefa');
+     deleteButtons.forEach(button => {
+         button.addEventListener('click', function() {
+             const tarefaId = this.getAttribute('data-tarefa-id');
+             const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+             modal.show();
+             
+             document.getElementById('confirmDeleteBtn').onclick = function() {
+                 fetch(`/tarefas/excluir/${tarefaId}`, {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                     }
+                 })
+                 .then(response => response.json())
+                 .then(data => {
+                     if (data.success) {
+                         location.reload();
+                     } else {
+                         alert('Erro ao excluir tarefa: ' + data.error);
+                     }
+                 })
+                 .catch(error => {
+                     console.error('Erro:', error);
+                     alert('Erro ao excluir tarefa');
+                 });
+                 
+                 modal.hide();
+             };
+         });
+     });
 
-    // Gráfico Gantt simples (se houver dados)
-    {% if gantt_geral_data %}
-    const ganttData = {{ gantt_geral_data|tojson }};
-    if (ganttData.length > 0) {
-        renderGanttChart(ganttData);
-    }
-    {% endif %}
-});
+         // Gráfico Gantt simples (se houver dados)
+     {% if gantt_geral_data %}
+     const ganttData = {{ gantt_geral_data|tojson }};
+     if (ganttData.length > 0) {
+         renderGanttChart(ganttData);
+     }
+     {% endif %}
+ });
+ 
+ // Função para configurar edição inline
+ function setupInlineEditing() {
+     // Campos de data
+     document.querySelectorAll('.data-input').forEach(input => {
+         input.addEventListener('change', function() {
+             const tarefaId = this.getAttribute('data-tarefa-id');
+             const campo = this.getAttribute('data-campo');
+             const valor = this.value;
+             
+             if (valor) {
+                 salvarCampoTarefa(tarefaId, campo, valor);
+             }
+         });
+     });
+     
+     // Campo de duração
+     document.querySelectorAll('.duracao-input').forEach(input => {
+         input.addEventListener('change', function() {
+             const tarefaId = this.getAttribute('data-tarefa-id');
+             const valor = this.value;
+             
+             if (valor && valor > 0) {
+                 salvarCampoTarefa(tarefaId, 'duracao', valor);
+             }
+         });
+     });
+     
+     // Campo de responsável
+     document.querySelectorAll('.responsavel-input').forEach(input => {
+         input.addEventListener('blur', function() {
+             const tarefaId = this.getAttribute('data-tarefa-id');
+             const valor = this.value.trim();
+             
+             if (valor !== '') {
+                 salvarCampoTarefa(tarefaId, 'responsavel', valor);
+             }
+         });
+     });
+     
+     // Campo de nome da tarefa
+     document.querySelectorAll('.nome-tarefa-input').forEach(input => {
+         input.addEventListener('blur', function() {
+             const tarefaId = this.getAttribute('data-tarefa-id');
+             const valor = this.value.trim();
+             
+             if (valor !== '') {
+                 salvarCampoTarefa(tarefaId, 'nome', valor);
+             }
+         });
+     });
+     
+     // Campo de predecessoras
+     document.querySelectorAll('.predecessoras-input').forEach(input => {
+         input.addEventListener('blur', function() {
+             const tarefaId = this.getAttribute('data-tarefa-id');
+             const valor = this.value.trim();
+             
+             salvarCampoTarefa(tarefaId, 'predecessoras', valor);
+         });
+     });
+ }
+ 
+ // Função para salvar campo da tarefa
+ function salvarCampoTarefa(tarefaId, campo, valor) {
+     const dados = {
+         campo: campo,
+         valor: valor
+     };
+     
+     fetch(`/tarefas/atualizar-campo/${tarefaId}`, {
+         method: 'POST',
+         headers: {
+             'Content-Type': 'application/json',
+         },
+         body: JSON.stringify(dados)
+     })
+     .then(response => response.json())
+     .then(data => {
+         if (data.success) {
+             // Mostrar feedback visual
+             mostrarFeedback('Campo atualizado com sucesso!', 'success');
+             
+             // Se for campo de data, recalcular predecessoras se necessário
+             if (campo === 'data_inicio' || campo === 'data_fim' || campo === 'duracao' || campo === 'predecessoras') {
+                 setTimeout(() => {
+                     location.reload(); // Recarregar para atualizar cálculos
+                 }, 1000);
+             }
+         } else {
+             mostrarFeedback('Erro ao atualizar: ' + data.error, 'error');
+         }
+     })
+     .catch(error => {
+         console.error('Erro:', error);
+         mostrarFeedback('Erro ao atualizar campo', 'error');
+     });
+ }
+ 
+ // Função para mostrar feedback visual
+ function mostrarFeedback(mensagem, tipo) {
+     // Criar elemento de feedback
+     const feedback = document.createElement('div');
+     feedback.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+     feedback.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+     feedback.innerHTML = `
+         ${mensagem}
+         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+     `;
+     
+     document.body.appendChild(feedback);
+     
+     // Remover automaticamente após 3 segundos
+     setTimeout(() => {
+         if (feedback.parentNode) {
+             feedback.remove();
+         }
+     }, 3000);
+ }
 
 function renderGanttChart(data) {
     const container = document.getElementById('gantt-chart');

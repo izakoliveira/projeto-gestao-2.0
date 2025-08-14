@@ -295,4 +295,79 @@ def atualizar_status_tarefa(tarefa_id, novo_status):
     except Exception as e:
         flash(f"Erro ao atualizar status da tarefa: {str(e)}")
     
-    return redirect(f'/projetos/{tarefa["projeto_id"]}') 
+    return redirect(f'/projetos/{tarefa["projeto_id"]}')
+
+@tarefas_bp.route('/tarefas/atualizar-campo/<uuid:tarefa_id>', methods=['POST'])
+@login_required
+def atualizar_campo_tarefa(tarefa_id):
+    """Atualiza um campo específico de uma tarefa via AJAX"""
+    try:
+        # Verificar se é uma requisição AJAX
+        if not request.is_json:
+            return jsonify({"success": False, "error": "Requisição deve ser JSON"}), 400
+        
+        data = request.get_json()
+        campo = data.get('campo')
+        valor = data.get('valor')
+        
+        if not campo:
+            return jsonify({"success": False, "error": "Campo não especificado"}), 400
+        
+        # Buscar a tarefa para verificar permissões
+        tarefa_resp = supabase.table("tarefas").select("projeto_id, usuario_id").eq("id", str(tarefa_id)).single().execute()
+        tarefa = tarefa_resp.data if hasattr(tarefa_resp, 'data') else None
+        
+        if not tarefa:
+            return jsonify({"success": False, "error": "Tarefa não encontrada"}), 404
+        
+        # Verificar permissões baseadas no campo
+        restricoes = carregar_restricoes()
+        usuario_id = session.get('user_id')
+        restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+        
+        # Verificar se é o usuário izak (acesso total)
+        is_izak = (session.get('user_email') == 'izak.gomes59@gmail.com' or 
+                   usuario_id == 'd0d784bd-f2bb-44b2-8096-5c10ec4d57be')
+        
+        if not is_izak:
+            # Verificar permissões específicas
+            if campo == 'nome' and restricoes_usuario.get('restr_editar_nome_tarefa', False):
+                return jsonify({"success": False, "error": "Sem permissão para editar nome da tarefa"}), 403
+            elif campo in ['data_inicio', 'data_fim'] and restricoes_usuario.get('restr_editar_datas', False):
+                return jsonify({"success": False, "error": "Sem permissão para editar datas da tarefa"}), 403
+            elif campo == 'duracao' and restricoes_usuario.get('restr_editar_duracao', False):
+                return jsonify({"success": False, "error": "Sem permissão para editar duração da tarefa"}), 403
+            elif campo == 'responsavel' and restricoes_usuario.get('restr_editar_responsavel', False):
+                return jsonify({"success": False, "error": "Sem permissão para editar responsável da tarefa"}), 403
+            elif campo == 'predecessoras' and restricoes_usuario.get('restr_editar_predecessoras', False):
+                return jsonify({"success": False, "error": "Sem permissão para editar predecessoras da tarefa"}), 403
+        
+        # Preparar dados para atualização
+        dados_atualizacao = {campo: valor}
+        
+        # Se for campo de data, converter para formato ISO se necessário
+        if campo in ['data_inicio', 'data_fim'] and valor:
+            try:
+                # Se a data estiver no formato dd/mm/yyyy, converter para yyyy-mm-dd
+                if '/' in valor:
+                    data_obj = datetime.strptime(valor, '%Y-%m-%d')
+                    dados_atualizacao[campo] = data_obj.strftime('%d/%m/%Y')
+                else:
+                    # Se já estiver no formato ISO, converter para dd/mm/yyyy
+                    data_obj = datetime.strptime(valor, '%Y-%m-%d')
+                    dados_atualizacao[campo] = data_obj.strftime('%d/%m/%Y')
+            except ValueError:
+                # Se não conseguir converter, usar o valor original
+                pass
+        
+        # Atualizar a tarefa
+        resp = supabase.table("tarefas").update(dados_atualizacao).eq("id", str(tarefa_id)).execute()
+        
+        if resp.data:
+            return jsonify({"success": True, "message": f"Campo {campo} atualizado com sucesso"})
+        else:
+            return jsonify({"success": False, "error": "Erro ao atualizar tarefa"}), 500
+            
+    except Exception as e:
+        print(f"[ERRO] Erro ao atualizar campo da tarefa: {e}")
+        return jsonify({"success": False, "error": f"Erro interno: {str(e)}"}), 500
