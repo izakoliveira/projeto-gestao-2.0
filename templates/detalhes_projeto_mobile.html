@@ -394,7 +394,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
-        
+
         .mobile-actions .btn {
             min-width: 100px;
             font-size: 0.8rem;
@@ -460,6 +460,207 @@
 
     .mobile-fab:active {
         transform: scale(0.95);
+    }
+
+    /* Estilos para o gráfico de Gantt (igual ao desktop) */
+    .gantt-container {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .gantt-title {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    /* Estilos específicos para o Gantt */
+    #gantt-custom {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background: white;
+        overflow: hidden;
+    }
+
+    #gantt-custom th {
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-row {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        min-height: 40px;
+    }
+
+    .gantt-row:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
+
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
+
+    /* Coluna fixa para Tarefa */
+    #gantt-custom th:first-child,
+    #gantt-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 50;
+        width: 320px;
+        min-width: 320px;
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .gantt-hoje-linha {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: repeating-linear-gradient(to bottom,
+                #e74c3c 0px, #e74c3c 8px,
+                transparent 8px, transparent 16px);
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    #gantt-hoje-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
+
+    #gantt-cronograma-area {
+        position: relative;
+    }
+
+    .gantt-row-compact {
+        height: 16px !important;
+    }
+
+    .gantt-bar-compact {
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+    }
+
+    .gantt-tooltip-detalhado {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-row-compact td,
+    .gantt-row-compact th {
+        height: 16px !important;
+        min-height: 16px !important;
+        max-height: 24px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 13px !important;
+    }
+
+    .gantt-h-linha {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #dee2e6;
+        z-index: 0;
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: none !important;
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+    }
+
+    #gantt-custom.dragging {
+        cursor: grabbing !important;
+        user-select: none !important;
     }
 </style>
 
@@ -757,7 +958,53 @@
     {% if gantt_geral_data %}
     <div class="gantt-container">
         <h3 class="gantt-title"><i class="fas fa-chart-line"></i> Cronograma do Projeto</h3>
-        <div id="gantt-chart" style="height: 300px;"></div>
+        
+        <!-- Controles de Zoom -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
+            <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
+                style="font-size: 1.2em;">-</button>
+            <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
+            <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Aumentar Zoom"
+                style="font-size: 1.2em;">+</button>
+        </div>
+        
+        <!-- Área do Gantt -->
+        <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+            <div style="display: flex; flex-direction: column;">
+                <div style="display: flex;">
+                </div>
+            </div>
+            <div id="gantt-cronograma-area" style="position: relative;">
+                <div id="gantt-hoje-container"></div>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                Tarefa
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="gantt-body">
+                        <!-- Linhas das tarefas geradas via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Legenda colorida por projeto -->
+        <div class="legend mt-2"
+            style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+            {% for projeto, cor in projects_colors.items() %}
+            <div class="legend-item"
+                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                data-projeto="{{ projeto }}">
+                <div class="legend-color"
+                    style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};">
+                </div>
+                <span>{{ projeto }}</span>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 </div>
@@ -792,6 +1039,9 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
+    // Dados do Gantt (igual ao desktop)
+    window.ganttData = {{ gantt_geral_data | tojson | safe }};
+
     document.addEventListener('DOMContentLoaded', function () {
         // Configurar campos editáveis inline
         setupInlineEditing();
@@ -1256,5 +1506,457 @@
             .attr('transform', `translate(${margin.left},0)`)
             .call(yAxis);
     }
+
+    // Código completo do gráfico de Gantt (igual ao desktop)
+    const larguraBase = 4; // 100% = 4px
+    let larguraDia = larguraBase;
+    const larguraMin = 1;
+    const larguraMax = 32;
+    const ROW_HEIGHT = 32; // altura de cada linha (ajuste conforme seu CSS)
+    const VISIBLE_ROWS = 18; // quantas linhas mostrar de cada vez (ajuste conforme altura do container)
+    let tarefas = [];
+    let nomesOrdenados = [];
+    let grupos = {};
+    let periodo = { min: null, max: null };
+    let diasTotais = 0;
+
+    // Função utilitária para agrupar tarefas por nome
+    function agruparTarefasPorNome(tarefas) {
+        const grupos = {};
+        tarefas.forEach(tarefa => {
+            if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+            grupos[tarefa.name].push(tarefa);
+        });
+        return grupos;
+    }
+
+    // Função para obter datas mínimas e máximas
+    function obterPeriodo(tarefas) {
+        let min = null, max = null;
+        tarefas.forEach(t => {
+            // Criar datas no fuso horário local para evitar problemas de UTC
+            const ini = new Date(t.start + 'T00:00:00');
+            const fim = new Date(t.end + 'T00:00:00');
+            if (!min || ini < min) min = ini;
+            if (!max || fim > max) max = fim;
+        });
+        return { min, max };
+    }
+
+    // Função para calcular dias entre datas
+    function diasEntre(a, b) {
+        // Usar datas no fuso horário local para cálculo preciso
+        const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+        const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
+    }
+
+    // Função para cor de status
+    function corStatus(tarefa) {
+        if (tarefa.bar_color) return tarefa.bar_color;
+        if (tarefa.status === 'concluída') return '#28a745';
+        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+        return '#ffc107';
+    }
+
+    // Função para verificar se tarefa está atrasada
+    function tarefaAtrasada(tarefa) {
+        // Usar apenas a data (sem hora) para comparação
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0); // Zerar hora, minuto, segundo e milissegundos
+        const status = tarefa.status?.toLowerCase();
+        const dataFim = tarefa.end;
+        const dataInicio = tarefa.start;
+
+        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim, 'Data início:', dataInicio);
+
+        // LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
+        if (status === 'pendente' && dataInicio) {
+            try {
+                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
+                dataInicioObj.setHours(0, 0, 0, 0);
+                if (dataInicioObj < hoje) {
+                    console.log('✅ Tarefa atrasada: data início passada');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Erro ao processar data início:', e);
+            }
+        }
+
+        // LÓGICA 2: Tarefa em progresso com data de fim passada (excluindo hoje)
+        if ((status === 'em progresso' || status === 'em_progresso') && dataFim) {
+            try {
+                const dataFimObj = new Date(dataFim + 'T00:00:00');
+                dataFimObj.setHours(0, 0, 0, 0);
+                if (dataFimObj < hoje) {
+                    console.log('✅ Tarefa atrasada: data fim passada');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Erro ao processar data fim:', e);
+            }
+        }
+
+        // LÓGICA 3: Tarefa pendente com data de fim passada (excluindo hoje)
+        if (status === 'pendente' && dataFim) {
+            try {
+                const dataFimObj = new Date(dataFim + 'T00:00:00');
+                dataFimObj.setHours(0, 0, 0, 0);
+                if (dataFimObj < hoje) {
+                    console.log('✅ Tarefa atrasada: data fim passada (pendente)');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Erro ao processar data fim:', e);
+            }
+        }
+
+        console.log('❌ Tarefa não está atrasada');
+        return false;
+    }
+
+    function calcularDiasUteis(dataInicio, dataFim) {
+        let diasUteis = 0;
+        const dataAtual = new Date(dataInicio);
+        const dataFinal = new Date(dataFim);
+        
+        while (dataAtual <= dataFinal) {
+            if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+                diasUteis++;
+            }
+            dataAtual.setDate(dataAtual.getDate() + 1);
+        }
+        return diasUteis;
+    }
+
+    function mostrarTooltipDetalhado(event, barra) {
+        esconderTooltipDetalhado();
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const startDate = new Date(barra.start + 'T00:00:00');
+        const endDate = new Date(barra.end + 'T00:00:00');
+        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        const diasUteis = calcularDiasUteis(startDate, endDate);
+        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+        const tooltip = document.createElement('div');
+        tooltip.className = 'gantt-tooltip-detalhado';
+        tooltip.id = 'gantt-tooltip-detalhado';
+        const dataInicio = startDate.toLocaleDateString('pt-BR');
+        const dataFim = endDate.toLocaleDateString('pt-BR');
+        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+        tooltip.innerHTML = `
+            <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
+            <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
+            <div style="color:#007bff;font-size:11px;margin-bottom:6px;line-height:1.2;"><b>Coleção:</b> ${barra.colecao || '-'} </div>
+            <div class="gantt-tooltip-info" style="gap: 12px;">
+                <span class="gantt-tooltip-label">🏁 Início:</span>
+                <span class="gantt-tooltip-value">${dataInicio}</span>
+                <span class="gantt-tooltip-label">🎯 Fim:</span>
+                <span class="gantt-tooltip-value">${dataFim}</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Corridos:</span>
+                <span class="gantt-tooltip-value">${diasCorridos} dias</span>
+            </div>
+            <div class="gantt-tooltip-info">
+                <span class="gantt-tooltip-label">📆 Dias Úteis:</span>
+                <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
+        atualizarPosicaoTooltipDetalhado(event);
+    }
+
+    function esconderTooltipDetalhado() {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) tooltip.remove();
+    }
+
+    function atualizarPosicaoTooltipDetalhado(event) {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = event.clientX + 12;
+            let top = event.clientY + 12;
+            if (left + tooltipRect.width > window.innerWidth) {
+                left = window.innerWidth - tooltipRect.width - 8;
+            }
+            if (top + tooltipRect.height > window.innerHeight) {
+                top = window.innerHeight - tooltipRect.height - 8;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+    }
+
+    // Função principal para montar o Gantt (sem virtualização)
+    function montarGanttAgrupado() {
+        const dados = window.ganttData || [];
+        const body = document.getElementById('gantt-body');
+        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+        if (!dados.length) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+            return;
+        }
+        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        const grupos = agruparTarefasPorNome(tarefas);
+        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+            return ordemA - ordemB;
+        });
+        const periodo = obterPeriodo(tarefas);
+        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+            return;
+        }
+        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+        // Linha de hoje, cabeçalhos, etc (igual ao seu código)
+        const hojeContainer = document.getElementById('gantt-hoje-container');
+        if (hojeContainer) {
+            hojeContainer.innerHTML = '';
+            hojeContainer.style.position = 'absolute';
+            hojeContainer.style.top = '0';
+            hojeContainer.style.left = '0';
+            hojeContainer.style.bottom = '0';
+            hojeContainer.style.right = '0';
+            hojeContainer.style.zIndex = '10';
+            hojeContainer.style.pointerEvents = 'none';
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            if (hoje >= periodo.min && hoje <= periodo.max) {
+                const offset = diasEntre(periodo.min, hoje);
+                const left = 320 + (offset * larguraDia); // 320px da coluna tarefa
+                const linhaHoje = document.createElement('div');
+                linhaHoje.className = 'gantt-hoje-linha';
+                linhaHoje.style.left = left + 'px';
+                linhaHoje.style.height = '100%';
+                hojeContainer.appendChild(linhaHoje);
+                // Adicionar label com a data
+                const hojeLabel = document.createElement('div');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+                hojeLabel.style.position = 'absolute';
+                hojeLabel.style.top = '0px';
+                hojeLabel.style.left = (left + 6) + 'px'; // 6px à direita da linha
+                hojeLabel.style.transform = 'none';
+                hojeLabel.style.fontSize = '12px';
+                hojeLabel.style.color = '#e74c3c';
+                hojeLabel.style.fontWeight = 'bold';
+                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
+                hojeLabel.style.padding = '2px 6px';
+                hojeLabel.style.borderRadius = '4px';
+                hojeLabel.style.zIndex = '20';
+                hojeContainer.appendChild(hojeLabel);
+            }
+        }
+        // Cabeçalho de datas de um nível (apenas dias)
+        const dateHeader = document.getElementById('gantt-date-header');
+        if (dateHeader) {
+            dateHeader.innerHTML = '';
+            // Espaço à esquerda para alinhar com a coluna Tarefa
+            const espacoTarefa = document.createElement('div');
+            espacoTarefa.style.width = '320px';
+            espacoTarefa.style.minWidth = '320px';
+            espacoTarefa.style.maxWidth = '320px';
+            espacoTarefa.style.display = 'inline-block';
+            espacoTarefa.style.height = '19px';
+            espacoTarefa.style.background = 'transparent';
+            dateHeader.appendChild(espacoTarefa);
+            // Não renderizar mais os dias
+        }
+        // Renderizar todas as linhas de uma vez
+        body.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        nomesOrdenados.forEach((nome, idx) => {
+            const barras = grupos[nome];
+            const tr = document.createElement('tr');
+            tr.className = 'gantt-row-compact';
+
+            // Verificar se alguma barra está atrasada para aplicar estilo vermelho na linha
+            const temTarefaAtrasada = barras.some(barra => tarefaAtrasada(barra));
+            console.log('Tarefa:', nome, 'Tem tarefa atrasada:', temTarefaAtrasada);
+            if (temTarefaAtrasada) {
+                tr.classList.add('tarefa-atrasada');
+                console.log('Aplicando classe tarefa-atrasada para:', nome);
+            }
+            // Nome da tarefa
+            const tdNome = document.createElement('td');
+            tdNome.textContent = nome;
+            tdNome.title = nome;
+
+            // Adicionar ícone de alerta para tarefas atrasadas
+            if (temTarefaAtrasada) {
+                tdNome.innerHTML = `<span class="icone-atrasada">⚠️</span>${nome}`;
+                tdNome.title = nome + ' (ATRASADA)';
+            }
+            tdNome.style.padding = "2px 8px";
+            tdNome.style.whiteSpace = "nowrap";
+            tdNome.style.overflow = "hidden";
+            tdNome.style.textOverflow = "ellipsis";
+            tdNome.style.height = "16px";
+            tdNome.style.fontSize = "13px";
+            tr.appendChild(tdNome);
+            // Cronograma
+            const tdCrono = document.createElement('td');
+            tdCrono.style.position = "relative";
+            tdCrono.style.height = "16px";
+            tdCrono.style.background = "#f8f9fa";
+            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+            // Adicionar linha horizontal de grade
+            const linhaH = document.createElement('div');
+            linhaH.className = 'gantt-h-linha';
+            linhaH.style.position = 'absolute';
+            linhaH.style.left = '0';
+            linhaH.style.right = '0';
+            linhaH.style.bottom = '0';
+            linhaH.style.height = '1px';
+            linhaH.style.background = '#dee2e6';
+            linhaH.style.zIndex = '1';
+            tdCrono.appendChild(linhaH);
+            barras.forEach((barra, idx) => {
+                // Criar datas no fuso horário local para evitar problemas de UTC
+                const inicio = new Date(barra.start + 'T00:00:00');
+                const fim = new Date(barra.end + 'T00:00:00');
+                const offset = diasEntre(periodo.min, inicio);
+                const largura = diasEntre(inicio, fim) + 1;
+                const div = document.createElement('div');
+                div.className = 'gantt-bar-compact';
+                div.style.position = "absolute";
+                div.style.left = (offset * larguraDia) + "px";
+                div.style.top = "2px";
+                div.style.height = "8px";
+                div.style.width = (largura * larguraDia) + "px";
+                div.style.background = corStatus(barra);
+                div.style.borderRadius = "4px";
+                div.style.textAlign = "center";
+                div.style.color = "#fff";
+                div.style.fontSize = "11px";
+                div.style.lineHeight = "14px";
+                div.style.cursor = "pointer";
+                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                tdCrono.appendChild(div);
+                div.onmouseenter = function (e) {
+                    mostrarTooltipDetalhado(e, barra);
+                    this._mousemoveHandler = function (ev) {
+                        atualizarPosicaoTooltipDetalhado(ev);
+                    };
+                    this.addEventListener('mousemove', this._mousemoveHandler);
+                };
+                div.onmouseleave = function () {
+                    esconderTooltipDetalhado();
+                    if (this._mousemoveHandler) {
+                        this.removeEventListener('mousemove', this._mousemoveHandler);
+                        this._mousemoveHandler = null;
+                    }
+                };
+            });
+            tr.appendChild(tdCrono);
+            fragment.appendChild(tr);
+        });
+        body.appendChild(fragment);
+    }
+
+    // Evento de scroll para atualizar as linhas visíveis
+    document.addEventListener('DOMContentLoaded', function () {
+        montarGanttAgrupado();
+        function atualizarZoomLabel() {
+            const zoomLabel = document.getElementById('zoom-label');
+            if (zoomLabel) {
+                const percent = Math.round((larguraDia / larguraBase) * 100);
+                zoomLabel.textContent = percent + '%';
+            }
+        }
+        atualizarZoomLabel();
+        document.getElementById('zoom-in').onclick = function () {
+            if (larguraDia < larguraMax) {
+                larguraDia += larguraBase * 0.1;
+                if (larguraDia > larguraMax) larguraDia = larguraMax;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+        document.getElementById('zoom-out').onclick = function () {
+            if (larguraDia > larguraMin) {
+                larguraDia -= larguraBase * 0.1;
+                if (larguraDia < larguraMin) larguraDia = larguraMin;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+
+        // Evidenciar barras ao clicar na legenda (agora com seleção múltipla via Ctrl)
+        let projetosSelecionados = [];
+        document.querySelectorAll('.legend-item').forEach(item => {
+            item.addEventListener('click', function (e) {
+                const projeto = this.getAttribute('data-projeto');
+                if (e.ctrlKey || e.metaKey) {
+                    // Seleção múltipla
+                    const index = projetosSelecionados.indexOf(projeto);
+                    if (index > -1) {
+                        projetosSelecionados.splice(index, 1);
+                    } else {
+                        projetosSelecionados.push(projeto);
+                    }
+                } else {
+                    // Seleção única
+                    projetosSelecionados = [projeto];
+                }
+                // Atualizar visual da legenda
+                document.querySelectorAll('.legend-item').forEach(li => li.classList.remove('selecionada'));
+                projetosSelecionados.forEach(p => {
+                    const item = document.querySelector(`[data-projeto="${p}"]`);
+                    if (item) item.classList.add('selecionada');
+                });
+                // Evidenciar barras dos projetos selecionados
+                document.querySelectorAll('.gantt-bar-compact').forEach(barra => {
+                    const projetoBarra = barra.getAttribute('data-projeto');
+                    if (projetosSelecionados.includes(projetoBarra)) {
+                        barra.classList.add('evidencia');
+                        barra.classList.remove('apagada');
+                    } else {
+                        barra.classList.remove('evidencia');
+                        barra.classList.add('apagada');
+                    }
+                });
+            });
+        });
+
+        // Drag and drop para o Gantt
+        (function () {
+            const ganttCustom = document.getElementById('gantt-custom');
+            if (!ganttCustom) return;
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            ganttCustom.addEventListener('mousedown', function (e) {
+                isDown = true;
+                ganttCustom.classList.add('dragging');
+                startX = e.pageX - ganttCustom.offsetLeft;
+                scrollLeft = ganttCustom.scrollLeft;
+                document.body.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function (e) {
+                if (!isDown) return;
+                const x = e.pageX - ganttCustom.offsetLeft;
+                const walk = (x - startX) * -1; // sentido inverso
+                ganttCustom.scrollLeft = scrollLeft + walk;
+            });
+            document.addEventListener('mouseup', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+            // Evita seleção de texto durante o drag
+            ganttCustom.addEventListener('mouseleave', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+        })();
+    });
 </script>
 {% endblock %}
