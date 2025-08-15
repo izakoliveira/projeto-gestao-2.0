@@ -1361,74 +1361,166 @@
 
     // Função para predecessoras (igual ao desktop)
     function onPredecessorasEdit(input) {
-        if (!input) return;
-
+        console.log('🔧 onPredecessorasEdit chamada para:', input.value);
         const tr = input.closest('tr');
-        if (!tr) return;
+        const predecessorasStr = input.value.trim();
+        const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+        const dataFimInput = tr.querySelector('input[name="data_fim"]');
 
-        const predecessoras = input.value.trim();
-        const tarefaId = input.dataset.id;
+        console.log('📅 Campos encontrados:', {
+            dataInicioInput: !!dataInicioInput,
+            dataFimInput: !!dataFimInput,
+            predecessorasStr: predecessorasStr
+        });
 
-        // Buscar os campos de data na mesma linha
-        const campoDataInicio = tr.querySelector('input[name="data_inicio"]');
-        const campoDataFim = tr.querySelector('input[name="data_fim"]');
-        const campoDuracao = tr.querySelector('input[name="duracao"]');
-
-        if (predecessoras) {
-            // Aplicar estilo de data calculada aos campos de data
-            if (campoDataInicio) {
-                campoDataInicio.classList.add('data-calculada');
-                campoDataInicio.style.setProperty('background', '#fffbe6', 'important');
-                campoDataInicio.style.setProperty('border-color', '#ffc107', 'important');
-                campoDataInicio.setAttribute('data-calculada', '1');
-                campoDataInicio.readOnly = true;
+        // Se não há predecessoras, liberar edição manual
+        if (!predecessorasStr) {
+            console.log('❌ Sem predecessoras, liberando edição manual');
+            if (dataInicioInput) {
+                dataInicioInput.readOnly = false;
+                dataInicioInput.dataset.calculada = '';
+                dataInicioInput.style.background = '';
+                dataInicioInput.classList.remove('data-calculada');
             }
-
-            if (campoDataFim) {
-                campoDataFim.classList.add('data-calculada');
-                campoDataFim.style.setProperty('background', '#fffbe6', 'important');
-                campoDataFim.style.setProperty('border-color', '#ffc107', 'important');
-                campoDataFim.setAttribute('data-calculada', '1');
-                campoDataFim.readOnly = true;
+            if (dataFimInput) {
+                dataFimInput.readOnly = false;
+                dataFimInput.dataset.calculada = '';
+                dataFimInput.style.background = '';
+                dataFimInput.classList.remove('data-calculada');
             }
-
-            if (campoDuracao) {
-                campoDuracao.classList.add('data-calculada');
-                campoDuracao.style.setProperty('background', '#fffbe6', 'important');
-                campoDuracao.style.setProperty('border-color', '#ffc107', 'important');
-                campoDuracao.setAttribute('data-calculada', '1');
-                campoDuracao.readOnly = true;
-            }
-
-            console.log('✅ Campos de data bloqueados por predecessoras');
-        } else {
-            // Remover estilo de data calculada dos campos de data
-            if (campoDataInicio) {
-                campoDataInicio.classList.remove('data-calculada');
-                campoDataInicio.style.removeProperty('background');
-                campoDataInicio.style.removeProperty('border-color');
-                campoDataInicio.removeAttribute('data-calculada');
-                campoDataInicio.readOnly = false;
-            }
-
-            if (campoDataFim) {
-                campoDataFim.classList.remove('data-calculada');
-                campoDataFim.style.removeProperty('background');
-                campoDataFim.style.removeProperty('border-color');
-                campoDataFim.removeAttribute('data-calculada');
-                campoDataFim.readOnly = false;
-            }
-
-            if (campoDuracao) {
-                campoDuracao.classList.remove('data-calculada');
-                campoDuracao.style.removeProperty('background');
-                campoDuracao.style.removeProperty('border-color');
-                campoDuracao.removeAttribute('data-calculada');
-                campoDuracao.readOnly = false;
-            }
-
-            console.log('🔓 Campos de data liberados para edição');
+            return;
         }
+
+        const preds = predecessorasStr.split(';').map(s => s.trim()).filter(Boolean);
+        console.log('🔗 Predecessoras processadas:', preds);
+
+        if (preds.length === 0) return;
+
+        // Mapear número de ordem para linha da tabela
+        const linhas = Array.from(document.querySelectorAll('#tabela-tarefas-inline tbody tr')).filter(tr => tr.id !== 'linha-nova-tarefa');
+        const ordemParaLinha = {};
+        linhas.forEach(trLinha => {
+            const ordem = trLinha.querySelector('.numero-tarefa')?.textContent?.trim();
+            if (ordem) ordemParaLinha[ordem] = trLinha;
+        });
+
+        console.log('📊 Ordem para linha mapeada:', ordemParaLinha);
+
+        // Para cada predecessora, calcular a data alvo
+        let datasInicio = [];
+        let datasFim = [];
+        preds.forEach(pred => {
+            // Ex: 2FS+2d, 3SS-1d
+            const m = pred.match(/^(\d+)(FS|SS|FF|SF)?([+-]\d+d)?$/);
+            if (!m) {
+                console.log(`⚠️ Predecessora inválida: ${pred}`);
+                return;
+            }
+            const ordemPred = m[1];
+            const tipo = m[2] || 'FS';
+            const desloc = m[3] || '';
+            const linhaPred = ordemParaLinha[ordemPred];
+
+            console.log(`🔍 Processando predecessora: ${pred} (ordem: ${ordemPred}, tipo: ${tipo}, desloc: ${desloc})`);
+
+            if (!linhaPred) {
+                console.log(`❌ Linha predecessora não encontrada para ordem: ${ordemPred}`);
+                return;
+            }
+
+            const dataInicioPred = linhaPred.querySelector('input[name="data_inicio"]').value;
+            const dataFimPred = linhaPred.querySelector('input[name="data_fim"]').value;
+
+            console.log(`📅 Datas da predecessora: início=${dataInicioPred}, fim=${dataFimPred}`);
+
+            let baseDate = null;
+            if (tipo === 'FS') baseDate = dataFimPred;
+            else if (tipo === 'SS') baseDate = dataInicioPred;
+            else if (tipo === 'FF') baseDate = dataFimPred;
+            else if (tipo === 'SF') baseDate = dataInicioPred;
+
+            if (!baseDate) {
+                console.log(`❌ Data base não encontrada para tipo: ${tipo}`);
+                return;
+            }
+
+            let data = new Date(baseDate);
+            if (desloc) {
+                const matchDesloc = desloc.match(/([+-])(\d+)d/);
+                if (matchDesloc) {
+                    const sinal = matchDesloc[1] === '+' ? 1 : -1;
+                    const dias = parseInt(matchDesloc[2], 10);
+                    data.setDate(data.getDate() + sinal * dias);
+                    console.log(`📅 Data ajustada: ${data.toISOString().split('T')[0]} (${sinal * dias} dias)`);
+                }
+            }
+
+            if (tipo === 'FS' || tipo === 'SS') datasInicio.push(data);
+            else if (tipo === 'FF' || tipo === 'SF') datasFim.push(data);
+        });
+
+        console.log('📊 Datas calculadas:', { datasInicio: datasInicio.length, datasFim: datasFim.length });
+
+        // Para múltiplas predecessoras: para datas de início, usar a MAIOR; para datas de fim, usar a MAIOR
+        let dataInicioFinal = null;
+        let dataFimFinal = null;
+        datasInicio.forEach(d => { if (!dataInicioFinal || d > dataInicioFinal) dataInicioFinal = d; });
+        datasFim.forEach(d => { if (!dataFimFinal || d > dataFimFinal) dataFimFinal = d; });
+
+        console.log('🎯 Datas finais:', {
+            dataInicioFinal: dataInicioFinal ? dataInicioFinal.toISOString().split('T')[0] : null,
+            dataFimFinal: dataFimFinal ? dataFimFinal.toISOString().split('T')[0] : null
+        });
+
+        // Preencher e bloquear os campos conforme o tipo
+        if (dataInicioFinal && dataInicioInput) {
+            dataInicioInput.value = dataInicioFinal.toISOString().split('T')[0];
+            dataInicioInput.dataset.calculada = '1';
+            dataInicioInput.readOnly = true;
+            dataInicioInput.style.background = '#fffbe6 !important';
+            dataInicioInput.classList.add('data-calculada');
+            console.log('✅ Data de início calculada e bloqueada');
+        }
+        if (dataFimFinal && dataFimInput) {
+            dataFimInput.value = dataFimFinal.toISOString().split('T')[0];
+            dataFimInput.dataset.calculada = '1';
+            dataFimInput.readOnly = true;
+            dataFimInput.style.background = '#fffbe6 !important';
+            dataFimInput.classList.add('data-calculada');
+
+            console.log('✅ Data de fim calculada e bloqueada');
+        }
+
+        // Se não houver predecessora para um dos campos, liberar edição
+        if (!dataInicioFinal && dataInicioInput) {
+            dataInicioInput.readOnly = false;
+            dataInicioInput.dataset.calculada = '';
+            dataInicioInput.style.background = '';
+            dataInicioInput.classList.remove('data-calculada');
+            console.log('🔓 Data de início liberada para edição');
+        }
+        if (!dataFimFinal && dataFimInput) {
+            dataFimInput.readOnly = false;
+            dataFimInput.dataset.calculada = '';
+            dataFimInput.style.background = '';
+            dataFimInput.classList.remove('data-calculada');
+            console.log('🔓 Data de fim liberada para edição');
+        }
+
+        marcarDatasCalculadasPorPredecessora();
+    }
+
+    // Função para marcar datas calculadas por predecessora (igual ao desktop)
+    function marcarDatasCalculadasPorPredecessora() {
+        document.querySelectorAll('input[name="data_inicio"], input[name="data_fim"]').forEach(input => {
+            if (input.dataset.calculada === '1') {
+                input.style.background = '#fffbe6 !important';
+                input.classList.add('data-calculada');
+            } else {
+                input.style.background = '';
+                input.classList.remove('data-calculada');
+            }
+        });
     }
 
     // Inicializar funcionalidades quando a página carregar
@@ -1481,7 +1573,7 @@
         window.abrirModalPredecessora = abrirModalPredecessora;
 
         // Restaurar formatação das datas calculadas ao carregar a página
-        restaurarFormatacaoPredecessoras();
+        marcarDatasCalculadasPorPredecessora();
 
         // Gráfico Gantt simples (se houver dados)
         {% if gantt_geral_data %}
