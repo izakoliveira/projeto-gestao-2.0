@@ -1572,8 +1572,17 @@
         window.onDuracaoOuFimEdit = onDuracaoOuFimEdit;
         window.abrirModalPredecessora = abrirModalPredecessora;
 
+        console.log('🔧 Funções configuradas:', {
+            onPredecessorasEdit: typeof window.onPredecessorasEdit,
+            marcarDatasCalculadasPorPredecessora: typeof marcarDatasCalculadasPorPredecessora,
+            restaurarFormatacaoPredecessoras: typeof restaurarFormatacaoPredecessoras
+        });
+
         // Restaurar formatação das datas calculadas ao carregar a página
         marcarDatasCalculadasPorPredecessora();
+        
+        // Restaurar formatação das predecessoras existentes
+        restaurarFormatacaoPredecessoras();
 
         // Gráfico Gantt simples (se houver dados)
         {% if gantt_geral_data %}
