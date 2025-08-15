@@ -43,18 +43,11 @@
                     <h4 class="mb-0"><i class="fas fa-user-shield"></i> Administração de Restrições</h4>
                 </div>
                 <div class="card-body">
-<<<<<<< HEAD
                     <form method="GET" class="mb-4" id="form-usuarios">
                         <div class="mb-3">
                             <label for="usuario_id" class="form-label">Selecione os usuários:</label>
                             <select class="form-select" id="usuario_id" name="usuario_id" multiple size="5" required
                                 onchange="submeterFormularioComScroll()">
-=======
-                    <form method="GET" class="mb-4">
-                        <div class="mb-3">
-                            <label for="usuario_id" class="form-label">Selecione os usuários:</label>
-                            <select class="form-select" id="usuario_id" name="usuario_id" multiple size="5" required
-                                onchange="this.form.submit()">
                                 {% for usuario in usuarios %}
                                 <option value="{{ usuario.id }}" {% if usuario_id and usuario.id|string in usuario_id
                                     %}selected{% endif %}>{{ usuario.nome }} ({{ usuario.email }})</option>
@@ -249,16 +242,13 @@
 
 {% block scripts %}
 <script>
-<<<<<<< HEAD
-        // Função para submeter formulário mantendo a posição da página
+    // Função para submeter formulário mantendo a posição da página
     function submeterFormularioComScroll() {
         // Salvar a posição atual da página no localStorage
         localStorage.setItem('adminScrollPosition', window.scrollY.toString());
-        
         // Submeter o formulário
         document.getElementById('form-usuarios').submit();
     }
-    
     // Função para restaurar a posição da página
     function restaurarPosicaoScroll() {
         const posicaoSalva = localStorage.getItem('adminScrollPosition');
@@ -344,7 +334,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         const ano = new Date().getFullYear();
         renderizarFeriadosManuaisAdmin(ano);
-        
         // Restaurar posição da página se houver posição salva
         restaurarPosicaoScroll();
     });
