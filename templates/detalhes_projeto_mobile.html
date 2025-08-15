@@ -11,30 +11,30 @@
         padding: 20px 15px;
         margin: -15px -15px 20px -15px;
         border-radius: 0 0 20px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
-    
+
     .mobile-header h1 {
         font-size: 1.5rem;
         margin: 0;
         font-weight: 600;
     }
-    
+
     .mobile-header .projeto-meta {
         margin-top: 15px;
         font-size: 0.9rem;
         opacity: 0.9;
     }
-    
+
     .mobile-card {
         background: white;
         border-radius: 15px;
         padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         border: none;
     }
-    
+
     .mobile-card h3 {
         color: #333;
         font-size: 1.2rem;
@@ -43,19 +43,19 @@
         align-items: center;
         gap: 10px;
     }
-    
+
     .mobile-card h3 i {
         color: #667eea;
         font-size: 1.1rem;
     }
-    
+
     .mobile-stats {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
         margin-bottom: 20px;
     }
-    
+
     .stat-item {
         background: #f8f9fa;
         padding: 15px;
@@ -63,27 +63,27 @@
         text-align: center;
         border-left: 4px solid #667eea;
     }
-    
+
     .stat-number {
         font-size: 1.5rem;
         font-weight: bold;
         color: #667eea;
         display: block;
     }
-    
+
     .stat-label {
         font-size: 0.8rem;
         color: #666;
         margin-top: 5px;
     }
-    
+
     .mobile-actions {
         display: flex;
         gap: 10px;
         margin-bottom: 20px;
         flex-wrap: wrap;
     }
-    
+
     .mobile-actions .btn {
         flex: 1;
         min-width: 120px;
@@ -93,272 +93,340 @@
         border: none;
         font-weight: 500;
     }
-    
+
     .mobile-actions .btn i {
         margin-right: 8px;
     }
-    
-                             /* Layout de tabela para tarefas */
-      .table-header {
-          background: #f8f9fa;
-          border-radius: 12px 12px 0 0;
-          margin-bottom: 0;
-          border: 1px solid #e9ecef;
-          border-bottom: none;
-      }
-      
-      .table-header-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr 1fr;
-          gap: 16px;
-          padding: 16px;
-      }
-      
-      .header-cell {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-weight: 600;
-          color: #495057;
-          font-size: 0.85rem;
-          padding: 8px 12px;
-          background: #e9ecef;
-          border-radius: 8px;
-          border-left: 3px solid #667eea;
-          text-align: center;
-          justify-content: center;
-      }
-      
-      .header-cell i {
-          color: #667eea;
-          font-size: 0.8rem;
-      }
-      
-      .tarefa-row {
-          background: white;
-          border: 1px solid #e9ecef;
-          border-top: none;
-          transition: all 0.3s ease;
-      }
-      
-      .tarefa-row:last-child {
-          border-radius: 0 0 12px 12px;
-      }
-      
-      .tarefa-row:hover {
-          background: #f8f9fa;
-      }
-      
-      .tarefa-row.tarefa-atrasada {
-          border-left: 4px solid #dc2626;
-          background: #fff5f5;
-      }
-      
-      .tarefa-row.tarefa-atrasada:hover {
-          background: #fef2f2;
-      }
-      
-      /* Cabeçalho da tarefa */
-      .tarefa-info-header {
-          display: flex;
-          align-items: center;
-          padding: 16px;
-          background: #f8f9fa;
-          border-bottom: 1px solid #e9ecef;
-          gap: 12px;
-      }
-      
-      .tarefa-numero {
-          background: #667eea;
-          color: white;
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.9rem;
-          font-weight: 600;
-          flex-shrink: 0;
-      }
-      
-      .tarefa-info {
-          flex: 1;
-          min-width: 0;
-      }
-      
-      .tarefa-nome {
-          font-weight: 600;
-          color: #333;
-          font-size: 1rem;
-          line-height: 1.3;
-          margin-bottom: 4px;
-      }
-      
-      .tarefa-status {
-          display: flex;
-          align-items: center;
-      }
-      
-      .status-badge {
-          padding: 4px 8px;
-          border-radius: 12px;
-          font-size: 0.7rem;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          display: inline-block;
-      }
-      
-      .status-pendente { background: #fff3cd; color: #856404; }
-      .status-em-progresso { background: #d1ecf1; color: #0c5460; }
-      .status-concluida { background: #d4edda; color: #155724; }
-      .status-atrasado { background: #f8d7da; color: #721c24; }
-      
-      .tarefa-actions {
-          display: flex;
-          gap: 6px;
-          flex-shrink: 0;
-      }
-      
-      .tarefa-actions .btn {
-          padding: 6px 10px;
-          font-size: 0.8rem;
-          border-radius: 8px;
-          border: none;
-          min-width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-      }
-      
-      /* Linha de dados da tarefa */
-      .tarefa-data-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr 1fr;
-          gap: 16px;
-          padding: 16px;
-      }
-      
-      .data-cell, .duracao-cell, .responsavel-cell, .predecessoras-cell {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          align-items: center;
-          justify-content: center;
-          min-height: 60px;
-      }
-      
-      .data-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-bottom: 4px;
-      }
-      
-      .data-item:last-child {
-          margin-bottom: 0;
-      }
-      
-      .data-label {
-          font-size: 0.7rem;
-          color: #666;
-          font-weight: 500;
-          min-width: 35px;
-      }
-      
-      .field-value {
-          font-size: 0.8rem;
-          color: #333;
-          text-align: center;
-      }
-      
-       .data-input {
-           width: 100% !important;
-           font-size: 0.75rem !important;
-           padding: 4px 6px !important;
-           height: 28px !important;
-       }
-       
-       /* Campo de duração */
-       .duracao-input {
-           width: 60px !important;
-           font-size: 0.75rem !important;
-           padding: 4px 6px !important;
-           height: 28px !important;
-       }
-       
-       .duracao-label {
-           font-size: 0.75rem;
-           color: #666;
-           margin-left: 4px;
-       }
-       
-       /* Campo de responsável */
-       .responsavel-input {
-           width: 100% !important;
-           font-size: 0.75rem !important;
-           padding: 4px 6px !important;
-           height: 28px !important;
-       }
-       
-       /* Campo de predecessoras */
-       .predecessoras-input {
-           width: 100% !important;
-           font-size: 0.75rem !important;
-           padding: 4px 6px !important;
-           height: 28px !important;
-       }
-     
-     /* Estilos para campos editáveis */
-     .data-input, .duracao-input, .responsavel-input, .nome-tarefa-input, .predecessoras-input {
-         border: 1px solid #ddd;
-         border-radius: 6px;
-         transition: all 0.3s ease;
-     }
-     
-     .data-input:focus, .duracao-input:focus, .responsavel-input:focus, 
-     .nome-tarefa-input:focus, .predecessoras-input:focus {
-         border-color: #667eea;
-         box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-         outline: none;
-     }
-     
-     .data-input:hover, .duracao-input:hover, .responsavel-input:hover, 
-     .nome-tarefa-input:hover, .predecessoras-input:hover {
-         border-color: #667eea;
-     }
-     
-     /* Indicador de campo editável - REMOVIDO */
-    
+
+    /* Estilos para tabela de tarefas igual ao desktop */
+    /* Estilo para tarefas atrasadas - VERSÃO ULTRA SIMPLIFICADA */
+    .tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    .tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    .tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    .tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    /* Ícone de aviso para tarefas atrasadas */
+    tr.tarefa-atrasada::before {
+        content: "⚠️";
+        position: absolute;
+        left: -25px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        color: #dc2626;
+        z-index: 10;
+    }
+
+    /* Estilo para linha de coleção quando atrasada */
+    tr.linha-colecao.tarefa-atrasada {
+        background-color: #fff0f0 !important;
+        border-left: 3px solid #dc2626 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada td {
+        background-color: #fff0f0 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada:hover {
+        background-color: #ffe0e0 !important;
+    }
+
+    tr.linha-colecao.tarefa-atrasada:hover td {
+        background-color: #ffe0e0 !important;
+    }
+
+    /* Garantir que os estilos sejam aplicados mesmo com outros estilos */
+    table tbody tr.tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    table tbody tr.tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    table tbody tr.tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    table tbody tr.tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    /* Estilo específico para tabelas responsivas */
+    .table-responsive tbody tr.tarefa-atrasada {
+        background-color: #ffe6e6 !important;
+        border-left: 5px solid #dc2626 !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada td {
+        background-color: #ffe6e6 !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada:hover {
+        background-color: #ffcccc !important;
+    }
+
+    .table-responsive tbody tr.tarefa-atrasada:hover td {
+        background-color: #ffcccc !important;
+    }
+
+    .icone-atrasada {
+        color: #dc2626;
+        margin-right: 5px;
+        font-size: 12px;
+    }
+
+    /* Estilos para datas calculadas por predecessoras */
+    .data-calculada {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+    }
+
+    .data-calculada:focus {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
+
+    /* Garantir que os estilos sejam aplicados mesmo com Bootstrap */
+    input[data-calculada="1"] {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+    }
+
+    input[data-calculada="1"]:focus {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
+
+    /* Estilos específicos para a tabela de tarefas no mobile */
+    #tabela-tarefas-inline input[name="duracao"] {
+        width: 55px !important;
+        max-width: 55px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline input[type="date"] {
+        width: 110px !important;
+        max-width: 110px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline select[name="status"] {
+        width: 120px !important;
+        max-width: 150px !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline td,
+    #tabela-tarefas-inline th {
+        padding-left: 4px;
+        padding-right: 4px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    #tabela-tarefas-inline input,
+    #tabela-tarefas-inline select {
+        height: 40px !important;
+        line-height: 20px !important;
+        vertical-align: middle !important;
+    }
+
+    #tabela-tarefas-inline .btn {
+        margin: 0px 3px 0px 0px !important;
+        padding: 8px 8px !important;
+    }
+
+    #tabela-tarefas-inline td:last-child {
+        white-space: nowrap;
+    }
+
+    #tabela-tarefas-inline input[name="nome"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    #tabela-tarefas-inline input[name="predecessoras"] {
+        width: 120px !important;
+        max-width: 180px !important;
+        min-width: 60px !important;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    #tabela-tarefas-inline select[name="usuario_id"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-left: 8px;
+        padding-right: 8px;
+        text-align: left;
+    }
+
+    #tabela-tarefas-inline td.drag-handle {
+        width: 25px !important;
+        min-width: 25px !important;
+        max-width: 32px !important;
+        text-align: center;
+        vertical-align: middle !important;
+        font-size: 1.3em;
+        color: #888;
+        padding-left: 4px !important;
+        padding-right: 0px !important;
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa {
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 40px !important;
+        text-align: center;
+        vertical-align: middle !important;
+        font-weight: bold;
+        padding: 0 !important;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa:hover {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        cursor: pointer;
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa:focus {
+        outline: none;
+        background-color: #fff3cd !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+
+    #tabela-tarefas-inline td.numero-tarefa[contenteditable="true"] {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .linha-colecao {
+        background-color: #e0e7ef !important;
+    }
+
+    #tabela-tarefas-inline thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #212529 !important;
+        color: #fff !important;
+    }
+
+    #tabela-tarefas-inline {
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #tabela-tarefas-inline select:disabled {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: none !important;
+        cursor: not-allowed;
+    }
+
+    /* Responsividade para mobile */
+    @media (max-width: 768px) {
+        .table-responsive {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #tabela-tarefas-inline {
+            min-width: 800px;
+        }
+
+        #tabela-tarefas-inline input,
+        #tabela-tarefas-inline select {
+            font-size: 0.8rem !important;
+            height: 35px !important;
+        }
+
+        #tabela-tarefas-inline .btn {
+            padding: 6px 6px !important;
+            font-size: 0.8rem !important;
+        }
+
+        .mobile-actions .btn {
+            min-width: 100px;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .mobile-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .mobile-actions .btn {
+            min-width: 100px;
+            font-size: 0.8rem;
+        }
+    }
+
     .gantt-container {
         background: #f8f9fa;
         border-radius: 12px;
         padding: 20px;
         margin-top: 20px;
     }
-    
+
     .gantt-title {
         text-align: center;
         margin-bottom: 20px;
         color: #333;
         font-weight: 600;
     }
-    
+
     .no-tarefas {
         text-align: center;
         padding: 40px 20px;
         color: #666;
     }
-    
+
     .no-tarefas i {
         font-size: 3rem;
         color: #ddd;
         margin-bottom: 15px;
         display: block;
     }
-    
+
     .mobile-fab {
         position: fixed;
         bottom: 20px;
@@ -376,154 +444,15 @@
         z-index: 1000;
         transition: all 0.3s ease;
     }
-    
+
     .mobile-fab:hover {
         transform: scale(1.1);
         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
     }
-    
+
     .mobile-fab:active {
         transform: scale(0.95);
     }
-    
-         /* Responsividade */
-     @media (max-width: 480px) {
-         .mobile-stats {
-             grid-template-columns: 1fr;
-         }
-         
-         .mobile-actions .btn {
-             min-width: 100px;
-             font-size: 0.8rem;
-         }
-         
-                                       /* Tabela responsiva para telas pequenas */
-           .table-header-row {
-               gap: 12px;
-               padding: 12px;
-           }
-           
-           .header-cell {
-               font-size: 0.75rem;
-               padding: 6px 8px;
-           }
-           
-           .tarefa-info-header {
-               padding: 12px;
-               gap: 8px;
-           }
-           
-           .tarefa-numero {
-               width: 28px;
-               height: 28px;
-               font-size: 0.8rem;
-           }
-           
-           .tarefa-nome {
-               font-size: 0.9rem;
-           }
-           
-           .status-badge {
-               padding: 3px 6px;
-               font-size: 0.65rem;
-           }
-           
-           .tarefa-actions .btn {
-               min-width: 28px;
-               height: 28px;
-               padding: 4px 8px;
-           }
-           
-           .tarefa-data-row {
-               gap: 12px;
-               padding: 12px;
-           }
-          
-          .data-input {
-              height: 26px !important;
-              font-size: 0.7rem !important;
-          }
-          
-          .duracao-input {
-              width: 50px !important;
-              height: 26px !important;
-              font-size: 0.7rem !important;
-          }
-          
-          .responsavel-input {
-              height: 26px !important;
-              font-size: 0.7rem !important;
-          }
-          
-          .predecessoras-input {
-              height: 26px !important;
-              font-size: 0.7rem !important;
-          }
-     }
-     
-           @media (max-width: 360px) {
-                    .table-header-row {
-               gap: 8px;
-               padding: 10px;
-           }
-          
-          .header-cell {
-               font-size: 0.7rem;
-               padding: 4px 6px;
-           }
-          
-          .tarefa-info-header {
-               padding: 10px;
-               gap: 6px;
-           }
-          
-          .tarefa-numero {
-               width: 24px;
-               height: 24px;
-               font-size: 0.7rem;
-           }
-          
-          .tarefa-nome {
-               font-size: 0.8rem;
-           }
-          
-          .status-badge {
-               padding: 2px 4px;
-               font-size: 0.6rem;
-           }
-          
-          .tarefa-actions .btn {
-               min-width: 24px;
-               height: 24px;
-               padding: 2px 6px;
-           }
-          
-          .tarefa-data-row {
-               gap: 8px;
-               padding: 10px;
-           }
-          
-          .data-input {
-              height: 24px !important;
-              font-size: 0.65rem !important;
-          }
-          
-          .duracao-input {
-              width: 45px !important;
-              height: 24px !important;
-              font-size: 0.65rem !important;
-          }
-          
-          .responsavel-input {
-              height: 24px !important;
-              font-size: 0.65rem !important;
-          }
-          
-          .predecessoras-input {
-              height: 24px !important;
-              font-size: 0.65rem !important;
-          }
-      }
 </style>
 
 <!-- Header Mobile -->
@@ -532,7 +461,8 @@
     <div class="projeto-meta">
         <div><i class="fas fa-calendar"></i> {{ projeto.data_inicio }} - {{ projeto.data_fim }}</div>
         {% if projeto.descricao %}
-        <div style="margin-top: 8px; opacity: 0.8;">{{ projeto.descricao[:100] }}{% if projeto.descricao|length > 100 %}...{% endif %}</div>
+        <div style="margin-top: 8px; opacity: 0.8;">{{ projeto.descricao[:100] }}{% if projeto.descricao|length > 100
+            %}...{% endif %}</div>
         {% endif %}
     </div>
 </div>
@@ -551,11 +481,13 @@
                 <span class="stat-label">Pendentes</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">{{ tarefas|selectattr('status', 'equalto', 'em progresso')|list|length }}</span>
+                <span class="stat-number">{{ tarefas|selectattr('status', 'equalto', 'em progresso')|list|length
+                    }}</span>
                 <span class="stat-label">Em Progresso</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">{{ tarefas|selectattr('status', 'equalto', 'concluída')|list|length + tarefas|selectattr('status', 'equalto', 'concluida')|list|length }}</span>
+                <span class="stat-number">{{ tarefas|selectattr('status', 'equalto', 'concluída')|list|length +
+                    tarefas|selectattr('status', 'equalto', 'concluida')|list|length }}</span>
                 <span class="stat-label">Concluídas</span>
             </div>
         </div>
@@ -581,153 +513,237 @@
         </div>
     </div>
 
-                             <!-- Lista de Tarefas -->
-      <div class="mobile-card">
-          <h3><i class="fas fa-tasks"></i> Tarefas ({{ tarefas|length }})</h3>
-          
-          {% if tarefas %}
-              <!-- Cabeçalho fixo das colunas -->
-              <div class="table-header">
-                  <div class="table-header-row">
-                      <div class="header-cell">
-                          <i class="fas fa-calendar"></i> Datas
-                      </div>
-                      <div class="header-cell">
-                          <i class="fas fa-clock"></i> Duração
-                      </div>
-                      <div class="header-cell">
-                          <i class="fas fa-user"></i> Responsável
-                      </div>
-                      <div class="header-cell">
-                          <i class="fas fa-link"></i> Predecessoras
-                      </div>
-                  </div>
-              </div>
-              
-              <!-- Lista de tarefas -->
-              {% for tarefa in tarefas %}
-              <div class="tarefa-row {% if tarefa.atrasada %}tarefa-atrasada{% endif %}" data-tarefa-id="{{ tarefa.id }}">
-                  <!-- Nome e status da tarefa -->
-                  <div class="tarefa-info-header">
-                      <div class="tarefa-numero">{{ loop.index }}</div>
-                      <div class="tarefa-info">
-                          <div class="tarefa-nome">
-                              {% if pode_editar_nome_tarefa %}
-                              <input type="text" class="form-control form-control-sm nome-tarefa-input" 
-                                     data-tarefa-id="{{ tarefa.id }}" 
-                                     value="{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}"
-                                     placeholder="Nome da tarefa">
-                              {% else %}
-                              <span>{{ tarefa.nome or tarefa.titulo or 'Tarefa sem nome' }}</span>
-                              {% endif %}
-                          </div>
-                          <div class="tarefa-status">
-                              <span class="status-badge status-{{ tarefa.status|replace(' ', '-')|lower }}">
-                                  {{ tarefa.status|title if tarefa.status else 'Sem status' }}
-                              </span>
-                          </div>
-                      </div>
-                      <div class="tarefa-actions">
-                          {% if pode_editar_tarefa %}
-                          <a href="/tarefas/editar/{{ tarefa.id }}" class="btn btn-warning btn-sm" title="Editar">
-                              <i class="fas fa-edit"></i>
-                          </a>
-                          {% endif %}
-                          
-                          {% if pode_excluir_tarefa %}
-                          <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="{{ tarefa.id }}" title="Excluir">
-                              <i class="fas fa-trash"></i>
-                          </button>
-                          {% endif %}
-                      </div>
-                  </div>
-                  
-                  <!-- Linha de dados da tarefa -->
-                  <div class="tarefa-data-row">
-                      <!-- Coluna Datas -->
-                      <div class="data-cell">
-                          {% if tarefa.data_inicio %}
-                          <div class="data-item">
-                              <span class="data-label">Início:</span>
-                              {% if pode_editar_data_inicio %}
-                              <input type="date" class="form-control form-control-sm data-input" 
-                                     data-tarefa-id="{{ tarefa.id }}" 
-                                     data-campo="data_inicio" 
-                                     value="{{ tarefa.data_inicio_iso or tarefa.data_inicio }}">
-                              {% else %}
-                              <span class="field-value">{{ tarefa.data_inicio }}</span>
-                              {% endif %}
-                          </div>
-                          {% endif %}
-                          
-                          {% if tarefa.data_fim %}
-                          <div class="data-item">
-                              <span class="data-label">Fim:</span>
-                              {% if pode_editar_data_termino %}
-                              <input type="date" class="form-control form-control-sm data-input" 
-                                     data-tarefa-id="{{ tarefa.id }}" 
-                                     data-campo="data_fim" 
-                                     value="{{ tarefa.data_fim_iso or tarefa.data_fim }}">
-                              {% else %}
-                              <span class="field-value">{{ tarefa.data_fim }}</span>
-                              {% endif %}
-                          </div>
-                          {% endif %}
-                      </div>
-                      
-                      <!-- Coluna Duração -->
-                      <div class="duracao-cell">
-                          {% if pode_editar_duracao %}
-                          <input type="number" class="form-control form-control-sm duracao-input" 
-                                 data-tarefa-id="{{ tarefa.id }}" 
-                                 value="{{ tarefa.duracao }}"
-                                 min="1" max="365">
-                          <span class="duracao-label">dias</span>
-                          {% else %}
-                          <span class="field-value">{{ tarefa.duracao }} dias</span>
-                          {% endif %}
-                      </div>
-                      
-                      <!-- Coluna Responsável -->
-                      <div class="responsavel-cell">
-                          {% if pode_editar_responsavel %}
-                          <input type="text" class="form-control form-control-sm responsavel-input" 
-                                 data-tarefa-id="{{ tarefa.id }}" 
-                                 value="{{ tarefa.responsavel }}"
-                                 placeholder="Responsável">
-                          {% else %}
-                          <span class="field-value">{{ tarefa.responsavel or '-' }}</span>
-                          {% endif %}
-                      </div>
-                      
-                      <!-- Coluna Predecessoras -->
-                      <div class="predecessoras-cell">
-                          {% if pode_editar_predecessoras %}
-                          <input type="text" class="form-control form-control-sm predecessoras-input" 
-                                 data-tarefa-id="{{ tarefa.id }}" 
-                                 value="{{ tarefa.predecessoras or '' }}"
-                                 placeholder="Ex: 1;2FS3;4SS5">
-                          {% else %}
-                          <span class="field-value">{{ tarefa.predecessoras or 'Nenhuma' }}</span>
-                          {% endif %}
-                      </div>
-                  </div>
-              </div>
-              {% endfor %}
-          {% else %}
-              <div class="no-tarefas">
-                  <i class="fas fa-tasks"></i>
-                  <div>Nenhuma tarefa encontrada</div>
-                  <div style="font-size: 0.9rem; margin-top: 10px;">
-                      {% if pode_criar_tarefa %}
-                      <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success btn-sm">
-                          <i class="fas fa-plus"></i> Criar Primeira Tarefa
-                      </a>
-                      {% endif %}
-                  </div>
-              </div>
-          {% endif %}
-      </div>
+    <!-- Lista de Tarefas -->
+    <div class="mobile-card">
+        <h3><i class="fas fa-tasks"></i> Tarefas ({{ tarefas|length }})</h3>
+
+        {% if tarefas %}
+        <!-- Cabeçalho fixo das colunas -->
+        <div class="table-header">
+            <div class="table-header-row">
+                <div class="header-cell">
+                    <i class="fas fa-calendar"></i> Datas
+                </div>
+                <div class="header-cell">
+                    <i class="fas fa-clock"></i> Duração
+                </div>
+                <div class="header-cell">
+                    <i class="fas fa-user"></i> Responsável
+                </div>
+                <div class="header-cell">
+                    <i class="fas fa-link"></i> Predecessoras
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de tarefas -->
+        {% if tarefas %}
+        <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+            <table class="table table-hover w-100" id="tabela-tarefas-inline" style="font-size: 0.95em;">
+                <colgroup>
+                    <col style="width: 32px;">
+                    <col style="width: 40px;">
+                    {# Calcular larguras dinâmicas #}
+                    {% set nome_width = 300 %}
+                    {% set responsavel_width = 150 %}
+                    {% set removed_width = 0 %}
+                    {% if not pode_editar_predecessoras %}
+                    {% set nome_width = nome_width + 120 %} {# toda a largura da predecessora vai para Nome #}
+                    {% endif %}
+                    {% if not pode_editar_tarefa and not pode_excluir_tarefa %}
+                    {% set responsavel_width = responsavel_width + 100 %} {# toda a largura da coluna de ações vai para
+                    Responsável #}
+                    {% endif %}
+                    {% set nome_width = nome_width + (removed_width // 2) %}
+                    {% set responsavel_width = responsavel_width + (removed_width - (removed_width // 2)) %}
+                    <col style="width: {{ nome_width }}px;">
+                    {% if pode_editar_predecessoras %}
+                    <col style="width: 120px;"> {# Predecessoras #}
+                    {% endif %}
+                    <col> {# Data Início #}
+                    <col> {# Data Término #}
+                    <col style="width: 55px;"> {# Duração (fixa, nunca removida) #}
+                    <col> {# Status #}
+                    <col style="width: {{ responsavel_width }}px;"> {# Responsável #}
+                    {% if pode_editar_tarefa or pode_excluir_tarefa %}
+                    <col style="width: 100px;"> {# Ações #}
+                    {% endif %}
+                </colgroup>
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:32px"></th>
+                        <th>Nº</th>
+                        <th>Nome</th>
+                        {% if pode_editar_predecessoras %}
+                        <th>Predecessoras</th>
+                        {% endif %}
+                        <th>Data Início</th>
+                        <th>Data Término</th>
+                        <th>Duração (dias)</th>
+                        <th>Status</th>
+                        <th>Responsável</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tarefa in tarefas %}
+                    <tr class="{% if tarefa.colecao %}linha-colecao{% endif %}{% if tarefa.atrasada %} tarefa-atrasada{% endif %}"
+                        {% if tarefa.atrasada
+                        %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: #333;"
+                        {% endif %}>
+                        <td class="drag-handle"
+                            style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
+                            &#9776;</td>
+                        <td class="numero-tarefa" contenteditable="true" data-id="{{ tarefa.id }}"
+                            style="cursor: pointer; text-align: center; font-weight: bold; padding: 0 !important; min-width: 30px; max-width: 40px;"
+                            onblur="atualizarOrdemTarefa(this)" onkeydown="handleOrdemKeydown(event, this)"
+                            title="Clique para editar a ordem">{{ tarefa.ordem or '' }}</td>
+                        <td><input type="text" class="form-control form-control-sm" value="{{ tarefa.nome }}"
+                                data-id="{{ tarefa.id }}" name="nome" {% if not pode_editar_nome_tarefa %}disabled{%
+                                endif %}></td>
+                        {% if pode_editar_predecessoras %}
+                        <td class="predecessoras-td">
+                            <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
+                            <input type="text" class="form-control form-control-sm"
+                                value="{{ tarefa.predecessoras or '' }}" data-id="{{ tarefa.id }}" name="predecessoras"
+                                placeholder="Ex: 2FS+2d"
+                                onchange="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)"
+                                onkeyup="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)">
+                        </td>
+                        {% endif %}
+                        <td><input type="date" class="form-control form-control-sm" value="{{ tarefa.data_inicio_iso }}"
+                                data-id="{{ tarefa.id }}" name="data_inicio" {% if tarefa.data_inicio_calculada %}
+                                data-calculada="1" readonly style="background:#fffbe6;" {% endif %}
+                                oninput="onInicioOuFimEdit(this)" {% if not pode_editar_data_inicio %}disabled{% endif
+                                %}></td>
+                        <td><input type="date" class="form-control form-control-sm" value="{{ tarefa.data_fim_iso }}"
+                                data-id="{{ tarefa.id }}" name="data_fim" {% if tarefa.data_fim_calculada %}
+                                data-calculada="1" readonly style="background:#fffbe6;" {% endif %}
+                                oninput="onDuracaoOuFimEdit(this)" onblur="onDuracaoOuFimEdit(this, true)" {% if not
+                                pode_editar_data_termino %}disabled{% endif %}></td>
+                        <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
+                                value="{{ tarefa.duracao or '' }}" oninput="onDuracaoOuFimEdit(this)"
+                                onblur="onDuracaoOuFimEdit(this, true)" onkeyup="onDuracaoOuFimEdit(this)" {% if not
+                                pode_editar_duracao %}disabled{% endif %}>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm" data-id="{{ tarefa.id }}" name="status">
+                                <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif %}>Pendente
+                                </option>
+                                <option value="em progresso" {% if tarefa.status=='em progresso' %}selected{% endif %}>
+                                    Em Progresso</option>
+                                <option value="concluída" {% if tarefa.status=='concluída' %}selected{% endif %}>
+                                    Concluída</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm" name="usuario_id" data-id="{{ tarefa.id }}" {% if
+                                not pode_editar_responsavel %}disabled{% endif %}>
+                                <option value="" {% if not tarefa.usuario_id %}selected{% endif %}>Sem responsável
+                                </option>
+                                {% for usuario in usuarios %}
+                                <option value="{{ usuario.id }}" {% if tarefa.usuario_id==usuario.id %}selected{% endif
+                                    %}>{{ usuario.email }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
+                                    class="fas fa-save"></i></button>
+                            {% if pode_editar_tarefa %}
+                            <a href="{{ url_for('tarefas.editar_tarefa', tarefa_id=tarefa.id) }}"
+                                class="btn btn-warning btn-sm" title="Editar tarefa"><i class="fas fa-edit"></i></a>
+                            {% endif %}
+                            {% if pode_excluir_tarefa %}
+                            <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="{{ tarefa.id }}"><i
+                                    class="fas fa-trash"></i></button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <!-- Linha para nova tarefa -->
+                    {% if pode_criar_tarefa %}
+                    <tr id="linha-nova-tarefa">
+                        <td></td>
+                        <td></td>
+                        <td><input type="text" class="form-control form-control-sm" name="nome"
+                                placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{% endif %}></td>
+                        {% if pode_editar_predecessoras %}
+                        <td class="predecessoras-td">
+                            <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
+                                onclick="abrirModalPredecessora(this)"><i class="fas fa-link"></i></button>
+                            <input type="text" class="form-control form-control-sm" name="predecessoras" value=""
+                                placeholder="Ex: 2FS+2d"
+                                onchange="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)"
+                                onkeyup="if(typeof onPredecessorasEdit === 'function') onPredecessorasEdit(this)">
+                        </td>
+                        {% endif %}
+                        <td><input type="date" class="form-control form-control-sm" name="data_inicio"
+                                oninput="onInicioOuFimEdit(this)"></td>
+                        <td><input type="date" class="form-control form-control-sm" name="data_fim"
+                                oninput="onDuracaoOuFimEdit(this)" onblur="onDuracaoOuFimEdit(this, true)">
+                        </td>
+                        <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
+                                placeholder="Dias" oninput="onDuracaoOuFimEdit(this)"
+                                onblur="onDuracaoOuFimEdit(this, true)"></td>
+                        <td>
+                            <select class="form-select form-select-sm" name="status">
+                                <option value="pendente">Pendente</option>
+                                <option value="em progresso">Em Progresso</option>
+                                <option value="concluída">Concluída</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm" name="usuario_id">
+                                <option value="">Sem responsável</option>
+                                {% for usuario in usuarios %}
+                                <option value="{{ usuario.id }}">{{ usuario.email }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="criarTarefaNovaLinha(this)"><i
+                                    class="fas fa-plus"></i></button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-tarefas">
+            <i class="fas fa-tasks"></i>
+            <div>Nenhuma tarefa encontrada</div>
+            <div style="font-size: 0.9rem; margin-top: 10px;">
+                {% if pode_criar_tarefa %}
+                <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i> Criar Primeira Tarefa
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="no-tarefas">
+            <i class="fas fa-tasks"></i>
+            <div>Nenhuma tarefa encontrada</div>
+            <div style="font-size: 0.9rem; margin-top: 10px;">
+                {% if pode_criar_tarefa %}
+                <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i> Criar Primeira Tarefa
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="d-flex justify-content-end mt-2" style="padding-right: 16px;">
+        <button class="btn btn-primary mb-4" type="button" onclick="salvarTodasTarefas()">
+            <i class="fas fa-save"></i> Salvar todas
+        </button>
+    </div>
 
     <!-- Gráfico Gantt -->
     {% if gantt_geral_data %}
@@ -768,223 +784,468 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-     // Configurar campos editáveis inline
-     setupInlineEditing();
-     
-     // Configurar botões de exclusão
-     const deleteButtons = document.querySelectorAll('.btn-excluir-tarefa');
-     deleteButtons.forEach(button => {
-         button.addEventListener('click', function() {
-             const tarefaId = this.getAttribute('data-tarefa-id');
-             const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-             modal.show();
-             
-             document.getElementById('confirmDeleteBtn').onclick = function() {
-                 fetch(`/tarefas/excluir/${tarefaId}`, {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                     }
-                 })
-                 .then(response => response.json())
-                 .then(data => {
-                     if (data.success) {
-                         location.reload();
-                     } else {
-                         alert('Erro ao excluir tarefa: ' + data.error);
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Erro:', error);
-                     alert('Erro ao excluir tarefa');
-                 });
-                 
-                 modal.hide();
-             };
-         });
-     });
+    document.addEventListener('DOMContentLoaded', function () {
+        // Configurar campos editáveis inline
+        setupInlineEditing();
 
-         // Gráfico Gantt simples (se houver dados)
-     {% if gantt_geral_data %}
-     const ganttData = {{ gantt_geral_data|tojson }};
-     if (ganttData.length > 0) {
-         renderGanttChart(ganttData);
-     }
-     {% endif %}
+        // Configurar botões de exclusão
+        const deleteButtons = document.querySelectorAll('.btn-excluir-tarefa');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const tarefaId = this.getAttribute('data-tarefa-id');
+                const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                modal.show();
+
+                document.getElementById('confirmDeleteBtn').onclick = function () {
+                    fetch(`/tarefas/excluir/${tarefaId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                location.reload();
+                            } else {
+                                alert('Erro ao excluir tarefa: ' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro:', error);
+                            alert('Erro ao excluir tarefa');
+                        });
+
+                    modal.hide();
+                };
+            });
+        });
+
+        // Gráfico Gantt simples (se houver dados)
+        {% if gantt_geral_data %}
+        const ganttData = {{ gantt_geral_data| tojson
+    }};
+    if (ganttData.length > 0) {
+        renderGanttChart(ganttData);
+    }
+    {% endif %}
  });
- 
- // Função para configurar edição inline
- function setupInlineEditing() {
-     // Campos de data
-     document.querySelectorAll('.data-input').forEach(input => {
-         input.addEventListener('change', function() {
-             const tarefaId = this.getAttribute('data-tarefa-id');
-             const campo = this.getAttribute('data-campo');
-             const valor = this.value;
-             
-             if (valor) {
-                 salvarCampoTarefa(tarefaId, campo, valor);
-             }
-         });
-     });
-     
-     // Campo de duração
-     document.querySelectorAll('.duracao-input').forEach(input => {
-         input.addEventListener('change', function() {
-             const tarefaId = this.getAttribute('data-tarefa-id');
-             const valor = this.value;
-             
-             if (valor && valor > 0) {
-                 salvarCampoTarefa(tarefaId, 'duracao', valor);
-             }
-         });
-     });
-     
-     // Campo de responsável
-     document.querySelectorAll('.responsavel-input').forEach(input => {
-         input.addEventListener('blur', function() {
-             const tarefaId = this.getAttribute('data-tarefa-id');
-             const valor = this.value.trim();
-             
-             if (valor !== '') {
-                 salvarCampoTarefa(tarefaId, 'responsavel', valor);
-             }
-         });
-     });
-     
-     // Campo de nome da tarefa
-     document.querySelectorAll('.nome-tarefa-input').forEach(input => {
-         input.addEventListener('blur', function() {
-             const tarefaId = this.getAttribute('data-tarefa-id');
-             const valor = this.value.trim();
-             
-             if (valor !== '') {
-                 salvarCampoTarefa(tarefaId, 'nome', valor);
-             }
-         });
-     });
-     
-     // Campo de predecessoras
-     document.querySelectorAll('.predecessoras-input').forEach(input => {
-         input.addEventListener('blur', function() {
-             const tarefaId = this.getAttribute('data-tarefa-id');
-             const valor = this.value.trim();
-             
-             salvarCampoTarefa(tarefaId, 'predecessoras', valor);
-         });
-     });
- }
- 
- // Função para salvar campo da tarefa
- function salvarCampoTarefa(tarefaId, campo, valor) {
-     const dados = {
-         campo: campo,
-         valor: valor
-     };
-     
-     fetch(`/tarefas/atualizar-campo/${tarefaId}`, {
-         method: 'POST',
-         headers: {
-             'Content-Type': 'application/json',
-         },
-         body: JSON.stringify(dados)
-     })
-     .then(response => response.json())
-     .then(data => {
-         if (data.success) {
-             // Mostrar feedback visual
-             mostrarFeedback('Campo atualizado com sucesso!', 'success');
-             
-             // Se for campo de data, recalcular predecessoras se necessário
-             if (campo === 'data_inicio' || campo === 'data_fim' || campo === 'duracao' || campo === 'predecessoras') {
-                 setTimeout(() => {
-                     location.reload(); // Recarregar para atualizar cálculos
-                 }, 1000);
-             }
-         } else {
-             mostrarFeedback('Erro ao atualizar: ' + data.error, 'error');
-         }
-     })
-     .catch(error => {
-         console.error('Erro:', error);
-         mostrarFeedback('Erro ao atualizar campo', 'error');
-     });
- }
- 
- // Função para mostrar feedback visual
- function mostrarFeedback(mensagem, tipo) {
-     // Criar elemento de feedback
-     const feedback = document.createElement('div');
-     feedback.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-     feedback.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-     feedback.innerHTML = `
+
+    // Função para configurar edição inline
+    function setupInlineEditing() {
+        // Campos de data
+        document.querySelectorAll('.data-input').forEach(input => {
+            input.addEventListener('change', function () {
+                const tarefaId = this.getAttribute('data-tarefa-id');
+                const campo = this.getAttribute('data-campo');
+                const valor = this.value;
+
+                if (valor) {
+                    salvarCampoTarefa(tarefaId, campo, valor);
+                }
+            });
+        });
+
+        // Campo de duração
+        document.querySelectorAll('.duracao-input').forEach(input => {
+            input.addEventListener('change', function () {
+                const tarefaId = this.getAttribute('data-tarefa-id');
+                const valor = this.value;
+
+                if (valor && valor > 0) {
+                    salvarCampoTarefa(tarefaId, 'duracao', valor);
+                }
+            });
+        });
+
+        // Campo de responsável
+        document.querySelectorAll('.responsavel-input').forEach(input => {
+            input.addEventListener('blur', function () {
+                const tarefaId = this.getAttribute('data-tarefa-id');
+                const valor = this.value.trim();
+
+                if (valor !== '') {
+                    salvarCampoTarefa(tarefaId, 'responsavel', valor);
+                }
+            });
+        });
+
+        // Campo de nome da tarefa
+        document.querySelectorAll('.nome-tarefa-input').forEach(input => {
+            input.addEventListener('blur', function () {
+                const tarefaId = this.getAttribute('data-tarefa-id');
+                const valor = this.value.trim();
+
+                if (valor !== '') {
+                    salvarCampoTarefa(tarefaId, 'nome', valor);
+                }
+            });
+        });
+
+        // Campo de predecessoras
+        document.querySelectorAll('.predecessoras-input').forEach(input => {
+            input.addEventListener('blur', function () {
+                const tarefaId = this.getAttribute('data-tarefa-id');
+                const valor = this.value.trim();
+
+                salvarCampoTarefa(tarefaId, 'predecessoras', valor);
+            });
+        });
+    }
+
+    // Função para salvar campo da tarefa
+    function salvarCampoTarefa(tarefaId, campo, valor) {
+        const dados = {
+            campo: campo,
+            valor: valor
+        };
+
+        fetch(`/tarefas/atualizar-campo/${tarefaId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dados)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar feedback visual
+                    mostrarFeedback('Campo atualizado com sucesso!', 'success');
+
+                    // Se for campo de data, recalcular predecessoras se necessário
+                    if (campo === 'data_inicio' || campo === 'data_fim' || campo === 'duracao' || campo === 'predecessoras') {
+                        setTimeout(() => {
+                            location.reload(); // Recarregar para atualizar cálculos
+                        }, 1000);
+                    }
+                } else {
+                    mostrarFeedback('Erro ao atualizar: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                mostrarFeedback('Erro ao atualizar campo', 'error');
+            });
+    }
+
+    // Função para mostrar feedback visual
+    function mostrarFeedback(mensagem, tipo) {
+        // Criar elemento de feedback
+        const feedback = document.createElement('div');
+        feedback.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        feedback.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        feedback.innerHTML = `
          ${mensagem}
          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
      `;
-     
-     document.body.appendChild(feedback);
-     
-     // Remover automaticamente após 3 segundos
-     setTimeout(() => {
-         if (feedback.parentNode) {
-             feedback.remove();
-         }
-     }, 3000);
- }
 
-function renderGanttChart(data) {
-    const container = document.getElementById('gantt-chart');
-    if (!container) return;
-    
-    // Implementação simples do gráfico Gantt
-    const width = container.clientWidth;
-    const height = 300;
-    const margin = { top: 20, right: 20, bottom: 40, left: 80 };
-    
-    const svg = d3.select(container)
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height);
-    
-    // Escalas
-    const xScale = d3.scaleTime()
-        .domain(d3.extent(data, d => new Date(d.start)))
-        .range([margin.left, width - margin.right]);
-    
-    const yScale = d3.scaleBand()
-        .domain(data.map(d => d.name))
-        .range([margin.top, height - margin.bottom])
-        .padding(0.1);
-    
-    // Barras do Gantt
-    svg.selectAll('.gantt-bar')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('class', 'gantt-bar')
-        .attr('x', d => xScale(new Date(d.start)))
-        .attr('y', d => yScale(d.name))
-        .attr('width', d => {
-            const start = new Date(d.start);
-            const end = new Date(d.end);
-            return xScale(end) - xScale(start);
+        document.body.appendChild(feedback);
+
+        // Remover automaticamente após 3 segundos
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.remove();
+            }
+        }, 3000);
+    }
+
+    // Funções necessárias para a tabela funcionar como no desktop
+    function salvarLinhaTarefa(btn) {
+        const tr = btn.closest('tr');
+        const tarefaId = tr.querySelector('input[name="nome"]').dataset.id;
+        
+        const dados = {
+            nome: tr.querySelector('input[name="nome"]').value,
+            data_inicio: tr.querySelector('input[name="data_inicio"]').value,
+            data_fim: tr.querySelector('input[name="data_fim"]').value,
+            duracao: tr.querySelector('input[name="duracao"]').value,
+            status: tr.querySelector('select[name="status"]').value,
+            usuario_id: tr.querySelector('select[name="usuario_id"]').value
+        };
+
+        if (tr.querySelector('input[name="predecessoras"]')) {
+            dados.predecessoras = tr.querySelector('input[name="predecessoras"]').value;
+        }
+
+        fetch(`/tarefas/atualizar/${tarefaId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dados)
         })
-        .attr('height', yScale.bandwidth())
-        .attr('fill', d => d.bar_color || '#667eea')
-        .attr('rx', 3);
-    
-    // Eixos
-    const xAxis = d3.axisBottom(xScale);
-    const yAxis = d3.axisLeft(yScale);
-    
-    svg.append('g')
-        .attr('transform', `translate(0,${height - margin.bottom})`)
-        .call(xAxis);
-    
-    svg.append('g')
-        .attr('transform', `translate(${margin.left},0)`)
-        .call(yAxis);
-}
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarFeedback('Tarefa salva com sucesso!', 'success');
+            } else {
+                mostrarFeedback('Erro ao salvar: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarFeedback('Erro ao salvar tarefa', 'error');
+        });
+    }
+
+    function criarTarefaNovaLinha(btn) {
+        const tr = btn.closest('tr');
+        const projetoId = '{{ projeto.id }}';
+        
+        const dados = {
+            projeto_id: projetoId,
+            nome: tr.querySelector('input[name="nome"]').value,
+            data_inicio: tr.querySelector('input[name="data_inicio"]').value,
+            data_fim: tr.querySelector('input[name="data_fim"]').value,
+            duracao: tr.querySelector('input[name="duracao"]').value,
+            status: tr.querySelector('select[name="status"]').value,
+            usuario_id: tr.querySelector('select[name="usuario_id"]').value
+        };
+
+        if (tr.querySelector('input[name="predecessoras"]')) {
+            dados.predecessoras = tr.querySelector('input[name="predecessoras"]').value;
+        }
+
+        fetch('/tarefas/criar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dados)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarFeedback('Tarefa criada com sucesso!', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                mostrarFeedback('Erro ao criar: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarFeedback('Erro ao criar tarefa', 'error');
+        });
+    }
+
+    function salvarTodasTarefas() {
+        const tarefas = document.querySelectorAll('#tabela-tarefas-inline tbody tr:not(#linha-nova-tarefa)');
+        let salvas = 0;
+        let total = tarefas.length;
+
+        tarefas.forEach((tr, index) => {
+            setTimeout(() => {
+                const btn = tr.querySelector('.btn-success');
+                if (btn) {
+                    salvarLinhaTarefa(btn);
+                    salvas++;
+                    
+                    if (salvas === total) {
+                        mostrarFeedback('Todas as tarefas foram salvas!', 'success');
+                    }
+                }
+            }, index * 200); // Delay entre cada salvamento
+        });
+    }
+
+    function atualizarOrdemTarefa(td) {
+        const novaOrdem = td.textContent.trim();
+        const tarefaId = td.dataset.id;
+        
+        if (novaOrdem && !isNaN(novaOrdem)) {
+            fetch('/tarefas/atualizar_ordem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    tarefa_id: tarefaId, 
+                    nova_ordem: parseInt(novaOrdem) 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarFeedback('Ordem atualizada!', 'success');
+                } else {
+                    mostrarFeedback('Erro ao atualizar ordem: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                mostrarFeedback('Erro ao atualizar ordem', 'error');
+            });
+        }
+    }
+
+    function handleOrdemKeydown(event, td) {
+        if (event.key === 'Enter') {
+            td.blur();
+        }
+    }
+
+    function onInicioOuFimEdit(input) {
+        // Lógica para edição de data início/fim
+        console.log('Data editada:', input.value);
+    }
+
+    function onDuracaoOuFimEdit(input, isBlur = false) {
+        // Lógica para edição de duração ou data fim
+        console.log('Campo editado:', input.name, input.value);
+    }
+
+    function abrirModalPredecessora(btn) {
+        // Implementação simples do modal de predecessoras
+        alert('Funcionalidade de predecessoras - clique no campo de texto para editar');
+    }
+
+    // Função para predecessoras (igual ao desktop)
+    function onPredecessorasEdit(input) {
+        if (!input) return;
+        
+        const tr = input.closest('tr');
+        if (!tr) return;
+        
+        const predecessoras = input.value.trim();
+        const tarefaId = input.dataset.id;
+        
+        if (predecessoras) {
+            // Aplicar estilo de data calculada
+            input.classList.add('data-calculada');
+            input.style.setProperty('background', '#fffbe6', 'important');
+            input.style.setProperty('border-color', '#ffc107', 'important');
+            
+            // Marcar como calculada
+            input.setAttribute('data-calculada', '1');
+            input.readOnly = true;
+            
+            console.log('✅ Data de fim calculada e bloqueada');
+        } else {
+            // Remover estilo de data calculada
+            input.classList.remove('data-calculada');
+            input.style.removeProperty('background');
+            input.style.removeProperty('border-color');
+            
+            // Desmarcar como calculada
+            input.removeAttribute('data-calculada');
+            input.readOnly = false;
+            
+            console.log('🔓 Data de início liberada para edição');
+        }
+    }
+
+    // Inicializar funcionalidades quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar campos editáveis inline
+        setupInlineEditing();
+        
+        // Configurar botões de exclusão
+        const deleteButtons = document.querySelectorAll('.btn-excluir-tarefa');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tarefaId = this.getAttribute('data-tarefa-id');
+                const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                modal.show();
+                
+                document.getElementById('confirmDeleteBtn').onclick = function() {
+                    fetch(`/tarefas/excluir/${tarefaId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Erro ao excluir tarefa: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        alert('Erro ao excluir tarefa');
+                    });
+
+                    modal.hide();
+                };
+            });
+        });
+
+        // Configurar função onPredecessorasEdit para estar disponível globalmente
+        window.onPredecessorasEdit = onPredecessorasEdit;
+        window.salvarLinhaTarefa = salvarLinhaTarefa;
+        window.criarTarefaNovaLinha = criarTarefaNovaLinha;
+        window.salvarTodasTarefas = salvarTodasTarefas;
+        window.atualizarOrdemTarefa = atualizarOrdemTarefa;
+        window.handleOrdemKeydown = handleOrdemKeydown;
+        window.onInicioOuFimEdit = onInicioOuFimEdit;
+        window.onDuracaoOuFimEdit = onDuracaoOuFimEdit;
+        window.abrirModalPredecessora = abrirModalPredecessora;
+
+        // Gráfico Gantt simples (se houver dados)
+        {% if gantt_geral_data %}
+        const ganttData = {{ gantt_geral_data|tojson }};
+        if (ganttData.length > 0) {
+            renderGanttChart(ganttData);
+        }
+        {% endif %}
+    });
+
+    // Função para renderizar gráfico Gantt
+    function renderGanttChart(data) {
+        const container = document.getElementById('gantt-chart');
+        if (!container) return;
+
+        // Implementação simples do gráfico Gantt
+        const width = container.clientWidth;
+        const height = 300;
+        const margin = { top: 20, right: 20, bottom: 40, left: 80 };
+
+        const svg = d3.select(container)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        // Escalas
+        const xScale = d3.scaleTime()
+            .domain(d3.extent(data, d => new Date(d.start)))
+            .range([margin.left, width - margin.right]);
+
+        const yScale = d3.scaleBand()
+            .domain(data.map(d => d.name))
+            .range([margin.top, height - margin.bottom])
+            .padding(0.1);
+
+        // Barras do Gantt
+        svg.selectAll('.gantt-bar')
+            .data(data)
+            .enter()
+            .append('rect')
+            .attr('class', 'gantt-bar')
+            .attr('x', d => xScale(new Date(d.start)))
+            .attr('y', d => yScale(d.name))
+            .attr('width', d => {
+                const start = new Date(d.start);
+                const end = new Date(d.end);
+                return xScale(end) - xScale(start);
+            })
+            .attr('height', yScale.bandwidth())
+            .attr('fill', d => d.bar_color || '#667eea')
+            .attr('rx', 3);
+
+        // Eixos
+        const xAxis = d3.axisBottom(xScale);
+        const yAxis = d3.axisLeft(yScale);
+
+        svg.append('g')
+            .attr('transform', `translate(0,${height - margin.bottom})`)
+            .call(xAxis);
+
+        svg.append('g')
+            .attr('transform', `translate(${margin.left},0)`)
+            .call(yAxis);
+    }
 </script>
 {% endblock %}
