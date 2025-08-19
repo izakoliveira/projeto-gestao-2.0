@@ -10,4 +10,5 @@ ADMIN_EMAIL=admin@exemplo.com
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=seu_email@gmail.com
-SMTP_PASS=sua_senha_de_app 
+SMTP_PASS=sua_senha_de_app
+FROM_NAME=Sistema de Gestão de Projetos 

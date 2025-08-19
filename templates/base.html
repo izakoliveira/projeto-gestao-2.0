@@ -14,6 +14,143 @@
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#1976d2">
+    <style>
+        /* Estilos personalizados para notificações */
+        .dropdown-menu {
+            max-width: 400px;
+            min-width: 350px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .dropdown-item {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 2px 4px;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item:active {
+            background-color: #e9ecef !important;
+        }
+
+        /* Badges personalizados */
+        .badge {
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Toast personalizado */
+        .toast {
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+
+        .toast-body {
+            padding: 1rem 1.25rem;
+        }
+
+        /* Scrollbar personalizada para o dropdown */
+        .dropdown-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Animações para notificações */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        /* Estado vazio mais atrativo */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Botão limpar mais atrativo */
+        #btnLimparNotificacoes {
+            border-radius: 20px;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        #btnLimparNotificacoes:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Indicador de notificação não lida */
+        .notification-unread {
+            position: relative;
+        }
+
+        .notification-unread::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: #007bff;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -43,14 +180,14 @@
                     </li>
                     <!-- DEBUG: Email da sessão -->
                     <!-- Email atual: {{ session.user_email }} -->
-                    {% if session.user_email == 'izak.gomes59@gmail.com' %}
+                    {% if session.is_admin %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('producao.producao_dashboard') }}">
                             <i class="fas fa-calendar-alt"></i> Produção
                         </a>
                     </li>
                     {% endif %}
-                    {% if session.user_email == 'izak.gomes59@gmail.com' %}
+                    {% if session.is_admin %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.admin_restricoes') }}">
                             <i class="fas fa-user-shield"></i> Administração
@@ -58,7 +195,7 @@
                     </li>
                     {% endif %}
                 </ul>
-                {% if session.user_email == 'izak.gomes59@gmail.com' %}
+                {% if session.is_admin %}
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('pastas.listar_pastas') }}">Pastas</a>
@@ -151,6 +288,10 @@
     {% endif %}
     {% endwith %}
 
+    <!-- Container para notificações toast -->
+    <div id="toastContainerGlobal" class="position-fixed top-0 end-0 p-3" style="z-index: 1080; min-width: 350px;">
+    </div>
+
     <!-- Main Content -->
     <main>
         {% block content %}{% endblock %}
@@ -168,6 +309,65 @@
     <!-- Removido script de dark mode -->
     {% block scripts %}
     <script>
+        // Função para mostrar notificação toast
+        function mostrarNotificacaoToast(mensagem, tipo = 'info', duracao = 5000) {
+            const container = document.getElementById('toastContainerGlobal');
+            const toastId = 'toast_' + Date.now();
+
+            // Definir cores e ícones baseados no tipo
+            let bgClass, icon, title;
+            switch (tipo) {
+                case 'success':
+                    bgClass = 'bg-success';
+                    icon = 'fas fa-check-circle';
+                    title = 'Sucesso';
+                    break;
+                case 'error':
+                case 'danger':
+                    bgClass = 'bg-danger';
+                    icon = 'fas fa-times-circle';
+                    title = 'Erro';
+                    break;
+                case 'warning':
+                    bgClass = 'bg-warning text-dark';
+                    icon = 'fas fa-exclamation-triangle';
+                    title = 'Aviso';
+                    break;
+                case 'info':
+                default:
+                    bgClass = 'bg-info text-dark';
+                    icon = 'fas fa-info-circle';
+                    title = 'Informação';
+                    break;
+            }
+
+            const toastHtml = `
+                <div class="toast align-items-center text-white ${bgClass} border-0 shadow-lg" 
+                     role="alert" id="${toastId}" data-bs-delay="${duracao}">
+                    <div class="d-flex">
+                        <div class="toast-body d-flex align-items-center">
+                            <i class="${icon} me-2 fs-5"></i>
+                            <div>
+                                <div class="fw-bold mb-1">${title}</div>
+                                <div class="small">${mensagem}</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                                data-bs-dismiss="toast" aria-label="Fechar"></button>
+                    </div>
+                </div>`;
+
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { delay: duracao });
+            toast.show();
+
+            // Remover elemento após ser fechado
+            toastEl.addEventListener('hidden.bs.toast', function () {
+                toastEl.remove();
+            });
+        }
+
         // Função para buscar notificações do usuário logado
         document.addEventListener('DOMContentLoaded', function () {
             const usuarioId = '{{ session.user_id }}';
@@ -189,73 +389,141 @@
                             data.notificacoes.forEach(notif => {
                                 const lida = notif.lida;
                                 if (!lida) naoLidas++;
+
                                 const li = document.createElement('li');
-                                li.className = 'dropdown-item d-flex justify-content-between align-items-start' + (lida ? ' text-muted' : ' fw-bold');
+                                li.className = 'dropdown-item p-3 border-bottom' + (lida ? ' text-muted' : ' notification-unread');
                                 li.style.cursor = 'pointer';
+                                li.style.minHeight = '80px';
+
+                                // Determinar cor do badge baseado no tipo
+                                let badgeClass = 'bg-info';
+                                let badgeText = notif.tipo || 'info';
+                                switch (notif.tipo) {
+                                    case 'conclusao':
+                                        badgeClass = 'bg-success';
+                                        badgeText = 'Concluída';
+                                        break;
+                                    case 'designacao':
+                                        badgeClass = 'bg-primary';
+                                        badgeText = 'Designação';
+                                        break;
+                                    case 'remocao':
+                                        badgeClass = 'bg-danger';
+                                        badgeText = 'Remoção';
+                                        break;
+                                    case 'status':
+                                        badgeClass = 'bg-warning text-dark';
+                                        badgeText = 'Status';
+                                        break;
+                                }
+
+                                // Formatar data
+                                const data = new Date(notif.data_criacao);
+                                const dataFormatada = data.toLocaleDateString('pt-BR') + ' ' +
+                                    data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
                                 let linkProjeto = '';
                                 if (notif.projeto_id) {
-                                    linkProjeto = `<a href="/projetos/${notif.projeto_id}" class="btn btn-primary btn-sm ms-2" style="font-size:0.8em; padding:2px 8px;">Ver projeto</a>`;
+                                    linkProjeto = `
+                                        <a href="/projetos/${notif.projeto_id}" 
+                                           class="btn btn-outline-primary btn-sm ms-2" 
+                                           style="font-size:0.75em; padding:2px 8px;">
+                                            <i class="fas fa-external-link-alt me-1"></i>Ver projeto
+                                        </a>`;
                                 }
+
                                 li.innerHTML = `
-  <div class=\"w-100\">
-    <div class=\"d-flex justify-content-between align-items-center\" style=\"gap:4px;\">
-      <span class=\"text-truncate\" style=\"max-width: 120px; font-size: 0.95em;\" title=\"${notif.mensagem.replace(/&/g, '&amp;').replace(/\"/g, '&quot;')}\">${notif.mensagem}</span>
-      ${linkProjeto}
-    </div>
-    <div class=\"d-flex flex-column align-items-end\">
-      <span class=\"badge bg-${notif.tipo === 'conclusao' ? 'success' : notif.tipo === 'remocao' ? 'danger' : 'info'} text-uppercase mt-1\" style=\"font-size:0.70em; font-weight:400; border-radius:8px; padding:2px 6px; letter-spacing:0.5px;\">${notif.tipo || ''}</span>
-      <span class=\"text-end\" style=\"font-size:0.75em; color:#888;\">${(new Date(notif.data_criacao)).toLocaleString('pt-BR')}</span>
-    </div>
-  </div>
-`;
-                                // Inicializar tooltip Bootstrap
-                                setTimeout(() => { var t = li.querySelector('[title]'); if (t) new bootstrap.Tooltip(t); }, 10);
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="badge ${badgeClass} text-uppercase" 
+                                              style="font-size:0.70em; font-weight:500; border-radius:8px; padding:4px 8px;">
+                                            ${badgeText}
+                                        </span>
+                                        <small class="text-muted">${dataFormatada}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <p class="mb-1 ${lida ? '' : 'fw-bold'}" style="font-size:0.9em; line-height:1.4;">
+                                            ${notif.mensagem}
+                                        </p>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-${lida ? 'check-double' : 'envelope'} me-1"></i>
+                                            ${lida ? 'Lida' : 'Nova'}
+                                        </small>
+                                        ${linkProjeto}
+                                    </div>
+                                `;
+
+                                // Adicionar efeito hover
+                                li.addEventListener('mouseenter', function () {
+                                    this.style.backgroundColor = '#f8f9fa';
+                                });
+                                li.addEventListener('mouseleave', function () {
+                                    this.style.backgroundColor = '';
+                                });
+
+                                // Marcar como lida ao clicar
                                 li.onclick = function () {
                                     if (!lida) {
                                         fetch(`/notificacoes/${notif.id}/ler`, { method: 'PATCH' })
-                                            .then(() => carregarNotificacoes());
+                                            .then(() => {
+                                                carregarNotificacoes();
+                                                // Mostrar toast de confirmação
+                                                mostrarNotificacaoToast('Notificação marcada como lida', 'success', 3000);
+                                            });
                                     }
                                 };
+
                                 lista.appendChild(li);
                             });
+
                             badge.textContent = naoLidas;
                             badge.style.display = naoLidas > 0 ? 'inline-block' : 'none';
-                            mostrarBotaoLimpar(data.notificacoes && data.notificacoes.length > 0);
+                            mostrarBotaoLimpar(true);
                         } else {
                             badge.style.display = 'none';
-                            lista.innerHTML = '<li class="text-center text-muted small p-2">Sem notificações.</li>';
+                            lista.innerHTML = `
+                                <li class="dropdown-item empty-state">
+                                    <i class="fas fa-bell-slash"></i>
+                                    <div>Sem notificações</div>
+                                    <small>Você está em dia com tudo!</small>
+                                </li>`;
                             mostrarBotaoLimpar(false);
                         }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar notificações:', error);
+                        lista.innerHTML = `
+                            <li class="dropdown-item empty-state text-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>Erro ao carregar notificações</div>
+                                <small>Tente novamente mais tarde</small>
+                            </li>`;
                     });
             }
+
             // Carregar ao abrir o dropdown
             document.getElementById('notificacaoDropdown').addEventListener('click', carregarNotificacoes);
-            // Carregar periodicamente (opcional)
+
+            // Carregar periodicamente
             setInterval(carregarNotificacoes, 60000); // a cada 60s
+
+            // Carregar inicialmente
             carregarNotificacoes();
 
+            // Botão limpar todas as notificações
             document.getElementById('btnLimparNotificacoes').onclick = function () {
                 if (!confirm('Tem certeza que deseja limpar todas as notificações?')) return;
+
                 fetch(`/notificacoes/${usuarioId}/limpar`, { method: 'DELETE' })
                     .then(resp => resp.json())
                     .then(data => {
                         carregarNotificacoes();
-                        var toast = document.createElement('div');
-                        toast.className = 'toast align-items-center text-white bg-success border-0';
-                        toast.role = 'alert';
-                        toast.innerHTML = `<div class='d-flex'><div class='toast-body'>Notificações limpas com sucesso!</div><button type='button' class='btn-close btn-close-white me-2 m-auto' data-bs-dismiss='toast'></button></div>`;
-                        document.body.appendChild(toast);
-                        new bootstrap.Toast(toast).show();
-                        setTimeout(() => toast.remove(), 4000);
+                        mostrarNotificacaoToast('Todas as notificações foram limpas com sucesso!', 'success');
                     })
-                    .catch(() => {
-                        var toast = document.createElement('div');
-                        toast.className = 'toast align-items-center text-white bg-danger border-0';
-                        toast.role = 'alert';
-                        toast.innerHTML = `<div class='d-flex'><div class='toast-body'>Erro ao limpar notificações!</div><button type='button' class='btn-close btn-close-white me-2 m-auto' data-bs-dismiss='toast'></button></div>`;
-                        document.body.appendChild(toast);
-                        new bootstrap.Toast(toast).show();
-                        setTimeout(() => toast.remove(), 4000);
+                    .catch(error => {
+                        console.error('Erro ao limpar notificações:', error);
+                        mostrarNotificacaoToast('Erro ao limpar notificações. Tente novamente.', 'error');
                     });
             };
         });

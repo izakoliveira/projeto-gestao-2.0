@@ -1,6 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
-from utils.auth import login_required, funcionalidade_restrita
+from utils.auth import login_required, funcionalidade_restrita, is_admin_session
 from utils.validators import normaliza_opcional
+from utils.email_notifications import (
+    notificar_tarefa_designada, 
+    notificar_tarefa_removida, 
+    notificar_status_alterado,
+    notificar_tarefa_concluida
+)
 from config.database import supabase, SUPABASE_URL, SUPABASE_KEY
 import requests
 from datetime import datetime
@@ -139,11 +145,33 @@ def editar_tarefa(tarefa_id):
                 return render_template('editar_tarefa.html', tarefa=tarefa, projeto=projeto)
         
         try:
-            # Atualizar tarefa
+            # Capturar valores antigos para notificação
+            old_usuario_id = tarefa.get('usuario_id') if tarefa else None
+            old_status = tarefa.get('status') if tarefa else None
+            projeto_id_ref = tarefa.get('projeto_id') if tarefa else None
+            nome_tarefa_ref = tarefa.get('nome') if tarefa else ''
+
+            # Verificar permissão para alterar o status: apenas o responsável (ou admin específico) pode
+            pode_alterar_status = False
+            try:
+                tarefa_existente_resp = supabase.table("tarefas").select("usuario_id").eq("id", str(tarefa_id)).single().execute()
+                tarefa_existente = tarefa_existente_resp.data if hasattr(tarefa_existente_resp, 'data') else None
+            except Exception:
+                tarefa_existente = None
+
+            usuario_id_sessao = session.get('user_id')
+            if is_admin_session():
+                pode_alterar_status = True
+            elif tarefa_existente and tarefa_existente.get('usuario_id') and usuario_id_sessao and str(tarefa_existente.get('usuario_id')) == str(usuario_id_sessao):
+                pode_alterar_status = True
+
+            # Montar payload base
             tarefa_data = {
                 "nome": nome,
-                "status": status
             }
+            # Só incluir status se houver permissão
+            if pode_alterar_status:
+                tarefa_data["status"] = status
             
             # Adicionar campos opcionais apenas se não forem None
             if data_inicio:
@@ -158,14 +186,124 @@ def editar_tarefa(tarefa_id):
                 tarefa_data["colecao"] = colecao
             if predecessoras:
                 tarefa_data["predecessoras"] = predecessoras
-            if usuario_id:
-                tarefa_data["usuario_id"] = usuario_id
+            # Sempre incluir usuario_id (pode ser None para remover designação)
+            tarefa_data["usuario_id"] = usuario_id
             
             print(f"[DEBUG] Dados para atualização: {tarefa_data}")
             
             resp = supabase.table("tarefas").update(tarefa_data).eq("id", str(tarefa_id)).execute()
             
             if resp.data:
+                # Notificações: designação/remocao de responsável e alteração de status
+                try:
+                    # Buscar informações do projeto para as notificações
+                    projeto_info = None
+                    try:
+                        projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id_ref)).single().execute()
+                        projeto_info = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+                    except Exception:
+                        pass
+                    
+                    projeto_nome = projeto_info.get('nome', 'Projeto') if projeto_info else 'Projeto'
+                    projeto_url = f"http://localhost:5000/projetos/{projeto_id_ref}"  # Ajustar URL base conforme necessário
+                    
+                    # Responsável alterado (designação ou remoção)
+                    if str(usuario_id) != str(old_usuario_id):
+                        # Buscar dados do novo usuário
+                        try:
+                            novo_usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                            novo_usuario = novo_usuario_resp.data if hasattr(novo_usuario_resp, 'data') else None
+                            
+                            if novo_usuario:
+                                # Notificação no sistema
+                                supabase.table('notificacoes').insert({
+                                    'usuario_id': str(usuario_id),
+                                    'mensagem': f"Você foi designado para a tarefa '{nome_tarefa_ref or nome}'",
+                                    'tipo': 'designacao',
+                                    'projeto_id': str(projeto_id_ref)
+                                }).execute()
+                                
+                                # Email para o novo responsável
+                                tarefa_info = {
+                                    'nome': nome_tarefa_ref or nome,
+                                    'projeto_nome': projeto_nome,
+                                    'data_inicio': data_inicio or 'Não definida',
+                                    'data_fim': data_fim or 'Não definida',
+                                    'duracao': duracao or 'Não definida',
+                                    'colecao': colecao or 'Não definida'
+                                }
+                                notificar_tarefa_designada(
+                                    novo_usuario['email'], 
+                                    novo_usuario['nome'], 
+                                    tarefa_info, 
+                                    projeto_url
+                                )
+                        except Exception as e:
+                            print(f"Erro ao notificar novo responsável: {e}")
+                        
+                        # Notificar usuário anterior se existir (sempre que houver mudança)
+                        if old_usuario_id and old_usuario_id != usuario_id:
+                            try:
+                                antigo_usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(old_usuario_id)).single().execute()
+                                antigo_usuario = antigo_usuario_resp.data if hasattr(antigo_usuario_resp, 'data') else None
+                                
+                                if antigo_usuario:
+                                    # Notificação no sistema
+                                    supabase.table('notificacoes').insert({
+                                        'usuario_id': str(old_usuario_id),
+                                        'mensagem': f"Você foi removido da tarefa '{nome_tarefa_ref or nome}'",
+                                        'tipo': 'remocao',
+                                        'projeto_id': str(projeto_id_ref)
+                                    }).execute()
+                                    
+                                    # Email para o usuário removido
+                                    tarefa_info = {
+                                        'nome': nome_tarefa_ref or nome,
+                                        'projeto_nome': projeto_nome
+                                    }
+                                    notificar_tarefa_removida(
+                                        antigo_usuario['email'], 
+                                        antigo_usuario['nome'], 
+                                        tarefa_info
+                                    )
+                            except Exception as e:
+                                print(f"Erro ao notificar usuário removido: {e}")
+                    
+                    # Status alterado
+                    if pode_alterar_status and status and status != old_status:
+                        destinatario_status = usuario_id or old_usuario_id
+                        if destinatario_status:
+                            try:
+                                # Buscar dados do usuário
+                                usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(destinatario_status)).single().execute()
+                                usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+                                
+                                if usuario:
+                                    # Notificação no sistema
+                                    supabase.table('notificacoes').insert({
+                                        'usuario_id': str(destinatario_status),
+                                        'mensagem': f"Status da tarefa '{nome_tarefa_ref or nome}' atualizado para '{status}'",
+                                        'tipo': 'conclusao' if status == 'concluída' else 'status',
+                                        'projeto_id': str(projeto_id_ref)
+                                    }).execute()
+                                    
+                                    # Email para o usuário
+                                    tarefa_info = {
+                                        'nome': nome_tarefa_ref or nome,
+                                        'projeto_nome': projeto_nome
+                                    }
+                                    notificar_status_alterado(
+                                        usuario['email'], 
+                                        usuario['nome'], 
+                                        tarefa_info, 
+                                        status, 
+                                        old_status, 
+                                        projeto_url
+                                    )
+                            except Exception as e:
+                                print(f"Erro ao notificar alteração de status: {e}")
+                except Exception as e:
+                    print(f"Erro geral nas notificações: {e}")
                 if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return jsonify({"sucesso": True})
                 else:
@@ -285,11 +423,70 @@ def atualizar_status_tarefa(tarefa_id, novo_status):
         return redirect('/projetos')
 
     try:
+        # Permissão: somente responsável ou admin específico pode alterar
+        usuario_id_sessao = session.get('user_id')
+        if not is_admin_session():
+            if not tarefa.get('usuario_id') or str(tarefa.get('usuario_id')) != str(usuario_id_sessao):
+                flash("Você não tem permissão para alterar o status desta tarefa.")
+                return redirect(f"/projetos/{tarefa['projeto_id']}")
+
         # Atualizar status da tarefa
         resp = supabase.table("tarefas").update({"status": novo_status}).eq("id", str(tarefa_id)).execute()
         
         if resp.data:
             flash(f"Status da tarefa atualizado para '{novo_status}'!")
+            # Notificação ao responsável
+            try:
+                responsavel = tarefa.get('usuario_id')
+                if responsavel:
+                    # Buscar dados do usuário responsável
+                    usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(responsavel)).single().execute()
+                    usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+                    
+                    if usuario:
+                        # Buscar informações do projeto
+                        projeto_info = None
+                        try:
+                            projeto_resp = supabase.table("projetos").select("nome").eq("id", str(tarefa.get('projeto_id'))).single().execute()
+                            projeto_info = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+                        except Exception:
+                            pass
+                        
+                        projeto_nome = projeto_info.get('nome', 'Projeto') if projeto_info else 'Projeto'
+                        projeto_url = f"http://localhost:5000/projetos/{tarefa.get('projeto_id')}"
+                        
+                        # Notificação no sistema
+                        supabase.table('notificacoes').insert({
+                            'usuario_id': str(responsavel),
+                            'mensagem': f"Status da tarefa '{tarefa.get('nome','')}' atualizado para '{novo_status}'",
+                            'tipo': 'conclusao' if novo_status == 'concluída' else 'status',
+                            'projeto_id': str(tarefa.get('projeto_id'))
+                        }).execute()
+                        
+                        # Email para o usuário
+                        tarefa_info = {
+                            'nome': tarefa.get('nome', ''),
+                            'projeto_nome': projeto_nome
+                        }
+                        
+                        if novo_status == 'concluída':
+                            notificar_tarefa_concluida(
+                                usuario['email'], 
+                                usuario['nome'], 
+                                tarefa_info, 
+                                projeto_url
+                            )
+                        else:
+                            notificar_status_alterado(
+                                usuario['email'], 
+                                usuario['nome'], 
+                                tarefa_info, 
+                                novo_status, 
+                                'pendente',  # Status anterior padrão
+                                projeto_url
+                            )
+            except Exception as e:
+                print(f"Erro ao notificar responsável: {e}")
         else:
             flash("Erro ao atualizar status da tarefa.")
     except Exception as e:
