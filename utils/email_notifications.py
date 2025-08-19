@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any
 import logging
 
-# Carregar variáveis de ambiente automaticamente
+# Carregar variáveis de ambiente
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -27,17 +27,28 @@ class EmailNotifier:
     """Classe para gerenciar envio de emails de notificação"""
     
     def __init__(self):
+        # Configurações padrão para desenvolvimento/produção
         self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
         self.smtp_user = os.getenv('SMTP_USER')
         self.smtp_pass = os.getenv('SMTP_PASS')
-        self.from_name = os.getenv('FROM_NAME', 'Sistema de Gestao de Projetos')
+        self.from_name = os.getenv('FROM_NAME', 'Sistema de Gestão')
         
-        # Verificar se as configurações de email estão disponíveis
+        # Verificar se as configurações essenciais estão disponíveis
         self.email_enabled = bool(self.smtp_user and self.smtp_pass)
         
         if not self.email_enabled:
-            logger.warning("Configuracoes de email nao encontradas. Notificacoes por email desabilitadas.")
+            logger.warning("Configurações de email não encontradas. Notificações por email desabilitadas.")
+            logger.info(f"SMTP_SERVER: {self.smtp_server}")
+            logger.info(f"SMTP_PORT: {self.smtp_port}")
+            logger.info(f"SMTP_USER: {'Configurado' if self.smtp_user else 'NÃO configurado'}")
+            logger.info(f"SMTP_PASS: {'Configurado' if self.smtp_pass else 'NÃO configurado'}")
+            logger.info(f"FROM_NAME: {self.from_name}")
+        else:
+            logger.info("Sistema de email configurado e habilitado!")
+            logger.info(f"Servidor: {self.smtp_server}:{self.smtp_port}")
+            logger.info(f"Usuário: {self.smtp_user}")
+            logger.info(f"De: {self.from_name}")
     
     def _get_email_template(self, template_name: str, **kwargs) -> str:
         """Retorna o template HTML do email baseado no nome"""
