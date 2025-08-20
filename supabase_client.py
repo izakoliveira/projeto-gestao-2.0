@@ -2,6 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
+# 🔧 TIMESTAMP: 2025-08-20 11:42 - Forçando rebuild no Render
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
