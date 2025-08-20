@@ -241,6 +241,15 @@
         text-align: left;
     }
 
+    /* Wrapper para permitir tooltip funcional em select desabilitado (mobile) */
+    .status-disabled-wrapper {
+        display: inline-block;
+    }
+
+    .status-disabled-wrapper select {
+        pointer-events: none;
+    }
+
     #tabela-tarefas-inline td,
     #tabela-tarefas-inline th {
         padding-left: 4px;
@@ -688,10 +697,16 @@
                                 <div class="card-body">
                                     <h6><i class="fas fa-calendar"></i> Período do Projeto:</h6>
                                     <p class="mb-1">
-                                        <strong>Início:</strong> {{ projeto.data_inicio }}
+                                        <strong>Início:</strong> {% if projeto.data_inicio %}{% if projeto.data_inicio
+                                        is string %}{% set __p = projeto.data_inicio.split('-') %}{{ __p[2] ~ '/' ~
+                                        __p[1] ~ '/' ~ __p[0] }}{% else %}{{ projeto.data_inicio.strftime('%d/%m/%Y')
+                                        }}{% endif %}{% else %}-{% endif %}
                                     </p>
                                     <p class="mb-0">
-                                        <strong>Término:</strong> {{ projeto.data_fim }}
+                                        <strong>Término:</strong> {% if projeto.data_fim %}{% if projeto.data_fim is
+                                        string %}{% set __p2 = projeto.data_fim.split('-') %}{{ __p2[2] ~ '/' ~ __p2[1]
+                                        ~ '/' ~ __p2[0] }}{% else %}{{ projeto.data_fim.strftime('%d/%m/%Y') }}{% endif
+                                        %}{% else %}-{% endif %}
                                     </p>
                                 </div>
                             </div>
@@ -772,23 +787,7 @@
         <h3><i class="fas fa-tasks"></i> Tarefas ({{ tarefas|length }})</h3>
 
         {% if tarefas %}
-        <!-- Cabeçalho fixo das colunas -->
-        <div class="table-header">
-            <div class="table-header-row">
-                <div class="header-cell">
-                    <i class="fas fa-calendar"></i> Datas
-                </div>
-                <div class="header-cell">
-                    <i class="fas fa-clock"></i> Duração
-                </div>
-                <div class="header-cell">
-                    <i class="fas fa-user"></i> Responsável
-                </div>
-                <div class="header-cell">
-                    <i class="fas fa-link"></i> Predecessoras
-                </div>
-            </div>
-        </div>
+
 
         <!-- Lista de tarefas -->
         {% if tarefas %}
@@ -882,6 +881,11 @@
                                 pode_editar_duracao %}disabled{% endif %}>
                         </td>
                         <td>
+                            {% set is_admin = (session.user_email == 'izak.gomes59@gmail.com' or session.user_id ==
+                            'd0d784bd-f2bb-44b2-8096-5c10ec4d57be') %}
+                            {% set is_responsavel = (tarefa.usuario_id and session.user_id and
+                            tarefa.usuario_id==session.user_id) %}
+                            {% if is_admin or is_responsavel %}
                             <select class="form-select form-select-sm" data-id="{{ tarefa.id }}" name="status">
                                 <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif %}>Pendente
                                 </option>
@@ -890,6 +894,21 @@
                                 <option value="concluída" {% if tarefa.status=='concluída' %}selected{% endif %}>
                                     Concluída</option>
                             </select>
+                            {% else %}
+                            <div class="status-disabled-wrapper" data-bs-toggle="tooltip" data-bs-trigger="click focus"
+                                data-bs-placement="top"
+                                title="Status só pode ser alterado pelo responsável ou administrador">
+                                <select class="form-select form-select-sm" data-id="{{ tarefa.id }}" name="status"
+                                    disabled>
+                                    <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif %}>
+                                        Pendente</option>
+                                    <option value="em progresso" {% if tarefa.status=='em progresso' %}selected{% endif
+                                        %}>Em Progresso</option>
+                                    <option value="concluída" {% if tarefa.status=='concluída' %}selected{% endif %}>
+                                        Concluída</option>
+                                </select>
+                            </div>
+                            {% endif %}
                         </td>
                         <td>
                             <select class="form-select form-select-sm" name="usuario_id" data-id="{{ tarefa.id }}" {% if
@@ -1124,6 +1143,12 @@
                 };
             });
         });
+
+        // Inicializar tooltips (para wrapper do select de status desabilitado no mobile)
+        if (window.bootstrap && document.querySelector('[data-bs-toggle="tooltip"]')) {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (tooltipTriggerEl) { new bootstrap.Tooltip(tooltipTriggerEl); });
+        }
 
         // Gráfico Gantt simples (se houver dados)
         {% if gantt_geral_data %}
@@ -1761,48 +1786,19 @@
     function tarefaAtrasada(tarefa) {
         // Usar apenas a data (sem hora) para comparação
         const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0); // Zerar hora, minuto, segundo e milissegundos
+        hoje.setHours(0, 0, 0, 0); // Zerar hora
         const status = tarefa.status?.toLowerCase();
         const dataFim = tarefa.end;
-        const dataInicio = tarefa.start;
 
-        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim, 'Data início:', dataInicio);
+        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim);
 
-        // LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
-        if (status === 'pendente' && dataInicio) {
-            try {
-                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
-                dataInicioObj.setHours(0, 0, 0, 0);
-                if (dataInicioObj < hoje) {
-                    console.log('✅ Tarefa atrasada: data início passada');
-                    return true;
-                }
-            } catch (e) {
-                console.error('Erro ao processar data início:', e);
-            }
-        }
-
-        // LÓGICA 2: Tarefa em progresso com data de fim passada (excluindo hoje)
-        if ((status === 'em progresso' || status === 'em_progresso') && dataFim) {
+        // ÚNICA LÓGICA: Tarefa não concluída com data de fim passada (excluindo hoje)
+        if (dataFim) {
             try {
                 const dataFimObj = new Date(dataFim + 'T00:00:00');
                 dataFimObj.setHours(0, 0, 0, 0);
-                if (dataFimObj < hoje) {
+                if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') {
                     console.log('✅ Tarefa atrasada: data fim passada');
-                    return true;
-                }
-            } catch (e) {
-                console.error('Erro ao processar data fim:', e);
-            }
-        }
-
-        // LÓGICA 3: Tarefa pendente com data de fim passada (excluindo hoje)
-        if (status === 'pendente' && dataFim) {
-            try {
-                const dataFimObj = new Date(dataFim + 'T00:00:00');
-                dataFimObj.setHours(0, 0, 0, 0);
-                if (dataFimObj < hoje) {
-                    console.log('✅ Tarefa atrasada: data fim passada (pendente)');
                     return true;
                 }
             } catch (e) {

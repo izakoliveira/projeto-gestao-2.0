@@ -1,4 +1,9 @@
 from datetime import datetime
+import os
+try:
+    from zoneinfo import ZoneInfo  # Python 3.9+
+except Exception:  # Fallback para ambientes sem zoneinfo
+    ZoneInfo = None
 
 def validar_projeto(nome, data_inicio, data_fim):
     """
@@ -73,27 +78,30 @@ def verificar_tarefa_atrasada(tarefa):
     """
     status = tarefa.get('status', '').lower()
     data_fim = tarefa.get('data_fim') or tarefa.get('data_fim_tarefa')
-    data_inicio = tarefa.get('data_inicio') or tarefa.get('data_inicio_tarefa')
-    
-    # Usar apenas a data (sem hora) para comparação
-    hoje = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Atraso é calculado apenas pela data de fim; data de início não torna a tarefa atrasada
+    # para evitar falsos positivos no dia final do prazo
+
+    # Usar apenas a data (sem hora) para comparação e respeitar o fuso horário da aplicação
+    # Para evitar marcar como atrasada antes da virada de dia no fuso local
+    try:
+        tz_name = os.getenv('APP_TZ', 'America/Sao_Paulo')
+        if ZoneInfo is not None:
+            hoje_data = datetime.now(ZoneInfo(tz_name)).date()
+        else:
+            hoje_data = datetime.now().date()
+    except Exception:
+        hoje_data = datetime.now().date()
     
     # LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
-    if status == 'pendente' and data_inicio:
-        try:
-            data_inicio_obj = datetime.strptime(data_inicio.split('T')[0], '%Y-%m-%d')
-            if data_inicio_obj < hoje:  # Apenas datas ANTERIORES a hoje
-                return True
-        except:
-            pass
+    # Removido: não considerar data de início para marcar atraso
     
     # LÓGICA 2: Tarefa não concluída com data de fim passada (excluindo hoje)
     if data_fim:
         try:
-            data_fim_obj = datetime.strptime(data_fim.split('T')[0], '%Y-%m-%d')
-            if data_fim_obj < hoje and status not in ['concluída', 'concluida']:  # Apenas datas ANTERIORES a hoje
+            data_fim_obj = datetime.strptime(data_fim.split('T')[0], '%Y-%m-%d').date()
+            if data_fim_obj < hoje_data and status not in ['concluída', 'concluida']:  # Apenas datas ANTERIORES a hoje
                 return True
-        except:
+        except Exception:
             pass
     
     return False

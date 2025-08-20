@@ -165,10 +165,16 @@
                                 <div class="card-body">
                                     <h6><i class="fas fa-calendar"></i> Período do Projeto:</h6>
                                     <p class="mb-1">
-                                        <strong>Início:</strong> {{ projeto.data_inicio }}
+                                        <strong>Início:</strong> {% if projeto.data_inicio %}{% if projeto.data_inicio
+                                        is string %}{% set __p = projeto.data_inicio.split('-') %}{{ __p[2] ~ '/' ~
+                                        __p[1] ~ '/' ~ __p[0] }}{% else %}{{ projeto.data_inicio.strftime('%d/%m/%Y')
+                                        }}{% endif %}{% else %}-{% endif %}
                                     </p>
                                     <p class="mb-0">
-                                        <strong>Término:</strong> {{ projeto.data_fim }}
+                                        <strong>Término:</strong> {% if projeto.data_fim %}{% if projeto.data_fim is
+                                        string %}{% set __p2 = projeto.data_fim.split('-') %}{{ __p2[2] ~ '/' ~ __p2[1]
+                                        ~ '/' ~ __p2[0] }}{% else %}{{ projeto.data_fim.strftime('%d/%m/%Y') }}{% endif
+                                        %}{% else %}-{% endif %}
                                     </p>
                                 </div>
                             </div>
@@ -287,7 +293,10 @@
                                     </td>
                                     <td>
                                         <select class="form-select form-select-sm" data-id="{{ tarefa.id }}"
-                                            name="status">
+                                            name="status" {% if not (is_admin or (tarefa.usuario_id and session.user_id
+                                            and tarefa.usuario_id==session.user_id)) %}disabled
+                                            title="Status só pode ser alterado pelo responsável pela tarefa" {% endif
+                                            %}>
                                             <option value="pendente" {% if tarefa.status=='pendente' %}selected{% endif
                                                 %}>Pendente</option>
                                             <option value="em progresso" {% if tarefa.status=='em progresso'
@@ -1007,23 +1016,10 @@
         hoje.setHours(0, 0, 0, 0); // Zerar hora, minuto, segundo e milissegundos
         const status = tarefa.status?.toLowerCase();
         const dataFim = tarefa.end;
-        const dataInicio = tarefa.start;
 
-        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim, 'Data início:', dataInicio);
+        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim);
 
-        // LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
-        if (status === 'pendente' && dataInicio) {
-            try {
-                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
-                if (dataInicioObj < hoje) { // Apenas datas ANTERIORES a hoje
-                    return true;
-                }
-            } catch (e) {
-                // Ignorar erro de parsing
-            }
-        }
-
-        // LÓGICA 2: Tarefa não concluída com data de fim passada (excluindo hoje)
+        // ÚNICA LÓGICA: Tarefa não concluída com data de fim passada (excluindo hoje)
         if (dataFim) {
             try {
                 const dataFimObj = new Date(dataFim + 'T00:00:00');
