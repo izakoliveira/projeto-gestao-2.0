@@ -24,6 +24,13 @@ def get_user_by_email(email):
         return resp.json()[0]
     return None
 
+def get_user_by_id(user_id: str):
+    url = f"{SUPABASE_URL}/rest/v1/{USERS_TABLE}?id=eq.{user_id}"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200 and resp.json():
+        return resp.json()[0]
+    return None
+
 def create_user(nome, email, senha_hash):
     url = f"{SUPABASE_URL}/rest/v1/{USERS_TABLE}"
     data = {
