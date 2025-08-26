@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
-from utils.auth import login_required, funcionalidade_restrita, is_admin_session
+from utils.auth import login_required, funcionalidade_restrita, is_admin_session, carregar_restricoes
 from utils.validators import normaliza_opcional
 from utils.email_notifications import (
     notificar_tarefa_designada, 
@@ -568,3 +568,147 @@ def atualizar_campo_tarefa(tarefa_id):
     except Exception as e:
         print(f"[ERRO] Erro ao atualizar campo da tarefa: {e}")
         return jsonify({"success": False, "error": f"Erro interno: {str(e)}"}), 500
+
+@tarefas_bp.route('/tarefas/atualizar_ordem', methods=['POST'])
+@login_required
+def atualizar_ordem_tarefas():
+    """Atualiza a ordem das tarefas via AJAX"""
+    try:
+        # Verificar se é uma requisição AJAX
+        if not request.is_json:
+            return jsonify({"success": False, "error": "Requisição deve ser JSON"}), 400
+        
+        data = request.get_json()
+        ids = data.get('ids', [])
+        
+        if not ids:
+            return jsonify({"success": False, "error": "Lista de IDs não fornecida"}), 400
+        
+        # Verificar se o usuário tem permissão para editar tarefas
+        restricoes = carregar_restricoes()
+        usuario_id = session.get('user_id')
+        restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+        
+        # Verificar se é o usuário izak (acesso total)
+        is_izak = (session.get('user_email') == 'izak.gomes59@gmail.com' or 
+                   usuario_id == 'd0d784bd-f2bb-44b2-8096-5c10ec4d57be')
+        
+        if not is_izak and restricoes_usuario.get('restr_editar_tarefa', False):
+            return jsonify({"success": False, "error": "Sem permissão para editar tarefas"}), 403
+        
+        # Atualizar a ordem de cada tarefa
+        for idx, tarefa_id in enumerate(ids):
+            try:
+                # Verificar se a tarefa pertence a um projeto do usuário ou se tem permissão
+                tarefa_resp = supabase.table("tarefas").select("projeto_id, usuario_id").eq("id", str(tarefa_id)).single().execute()
+                tarefa = tarefa_resp.data if hasattr(tarefa_resp, 'data') else None
+                
+                if not tarefa:
+                    continue
+                
+                # Verificar permissões
+                projeto_id = tarefa.get('projeto_id')
+                if projeto_id:
+                    # Verificar se é dono do projeto
+                    projeto_resp = supabase.table("projetos").select("usuario_id").eq("id", str(projeto_id)).single().execute()
+                    projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+                    
+                    if projeto and str(projeto.get('usuario_id')) == str(usuario_id):
+                        # É dono do projeto, pode editar
+                        pass
+                    else:
+                        # Verificar se tem permissão de visualização
+                        try:
+                            permissao_resp = supabase.table("projetos_usuarios_visiveis").select("*").eq("projeto_id", str(projeto_id)).eq("usuario_id", str(usuario_id)).execute()
+                            if not permissao_resp.data:
+                                continue  # Pular esta tarefa se não tiver permissão
+                        except Exception:
+                            continue  # Pular esta tarefa se não tiver permissão
+                
+                # Atualizar a ordem da tarefa
+                nova_ordem = idx + 1
+                supabase.table("tarefas").update({"ordem": nova_ordem}).eq("id", str(tarefa_id)).execute()
+                
+            except Exception as e:
+                print(f"Erro ao atualizar ordem da tarefa {tarefa_id}: {e}")
+                continue
+        
+        return jsonify({"success": True, "message": "Ordem das tarefas atualizada com sucesso"})
+        
+    except Exception as e:
+        print(f"[ERRO] Erro ao atualizar ordem das tarefas: {e}")
+        return jsonify({"success": False, "error": f"Erro interno: {str(e)}"}), 500
+
+@tarefas_bp.route('/tarefas/atualizar_ordem_individual', methods=['POST'])
+@login_required
+def atualizar_ordem_individual():
+    """Atualiza a ordem de uma tarefa individual via AJAX"""
+    try:
+        # Verificar se é uma requisição AJAX
+        if not request.is_json:
+            return jsonify({"sucesso": False, "erro": "Requisição deve ser JSON"}), 400
+        
+        data = request.get_json()
+        tarefa_id = data.get('tarefa_id')
+        nova_ordem = data.get('nova_ordem')
+        
+        if not tarefa_id or nova_ordem is None:
+            return jsonify({"sucesso": False, "erro": "ID da tarefa e nova ordem são obrigatórios"}), 400
+        
+        # Validar que a nova ordem é um número positivo
+        try:
+            nova_ordem = int(nova_ordem)
+            if nova_ordem < 1:
+                return jsonify({"sucesso": False, "erro": "A ordem deve ser um número positivo"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"sucesso": False, "erro": "A ordem deve ser um número válido"}), 400
+        
+        # Verificar se o usuário tem permissão para editar tarefas
+        restricoes = carregar_restricoes()
+        usuario_id = session.get('user_id')
+        restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+        
+        # Verificar se é o usuário izak (acesso total)
+        is_izak = (session.get('user_email') == 'izak.gomes59@gmail.com' or 
+                   usuario_id == 'd0d784bd-f2bb-44b2-8096-5c10ec4d57be')
+        
+        if not is_izak and restricoes_usuario.get('restr_editar_tarefa', False):
+            return jsonify({"sucesso": False, "erro": "Sem permissão para editar tarefas"}), 403
+        
+        # Verificar se a tarefa existe e se o usuário tem permissão
+        tarefa_resp = supabase.table("tarefas").select("projeto_id, usuario_id").eq("id", str(tarefa_id)).single().execute()
+        tarefa = tarefa_resp.data if hasattr(tarefa_resp, 'data') else None
+        
+        if not tarefa:
+            return jsonify({"sucesso": False, "erro": "Tarefa não encontrada"}), 404
+        
+        # Verificar permissões
+        projeto_id = tarefa.get('projeto_id')
+        if projeto_id:
+            # Verificar se é dono do projeto
+            projeto_resp = supabase.table("projetos").select("usuario_id").eq("id", str(projeto_id)).single().execute()
+            projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+            
+            if projeto and str(projeto.get('usuario_id')) == str(usuario_id):
+                # É dono do projeto, pode editar
+                pass
+            else:
+                # Verificar se tem permissão de visualização
+                try:
+                    permissao_resp = supabase.table("projetos_usuarios_visiveis").select("*").eq("projeto_id", str(projeto_id)).eq("usuario_id", str(usuario_id)).execute()
+                    if not permissao_resp.data:
+                        return jsonify({"sucesso": False, "erro": "Sem permissão para editar esta tarefa"}), 403
+                except Exception:
+                    return jsonify({"sucesso": False, "erro": "Sem permissão para editar esta tarefa"}), 403
+        
+        # Atualizar a ordem da tarefa
+        resp = supabase.table("tarefas").update({"ordem": nova_ordem}).eq("id", str(tarefa_id)).execute()
+        
+        if resp.data:
+            return jsonify({"sucesso": True, "message": "Ordem da tarefa atualizada com sucesso"})
+        else:
+            return jsonify({"sucesso": False, "erro": "Erro ao atualizar ordem da tarefa"}), 500
+        
+    except Exception as e:
+        print(f"[ERRO] Erro ao atualizar ordem individual da tarefa: {e}")
+        return jsonify({"sucesso": False, "erro": f"Erro interno: {str(e)}"}), 500

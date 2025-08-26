@@ -304,6 +304,9 @@
         </div>
     </footer>
 
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Removido script de dark mode -->
@@ -534,6 +537,28 @@
             navigator.serviceWorker.register('/static/service-worker.js')
                 .then(function (reg) { console.log('Service worker registrado!', reg); })
                 .catch(function (err) { console.log('Erro ao registrar service worker:', err); });
+        }
+    </script>
+
+    <!-- Sistema de Logging Configurável -->
+    <script src="{{ url_for('static', filename='js/logger.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/log-config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/log-panel.js') }}"></script>
+
+    <!-- Sistema de Drag & Drop para Tarefas -->
+    <script src="{{ url_for('static', filename='js/sortable-tarefas.js') }}"></script>
+    <script>
+        // Configurar logs baseado no ambiente
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Em desenvolvimento, logs detalhados por padrão
+            if (!localStorage.getItem('logLevel')) {
+                localStorage.setItem('logLevel', 'debug');
+            }
+        } else {
+            // Em produção, logs mínimos por padrão
+            if (!localStorage.getItem('logLevel')) {
+                localStorage.setItem('logLevel', 'warn');
+            }
         }
     </script>
 </body>

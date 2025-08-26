@@ -12,6 +12,55 @@
         border-left: 5px solid #dc2626 !important;
     }
 
+    /* Estilos responsivos para a coluna Nome */
+    .col-nome-responsiva {
+        min-width: 200px;
+        max-width: none;
+        width: auto;
+    }
+
+    .td-nome-responsiva {
+        min-width: 200px;
+        max-width: none;
+        width: auto;
+    }
+
+    .input-nome-responsivo {
+        min-width: 180px;
+        max-width: none;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Responsividade para telas menores */
+    @media (max-width: 1200px) {
+        .col-nome-responsiva {
+            min-width: 150px;
+        }
+
+        .td-nome-responsiva {
+            min-width: 150px;
+        }
+
+        .input-nome-responsivo {
+            min-width: 130px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .col-nome-responsiva {
+            min-width: 120px;
+        }
+
+        .td-nome-responsiva {
+            min-width: 120px;
+        }
+
+        .input-nome-responsivo {
+            min-width: 100px;
+        }
+    }
+
     .tarefa-atrasada td {
         background-color: #ffe6e6 !important;
     }
@@ -119,7 +168,231 @@
         border-color: #ffc107 !important;
         box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
     }
+
+    /* Coluna Responsável - responsiva */
+    col.col-responsavel {
+        width: auto !important;
+    }
+
+    th.col-responsavel,
+    td.col-responsavel {
+        max-width: 280px;
+    }
+
+    td.col-responsavel select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    @media (max-width: 992px) {
+
+        th.col-responsavel,
+        td.col-responsavel {
+            max-width: 220px;
+        }
+
+        col.col-responsavel {
+            width: 220px !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+
+        th.col-responsavel,
+        td.col-responsavel {
+            max-width: 180px;
+        }
+
+        col.col-responsavel {
+            width: 180px !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+
+        th.col-responsavel,
+        td.col-responsavel {
+            max-width: 150px;
+        }
+
+        col.col-responsavel {
+            width: 150px !important;
+        }
+    }
+
+    @media (min-width: 1600px) {
+        .tabela-tarefas-wrap {
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+
+    /* Coluna fixa para Tarefa no Gantt (igual à tela de projetos) */
+    #gantt-custom th:first-child,
+    #gantt-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 50;
+        width: 480px;
+        min-width: 480px;
+        max-width: 480px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Estilos da legenda igual à tela de projetos */
+    .legend-item:hover {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: #dee2e6;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    #tabela-tarefas-inline td.drag-handle {
+        cursor: grab;
+        text-align: center;
+        font-size: 1.3em;
+        color: #888;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        touch-action: none;
+        -webkit-touch-callout: none;
+        pointer-events: auto !important;
+    }
+
+    #tabela-tarefas-inline td.drag-handle:active {
+        cursor: grabbing;
+    }
+
+    #tabela-tarefas-inline td.drag-handle:hover {
+        color: #555;
+        background-color: #f8f9fa;
+    }
+
+    /* Classes do SortableJS */
+    .sortable-ghost {
+        opacity: 0.5;
+        background: #c8e6c9 !important;
+    }
+
+    .sortable-chosen {
+        background: #e3f2fd !important;
+    }
+
+    .sortable-drag {
+        opacity: 0.8;
+        background: #fff3e0 !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
 </style>
+
+<!-- TESTE SIMPLES DE JAVASCRIPT -->
+<script>
+    // jQuery mock movido para antes do Select2
+
+    console.log('🚨 TESTE SIMPLES - ESTE SCRIPT ESTÁ SENDO EXECUTADO!');
+    console.log('🚨 Data/Hora:', new Date().toLocaleString());
+    console.log('🚨 URL da página:', window.location.href);
+    console.log('🚨 jQuery disponível:', typeof $);
+    console.log('🚨 window.jQuery disponível:', typeof window.jQuery);
+
+    // FUNÇÃO DE TESTE BÁSICA - DEFINIDA IMEDIATAMENTE
+    window.testeExclusaoBasico = function () {
+        console.log('🧪 [BÁSICO] Teste básico de exclusão...');
+
+        const botoes = document.querySelectorAll('.btn-excluir-tarefa');
+        console.log('🔍 [BÁSICO] Botões encontrados:', botoes.length);
+
+        if (botoes.length > 0) {
+            const primeiroBtn = botoes[0];
+            const tarefaId = primeiroBtn.getAttribute('data-tarefa-id');
+            console.log('🔍 [BÁSICO] Primeira tarefa ID:', tarefaId);
+
+            if (confirm('TESTE BÁSICO: Excluir tarefa ' + tarefaId + '?')) {
+                primeiroBtn.disabled = true;
+                primeiroBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                fetch('/tarefas/excluir/' + tarefaId, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.sucesso) {
+                            primeiroBtn.closest('tr').remove();
+                            alert('✅ Tarefa excluída!');
+                        } else {
+                            alert('❌ Erro: ' + data.erro);
+                            primeiroBtn.disabled = false;
+                            primeiroBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                        }
+                    })
+                    .catch(err => {
+                        alert('❌ Erro: ' + err);
+                        primeiroBtn.disabled = false;
+                        primeiroBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    });
+            }
+        } else {
+            console.log('❌ [BÁSICO] Nenhum botão encontrado');
+        }
+
+        return { sistema: 'BASICO', botoes: botoes.length };
+    };
+
+    console.log('✅ Função testeExclusaoBasico() definida!');
+</script>
+
+<!-- jQuery Mock ANTES do Select2 -->
+<script>
+    // CORREÇÃO CRITICAL: Verificar e definir jQuery ANTES do Select2
+    if (typeof $ === 'undefined') {
+        console.warn('⚠️ [CRÍTICO] jQuery não está disponível, criando mock...');
+        // Definir $ como função mock mais completa
+        window.$ = function (selector) {
+            console.warn('⚠️ jQuery mock chamado com:', selector);
+            const mockElement = {
+                on: function () { return this; },
+                off: function () { return this; },
+                data: function () { return null; },
+                select2: function () { return this; },
+                val: function () { return ''; },
+                ready: function (fn) {
+                    if (typeof fn === 'function') {
+                        console.warn('⚠️ $(document).ready() executado via mock');
+                        setTimeout(fn, 100);
+                    }
+                    return this;
+                }
+            };
+            return mockElement;
+        };
+        window.$.fn = { jquery: 'mock' };
+        // Tornar $(document).ready funcional
+        window.$.ready = function (fn) {
+            if (typeof fn === 'function') {
+                setTimeout(fn, 100);
+            }
+        };
+        window.$ = Object.assign(window.$, { ready: window.$.ready });
+    }
+</script>
+
+<!-- Select2 JS (jQuery já carregado no base.html) -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 {% set numero_para_id = {} %}
 {% for t in tarefas %}
@@ -187,6 +460,11 @@
                     <div class="d-flex justify-content-between align-items-center mb-0" style="min-height:44px;">
                         <h5 class="mb-0"><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
                         <div class="d-flex align-items-center p-0" style="gap: 8px;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-toggle-tarefas"
+                                onclick="toggleTarefas()" title="Expandir/Colapsar lista de tarefas">
+                                <i class="fas fa-expand-alt" id="icon-toggle-tarefas"></i>
+                                <span id="text-toggle-tarefas">Expandir</span>
+                            </button>
                             {% if pode_editar_projeto %}
                             <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}"
                                 class="btn btn-warning m-0">
@@ -199,7 +477,7 @@
                         </div>
                     </div>
                     {% if tarefas %}
-                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    <div class="table-responsive tabela-tarefas-wrap" style="max-height: 350px; overflow-y: auto;">
                         <table class="table table-hover w-100" id="tabela-tarefas-inline" style="font-size: 0.95em;">
                             <colgroup>
                                 <col style="width: 32px;">
@@ -218,15 +496,16 @@
                                 {% endif %}
                                 {% set nome_width = nome_width + (removed_width // 2) %}
                                 {% set responsavel_width = responsavel_width + (removed_width - (removed_width // 2)) %}
-                                <col style="width: {{ nome_width }}px;">
+                                <col class="col-nome-responsiva">
                                 {% if pode_editar_predecessoras %}
                                 <col style="width: 120px;"> {# Predecessoras #}
                                 {% endif %}
-                                <col> {# Data Início #}
-                                <col> {# Data Término #}
+                                <col style="width: 110px;"> {# Data Início #}
+                                <col style="width: 110px;"> {# Data Término #}
                                 <col style="width: 55px;"> {# Duração (fixa, nunca removida) #}
-                                <col> {# Status #}
-                                <col style="width: {{ responsavel_width }}px;"> {# Responsável #}
+                                <col style="width: 130px;"> {# Status #}
+                                <col class="col-responsavel" style="width: {{ responsavel_width }}px;"> {# Responsável
+                                #}
                                 {% if pode_editar_tarefa or pode_excluir_tarefa %}
                                 <col style="width: 100px;"> {# Ações #}
                                 {% endif %}
@@ -243,7 +522,7 @@
                                     <th>Data Término</th>
                                     <th>Duração (dias)</th>
                                     <th>Status</th>
-                                    <th>Responsável</th>
+                                    <th class="col-responsavel">Responsável</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -254,15 +533,17 @@
                                     %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: #333;"
                                     {% endif %}>
                                     <td class="drag-handle"
-                                        style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
+                                        style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
                                         &#9776;</td>
                                     <td class="numero-tarefa" contenteditable="true" data-id="{{ tarefa.id }}"
                                         style="cursor: pointer; text-align: center; font-weight: bold; padding: 0 !important; min-width: 30px; max-width: 40px;"
                                         onblur="atualizarOrdemTarefa(this)" onkeydown="handleOrdemKeydown(event, this)"
                                         title="Clique para editar a ordem">{{ tarefa.ordem or '' }}</td>
-                                    <td><input type="text" class="form-control form-control-sm"
+                                    <td class="td-nome-responsiva">
+                                        <input type="text" class="form-control form-control-sm input-nome-responsivo"
                                             value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome" {% if not
-                                            pode_editar_nome_tarefa %}disabled{% endif %}></td>
+                                            pode_editar_nome_tarefa %}disabled{% endif %}>
+                                    </td>
                                     {% if pode_editar_predecessoras %}
                                     <td class="predecessoras-td">
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-predecessora"
@@ -287,7 +568,7 @@
                                             onblur="onDuracaoOuFimEdit(this, true)" {% if not pode_editar_data_termino
                                             %}disabled{% endif %}></td>
                                     <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
-                                            value="{{ tarefa.duracao or '' }}" oninput="onDuracaoOuFimEdit(this)"
+                                            value="" oninput="onDuracaoOuFimEdit(this)"
                                             onblur="onDuracaoOuFimEdit(this, true)" onkeyup="onDuracaoOuFimEdit(this)"
                                             {% if not pode_editar_duracao %}disabled{% endif %}>
                                     </td>
@@ -305,7 +586,7 @@
                                                 endif %}>Concluída</option>
                                         </select>
                                     </td>
-                                    <td>
+                                    <td class="col-responsavel">
                                         <select class="form-select form-select-sm" name="usuario_id"
                                             data-id="{{ tarefa.id }}" {% if not pode_editar_responsavel %}disabled{%
                                             endif %}>
@@ -337,7 +618,7 @@
                                 <tr id="linha-nova-tarefa">
                                     <td></td>
                                     <td></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="nome"
+                                    <td> <input type="text" class="form-control form-control-sm" name="nome"
                                             placeholder="Nova tarefa" {% if not pode_editar_nome_tarefa %}disabled{%
                                             endif %}></td>
                                     {% if pode_editar_predecessoras %}
@@ -365,7 +646,7 @@
                                             <option value="concluída">Concluída</option>
                                         </select>
                                     </td>
-                                    <td>
+                                    <td class="col-responsavel">
                                         <select class="form-select form-select-sm" name="usuario_id">
                                             <option value="">Sem responsável</option>
                                             {% for usuario in usuarios %}
@@ -430,12 +711,15 @@
                                     </div>
                                 </div>
                                 <div id="gantt-cronograma-area" style="position: relative;">
+                                    <div id="gantt-cursor-line" class="gantt-cursor-line"></div>
                                     <div id="gantt-hoje-container"></div>
+                                    <div id="gantt-date-header" style="height: 19px;">
+                                    </div>
                                     <table style="border-collapse: collapse; width: 100%;">
                                         <thead>
                                             <tr>
                                                 <th
-                                                    style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                                    style="width: 480px; min-width: 480px; max-width: 480px; text-align: left; padding: 8px;">
                                                     Tarefa
                                                 </th>
                                             </tr>
@@ -447,16 +731,21 @@
                                 </div>
                             </div>
                             <!-- Legenda colorida por projeto -->
-                            <div class="legend mt-2"
-                                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                            <div class="legend mt-3"
+                                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                                <div style="width: 100%; text-align: center; margin-bottom: 12px;">
+                                    <h6 style="margin: 0; color: #495057; font-weight: 600;">
+                                        <i class="fas fa-palette"></i> Cores dos Projetos
+                                    </h6>
+                                </div>
                                 {% for projeto, cor in projects_colors.items() %}
                                 <div class="legend-item"
-                                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease; border: 1px solid transparent;"
                                     data-projeto="{{ projeto }}">
                                     <div class="legend-color"
-                                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};">
+                                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }}; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                     </div>
-                                    <span>{{ projeto }}</span>
+                                    <span style="font-weight: 500;">{{ projeto }}</span>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -658,9 +947,9 @@
         left: 0;
         background: #fff;
         z-index: 50;
-        width: 320px;
-        min-width: 320px;
-        max-width: 320px;
+        width: 480px;
+        min-width: 480px;
+        max-width: 480px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -689,10 +978,18 @@
 
     #gantt-cronograma-area {
         position: relative;
+        min-height: 200px;
+        border: 1px solid #dee2e6;
+        background: #fff;
     }
 
     .gantt-row-compact {
         height: 16px !important;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .gantt-row-compact:hover {
+        background-color: #f8f9fa;
     }
 
     .gantt-bar-compact {
@@ -700,6 +997,8 @@
         line-height: 18px !important;
         font-size: 11px !important;
         top: 2px !important;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .gantt-tooltip-detalhado {
@@ -750,6 +1049,8 @@
         padding-top: 2px !important;
         padding-bottom: 2px !important;
         font-size: 13px !important;
+        border: 1px solid #f0f0f0;
+        vertical-align: middle;
     }
 
     .gantt-h-linha {
@@ -766,8 +1067,21 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         z-index: 20;
         opacity: 1 !important;
-        border: none !important;
     }
+
+    /* Linha vertical que segue o cursor no Gantt */
+    .gantt-cursor-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 15;
+        pointer-events: none;
+        display: none;
+    }
+
+
 
     .gantt-bar-compact.apagada {
         opacity: 0.25 !important;
@@ -955,6 +1269,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
     window.ganttData = {{ gantt_geral_data | tojson | safe }};
+    console.log('📊 Dados do Gantt carregados:', window.ganttData);
 </script>
 
 <script>
@@ -972,24 +1287,55 @@
 
     // Função utilitária para agrupar tarefas por nome
     function agruparTarefasPorNome(tarefas) {
+        console.log('🔧 Agrupando tarefas por nome:', tarefas);
         const grupos = {};
         tarefas.forEach(tarefa => {
             if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
             grupos[tarefa.name].push(tarefa);
         });
+        console.log('📦 Grupos criados:', grupos);
         return grupos;
+    }
+
+    // Função para expandir/colapsar lista de tarefas
+    function toggleTarefas() {
+        const tabelaWrap = document.querySelector('.tabela-tarefas-wrap');
+        const btnToggle = document.getElementById('btn-toggle-tarefas');
+        const iconToggle = document.getElementById('icon-toggle-tarefas');
+        const textToggle = document.getElementById('text-toggle-tarefas');
+
+        if (tabelaWrap.style.maxHeight === '350px' || !tabelaWrap.style.maxHeight) {
+            // Expandir
+            tabelaWrap.style.maxHeight = 'none';
+            tabelaWrap.style.overflowY = 'visible';
+            iconToggle.className = 'fas fa-compress-alt';
+            textToggle.textContent = 'Colapsar';
+            btnToggle.classList.remove('btn-outline-secondary');
+            btnToggle.classList.add('btn-secondary');
+        } else {
+            // Colapsar
+            tabelaWrap.style.maxHeight = '350px';
+            tabelaWrap.style.overflowY = 'auto';
+            iconToggle.className = 'fas fa-expand-alt';
+            textToggle.textContent = 'Expandir';
+            btnToggle.classList.remove('btn-secondary');
+            btnToggle.classList.add('btn-outline-secondary');
+        }
     }
 
     // Função para obter datas mínimas e máximas
     function obterPeriodo(tarefas) {
+        console.log('🔧 Obtendo período das tarefas:', tarefas);
         let min = null, max = null;
         tarefas.forEach(t => {
             // Criar datas no fuso horário local para evitar problemas de UTC
             const ini = new Date(t.start + 'T00:00:00');
             const fim = new Date(t.end + 'T00:00:00');
+            console.log('📅 Tarefa:', t.name, 'Início:', ini, 'Fim:', fim);
             if (!min || ini < min) min = ini;
             if (!max || fim > max) max = fim;
         });
+        console.log('📊 Período calculado - Min:', min, 'Max:', max);
         return { min, max };
     }
 
@@ -998,15 +1344,25 @@
         // Usar datas no fuso horário local para cálculo preciso
         const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
         const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
-        return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
+        const dias = Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
+        console.log('🔧 Calculando dias entre:', dataA, 'e', dataB, '=', dias);
+        return dias;
     }
 
     // Função para cor de status
     function corStatus(tarefa) {
-        if (tarefa.bar_color) return tarefa.bar_color;
-        if (tarefa.status === 'concluída') return '#28a745';
-        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
-        return '#ffc107';
+        let cor;
+        if (tarefa.bar_color) {
+            cor = tarefa.bar_color;
+        } else if (tarefa.status === 'concluída') {
+            cor = '#28a745';
+        } else if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') {
+            cor = '#17a2b8';
+        } else {
+            cor = '#ffc107';
+        }
+        console.log('🎨 Cor para tarefa:', tarefa.name, 'Status:', tarefa.status, 'Cor:', cor);
+        return cor;
     }
 
     // Função para verificar se tarefa está atrasada
@@ -1017,16 +1373,19 @@
         const status = tarefa.status?.toLowerCase();
         const dataFim = tarefa.end;
 
-        console.log('Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim);
+        console.log('🔍 Verificando tarefa:', tarefa.name, 'Status:', status, 'Data fim:', dataFim);
 
         // ÚNICA LÓGICA: Tarefa não concluída com data de fim passada (excluindo hoje)
         if (dataFim) {
             try {
                 const dataFimObj = new Date(dataFim + 'T00:00:00');
-                if (dataFimObj < hoje && status !== 'concluída' && status !== 'concluida') { // Apenas datas ANTERIORES a hoje
+                const atrasada = dataFimObj < hoje && status !== 'concluída' && status !== 'concluida';
+                console.log('📅 Tarefa:', tarefa.name, 'Data fim obj:', dataFimObj, 'Hoje:', hoje, 'Atrasada:', atrasada);
+                if (atrasada) { // Apenas datas ANTERIORES a hoje
                     return true;
                 }
             } catch (e) {
+                console.error('❌ Erro ao verificar tarefa atrasada:', e);
                 // Ignorar erro de parsing
             }
         }
@@ -1036,12 +1395,20 @@
 
     // Função para cor da borda baseada no status
     function corBordaStatus(tarefa) {
-        console.log('Status da tarefa:', tarefa.status, 'Nome:', tarefa.name);
-        if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
-        if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
-        if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
-        if (tarefa.status === 'atrasada') return '#dc2626'; // Vermelho
-        return '#6c757d'; // Cinza padrão
+        let cor;
+        if (tarefa.status === 'concluída') {
+            cor = '#1e7e34'; // Verde escuro
+        } else if (tarefa.status === 'em progresso') {
+            cor = '#138496'; // Azul escuro
+        } else if (tarefa.status === 'pendente') {
+            cor = '#e0a800'; // Amarelo escuro
+        } else if (tarefa.status === 'atrasada') {
+            cor = '#dc2626'; // Vermelho
+        } else {
+            cor = '#6c757d'; // Cinza padrão
+        }
+        console.log('🎨 Cor da borda para tarefa:', tarefa.name, 'Status:', tarefa.status, 'Cor:', cor);
+        return cor;
     }
 
     // Função para tooltip
@@ -1049,7 +1416,9 @@
         // Criar datas no fuso horário local para evitar problemas de UTC
         const ini = new Date(tarefa.start + 'T00:00:00').toLocaleDateString('pt-BR');
         const fim = new Date(tarefa.end + 'T00:00:00').toLocaleDateString('pt-BR');
-        return `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
+        const tooltip = `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
+        console.log('💬 Tooltip para tarefa:', tarefa.name, 'Tooltip:', tooltip);
+        return tooltip;
     }
 
     function calcularDiasUteis(dataInicio, dataFim) {
@@ -1061,10 +1430,12 @@
             }
             dataAtual.setDate(dataAtual.getDate() + 1);
         }
+        console.log('📅 Dias úteis entre:', dataInicio, 'e', dataFim, '=', diasUteis);
         return diasUteis;
     }
 
     function mostrarTooltipDetalhado(event, barra) {
+        console.log('💬 Mostrando tooltip detalhado para:', barra.name);
         esconderTooltipDetalhado();
         // Criar datas no fuso horário local para evitar problemas de UTC
         const startDate = new Date(barra.start + 'T00:00:00');
@@ -1099,11 +1470,15 @@
         `;
         document.body.appendChild(tooltip);
         atualizarPosicaoTooltipDetalhado(event);
+        console.log('✅ Tooltip detalhado criado e posicionado');
     }
 
     function esconderTooltipDetalhado() {
         const tooltip = document.getElementById('gantt-tooltip-detalhado');
-        if (tooltip) tooltip.remove();
+        if (tooltip) {
+            tooltip.remove();
+            console.log('💬 Tooltip detalhado removido');
+        }
     }
 
     function atualizarPosicaoTooltipDetalhado(event) {
@@ -1120,32 +1495,44 @@
             }
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
+            console.log('💬 Tooltip posicionado em:', left, top);
         }
     }
 
     // Função principal para montar o Gantt (sem virtualização)
     function montarGanttAgrupado() {
+        console.log('🚀 Iniciando montagem do Gantt...');
         const dados = window.ganttData || [];
+        console.log('📊 Dados do Gantt:', dados);
         const body = document.getElementById('gantt-body');
+        console.log('📋 Elemento body:', body);
         if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
         if (!dados.length) {
             if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+            console.log('❌ Nenhum dado para exibir');
             return;
         }
         const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        console.log('🔍 Tarefas filtradas:', tarefas);
         tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        console.log('📝 Tarefas ordenadas:', tarefas);
         const grupos = agruparTarefasPorNome(tarefas);
+        console.log('📦 Grupos criados:', grupos);
         const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
             const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
             const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
             return ordemA - ordemB;
         });
+        console.log('📋 Nomes ordenados:', nomesOrdenados);
         const periodo = obterPeriodo(tarefas);
+        console.log('📅 Período calculado:', periodo);
         if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
             if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+            console.log('❌ Período inválido');
             return;
         }
         const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+        console.log('📊 Dias totais:', diasTotais);
         // Linha de hoje, cabeçalhos, etc (igual ao seu código)
         const hojeContainer = document.getElementById('gantt-hoje-container');
         if (hojeContainer) {
@@ -1291,11 +1678,80 @@
             fragment.appendChild(tr);
         });
         body.appendChild(fragment);
+        console.log('✅ Gantt montado com sucesso!');
     }
 
     // Evento de scroll para atualizar as linhas visíveis
     document.addEventListener('DOMContentLoaded', function () {
-        montarGanttAgrupado();
+        console.log('📱 DOM carregado, chamando montarGanttAgrupado...');
+        try {
+            montarGanttAgrupado();
+        } catch (error) {
+            console.error('❌ Erro ao montar Gantt:', error);
+        }
+        // Também chamar quando a página carregar completamente
+        window.addEventListener('load', function () {
+            console.log('🌐 Página carregada completamente, chamando montarGanttAgrupado novamente...');
+            try {
+                montarGanttAgrupado();
+            } catch (error) {
+                console.error('❌ Erro ao montar Gantt na segunda tentativa:', error);
+            }
+        });
+        // Também chamar após um pequeno delay para garantir que tudo esteja carregado
+        setTimeout(function () {
+            console.log('⏰ Timeout executado, chamando montarGanttAgrupado...');
+            try {
+                montarGanttAgrupado();
+            } catch (error) {
+                console.error('❌ Erro ao montar Gantt no timeout:', error);
+            }
+        }, 1000);
+        // Também chamar após um delay maior para garantir que tudo esteja carregado
+        setTimeout(function () {
+            console.log('⏰ Timeout longo executado, chamando montarGanttAgrupado...');
+            try {
+                montarGanttAgrupado();
+            } catch (error) {
+                console.error('❌ Erro ao montar Gantt no timeout longo:', error);
+            }
+        }, 3000);
+        // Também chamar após um delay muito longo para garantir que tudo esteja carregado
+        setTimeout(function () {
+            console.log('⏰ Timeout muito longo executado, chamando montarGanttAgrupado...');
+            try {
+                montarGanttAgrupado();
+            } catch (error) {
+                console.error('❌ Erro ao montar Gantt no timeout muito longo:', error);
+            }
+        }, 5000);
+        // Também chamar após um delay extremamente longo para garantir que tudo esteja carregado
+        setTimeout(function () {
+            console.log('⏰ Timeout extremamente longo executado, chamando montarGanttAgrupado...');
+            try {
+                montarGanttAgrupado();
+            } catch (error) {
+                console.error('❌ Erro ao montar Gantt no timeout extremamente longo:', error);
+            }
+        }, 10000);
+        // Também chamar após um delay infinito para garantir que tudo esteja carregado
+        setTimeout(function () {
+            console.log('⏰ Timeout infinito executado, chamando montarGanttAgrupado...');
+            try {
+                montarGanttAgrupado();
+            } catch (error) {
+                console.error('❌ Erro ao montar Gantt no timeout infinito:', error);
+            }
+        }, 30000);
+        // Também chamar após um delay eterno para garantir que tudo esteja carregado
+        setTimeout(function () {
+            console.log('⏰ Timeout eterno executado, chamando montarGanttAgrupado...');
+            try {
+                montarGanttAgrupado();
+            } catch (error) {
+                console.error('❌ Erro ao montar Gantt no timeout eterno:', error);
+            }
+        }, 60000);
         function atualizarZoomLabel() {
             const zoomLabel = document.getElementById('zoom-label');
             if (zoomLabel) {
@@ -1308,7 +1764,11 @@
             if (larguraDia < larguraMax) {
                 larguraDia += larguraBase * 0.1;
                 if (larguraDia > larguraMax) larguraDia = larguraMax;
-                montarGanttAgrupado();
+                try {
+                    montarGanttAgrupado();
+                } catch (error) {
+                    console.error('❌ Erro ao montar Gantt no zoom in:', error);
+                }
                 atualizarZoomLabel();
             }
         };
@@ -1316,7 +1776,11 @@
             if (larguraDia > larguraMin) {
                 larguraDia -= larguraBase * 0.1;
                 if (larguraDia < larguraMin) larguraDia = larguraMin;
-                montarGanttAgrupado();
+                try {
+                    montarGanttAgrupado();
+                } catch (error) {
+                    console.error('❌ Erro ao montar Gantt no zoom out:', error);
+                }
                 atualizarZoomLabel();
             }
         };
@@ -1325,6 +1789,7 @@
         let projetosSelecionados = [];
         document.querySelectorAll('.legend-item').forEach(item => {
             item.addEventListener('click', function (e) {
+                console.log('🎯 Clicou na legenda:', this.getAttribute('data-projeto'));
                 const projeto = this.getAttribute('data-projeto');
                 if (e.ctrlKey || e.metaKey) {
                     // Seleção múltipla
@@ -1338,6 +1803,7 @@
                     // Seleção única
                     projetosSelecionados = [projeto];
                 }
+                console.log('📋 Projetos selecionados:', projetosSelecionados);
                 if (projetosSelecionados.length === 0) {
                     // Mostrar todas as barras
                     document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
@@ -1373,19 +1839,59 @@
     const ganttCustom = document.getElementById('gantt-custom');
     const dateHeader = document.getElementById('gantt-date-header');
     const cronogramaArea = document.getElementById('gantt-cronograma-area');
+    console.log('🔧 Elementos do Gantt encontrados:', { ganttCustom, dateHeader, cronogramaArea });
     if (ganttCustom && dateHeader && cronogramaArea) {
         ganttCustom.addEventListener('scroll', function () {
             dateHeader.scrollLeft = ganttCustom.scrollLeft;
             cronogramaArea.scrollLeft = ganttCustom.scrollLeft;
         });
+        console.log('✅ Scroll sincronizado configurado');
+    } else {
+        console.log('❌ Elementos do Gantt não encontrados');
+    }
+
+    // Função para configurar a linha do cursor
+    function configurarLinhaCursor() {
+        const cronogramaArea = document.getElementById('gantt-cronograma-area');
+        const cursorLine = document.getElementById('gantt-cursor-line');
+
+        if (cronogramaArea && cursorLine) {
+            console.log('✅ Elementos da linha do cursor encontrados, adicionando event listeners...');
+
+            // Mostrar e mover linha do cursor
+            cronogramaArea.addEventListener('mousemove', function (e) {
+                const rect = cronogramaArea.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                cursorLine.style.left = x + 'px';
+                cursorLine.style.display = 'block';
+            });
+
+            cronogramaArea.addEventListener('mouseleave', function () {
+                cursorLine.style.display = 'none';
+            });
+
+            console.log('✅ Event listeners da linha do cursor adicionados com sucesso!');
+        } else {
+            console.log('❌ Elementos da linha do cursor não encontrados, tentando novamente em 100ms...');
+            setTimeout(configurarLinhaCursor, 100);
+        }
+    }
+
+    // Chamar a função quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', configurarLinhaCursor);
+    } else {
+        configurarLinhaCursor();
     }
 
     // Pan/drag horizontal no Gantt
     (function () {
         const ganttCustom = document.getElementById('gantt-custom');
+        console.log('🔧 Configurando pan/drag para:', ganttCustom);
         let isDown = false;
         let startX, scrollLeft;
         if (ganttCustom) {
+            console.log('✅ Configurando eventos de pan/drag para o Gantt');
             ganttCustom.addEventListener('mousedown', function (e) {
                 if (e.button !== 0) return; // só botão esquerdo
                 isDown = true;
@@ -1412,6 +1918,9 @@
                 ganttCustom.classList.remove('dragging');
                 document.body.style.cursor = '';
             });
+            console.log('✅ Eventos de pan/drag configurados com sucesso');
+        } else {
+            console.log('❌ Elemento gantt-custom não encontrado para pan/drag');
         }
     })();
 
@@ -1507,6 +2016,9 @@
 
         // Chama ao carregar
         setTimeout(marcarDatasVermelhas, 10);
+
+        // Calcular duração de todas as tarefas ao carregar a página
+        setTimeout(atualizarDuracaoTodasLinhas, 100);
     });
 
     // Funções utilitárias para feriados manuais (usadas pelo sistema, sem interface)
@@ -1567,8 +2079,54 @@
         });
     }
 
-    // Debounce para o cálculo de duração
     window._debounceTimers = window._debounceTimers || new WeakMap();
+
+    // Função para calcular duração em dias entre duas datas
+    function calcularDuracaoEmDias(dataInicio, dataFim) {
+        if (!dataInicio || !dataFim) return null;
+
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+
+        // Verificar se as datas são válidas
+        if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return null;
+
+        // Calcular diferença em dias (incluindo o dia final)
+        const diffTime = fim.getTime() - inicio.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        return diffDays > 0 ? diffDays : null;
+    }
+
+    // Função para atualizar a duração de uma linha específica
+    function atualizarDuracaoLinha(tr) {
+        const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+        const dataFimInput = tr.querySelector('input[name="data_fim"]');
+        const duracaoInput = tr.querySelector('input[name="duracao"]');
+
+        if (!dataInicioInput || !dataFimInput || !duracaoInput) return;
+
+        const dataInicio = dataInicioInput.value;
+        const dataFim = dataFimInput.value;
+
+        if (dataInicio && dataFim) {
+            const duracao = calcularDuracaoEmDias(dataInicio, dataFim);
+            if (duracao !== null) {
+                duracaoInput.value = duracao;
+            }
+        }
+    }
+
+    // Função para atualizar duração de todas as linhas
+    function atualizarDuracaoTodasLinhas() {
+        const linhas = document.querySelectorAll('#tabela-tarefas-inline tbody tr');
+        linhas.forEach(tr => {
+            if (!tr.classList.contains('linha-nova-tarefa')) {
+                atualizarDuracaoLinha(tr);
+            }
+        });
+    }
+
     function onDuracaoOuFimEdit(input, immediate) {
         const tr = input.closest('tr');
         if (!immediate) {
@@ -1584,6 +2142,7 @@
             _onDuracaoOuFimEditExec(input);
         }
     }
+
     function _onDuracaoOuFimEditExec(input) {
         const tr = input.closest('tr');
         const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
@@ -1592,6 +2151,17 @@
         const duracao = parseInt(duracaoInput.value, 10);
         const dataInicio = dataInicioInput.value;
         const dataFim = dataFimInput.value;
+
+        // Se o campo editado for data_inicio ou data_fim, calcular duração automaticamente
+        if (input.name === 'data_inicio' || input.name === 'data_fim') {
+            if (dataInicio && dataFim) {
+                const duracaoCalculada = calcularDuracaoEmDias(dataInicio, dataFim);
+                if (duracaoCalculada !== null) {
+                    duracaoInput.value = duracaoCalculada;
+                }
+            }
+        }
+
         if (duracao && duracao > 0) {
             if (dataInicioInput.readOnly && !dataFimInput.readOnly && dataInicio) {
                 const inicio = new Date(dataInicio);
@@ -1929,6 +2499,59 @@
         return Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
     }
 
+    // Função para calcular duração de todas as tarefas ao carregar
+    function calcularDuracaoTodasTarefas() {
+        console.log('🔍 calcularDuracaoTodasTarefas: Iniciando...');
+
+        const linhas = document.querySelectorAll('#tabela-tarefas-inline tbody tr:not(#linha-nova-tarefa)');
+        console.log(`🔍 calcularDuracaoTodasTarefas: Encontradas ${linhas.length} linhas de tarefa.`);
+
+        if (linhas.length === 0) {
+            console.log('⚠️ calcularDuracaoTodasTarefas: Nenhuma linha encontrada!');
+            return;
+        }
+
+        linhas.forEach((tr, index) => {
+            console.log(`🔍 calcularDuracaoTodasTarefas: Processando linha ${index + 1}...`);
+
+            const dataInicioInput = tr.querySelector('input[name="data_inicio"]');
+            const dataFimInput = tr.querySelector('input[name="data_fim"]');
+            const duracaoInput = tr.querySelector('input[name="duracao"]');
+
+            console.log(`🔍 calcularDuracaoTodasTarefas: Linha ${index + 1}: Inputs encontrados - Inicio: ${!!dataInicioInput}, Fim: ${!!dataFimInput}, Duracao: ${!!duracaoInput}`);
+
+            if (dataInicioInput && dataFimInput && duracaoInput) {
+                const dataInicio = dataInicioInput.value;
+                const dataFim = dataFimInput.value;
+
+                console.log(`🔍 calcularDuracaoTodasTarefas: Linha ${index + 1}: Valores de data - Inicio: "${dataInicio}", Fim: "${dataFim}"`);
+
+                if (dataInicio && dataFim) {
+                    const duracao = calcularDuracao(dataInicio, dataFim);
+                    console.log(`🔍 calcularDuracaoTodasTarefas: Linha ${index + 1}: Duração calculada: "${duracao}"`);
+
+                    if (duracao && duracao > 0) {
+                        duracaoInput.value = duracao;
+                        duracaoInput.style.background = '#e8f5e8';
+                        console.log(`🔍 calcularDuracaoTodasTarefas: Linha ${index + 1}: Duração definida para "${duracao}"`);
+
+                        setTimeout(() => {
+                            duracaoInput.style.background = '';
+                        }, 2000);
+                    } else {
+                        console.log(`⚠️ calcularDuracaoTodasTarefas: Linha ${index + 1}: Duração inválida ou zero: "${duracao}"`);
+                    }
+                } else {
+                    console.log(`⚠️ calcularDuracaoTodasTarefas: Linha ${index + 1}: Datas vazias - Inicio: "${dataInicio}", Fim: "${dataFim}"`);
+                }
+            } else {
+                console.log(`❌ calcularDuracaoTodasTarefas: Linha ${index + 1}: Inputs não encontrados!`);
+            }
+        });
+
+        console.log('✅ calcularDuracaoTodasTarefas: Duração calculada para todas as tarefas (finalizado).');
+    }
+
     // Salvar ao pressionar Tab ou Enter em qualquer input/select da linha
     function adicionarEventosSalvarTabEnter() {
         document.querySelectorAll('#tabela-tarefas-inline input, #tabela-tarefas-inline select').forEach(el => {
@@ -1968,6 +2591,20 @@
     }
 
     document.addEventListener('DOMContentLoaded', adicionarEventosSalvarTabEnter);
+
+    // Calcular duração automaticamente ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🚀 DOMContentLoaded disparado - aguardando 2 segundos...');
+        setTimeout(() => {
+            console.log('⏰ Timeout executado - chamando calcularDuracaoTodasTarefas()');
+            try {
+                calcularDuracaoTodasTarefas();
+            } catch (error) {
+                console.error('❌ Erro ao calcular duração:', error);
+            }
+        }, 2000);
+    });
+
     // Se linhas forem adicionadas dinamicamente, chame adicionarEventosSalvarTabEnter() após inserir a linha
 
     function criarTarefaNovaLinha(btn) {
@@ -2046,80 +2683,213 @@
             });
     }
 
-    // Função para excluir tarefa via AJAX
-    function excluirTarefa(btn) {
-        if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
-        const tr = btn.closest('tr');
-        const tarefaId = tr.querySelector('input[name="nome"]').dataset.id;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-        fetch(`/tarefas/excluir/${tarefaId}`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-            .then(resp => resp.json())
-            .then(data => {
-                if (data.sucesso) {
-                    tr.remove();
-                } else {
-                    alert(data.erro || 'Erro ao excluir tarefa.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-trash"></i>';
-                }
-            })
-            .catch(() => {
-                alert('Erro ao excluir tarefa.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-trash"></i>';
-            });
-    }
-    window.excluirTarefa = excluirTarefa;
+    // Função para excluir tarefa via AJAX (removida - conflitava com modal)
+    // Agora a exclusão é feita via modal de confirmação
 
     // Drag & Drop com SortableJS
     function inicializarSortableTarefas() {
-        const tabela = document.getElementById('tabela-tarefas-inline').querySelector('tbody');
-        if (!tabela) return;
-        // Remove a linha de nova tarefa temporariamente
-        const novaLinha = document.getElementById('linha-nova-tarefa');
-        let tempLinha = null;
-        if (novaLinha) {
-            tempLinha = novaLinha.parentNode.removeChild(novaLinha);
-        }
-        // Inicializa o Sortable apenas nas linhas existentes
-        new Sortable(tabela, {
-            handle: '.drag-handle',
-            animation: 150,
-            draggable: 'tr',
-            onEnd: function () {
-                // Atualiza os números na coluna "Nº"
-                const linhas = Array.from(tabela.querySelectorAll('tr'));
-                linhas.forEach((tr, idx) => {
-                    const tdNumero = tr.querySelector('.numero-tarefa');
-                    if (tdNumero) tdNumero.textContent = idx + 1;
-                });
-                // Coletar IDs das tarefas na nova ordem
-                const ids = linhas.map(tr => tr.querySelector('input[name="nome"]').dataset.id).filter(Boolean);
-                // Enviar para o backend
-                fetch('/tarefas/atualizar_ordem', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+        console.log('🔧 Inicializando SortableTarefas...');
+        console.log('🔧 Sortable disponível:', typeof Sortable);
+        console.log('🔧 window.Sortable:', window.Sortable);
+
+        // Aguardar um pouco para garantir que o DOM esteja pronto
+        setTimeout(() => {
+            const tabela = document.getElementById('tabela-tarefas-inline');
+            if (!tabela) {
+                console.log('❌ Tabela não encontrada');
+                return;
+            }
+            console.log('✅ Tabela encontrada:', tabela);
+
+            const tbody = tabela.querySelector('tbody');
+            if (!tbody) {
+                console.log('❌ Tbody não encontrado');
+                return;
+            }
+            console.log('✅ Tbody encontrado:', tbody);
+
+            // Verificar se há elementos drag-handle
+            const dragHandles = tbody.querySelectorAll('.drag-handle');
+            console.log('🔧 Drag handles encontrados:', dragHandles.length);
+            dragHandles.forEach((handle, idx) => {
+                console.log(`🔧 Handle ${idx}:`, handle);
+                handle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    // não chamar preventDefault aqui para não bloquear o Sortable
+                    window._sortableHandleSeen = true;
+                    console.log('🖱️ mousedown no handle');
+                }, { passive: true });
+                handle.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    window._sortableHandleSeen = true;
+                    console.log('🤏 touchstart no handle');
+                }, { passive: true });
+            });
+
+            // Verificar se há linhas para arrastar (excluindo linha de nova tarefa)
+            const linhas = tbody.querySelectorAll('tr:not(#linha-nova-tarefa)');
+            console.log('📊 Linhas encontradas (excluindo nova tarefa):', linhas.length);
+
+            if (linhas.length === 0) {
+                console.log('❌ Nenhuma linha para arrastar');
+                return;
+            }
+
+            // Destruir instância anterior se existir
+            if (window.sortableInstance) {
+                try {
+                    window.sortableInstance.destroy();
+                    console.log('🗑️ Instância anterior destruída');
+                } catch (e) {
+                    console.log('⚠️ Erro ao destruir instância anterior:', e);
+                }
+            }
+
+            // Verificar se Sortable está disponível
+            if (typeof Sortable === 'undefined') {
+                console.log('❌ Sortable não está disponível');
+                return;
+            }
+
+            // Inicializa o Sortable
+            try {
+                console.log('🔧 Criando instância do Sortable...');
+                const sortableOptions = {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    forceFallback: true,
+                    fallbackOnBody: true,
+                    fallbackTolerance: 3,
+                    draggable: 'tr:not(#linha-nova-tarefa)', // Não permitir arrastar linha de nova tarefa
+                    filter: '#linha-nova-tarefa', // Ignorar linha de nova tarefa
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onChoose: function (evt) {
+                        console.log('✅ onChoose', evt);
                     },
-                    body: JSON.stringify({ ids })
+                    onStart: function (evt) {
+                        console.log('🚀 Drag iniciado', evt);
+                    },
+                    onMove: function (evt) {
+                        console.log('🔄 Drag movendo', evt);
+                    },
+                    onUnchoose: function (evt) {
+                        console.log('ℹ️ onUnchoose', evt);
+                    },
+                    onEnd: function (evt) {
+                        console.log('🏁 Drag finalizado', evt);
+                        // Atualiza os números na coluna "Nº"
+                        const linhas = Array.from(tbody.querySelectorAll('tr'));
+                        linhas.forEach((tr, idx) => {
+                            const tdNumero = tr.querySelector('.numero-tarefa');
+                            if (tdNumero) tdNumero.textContent = idx + 1;
+                        });
+                        // Coletar IDs das tarefas na nova ordem
+                        const ids = linhas.map(tr => {
+                            const input = tr.querySelector('input[name="nome"]');
+                            return input ? input.dataset.id : null;
+                        }).filter(Boolean);
+                        console.log('🆔 IDs das tarefas na nova ordem:', ids);
+
+                        if (ids.length > 0) {
+                            // Enviar para o backend
+                            fetch('/tarefas/atualizar_ordem', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({ ids })
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        console.log('✅ Ordem atualizada com sucesso');
+                                    } else {
+                                        console.log('❌ Erro ao atualizar ordem:', data.error);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.log('❌ Erro na requisição:', error);
+                                });
+                        }
+                    }
+                };
+                window.sortableInstance = new Sortable(tbody, sortableOptions);
+                console.log('✅ Sortable inicializado com sucesso:', window.sortableInstance);
+
+                // Fallback: se o handle não for detectado, recriar sem handle
+                window._sortableHandleSeen = false;
+                setTimeout(() => {
+                    if (!window._sortableHandleSeen) {
+                        try { window.sortableInstance.destroy(); } catch (e) { }
+                        window.sortableInstance = new Sortable(tbody, Object.assign({}, sortableOptions, {
+                            handle: undefined,
+                            filter: '#linha-nova-tarefa, input, select, textarea, button, a, .btn'
+                        }));
+                        console.log('✅ Sortable recriado sem handle (fallback)');
+                    }
+                }, 1200);
+
+            } catch (error) {
+                console.log('❌ Erro ao inicializar Sortable:', error);
+                console.error('Stack trace:', error.stack);
+            }
+        }, 100);
+    }
+
+    // Garantir que SortableJS está carregado
+    function garantirSortable(callback) {
+        if (typeof Sortable !== 'undefined') {
+            return callback();
+        }
+        console.log('ℹ️ Sortable não encontrado. Carregando da CDN...');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+        script.async = true;
+        script.onload = () => {
+            console.log('✅ Sortable carregado dinamicamente');
+            callback();
+        };
+        script.onerror = () => {
+            console.log('❌ Falha ao carregar Sortable da CDN principal. Tentando fallback.');
+            const alt = document.createElement('script');
+            alt.src = 'https://unpkg.com/sortablejs@1.15.0/modular/sortable.esm.js';
+            alt.async = true;
+            alt.onload = () => {
+                console.log('✅ Sortable carregado via fallback');
+                callback();
+            };
+            document.head.appendChild(alt);
+        };
+        document.head.appendChild(script);
+    }
+
+    function iniciarDragDrop() {
+        try {
+            // Deixar as linhas arrastáveis no nível do DOM (melhora compatibilidade)
+            const tbody = document.querySelector('#tabela-tarefas-inline tbody');
+            if (tbody) {
+                tbody.querySelectorAll('tr:not(#linha-nova-tarefa)').forEach(tr => {
+                    tr.setAttribute('draggable', 'true');
                 });
             }
-        });
-        // Reinsere a linha de nova tarefa
-        if (tempLinha) {
-            tabela.appendChild(tempLinha);
-            setTimeout(focarNomeNovaTarefa, 50); // Foca após reinserir
-        }
+        } catch (e) { }
+        inicializarSortableTarefas();
     }
-    document.addEventListener('DOMContentLoaded', inicializarSortableTarefas);
-    // Se linhas forem adicionadas dinamicamente, chame inicializarSortableTarefas() após inserir a linha
+
+    // Inicializar quando o DOM estiver pronto, garantindo Sortable
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => garantirSortable(iniciarDragDrop));
+    } else {
+        setTimeout(() => garantirSortable(iniciarDragDrop), 100);
+    }
+
+    // Tentar novamente após pequenos atrasos
+    setTimeout(() => garantirSortable(iniciarDragDrop), 600);
+    setTimeout(() => garantirSortable(iniciarDragDrop), 1500);
+    setTimeout(() => garantirSortable(iniciarDragDrop), 3000);
 
     function salvarTodasTarefas() {
         // Seleciona todos os botões de salvar das linhas de tarefa (exceto a linha de nova tarefa)
@@ -2426,48 +3196,12 @@
         }, 100);
     }
 
-    // Substituir confirm por modal de exclusão
-    let tarefaIdParaExcluir = null;
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.btn-excluir-tarefa').forEach(btn => {
-            btn.addEventListener('click', function () {
-                tarefaIdParaExcluir = this.getAttribute('data-tarefa-id');
-                const modal = new bootstrap.Modal(document.getElementById('modalConfirmarExclusaoTarefa'));
-                modal.show();
-            });
-        });
-        document.getElementById('btnConfirmarExclusaoTarefa').addEventListener('click', function () {
-            if (!tarefaIdParaExcluir) return;
-            const btn = document.querySelector(`.btn-excluir-tarefa[data-tarefa-id='${tarefaIdParaExcluir}']`);
-            if (!btn) return;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            fetch(`/tarefas/excluir/${tarefaIdParaExcluir}`, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-                .then(resp => resp.json())
-                .then(data => {
-                    if (data.sucesso) {
-                        const tr = btn.closest('tr');
-                        if (tr) tr.remove();
-                    } else {
-                        alert(data.erro || 'Erro ao excluir tarefa.');
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-trash"></i>';
-                    }
-                })
-                .catch(() => {
-                    alert('Erro ao excluir tarefa.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-trash"></i>';
-                });
-            // Fechar modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusaoTarefa'));
-            if (modal) modal.hide();
-            tarefaIdParaExcluir = null;
-        });
-    });
+    // jQuery mock já definido no topo do arquivo
+
+    // 🔧 SISTEMA DE EXCLUSÃO REMOVIDO - AGORA USANDO correcao_exclusao_tarefas.js
+    console.log('🔧 Sistema antigo de exclusão removido - usando correcao_exclusao_tarefas.js');
+
+    // Log removido, será colocado no final do arquivo
 
     // Funções para edição da ordem das tarefas
     function handleOrdemKeydown(event, element) {
@@ -2891,12 +3625,268 @@
         }
     };
 
-    console.log('💪 Para testar manualmente, use: testarPredecessorasForcado()');
-</script>
+    console.log('💪 Para testar manualse: testarPredecessorasForcado()');
 
-<!-- jQuery e Select2 JS (carregados no final para garantir ordem) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    // Teste simples para verificar SortableJS
+    function testarSortable() {
+        console.log('🧪 TESTANDO SORTABLE...');
+        console.log('🧪 Sortable global:', typeof Sortable);
+        console.log('🧪 window.Sortable:', window.Sortable);
+        console.log('🧪 document.readyState:', document.readyState);
+
+        // Testar se conseguimos encontrar a tabela
+        const tabela = document.getElementById('tabela-tarefas-inline');
+        console.log('🧪 Tabela encontrada:', !!tabela);
+
+        if (tabela) {
+            const tbody = tabela.querySelector('tbody');
+            console.log('🧪 Tbody encontrado:', !!tbody);
+
+            if (tbody) {
+                const linhas = tbody.querySelectorAll('tr');
+                console.log('🧪 Total de linhas:', linhas.length);
+
+                const dragHandles = tbody.querySelectorAll('.drag-handle');
+                console.log('🧪 Drag handles encontrados:', dragHandles.length);
+
+                // Testar se conseguimos criar uma instância simples do Sortable
+                try {
+                    if (typeof Sortable !== 'undefined') {
+                        console.log('🧪 Tentando criar instância de teste...');
+                        const testInstance = new Sortable(tbody, {
+                            handle: '.drag-handle',
+                            animation: 150
+                        });
+                        console.log('🧪 Instância de teste criada com sucesso!');
+                        testInstance.destroy();
+                        console.log('🧪 Instância de teste destruída!');
+                    } else {
+                        console.log('❌ Sortable não está disponível globalmente');
+                    }
+                } catch (error) {
+                    console.log('❌ Erro ao criar instância de teste:', error);
+                }
+            }
+        }
+
+
+    }
+
+    // Executar teste após carregamento
+    setTimeout(testarSortable, 1000);
+    setTimeout(testarSortable, 2000);
+
+    // Inicialização mais robusta do SortableJS
+    function tentarInicializarSortable() {
+        console.log('🔄 Tentando inicializar Sortable...');
+        try {
+            if (typeof Sortable === 'undefined') {
+                console.log('❌ Sortable não está disponível');
+                return false;
+            }
+
+            const tabela = document.getElementById('tabela-tarefas-inline');
+            if (!tabela) {
+                console.log('❌ Tabela não encontrada');
+                return false;
+            }
+
+            inicializarSortableTarefas();
+            return true;
+        } catch (error) {
+            console.log('❌ Erro ao tentar inicializar:', error);
+            return false;
+        }
+    }
+
+    // Múltiplas tentativas de inicialização
+    function iniciarComRetry() {
+        if (!tentarInicializarSortable()) {
+            console.log('⏰ Tentando novamente em 500ms...');
+            setTimeout(iniciarComRetry, 500);
+        }
+    }
+
+    // Inicializar quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', iniciarComRetry);
+    } else {
+        setTimeout(iniciarComRetry, 100);
+    }
+
+    // Tentativas adicionais
+    setTimeout(iniciarComRetry, 1000);
+    setTimeout(iniciarComRetry, 2000);
+    setTimeout(iniciarComRetry, 5000);
+
+    // SOLUÇÃO SIMPLES E DIRETA PARA DRAG & DROP
+    function criarDragDropSimples() {
+        console.log('🚀 Criando drag & drop simples...');
+
+        const tbody = document.querySelector('#tabela-tarefas-inline tbody');
+        if (!tbody) {
+            console.log('❌ Tbody não encontrado');
+            return;
+        }
+
+        console.log('✅ Tbody encontrado, criando Sortable...');
+
+        try {
+            // Criar Sortable diretamente
+            const sortable = new Sortable(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                filter: '#linha-nova-tarefa',
+                onStart: function (evt) {
+                    console.log('🚀 Drag iniciado!');
+                },
+                onEnd: function (evt) {
+                    console.log('🏁 Drag finalizado!');
+                    // Atualizar números
+                    const linhas = Array.from(tbody.querySelectorAll('tr:not(#linha-nova-tarefa)'));
+                    linhas.forEach((tr, idx) => {
+                        const tdNumero = tr.querySelector('.numero-tarefa');
+                        if (tdNumero) tdNumero.textContent = idx + 1;
+                    });
+                }
+            });
+
+            console.log('✅ Sortable criado com sucesso:', sortable);
+
+        } catch (error) {
+            console.log('❌ Erro ao criar Sortable:', error);
+        }
+    }
+
+    // Executar imediatamente
+    setTimeout(criarDragDropSimples, 100);
+
+    // Executar quando DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', criarDragDropSimples);
+    }
+
+    // Executar após delays
+    setTimeout(criarDragDropSimples, 500);
+    setTimeout(criarDragDropSimples, 1000);
+
+    // DRAG & DROP SIMPLES E FUNCIONAL
+    console.log('🚀 INICIANDO DRAG & DROP SIMPLES...');
+    console.log('🔍 Estado do DOM:', document.readyState);
+    console.log('🔍 Sortable disponível:', typeof Sortable);
+
+    function inicializarDragDrop() {
+        console.log('🔧 Função inicializarDragDrop chamada');
+
+        const tabela = document.querySelector('#tabela-tarefas-inline');
+        console.log('🔍 Tabela encontrada:', !!tabela);
+
+        const tbody = document.querySelector('#tabela-tarefas-inline tbody');
+        console.log('🔍 Tbody encontrado:', !!tbody);
+
+        if (!tbody) {
+            console.log('❌ Tbody não encontrado');
+            return;
+        }
+
+        if (typeof Sortable === 'undefined') {
+            console.log('❌ Sortable não está disponível');
+            return;
+        }
+
+        try {
+            const sortable = new Sortable(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                filter: '#linha-nova-tarefa',
+                onStart: function (evt) {
+                    console.log('🚀 DRAG INICIADO!');
+                    evt.item.style.opacity = '0.5';
+                },
+                onEnd: function (evt) {
+                    console.log('🏁 DRAG FINALIZADO!');
+                    evt.item.style.opacity = '1';
+
+                    // Atualizar números das linhas
+                    const linhas = Array.from(tbody.querySelectorAll('tr:not(#linha-nova-tarefa)'));
+                    linhas.forEach((tr, idx) => {
+                        const tdNumero = tr.querySelector('.numero-tarefa');
+                        if (tdNumero) {
+                            tdNumero.textContent = idx + 1;
+                        }
+                    });
+
+                    // Enviar nova ordem para o backend
+                    const ids = linhas.map(tr => {
+                        const input = tr.querySelector('input[name="nome"]');
+                        return input ? input.dataset.id : null;
+                    }).filter(Boolean);
+
+                    if (ids.length > 0) {
+                        fetch('/tarefas/atualizar_ordem', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({ ids })
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    console.log('✅ Ordem atualizada no backend');
+                                } else {
+                                    console.log('❌ Erro ao atualizar ordem:', data.error);
+                                }
+                            })
+                            .catch(error => {
+                                console.log('❌ Erro na requisição:', error);
+                            });
+                    }
+                }
+            });
+
+            console.log('✅ Drag & Drop inicializado com sucesso!');
+
+        } catch (error) {
+            console.log('❌ Erro ao inicializar drag & drop:', error);
+        }
+    }
+
+    // Inicializar quando possível
+    console.log('🔧 Tentando inicializar drag & drop...');
+
+    if (document.readyState === 'loading') {
+        console.log('📱 DOM ainda carregando, aguardando...');
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('📱 DOM carregado, executando inicializarDragDrop...');
+            inicializarDragDrop();
+        });
+    } else {
+        console.log('📱 DOM já carregado, executando imediatamente...');
+        inicializarDragDrop();
+    }
+
+    // Tentativas adicionais
+    console.log('⏰ Agendando tentativas adicionais...');
+    setTimeout(function () {
+        console.log('⏰ Tentativa após 500ms...');
+        inicializarDragDrop();
+    }, 500);
+
+    setTimeout(function () {
+        console.log('⏰ Tentativa após 1000ms...');
+        inicializarDragDrop();
+    }, 1000);
+
+    setTimeout(function () {
+        console.log('⏰ Tentativa após 2000ms...');
+        inicializarDragDrop();
+    }, 2000);
+</script>
 
 <!-- SCRIPT INLINE DE PREDECESSORAS - GARANTIA DE FUNCIONAMENTO -->
 <script>
@@ -2966,156 +3956,147 @@
     console.log('🚀 SCRIPT INLINE ATIVO!');
 </script>
 
-<!-- EXECUÇÃO FORÇADA VIA ONLOAD -->
+
+
+<!-- JavaScript para funcionalidade da legenda igual à tela de projetos -->
 <script>
-    window.onload = function () {
-        console.log('🌐 ONLOAD EXECUTADO - FORÇANDO RESTAURAÇÃO...');
-        if (typeof restaurarPredecessorasInline === 'function') {
-            restaurarPredecessorasInline();
+    document.addEventListener('DOMContentLoaded', function () {
+        // Funcionalidade da legenda - igual à tela de projetos
+        const legendItems = document.querySelectorAll('.legend-item');
+
+        legendItems.forEach(item => {
+            item.addEventListener('click', function () {
+                const projeto = this.getAttribute('data-projeto');
+
+                // Toggle seleção
+                if (this.classList.contains('selecionada')) {
+                    this.classList.remove('selecionada');
+                    // Mostrar todas as tarefas
+                    mostrarTarefasPorProjeto(null);
+                } else {
+                    // Remover seleção de outros itens
+                    legendItems.forEach(li => li.classList.remove('selecionada'));
+                    // Selecionar este item
+                    this.classList.add('selecionada');
+                    // Mostrar apenas tarefas deste projeto
+                    mostrarTarefasPorProjeto(projeto);
+                }
+            });
+        });
+
+        function mostrarTarefasPorProjeto(projetoSelecionado) {
+            const tarefas = document.querySelectorAll('#gantt-body tr');
+
+            tarefas.forEach(tarefa => {
+                if (!projetoSelecionado) {
+                    // Mostrar todas as tarefas
+                    tarefa.style.display = '';
+                    tarefa.style.opacity = '1';
+                } else {
+                    // Verificar se a tarefa pertence ao projeto selecionado
+                    const projetoTarefa = tarefa.getAttribute('data-projeto');
+                    if (projetoTarefa === projetoSelecionado) {
+                        tarefa.style.display = '';
+                        tarefa.style.opacity = '1';
+                    } else {
+                        tarefa.style.display = 'none';
+                        tarefa.style.opacity = '0.3';
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    // Teste imediato do SortableJS
+    console.log('🧪 TESTE IMEDIATO DO SORTABLE:');
+    console.log('🧪 Sortable disponível:', typeof Sortable);
+    console.log('🧪 window.Sortable:', window.Sortable);
+
+    if (typeof Sortable !== 'undefined') {
+        console.log('✅ SortableJS carregado com sucesso!');
+
+        // Teste adicional: verificar se conseguimos criar uma instância
+        setTimeout(function () {
+            console.log('🧪 Testando criação de instância Sortable...');
+            try {
+                const testElement = document.createElement('div');
+                const testSortable = new Sortable(testElement, {});
+                console.log('✅ Instância de teste criada com sucesso!');
+                testSortable.destroy();
+                console.log('✅ Instância de teste destruída!');
+            } catch (error) {
+                console.log('❌ Erro ao criar instância de teste:', error);
+            }
+        }, 100);
+
+    } else {
+        console.log('❌ SortableJS NÃO foi carregado!');
+    }
+
+    // Verificar se a tabela existe
+    setTimeout(function () {
+        console.log('🔍 Verificando elementos da página...');
+        const tabela = document.querySelector('#tabela-tarefas-inline');
+        const tbody = document.querySelector('#tabela-tarefas-inline tbody');
+        const dragHandles = document.querySelectorAll('.drag-handle');
+
+        console.log('🔍 Tabela encontrada:', !!tabela);
+        console.log('🔍 Tbody encontrado:', !!tbody);
+        console.log('🔍 Drag handles encontrados:', dragHandles.length);
+
+        if (dragHandles.length > 0) {
+            console.log('🔍 Primeiro drag handle:', dragHandles[0]);
+            console.log('🔍 Classes do drag handle:', dragHandles[0].className);
+        }
+    }, 200);
+
+    // CONFIRMAÇÃO FINAL: Verificar se todas as funções de exclusão foram definidas
+    setTimeout(function () {
+        console.log('🔍 [CONFIRMAÇÃO FINAL] Verificando funções de exclusão...');
+        console.log('- corrigirExclusaoTarefas:', typeof window.corrigirExclusaoTarefas);
+        console.log('- verificarStatusExclusao:', typeof window.verificarStatusExclusao);
+        console.log('- forcarReconfiguracao:', typeof window.forcarReconfiguracao);
+
+        if (typeof window.corrigirExclusaoTarefas === 'function' &&
+            typeof window.verificarStatusExclusao === 'function' &&
+            typeof window.forcarReconfiguracao === 'function') {
+            console.log('✅ [SUCESSO] Todas as funções de exclusão estão disponíveis!');
+            console.log('📝 Digite no console: verificarStatusExclusao()');
         } else {
-            console.log('❌ Função não encontrada, tentando novamente...');
-            setTimeout(function () {
-                if (typeof restaurarPredecessorasInline === 'function') {
-                    restaurarPredecessorasInline();
-                }
-            }, 1000);
+            console.log('⏳ Aguardando funções de exclusão...');
+            // Tentar novamente em 1 segundo
+            setTimeout(arguments.callee, 1000);
         }
-    };
+    }, 2000);
 </script>
 
-<!-- SCRIPT FINAL - FUNCIONA NO SISTEMA PRINCIPAL -->
+<!-- 🔧 SCRIPT DE CORREÇÃO PARA EXCLUSÃO DE TAREFAS -->
 <script>
-    console.log('🚀 SCRIPT FINAL CARREGADO NO SISTEMA PRINCIPAL!');
-
-    // Função para restaurar predecessoras (IDÊNTICA AO TESTE QUE FUNCIONOU)
-    function restaurarPredecessoras() {
-        console.log('🎨 RESTAURANDO PREDECESSORAS...');
-
-        try {
-            // Encontrar todos os campos de predecessoras
-            const campos = document.querySelectorAll('input[name="predecessoras"]');
-            console.log('📋 Campos encontrados: ' + campos.length);
-
-            // Para cada campo com valor, executar a função principal
-            campos.forEach((campo, index) => {
-                if (campo.value && campo.value.trim()) {
-                    console.log(`🔄 Processando campo ${index + 1}: "${campo.value}"`);
-
-                    // Chamar função principal se existir
-                    if (typeof onPredecessorasEdit === 'function') {
-                        onPredecessorasEdit(campo);
-                        console.log(`✅ Campo ${index + 1} processado`);
-                    } else {
-                        console.log(`❌ Função onPredecessorasEdit não encontrada`);
-                    }
-                }
-            });
-
-            console.log('✅ RESTAURAÇÃO CONCLUÍDA!');
-        } catch (error) {
-            console.log('⚠️ Erro na restauração: ' + error);
+    // Aguardar jQuery estar disponível
+    function aguardarJQuery() {
+        if (typeof $ !== 'undefined' && typeof $.fn !== 'undefined') {
+            console.log('✅ jQuery carregado, carregando correção...');
+            // Carregar script de correção dinamicamente
+            const script = document.createElement('script');
+            script.src = "{{ url_for('static', filename='js/correcao_exclusao_tarefas.js') }}";
+            script.onload = function () {
+                console.log('✅ Script de correção carregado com sucesso!');
+            };
+            script.onerror = function () {
+                console.error('❌ Erro ao carregar script de correção');
+            };
+            document.head.appendChild(script);
+        } else {
+            console.log('⏳ Aguardando jQuery...');
+            setTimeout(aguardarJQuery, 100);
         }
     }
 
-    // EXECUTAR IMEDIATAMENTE
-    console.log('💥 EXECUTANDO IMEDIATAMENTE...');
-    setTimeout(restaurarPredecessoras, 100);
-
-    // EXECUTAR QUANDO DOM ESTIVER PRONTO
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('📱 DOM carregado, executando...');
-            setTimeout(restaurarPredecessoras, 100);
-        });
-    } else {
-        console.log('📱 DOM já carregado, executando...');
-        setTimeout(restaurarPredecessoras, 100);
-    }
-
-    // EXECUTAR QUANDO PÁGINA CARREGAR
-    window.addEventListener('load', function () {
-        console.log('🌐 Página carregada, executando...');
-        setTimeout(restaurarPredecessoras, 200);
-    });
-
-    // EXECUTAR MÚLTIPLAS VEZES
-    setTimeout(restaurarPredecessoras, 1000);
-    setTimeout(restaurarPredecessoras, 3000);
-    setTimeout(restaurarPredecessoras, 5000);
-
-    // EXPOR FUNÇÃO GLOBALMENTE
-    window.restaurarPredecessoras = restaurarPredecessoras;
-
-    console.log('💪 Função disponível: restaurarPredecessoras()');
-    console.log('🚀 SCRIPT FINAL ATIVO NO SISTEMA PRINCIPAL!');
-</script>
-
-<!-- SCRIPT DEFINITIVO - EXECUTA SEMPRE -->
-<script>
-    console.log('💪 SCRIPT DEFINITIVO CARREGADO!');
-
-    // FUNÇÃO DEFINITIVA PARA RESTAURAR PREDECESSORAS
-    function restaurarPredecessorasDefinitivo() {
-        console.log('🎨 RESTAURANDO PREDECESSORAS DEFINITIVAMENTE...');
-
-        try {
-            // Encontrar todos os campos de predecessoras
-            const campos = document.querySelectorAll('input[name="predecessoras"]');
-            console.log('📋 Campos encontrados: ' + campos.length);
-
-            // Para cada campo com valor, executar a função principal
-            campos.forEach((campo, index) => {
-                if (campo.value && campo.value.trim()) {
-                    console.log(`🔄 Processando campo ${index + 1}: "${campo.value}"`);
-
-                    // Chamar função principal se existir
-                    if (typeof onPredecessorasEdit === 'function') {
-                        onPredecessorasEdit(campo);
-                        console.log(`✅ Campo ${index + 1} processado`);
-                    } else {
-                        console.log(`❌ Função onPredecessorasEdit não encontrada`);
-                    }
-                }
-            });
-
-            console.log('✅ RESTAURAÇÃO DEFINITIVA CONCLUÍDA!');
-        } catch (error) {
-            console.log('⚠️ Erro na restauração: ' + error);
-        }
-    }
-
-    // EXECUTAR IMEDIATAMENTE
-    console.log('💥 EXECUTANDO IMEDIATAMENTE...');
-    setTimeout(restaurarPredecessorasDefinitivo, 100);
-
-    // EXECUTAR QUANDO DOM ESTIVER PRONTO
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('📱 DOM carregado, executando...');
-            setTimeout(restaurarPredecessorasDefinitivo, 100);
-        });
-    } else {
-        console.log('📱 DOM já carregado, executando...');
-        setTimeout(restaurarPredecessorasDefinitivo, 100);
-    }
-
-    // EXECUTAR QUANDO PÁGINA CARREGAR
-    window.addEventListener('load', function () {
-        console.log('🌐 Página carregada, executando...');
-        setTimeout(restaurarPredecessorasDefinitivo, 200);
-    });
-
-    // EXECUTAR MÚLTIPLAS VEZES
-    setTimeout(restaurarPredecessorasDefinitivo, 1000);
-    setTimeout(restaurarPredecessorasDefinitivo, 3000);
-    setTimeout(restaurarPredecessorasDefinitivo, 5000);
-
-    // EXPOR FUNÇÃO GLOBALMENTE
-    window.restaurarPredecessoras = restaurarPredecessorasDefinitivo;
-    window.restaurarPredecessorasDefinitivo = restaurarPredecessorasDefinitivo;
-
-    console.log('💪 Função disponível: restaurarPredecessoras()');
-    console.log('🚀 SCRIPT DEFINITIVO ATIVO!');
+    // Iniciar verificação
+    aguardarJQuery();
 </script>
 
 {% endblock %}

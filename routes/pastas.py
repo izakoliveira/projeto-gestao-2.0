@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
-from utils.auth import login_required, funcionalidade_restrita, carregar_restricoes
+from utils.auth import login_required, funcionalidade_restrita, carregar_restricoes, is_admin_session
 from utils.validators import normaliza_opcional, is_mobile_device
 from config.database import supabase
 from datetime import datetime
@@ -46,11 +46,8 @@ def listar_pastas():
     usuario_id = session.get('user_id')
     restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
     
-    # Verificar se é o usuário izak
-    is_izak = (session.get('user_email') == 'izak.gomes59@gmail.com' or 
-               usuario_id == 'd0d784bd-f2bb-44b2-8096-5c10ec4d57be')
-    
-    if is_izak:
+    # Admin tem acesso total
+    if is_admin_session():
         pode_editar_projeto = True
         pode_excluir_projeto = True
     else:

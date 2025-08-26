@@ -283,6 +283,7 @@
                     </div>
                 </div>
                 <div id="gantt-cronograma-area" style="position: relative;">
+                    <div id="gantt-cursor-line" class="gantt-cursor-line"></div>
                     <div id="gantt-hoje-container"></div>
                     <table style="border-collapse: collapse; width: 100%;">
                         <thead>
@@ -2072,6 +2073,18 @@
         opacity: 0.25 !important;
         filter: grayscale(0.5);
     }
+
+    /* Linha vertical que segue o cursor no Gantt */
+    .gantt-cursor-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 15;
+        pointer-events: none;
+        display: none;
+    }
 </style>
 
 <script>
@@ -2643,15 +2656,38 @@
         });
     });
 
-    // Sincronizar scroll horizontal do cabeçalho e do corpo do Gantt
-    const ganttCustom = document.getElementById('gantt-custom');
-    const dateHeader = document.getElementById('gantt-date-header');
-    const cronogramaArea = document.getElementById('gantt-cronograma-area');
-    if (ganttCustom && dateHeader && cronogramaArea) {
-        ganttCustom.addEventListener('scroll', function () {
-            dateHeader.scrollLeft = ganttCustom.scrollLeft;
-            cronogramaArea.scrollLeft = ganttCustom.scrollLeft;
-        });
+    // Função para configurar a linha do cursor
+    function configurarLinhaCursor() {
+        const cronogramaArea = document.getElementById('gantt-cronograma-area');
+        const cursorLine = document.getElementById('gantt-cursor-line');
+
+        if (cronogramaArea && cursorLine) {
+            console.log('Elementos da linha do cursor encontrados, adicionando event listeners...');
+
+            // Mostrar e mover linha do cursor
+            cronogramaArea.addEventListener('mousemove', function (e) {
+                const rect = cronogramaArea.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                cursorLine.style.left = x + 'px';
+                cursorLine.style.display = 'block';
+            });
+
+            cronogramaArea.addEventListener('mouseleave', function () {
+                cursorLine.style.display = 'none';
+            });
+
+            console.log('Event listeners da linha do cursor adicionados com sucesso!');
+        } else {
+            console.log('Elementos da linha do cursor não encontrados, tentando novamente em 100ms...');
+            setTimeout(configurarLinhaCursor, 100);
+        }
+    }
+
+    // Chamar a função quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', configurarLinhaCursor);
+    } else {
+        configurarLinhaCursor();
     }
 
     // Pan/drag horizontal no Gantt
@@ -2706,7 +2742,7 @@
 
         let estatisticas = `
             <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                <div style="ba: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
                     <strong>Projetos:</strong> ${projetosUnicos.length}
                 </div>
                 <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
@@ -2755,8 +2791,7 @@
 </div>
 <script>
     // Modal de confirmação de exclusão de projeto
-    let projetoIdParaExcluir = null;
-    document.addEventListener('DOMContentLoaded', function () {
+    let projetoIdParaExcluir = document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.btn-excluir-projeto').forEach(btn => {
             btn.addEventListener('click', function () {
                 projetoIdParaExcluir = this.getAttribute('data-projeto-id');

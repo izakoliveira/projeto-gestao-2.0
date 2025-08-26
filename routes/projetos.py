@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
-from utils.auth import login_required, funcionalidade_restrita
+from utils.auth import login_required, funcionalidade_restrita, is_admin_session
 from utils.validators import validar_projeto, normaliza_opcional, verificar_tarefa_atrasada, contar_tarefas_atrasadas
 from config.database import supabase, SUPABASE_URL, SUPABASE_KEY
 import requests
@@ -22,7 +22,7 @@ def listar_projetos():
     tipo_id = request.args.get('tipo_id', '')
     ambiente = request.args.get('ambiente', '')
 
-    if session.get('user_email') == 'izak.gomes59@gmail.com':
+    if is_admin_session():
         # Admin vê todos os projetos
         query = supabase.table("projetos").select("*")
         if nome_list:
@@ -94,6 +94,12 @@ def listar_projetos():
         projetos = projetos[:MAX_PROJETOS]
     if len(tarefas_filtradas) > MAX_TAREFAS:
         tarefas_filtradas = tarefas_filtradas[:MAX_TAREFAS]
+
+    # Construir lista de coleções disponíveis a partir das tarefas filtradas
+    try:
+        colecoes = sorted(list({str(t.get('colecao')).strip() for t in tarefas_filtradas if t.get('colecao')}))
+    except Exception:
+        colecoes = []
 
     # Formatar datas dos projetos para dd/mm/aaaa
     for projeto in projetos:
@@ -253,6 +259,7 @@ def listar_projetos():
                     'start': str(data_inicio),
                     'end': str(data_fim),
                     'status': str(tarefa.get('status', 'pendente')),
+                    'colecao': str(tarefa.get('colecao', '') or ''),
                     'projeto_nome': str(projeto_nome),
                     'projeto_origem': str(projeto_nome),
                     'bar_color': str(projects_colors.get(projeto_nome, '#4ECDC4')),
@@ -273,7 +280,8 @@ def listar_projetos():
                              pode_editar_projeto=pode_editar_projeto,
                              pode_excluir_projeto=pode_excluir_projeto,
                              alertas_projetos=alertas_projetos,
-                             gantt_geral_data=gantt_geral_data)
+                             gantt_geral_data=gantt_geral_data,
+                             colecoes=colecoes)
     else:
         return render_template('projetos_gantt_basico.html', 
                              projetos=projetos, 
@@ -285,7 +293,8 @@ def listar_projetos():
                              pode_editar_projeto=pode_editar_projeto,
                              pode_excluir_projeto=pode_excluir_projeto,
                              alertas_projetos=alertas_projetos,
-                             gantt_geral_data=gantt_geral_data)
+                             gantt_geral_data=gantt_geral_data,
+                             colecoes=colecoes)
 
 @projetos_bp.route('/projetos/criar', methods=['GET', 'POST'])
 @login_required

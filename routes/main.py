@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
-from utils.auth import login_required, funcionalidade_restrita, apenas_admin_izak, carregar_restricoes
+from utils.auth import login_required, funcionalidade_restrita, apenas_admin_izak, carregar_restricoes, is_admin_session
 from utils.validators import is_mobile_device, normaliza_opcional, verificar_tarefa_atrasada
 from config.database import supabase
 import requests
@@ -262,6 +262,7 @@ def detalhes_projeto(projeto_id):
                     'start': str(data_inicio),
                     'end': str(data_fim),
                     'status': str(tarefa.get('status', 'pendente')),
+                    'colecao': str(tarefa.get('colecao', '') or ''),
                     'projeto_nome': str(projeto.get('nome', 'Projeto sem nome')),
                     'projeto_origem': str(projeto.get('nome', 'Projeto sem nome')),
                     'bar_color': str(projects_colors.get(projeto.get('nome', 'Projeto sem nome'), '#4ECDC4')),
@@ -276,12 +277,11 @@ def detalhes_projeto(projeto_id):
     usuario_id = session.get('user_id')
     restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
     
-    # Verificar se é o usuário izak (por email ou por ID)
-    is_izak = (session.get('user_email') == 'izak.gomes59@gmail.com' or 
-               usuario_id == 'd0d784bd-f2bb-44b2-8096-5c10ec4d57be')
+    # Verificar se é admin
+    is_admin = is_admin_session()
     
-    # Se for o usuário izak, dar acesso total
-    if is_izak:
+    # Se for admin, dar acesso total
+    if is_admin:
         pode_criar_projeto = True
         pode_editar_projeto = True
         pode_excluir_projeto = True
@@ -309,12 +309,22 @@ def detalhes_projeto(projeto_id):
         pode_editar_predecessoras = not restricoes_usuario.get('restr_editar_predecessoras', False)
         pode_editar_nome_tarefa = not restricoes_usuario.get('restr_editar_nome_tarefa', False)
     
+    # Buscar usuários para o select de responsável
+    try:
+        usuarios_resp = supabase.table("usuarios").select("id, nome, email").execute()
+        usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
+    except Exception as e:
+        print(f"Erro ao buscar usuarios: {e}")
+        usuarios = []
+
     # Criar dicionário com todas as variáveis para debug
     template_vars = {
         'projeto': projeto,
         'tarefas': tarefas,
+        'usuarios': usuarios,
         'projects_colors': projects_colors,
         'gantt_geral_data': gantt_geral_data,
+        'is_admin': is_admin,
         'pode_criar_projeto': pode_criar_projeto,
         'pode_editar_projeto': pode_editar_projeto,
         'pode_excluir_projeto': pode_excluir_projeto,
@@ -337,6 +347,153 @@ def detalhes_projeto(projeto_id):
     template_name = 'detalhes_projeto_mobile.html' if is_mobile else 'detalhes_projeto.html'
     
     return render_template(template_name, **template_vars)
+
+@main_bp.route('/projetos/<uuid:projeto_id>/criar_tarefa_rapida', methods=['POST'])
+@login_required
+def criar_tarefa_rapida(projeto_id):
+    """Cria uma tarefa rápida via AJAX"""
+    try:
+        # Verificar se é uma requisição AJAX
+        if not request.is_json:
+            return jsonify({"sucesso": False, "erro": "Requisição deve ser JSON"}), 400
+        
+        data = request.get_json()
+        nome = data.get('nome', '').strip()
+        predecessoras = data.get('predecessoras')
+        data_inicio = data.get('data_inicio')
+        data_fim = data.get('data_fim')
+        status = data.get('status', 'pendente')
+        usuario_id = data.get('usuario_id')
+        duracao = data.get('duracao')
+        
+        if not nome:
+            return jsonify({"sucesso": False, "erro": "Nome da tarefa é obrigatório"}), 400
+        
+        # Buscar projeto para verificar permissões
+        projeto_resp = supabase.table("projetos").select("*").eq("id", str(projeto_id)).single().execute()
+        projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+        if not projeto:
+            return jsonify({"sucesso": False, "erro": "Projeto não encontrado"}), 404
+        
+        # Verificar se o usuário tem permissão para criar tarefas neste projeto
+        # (dono do projeto ou usuário com permissão de visualização)
+        if str(projeto.get('usuario_id')) != str(session.get('user_id')):
+            # Verificar se tem permissão de visualização
+            try:
+                permissao_resp = supabase.table("projetos_usuarios_visiveis").select("*").eq("projeto_id", str(projeto_id)).eq("usuario_id", str(session.get('user_id'))).execute()
+                if not permissao_resp.data:
+                    return jsonify({"sucesso": False, "erro": "Sem permissão para criar tarefas neste projeto"}), 403
+            except Exception:
+                return jsonify({"sucesso": False, "erro": "Sem permissão para criar tarefas neste projeto"}), 403
+        
+        # Buscar ordem máxima atual
+        tarefas_resp = supabase.table("tarefas").select("ordem").eq("projeto_id", str(projeto_id)).order("ordem", desc=True).limit(1).execute()
+        nova_ordem = 1
+        if tarefas_resp.data:
+            nova_ordem = tarefas_resp.data[0]['ordem'] + 1
+        
+        # Preparar dados da tarefa
+        tarefa_data = {
+            "nome": nome,
+            "projeto_id": str(projeto_id),
+            "usuario_id": session['user_id'],
+            "ordem": nova_ordem,
+            "status": status
+        }
+        
+        # Adicionar campos opcionais se fornecidos
+        if predecessoras:
+            tarefa_data["predecessoras"] = predecessoras
+        if data_inicio:
+            tarefa_data["data_inicio"] = data_inicio
+        if data_fim:
+            tarefa_data["data_fim"] = data_fim
+        if usuario_id:
+            tarefa_data["responsavel"] = usuario_id
+        if duracao:
+            tarefa_data["duracao"] = duracao
+        
+        # Criar tarefa
+        resp = supabase.table("tarefas").insert(tarefa_data).execute()
+        
+        if resp.data:
+            nova_tarefa = resp.data[0]
+            
+            # Buscar usuários para gerar o select
+            try:
+                usuarios_resp = supabase.table("usuarios").select("id, nome, email").execute()
+                usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
+            except Exception as e:
+                usuarios = []
+            
+            # Gerar opções do select de usuários
+            opcoes_usuarios = '<option value="">Selecione</option>'
+            for usuario in usuarios:
+                selected = 'selected' if nova_tarefa.get('responsavel') == usuario['id'] else ''
+                opcoes_usuarios += f'<option value="{usuario["id"]}" {selected}>{usuario["nome"]}</option>'
+            
+            # Gerar opções do select de status
+            status_atual = nova_tarefa.get('status', 'pendente')
+            opcoes_status = f'''
+                <option value="pendente" {"selected" if status_atual == 'pendente' else ""}>Pendente</option>
+                <option value="em progresso" {"selected" if status_atual == 'em progresso' else ""}>Em Progresso</option>
+                <option value="concluída" {"selected" if status_atual == 'concluída' else ""}>Concluída</option>
+            '''
+            
+            # Gerar HTML da nova linha para inserir na tabela
+            html_linha = f'''
+            <tr id="linha-tarefa-{nova_tarefa['id']}" data-id="{nova_tarefa['id']}">
+                <td class="numero-tarefa">{nova_ordem}</td>
+                <td>
+                    <input type="text" name="nome" value="{nova_tarefa['nome']}" class="form-control form-control-sm" data-id="{nova_tarefa['id']}" data-original-value="{nova_tarefa['nome']}">
+                </td>
+                <td>
+                    <input type="text" name="predecessoras" value="{nova_tarefa.get('predecessoras', '')}" class="form-control form-control-sm" data-original-value="{nova_tarefa.get('predecessoras', '')}">
+                </td>
+                <td>
+                    <input type="date" name="data_inicio" value="{nova_tarefa.get('data_inicio', '')}" class="form-control form-control-sm" data-original-value="{nova_tarefa.get('data_inicio', '')}">
+                </td>
+                <td>
+                    <input type="date" name="data_fim" value="{nova_tarefa.get('data_fim', '')}" class="form-control form-control-sm" data-original-value="{nova_tarefa.get('data_fim', '')}">
+                </td>
+                <td>
+                    <select name="status" class="form-control form-control-sm" data-original-value="{nova_tarefa.get('status', 'pendente')}">
+                        {opcoes_status}
+                    </select>
+                </td>
+                <td>
+                    <select name="usuario_id" class="form-control form-control-sm" data-original-value="{nova_tarefa.get('responsavel', '')}">
+                        {opcoes_usuarios}
+                    </select>
+                </td>
+                <td>
+                    <input type="text" name="duracao" value="{nova_tarefa.get('duracao', '')}" class="form-control form-control-sm" data-original-value="{nova_tarefa.get('duracao', '')}">
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-success" onclick="salvarLinhaTarefa(this)">
+                            <i class="fas fa-save"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="excluirTarefa(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            '''
+            
+            return jsonify({
+                "sucesso": True,
+                "mensagem": "Tarefa criada com sucesso",
+                "html_linha": html_linha,
+                "tarefa_id": nova_tarefa['id']
+            })
+        else:
+            return jsonify({"sucesso": False, "erro": "Erro ao criar tarefa no banco de dados"}), 500
+            
+    except Exception as e:
+        print(f"[ERRO] Erro ao criar tarefa rápida: {e}")
+        return jsonify({"sucesso": False, "erro": f"Erro interno: {str(e)}"}), 500
 
 @main_bp.route('/projetos/editar/<uuid:projeto_id>', methods=['GET', 'POST'])
 @login_required
@@ -434,26 +591,41 @@ def excluir_projeto(projeto_id):
 @main_bp.route('/notificacoes/<user_id>')
 @login_required
 def notificacoes(user_id):
-    """Rota para buscar notificações do usuário"""
+    """Retorna notificações do usuário logado (ou admin pode ver qualquer)."""
     try:
-        # Por enquanto, retornar notificações vazias
+        # Segurança básica: só o próprio usuário pode ver suas notificações
+        if str(session.get('user_id')) != str(user_id) and not is_admin_session():
+            return jsonify({'notificacoes': [], 'total': 0}), 403
+
+        # Buscar notificações do Supabase
+        resp = supabase.table('notificacoes') \
+            .select('id, usuario_id, mensagem, tipo, lida, projeto_id, data_criacao') \
+            .eq('usuario_id', str(user_id)) \
+            .order('data_criacao', desc=True) \
+            .execute()
+
+        notificacoes = resp.data if hasattr(resp, 'data') and resp.data else []
         return jsonify({
-            'notificacoes': [],
-            'total': 0
+            'notificacoes': notificacoes,
+            'total': len(notificacoes)
         })
     except Exception as e:
-        return jsonify({
-            'notificacoes': [],
-            'total': 0,
-            'error': str(e)
-        }), 500
+        return jsonify({'notificacoes': [], 'total': 0, 'error': str(e)}), 500
 
 @main_bp.route('/notificacoes/<notif_id>/ler', methods=['PATCH'])
 @login_required
 def marcar_notificacao_lida(notif_id):
-    """Rota para marcar notificação como lida"""
+    """Marca uma notificação como lida, validando pertença ao usuário."""
     try:
-        # Por enquanto, apenas retornar sucesso
+        # Verificar se a notificação pertence ao usuário logado (ou se é admin)
+        notif_resp = supabase.table('notificacoes').select('usuario_id').eq('id', str(notif_id)).single().execute()
+        notif = notif_resp.data if hasattr(notif_resp, 'data') else None
+        if not notif:
+            return jsonify({'error': 'Notificação não encontrada'}), 404
+        if str(notif.get('usuario_id')) != str(session.get('user_id')) and not is_admin_session():
+            return jsonify({'error': 'Sem permissão'}), 403
+
+        upd = supabase.table('notificacoes').update({'lida': True}).eq('id', str(notif_id)).execute()
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -461,9 +633,14 @@ def marcar_notificacao_lida(notif_id):
 @main_bp.route('/notificacoes/<user_id>/limpar', methods=['DELETE'])
 @login_required
 def limpar_notificacoes(user_id):
-    """Rota para limpar notificações do usuário"""
+    """Remove todas as notificações do usuário (ou marca como lidas)."""
     try:
-        # Por enquanto, apenas retornar sucesso
+        if str(session.get('user_id')) != str(user_id) and not is_admin_session():
+            return jsonify({'error': 'Sem permissão'}), 403
+        # Opção 1: deletar
+        supabase.table('notificacoes').delete().eq('usuario_id', str(user_id)).execute()
+        # Opção 2 (alternativa): marcar como lidas
+        # supabase.table('notificacoes').update({'lida': True}).eq('usuario_id', str(user_id)).execute()
         return jsonify({'success': True})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500

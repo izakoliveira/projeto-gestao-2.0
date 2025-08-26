@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 from supabase_client import get_user_by_email, create_user
+from utils.auth import is_admin_session
 from utils.auth import carregar_restricoes
 import json
 
@@ -35,6 +36,8 @@ def login():
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
             session['user_email'] = user['email']
+            # Flag de admin baseada no banco (campo is_admin). Não usar fallback aqui para respeitar o BD.
+            session['is_admin'] = bool(user.get('is_admin', False))
             # Se quiser implementar o "lembrar-me", pode usar cookies aqui
             return redirect('/dashboard')
         else:

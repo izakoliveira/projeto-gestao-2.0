@@ -407,19 +407,19 @@
                     {% for tarefa in projeto.tarefas %}
                     {% set status = tarefa.status|lower %}
                     {% if status == 'pendente' or status == 'em progresso' %}
-                        {% set _=tarefas_filtradas.append(tarefa) %}
+                    {% set _=tarefas_filtradas.append(tarefa) %}
                     {% endif %}
                     {% endfor %}
                     {% elif alerta.tipo=='pendente' %}
                     {% for tarefa in projeto.tarefas %}
                     {% if tarefa.status=='pendente' or tarefa.status=='em progresso' %}
-                        {% set _=tarefas_filtradas.append(tarefa) %}
+                    {% set _=tarefas_filtradas.append(tarefa) %}
                     {% endif %}
                     {% endfor %}
                     {% else %}
                     {% set tarefas_filtradas=projeto.tarefas %}
                     {% endif %} {% else %} {% set
-                        tarefas_filtradas=projeto.tarefas %} {% endif %} {% if tarefas_filtradas %} <div class="mt-2"
+                    tarefas_filtradas=projeto.tarefas %} {% endif %} {% if tarefas_filtradas %} <div class="mt-2"
                         style="text-align: center; max-height: 80px; overflow-y: auto;">
                         <small style="font-size: 0.6em; font-weight: bold; color: #495057;">
                             Tarefas {{ alerta.tipo if alerta else '' }} ({{ tarefas_filtradas|length }}):
@@ -442,116 +442,117 @@
                             </div>
                             {% endif %}
                         </div>
-                </div>
-                {% else %}
-                <div class="mt-2" style="text-align: center;">
-                    <small style="font-size: 0.6em; color: #6c757d;">
-                        Nenhuma tarefa {{ alerta.tipo if alerta else '' }} encontrada
-                    </small>
-                </div>
-                {% endif %}
-                {% endif %}
-            </div>
-            <div class="card-footer compact-footer bg-white border-0"
-                style="border-top: 1px solid #e9ecef; width: 100%; text-align: center; margin-top: auto; padding-bottom: 16px; padding-top: 8px;">
-                <div class="card-actions"
-                    style="display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%;">
-                    <form action="/projetos/{{ projeto.id }}" method="get" style="display:inline;">
-                        <button type="submit" class="btn btn-info btn-sm" title="Ver Detalhes">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </form>
-                    {% if pode_editar_projeto %}
-                    <form action="/projetos/editar/{{ projeto.id }}" method="get" style="display:inline;">
-                        <button type="submit" class="btn btn-warning btn-sm" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </form>
+                    </div>
+                    {% else %}
+                    <div class="mt-2" style="text-align: center;">
+                        <small style="font-size: 0.6em; color: #6c757d;">
+                            Nenhuma tarefa {{ alerta.tipo if alerta else '' }} encontrada
+                        </small>
+                    </div>
                     {% endif %}
-                    {% if pode_excluir_projeto %}
-                    <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
-                        <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto"
-                            data-projeto-id="{{ projeto.id }}" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
                     {% endif %}
                 </div>
+                <div class="card-footer compact-footer bg-white border-0"
+                    style="border-top: 1px solid #e9ecef; width: 100%; text-align: center; margin-top: auto; padding-bottom: 16px; padding-top: 8px;">
+                    <div class="card-actions"
+                        style="display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%;">
+                        <form action="/projetos/{{ projeto.id }}" method="get" style="display:inline;">
+                            <button type="submit" class="btn btn-info btn-sm" title="Ver Detalhes">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </form>
+                        {% if pode_editar_projeto %}
+                        <form action="/projetos/editar/{{ projeto.id }}" method="get" style="display:inline;">
+                            <button type="submit" class="btn btn-warning btn-sm" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if pode_excluir_projeto %}
+                        <form action="/projetos/excluir/{{ projeto.id }}" method="POST" style="display:inline;">
+                            <button type="button" class="btn btn-danger btn-sm btn-excluir-projeto"
+                                data-projeto-id="{{ projeto.id }}" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-info" style="min-width: 120px; text-align: center;">
+                <i class="fas fa-info-circle"></i>
+                <br>Nenhum projeto encontrado
+            </div>
+            {% endif %}
         </div>
-        {% endfor %}
-        {% else %}
-        <div class="alert alert-info" style="min-width: 120px; text-align: center;">
-            <i class="fas fa-info-circle"></i>
-            <br>Nenhum projeto encontrado
-        </div>
-        {% endif %}
     </div>
-</div>
 
-<!-- Indicadores do carousel -->
-<div class="carousel-indicators" id="carousel-indicators"
-    style="display:flex;justify-content:center;align-items:center;width:100%;background:transparent;position:relative;z-index:1;margin:20px 0 24px 0;">
-</div>
+    <!-- Indicadores do carousel -->
+    <div class="carousel-indicators" id="carousel-indicators"
+        style="display:flex;justify-content:center;align-items:center;width:100%;background:transparent;position:relative;z-index:1;margin:20px 0 24px 0;">
+    </div>
 
-<!-- Gantt agrupado estilo desktop -->
-<div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Cronograma Geral</h5>
-        <div class="gantt-controls">
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-out" title="Diminuir zoom">
-                    <i class="fas fa-search-minus"></i>
-                </button>
-                <span class="btn btn-outline-secondary btn-sm disabled" id="zoom-label">100%</span>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-in" title="Aumentar zoom">
-                    <i class="fas fa-search-plus"></i>
-                </button>
+    <!-- Gantt agrupado estilo desktop -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Cronograma Geral</h5>
+            <div class="gantt-controls">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-out" title="Diminuir zoom">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span class="btn btn-outline-secondary btn-sm disabled" id="zoom-label">100%</span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="zoom-in" title="Aumentar zoom">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="card-body p-0">
-        <!-- Bloco para dados do Gantt -->
-    </div>
-    <script>
-        window.ganttData = {{ gantt_geral_data | tojson | safe }};
-    </script>
-    <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
-        <div style="display: flex; flex-direction: column;">
-            <div style="display: flex;">
+        <div class="card-body p-0">
+            <!-- Bloco para dados do Gantt -->
+        </div>
+        <script>
+            window.ganttData = {{ gantt_geral_data | tojson | safe }};
+        </script>
+        <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+            <div style="display: flex; flex-direction: column;">
+                <div style="display: flex;">
+                </div>
+            </div>
+            <div id="gantt-cronograma-area" style="position: relative;">
+                <div id="gantt-hoje-container"></div>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th
+                                style="width: 180px; min-width: 180px; max-width: 180px; text-align: left; padding: 8px;">
+                                Tarefa
+                            </th>
+                            {# Cabeçalho dos meses e dias removidos #}
+                        </tr>
+                    </thead>
+                    <tbody id="gantt-body">
+                        <!-- Linhas das tarefas geradas via JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div id="gantt-cronograma-area" style="position: relative;">
-            <div id="gantt-hoje-container"></div>
-            <table style="border-collapse: collapse; width: 100%;">
-                <thead>
-                    <tr>
-                        <th style="width: 180px; min-width: 180px; max-width: 180px; text-align: left; padding: 8px;">
-                            Tarefa
-                        </th>
-                        {# Cabeçalho dos meses e dias removidos #}
-                    </tr>
-                </thead>
-                <tbody id="gantt-body">
-                    <!-- Linhas das tarefas geradas via JS -->
-                </tbody>
-            </table>
+        <!-- Legenda colorida por projeto -->
+        <div class="legend mt-2"
+            style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
+            {% for projeto, cor in projects_colors.items() %}
+            <div class="legend-item"
+                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                data-projeto="{{ projeto }}">
+                <div class="legend-color"
+                    style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
+                <span>{{ projeto }}</span>
+            </div>
+            {% endfor %}
         </div>
     </div>
-    <!-- Legenda colorida por projeto -->
-    <div class="legend mt-2"
-        style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
-        {% for projeto, cor in projects_colors.items() %}
-        <div class="legend-item"
-            style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
-            data-projeto="{{ projeto }}">
-            <div class="legend-color"
-                style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
-            <span>{{ projeto }}</span>
-        </div>
-        {% endfor %}
-    </div>
-</div>
 </div>
 
 <style>
