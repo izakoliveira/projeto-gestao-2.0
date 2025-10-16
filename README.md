@@ -1,16 +1,53 @@
-# Projeto de Gestão de Projetos 2.0
+# Sistema de Gestão de Projetos 2.0 🚀
 
-Sistema web para gestão de projetos com visualização de tarefas em gráfico de Gantt, desenvolvido em Flask e integrado ao Supabase.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-orange.svg)](https://supabase.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-2.0.0-red.svg)](https://github.com/izakoliveira/sistema-gestao-projetos-2.0/releases)
 
-## Funcionalidades
-- Cadastro e login de usuários
+Sistema web completo para gestão de projetos com visualização interativa em gráfico de Gantt, relatórios Excel/PDF e sistema de notificações por email.
+
+## ✨ Funcionalidades Principais
+
+### 👥 **Gestão de Usuários**
+- Sistema completo de autenticação e cadastro
+- Controle de acesso por níveis de usuário
+- Perfis personalizáveis com notificações
+
+### 📊 **Gestão de Projetos**
 - Criação, edição e exclusão de projetos
-- Criação, edição e exclusão de tarefas
-- Visualização de tarefas em gráfico de Gantt (Frappe Gantt customizado)
-- Agrupamento de tarefas por projeto ou exibição geral
-- Tooltip dinâmico e colorização por projeto
-- Filtros por status, coleção e datas
-- Integração com Supabase para persistência dos dados
+- Organização em pastas e categorias
+- Duplicação de projetos com templates
+- Controle de status e progresso
+
+### ✅ **Gestão de Tarefas**
+- Criação e edição avançada de tarefas
+- Sistema de dependências entre tarefas
+- Controle de datas, durações e responsáveis
+- Diferentes tipos de coleções e status
+
+### 📈 **Visualização Gantt**
+- Gráfico de Gantt interativo e responsivo
+- Colorização automática por projeto
+- Tooltip dinâmico com informações detalhadas
+- Visualização desktop e mobile otimizada
+
+### 📋 **Relatórios e Exportação**
+- Exportação completa para Excel (múltiplas abas)
+- Geração de relatórios em PDF
+- Coluna de responsáveis nas planilhas
+- Números centralizados em relatórios
+
+### 🔔 **Sistema de Notificações**
+- Notificações por email automáticas
+- Alertas de prazos e atualizações
+- Templates personalizáveis de email
+
+### 🎯 **Filtros e Buscas**
+- Filtros avançados por status, coleção e datas
+- Sistema de busca inteligente
+- Agrupamento flexível de dados
 
 ## Estrutura de Pastas
 ```
