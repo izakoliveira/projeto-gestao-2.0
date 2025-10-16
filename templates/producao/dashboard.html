@@ -1,0 +1,223 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Dashboard{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-industry"></i> Dashboard de Produção
+            </h1>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ stats.total_projetos or 0 }}</h3>
+                        <p class="mb-0">Total Projetos</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ stats.projetos_ativos or 0 }}</h3>
+                        <p class="mb-0">Projetos Ativos</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ stats.total_tarefas or 0 }}</h3>
+                        <p class="mb-0">Total Tarefas</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card-producao">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ stats.tarefas_concluidas or 0 }}</h3>
+                        <p class="mb-0">Tarefas Concluídas</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Projetos Recentes -->
+        <div class="col-md-6">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-boxes"></i> Projetos Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if projetos %}
+                        {% for projeto in projetos[:5] %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>{{ projeto.nome }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {% if projeto.data_inicio %}{{ projeto.data_inicio }}{% endif %}
+                                    {% if projeto.data_inicio and projeto.data_fim %} - {% endif %}
+                                    {% if projeto.data_fim %}{{ projeto.data_fim }}{% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                {% if projeto.data_fim %}
+                                    {% set hoje = moment().format('YYYY-MM-DD') %}
+                                    {% if projeto.data_fim < hoje %}
+                                        <span class="badge bg-success">Concluído</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Em Andamento</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-info">Sem Prazo</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Nenhum projeto encontrado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarefas Recentes -->
+        <div class="col-md-6">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks"></i> Tarefas Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if tarefas %}
+                        {% for tarefa in tarefas[:5] %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>{{ tarefa.nome }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {% if tarefa.data_inicio %}{{ tarefa.data_inicio }}{% endif %}
+                                    {% if tarefa.data_inicio and tarefa.data_fim %} - {% endif %}
+                                    {% if tarefa.data_fim %}{{ tarefa.data_fim }}{% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                {% if tarefa.status == 'CONCLUIDA' %}
+                                    <span class="badge bg-success">{{ tarefa.status }}</span>
+                                {% elif tarefa.status == 'PENDENTE' %}
+                                    <span class="badge bg-warning">{{ tarefa.status }}</span>
+                                {% elif tarefa.status == 'EM_ANDAMENTO' %}
+                                    <span class="badge bg-info">{{ tarefa.status }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ tarefa.status or 'N/A' }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Nenhuma tarefa encontrada.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_colecoes') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-plus me-2"></i>Nova Coleção
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_calendario') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-calendar-plus me-2"></i>Novo Evento
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_atividades') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-tasks me-2"></i>Nova Atividade
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('producao.producao_projecoes') }}" class="btn btn-producao w-100">
+                                <i class="fas fa-chart-line me-2"></i>Nova Projeção
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Dashboard de Produção carregado!');
+        console.log('Projetos:', {{ (projetos|length) }});
+        console.log('Tarefas:', {{ (tarefas|length) }});
+        
+        // Dashboard integrado com dados reais - sem necessidade de JavaScript adicional
+        // Os dados são carregados diretamente do backend via Jinja2
+    });
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+
+    // Função para atualizar estatísticas em tempo real (opcional)
+    async function atualizarEstatisticas() {
+        try {
+            const response = await fetch('/api/producao/colecoes');
+            const projetos = await response.json();
+            
+            // Atualizar contadores se necessário
+            console.log('Estatísticas atualizadas:', projetos.length, 'projetos');
+        } catch (error) {
+            console.error('Erro ao atualizar estatísticas:', error);
+        }
+    }
+</script>
+{% endblock %}

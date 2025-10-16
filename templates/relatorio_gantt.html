@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Calendários</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 32px; }
+        h1 { color: #007bff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 12px; }
+        th, td { border: 1px solid #ccc; padding: 6px 4px; text-align: left; }
+        .text-center { text-align: center; }
+        th { background: #f8f9fa; font-size: 12px; }
+    .gantt-img { display: block; margin: 24px auto; width: 100%; max-width: none; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    <h1>Relatório de Calendários</h1>
+    <!-- Imagem do gráfico de Gantt removida conforme solicitado -->
+    {% macro normalizar(nome) %}
+        {{ nome|lower|replace('ã','a')|replace('á','a')|replace('â','a')|replace('é','e')|replace('ê','e')|replace('í','i')|replace('ó','o')|replace('ô','o')|replace('ú','u')|replace('ç','c')|trim }}
+    {% endmacro %}
+
+    {% macro data_inicio_lancamento(projeto) %}
+        {% set datas = [] %}
+        {% for t in projeto.tarefas %}
+            {% if normalizar(t.nome) == 'lancamento' %}
+                {% if t.inicio %}
+                    {% set _ = datas.append(t.inicio) %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% if datas %}
+            {{ datas|min }}
+        {% else %}
+            9999-12-31
+        {% endif %}
+    {% endmacro %}
+
+    {# Ordena por nome primeiro #}
+    {% set projetos_nome = projetos|sort(attribute='nome') %}
+    {# Depois ordena por data de lançamento #}
+    {% set projetos_ordenados = projetos_nome|sort(attribute=data_inicio_lancamento) %}
+    {% for projeto in projetos_ordenados %}
+    <h2>Tarefas - {{ projeto.nome }}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tarefa</th>
+                <th class="text-center">Início</th>
+                <th class="text-center">Fim</th>
+                <th class="text-center">Duração</th>
+                <th class="text-center">Dias Úteis</th>
+                <th>Coleção</th>
+                <th>Responsável</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tarefa in projeto.tarefas %}
+            {% if tarefa.nome|lower|trim == 'lançamento' %}
+            <tr style="color: red; font-weight: bold;">
+                <td>{{ tarefa.nome }}</td>
+                <td class="text-center">{{ tarefa.inicio }}</td>
+                <td class="text-center">{{ tarefa.fim }}</td>
+                <td class="text-center">{{ tarefa.duracao }}</td>
+                <td class="text-center">{{ tarefa.dias_uteis }}</td>
+                <td>{{ tarefa.colecao }}</td>
+                <td>{{ tarefa.responsavel }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>{{ tarefa.nome }}</td>
+                <td class="text-center">{{ tarefa.inicio }}</td>
+                <td class="text-center">{{ tarefa.fim }}</td>
+                <td class="text-center">{{ tarefa.duracao }}</td>
+                <td class="text-center">{{ tarefa.dias_uteis }}</td>
+                <td>{{ tarefa.colecao }}</td>
+                <td>{{ tarefa.responsavel }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+</body>
+</html>

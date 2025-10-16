@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Teste Final - Exclusão de Tarefas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn-excluir-tarefa {
+            margin: 5px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">🧪 Teste Final - Exclusão de Tarefas</h1>
+
+        <div class="test-section">
+            <h3>📋 Tarefas de Teste</h3>
+            <p>Clique nos botões de exclusão para testar a funcionalidade:</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Tarefa 1</h5>
+                            <p class="card-text">Esta é uma tarefa de teste para verificar a exclusão.</p>
+                            <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="teste-1">
+                                <i class="fas fa-trash"></i> Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Tarefa 2</h5>
+                            <p class="card-text">Outra tarefa para testar a funcionalidade.</p>
+                            <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="teste-2">
+                                <i class="fas fa-trash"></i> Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Controles de Teste</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <button class="btn btn-primary" onclick="verificarStatus()">
+                        🔍 Verificar Status
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-warning" onclick="forcarReconfiguracao()">
+                        🔄 Forçar Reconfiguração
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-info" onclick="limparLogs()">
+                        🧹 Limpar Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Status do Sistema</h3>
+            <div id="status-container">
+                <div class="status info">Clique em "Verificar Status" para ver o estado atual</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Logs do Console</h3>
+            <div id="console-output"
+                style="background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; max-height: 300px; overflow-y: auto;">
+                <div class="text-muted">Os logs aparecerão aqui conforme você interage com a página...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📚 Instruções</h3>
+            <ol>
+                <li><strong>Verificar Status:</strong> Clique para ver se o sistema está funcionando</li>
+                <li><strong>Forçar Reconfiguração:</strong> Recarrega o sistema de exclusão</li>
+                <li><strong>Testar Exclusão:</strong> Clique nos botões de exclusão das tarefas</li>
+                <li><strong>Ver Logs:</strong> Observe o console do navegador e a área de logs</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Script de correção -->
+    <script src="static/js/correcao_exclusao_tarefas.js"></script>
+
+    <script>
+        // Interceptar console.log para mostrar na tela
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('console-output');
+
+        function addToConsole(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = type === 'error' ? 'text-danger' : 'text-dark';
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function (...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '));
+        };
+
+        console.error = function (...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        // Funções de teste
+        function verificarStatus() {
+            console.log('🔍 Verificando status do sistema...');
+
+            if (typeof window.verificarStatusExclusao === 'function') {
+                const resultado = window.verificarStatusExclusao();
+                mostrarStatus('✅ Sistema funcionando corretamente', 'success');
+            } else {
+                mostrarStatus('❌ Função verificarStatusExclusao não encontrada', 'error');
+            }
+        }
+
+        function forcarReconfiguracao() {
+            console.log('🔄 Forçando reconfiguração...');
+
+            if (typeof window.forcarReconfiguracao === 'function') {
+                window.forcarReconfiguracao();
+                mostrarStatus('🔄 Reconfiguração executada', 'info');
+            } else {
+                mostrarStatus('❌ Função forcarReconfiguracao não encontrada', 'error');
+            }
+        }
+
+        function limparLogs() {
+            consoleOutput.innerHTML = '<div class="text-muted">Logs limpos...</div>';
+            console.log('🧹 Logs limpos');
+        }
+
+        function mostrarStatus(mensagem, tipo) {
+            const statusContainer = document.getElementById('status-container');
+            statusContainer.innerHTML = `<div class="status ${tipo}">${mensagem}</div>`;
+        }
+
+        // Verificar quando a página carregar
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🚀 Página carregada - verificando sistema...');
+
+            setTimeout(function () {
+                if (typeof window.corrigirExclusaoTarefas === 'function') {
+                    console.log('✅ Sistema de correção carregado com sucesso!');
+                    mostrarStatus('✅ Sistema carregado e funcionando', 'success');
+                } else {
+                    console.log('❌ Sistema de correção não encontrado');
+                    mostrarStatus('❌ Sistema não carregado', 'error');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>

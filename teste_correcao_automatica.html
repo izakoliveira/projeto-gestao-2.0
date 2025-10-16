@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste da Correção Automática</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .sucesso {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .erro {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .aviso {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1>🧪 Teste da Correção Automática</h1>
+
+        <div class="alert alert-success">
+            <h5>✅ Correção Implementada Automaticamente!</h5>
+            <p>O script de correção foi incluído automaticamente nos templates principais.</p>
+        </div>
+
+        <!-- Status da Implementação -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>📋 Status da Implementação</h5>
+            </div>
+            <div class="card-body">
+                <div id="status-implementacao"></div>
+            </div>
+        </div>
+
+        <!-- Tabela de Teste -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Tarefas de Teste</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tarefa</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Tarefa de Teste 1</td>
+                            <td><span class="badge bg-warning">Pendente</span></td>
+                            <td>
+                                <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="teste-001">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tarefa de Teste 2</td>
+                            <td><span class="badge bg-success">Concluída</span></td>
+                            <td>
+                                <button class="btn btn-danger btn-sm btn-excluir-tarefa" data-tarefa-id="teste-002">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Botões de Controle -->
+        <div class="mt-4">
+            <button class="btn btn-primary" onclick="verificarImplementacao()">
+                <i class="fas fa-check"></i> Verificar Implementação
+            </button>
+            <button class="btn btn-info" onclick="testarExclusao()">
+                <i class="fas fa-trash"></i> Testar Exclusão
+            </button>
+            <button class="btn btn-warning" onclick="forcarReconfiguracao()">
+                <i class="fas fa-sync"></i> Forçar Reconfiguração
+            </button>
+        </div>
+
+        <!-- Resultados -->
+        <div class="mt-4">
+            <div id="resultados-teste"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 🔧 SCRIPT DE CORREÇÃO AUTOMÁTICA -->
+    <script src="static/js/correcao_exclusao_tarefas.js"></script>
+
+    <script>
+        // Função para verificar a implementação
+        function verificarImplementacao() {
+            const resultados = document.getElementById('resultados-teste');
+            const status = document.getElementById('status-implementacao');
+
+            resultados.innerHTML = '';
+
+            let statusHTML = '';
+            let resultadosHTML = '';
+
+            // 1. Verificar se o script foi carregado
+            if (typeof corrigirExclusaoTarefas === 'function') {
+                statusHTML += '<div class="status-item sucesso"><i class="fas fa-check"></i> Script de correção carregado</div>';
+                resultadosHTML += '<div class="alert alert-success">✅ Script de correção carregado com sucesso!</div>';
+            } else {
+                statusHTML += '<div class="status-item erro"><i class="fas fa-times"></i> Script de correção não carregado</div>';
+                resultadosHTML += '<div class="alert alert-danger">❌ Script de correção não foi carregado!</div>';
+                return;
+            }
+
+            // 2. Verificar se as funções estão disponíveis
+            const funcoes = [
+                'verificarStatusExclusao',
+                'forcarReconfiguracao',
+                'corrigirExclusaoTarefas'
+            ];
+
+            funcoes.forEach(funcao => {
+                if (typeof window[funcao] === 'function') {
+                    statusHTML += `<div class="status-item sucesso"><i class="fas fa-check"></i> Função ${funcao} disponível</div>`;
+                } else {
+                    statusHTML += `<div class="status-item erro"><i class="fas fa-times"></i> Função ${funcao} não disponível</div>`;
+                }
+            });
+
+            // 3. Verificar botões de exclusão
+            const botoes = document.querySelectorAll('.btn-excluir-tarefa');
+            if (botoes.length > 0) {
+                statusHTML += `<div class="status-item sucesso"><i class="fas fa-check"></i> ${botoes.length} botões de exclusão encontrados</div>`;
+            } else {
+                statusHTML += '<div class="status-item erro"><i class="fas fa-times"></i> Nenhum botão de exclusão encontrado</div>';
+            }
+
+            // 4. Verificar se o sistema está configurado
+            if (window.exclusaoTarefasConfigurada) {
+                statusHTML += '<div class="status-item sucesso"><i class="fas fa-check"></i> Sistema de exclusão configurado</div>';
+                resultadosHTML += '<div class="alert alert-success">✅ Sistema de exclusão configurado automaticamente!</div>';
+            } else {
+                statusHTML += '<div class="status-item aviso"><i class="fas fa-exclamation-triangle"></i> Sistema de exclusão não configurado</div>';
+                resultadosHTML += '<div class="alert alert-warning">⚠️ Sistema de exclusão não configurado. Clique em "Forçar Reconfiguração".</div>';
+            }
+
+            status.innerHTML = statusHTML;
+            resultados.innerHTML = resultadosHTML;
+        }
+
+        // Função para testar exclusão
+        function testarExclusao() {
+            const resultados = document.getElementById('resultados-teste');
+
+            if (!window.exclusaoTarefasConfigurada) {
+                resultados.innerHTML = '<div class="alert alert-warning">⚠️ Configure o sistema primeiro usando "Forçar Reconfiguração"</div>';
+                return;
+            }
+
+            const botoes = document.querySelectorAll('.btn-excluir-tarefa');
+            if (botoes.length === 0) {
+                resultados.innerHTML = '<div class="alert alert-warning">⚠️ Nenhum botão de exclusão encontrado</div>';
+                return;
+            }
+
+            const primeiroBotao = botoes[0];
+            const tarefaId = primeiroBotao.getAttribute('data-tarefa-id');
+
+            resultados.innerHTML = `<div class="alert alert-info">🧪 Testando exclusão da tarefa: ${tarefaId}</div>`;
+
+            // Simular clique
+            primeiroBotao.click();
+        }
+
+        // Função para forçar reconfiguração
+        function forcarReconfiguracao() {
+            const resultados = document.getElementById('resultados-teste');
+
+            if (typeof forcarReconfiguracao === 'function') {
+                try {
+                    window.forcarReconfiguracao();
+                    resultados.innerHTML = '<div class="alert alert-success">✅ Reconfiguração forçada executada!</div>';
+
+                    // Verificar novamente após reconfiguração
+                    setTimeout(() => {
+                        verificarImplementacao();
+                    }, 1000);
+                } catch (error) {
+                    resultados.innerHTML = `<div class="alert alert-danger">❌ Erro na reconfiguração: ${error.message}</div>`;
+                }
+            } else {
+                resultados.innerHTML = '<div class="alert alert-danger">❌ Função de reconfiguração não disponível</div>';
+            }
+        }
+
+        // Verificar implementação quando a página carregar
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🚀 Verificando implementação automática...');
+            setTimeout(() => {
+                verificarImplementacao();
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,343 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Coleções{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-boxes"></i> Gerenciamento de Coleções (Projetos)
+                </h1>
+                <button class="btn btn-producao" onclick="showAddColecaoModal()">
+                    <i class="fas fa-plus me-2"></i>Nova Coleção
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Filtrar por Tipo:</label>
+            <select class="form-select" id="filtroTipo" onchange="filtrarColecoes()">
+                <option value="">Todos os tipos</option>
+                {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Buscar por Nome:</label>
+            <input type="text" class="form-control" id="buscaNome" placeholder="Digite o nome..." onkeyup="filtrarColecoes()">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-outline-secondary" onclick="limparFiltros()">
+                <i class="fas fa-broom me-2"></i>Limpar Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista de Coleções -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Coleções (Projetos) - {{ projetos|length }} encontrados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="colecoes-table">
+                        {% if projetos %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Tipo</th>
+                                            <th>Data Início</th>
+                                            <th>Data Fim</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-colecoes">
+                                        {% for projeto in projetos %}
+                                        <tr data-tipo-id="{{ projeto.tipo_id or '' }}" data-nome="{{ projeto.nome|lower }}">
+                                            <td><strong>{{ projeto.nome }}</strong></td>
+                                            <td>
+                                                {% if projeto.tipo_id %}
+                                                    {% for tipo in tipos %}
+                                                        {% if tipo.id == projeto.tipo_id %}
+                                                            <span class="badge bg-info">{{ tipo.nome }}</span>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if not (tipos | selectattr('id', 'equalto', projeto.tipo_id) | list) %}
+                                                        <span class="badge bg-secondary">Tipo: {{ projeto.tipo_id[:8] }}...</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-light text-dark">Sem Tipo</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ projeto.data_inicio or '-' }}</td>
+                                            <td>{{ projeto.data_fim or '-' }}</td>
+                                            <td>
+                                                {% if projeto.data_fim %}
+                                                    {% set hoje = moment().format('YYYY-MM-DD') %}
+                                                    {% if projeto.data_fim < hoje %}
+                                                        <span class="badge bg-success">Concluído</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Em Andamento</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Sem Data</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="editColecao('{{ projeto.id }}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteColecao('{{ projeto.id }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                <a href="{{ url_for('main.detalhes_projeto', id=projeto.id) }}" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Nenhuma coleção encontrada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar/Editar Coleção -->
+<div class="modal fade" id="addColecaoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header card-header-producao">
+                <h5 class="modal-title text-white" id="modalTitle">Nova Coleção</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addColecaoForm">
+                    <input type="hidden" id="colecaoId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome *</label>
+                        <input type="text" class="form-control" id="colecaoNome" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data Início</label>
+                                <input type="date" class="form-control" id="colecaoDataInicio">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data Fim</label>
+                                <input type="date" class="form-control" id="colecaoDataFim">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Projeto (Opcional)</label>
+                        <select class="form-control" id="colecaoTipo">
+                            <option value="">Sem tipo específico</option>
+                            {% for tipo in tipos %}
+                                <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Por enquanto, tipos são gerados automaticamente.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-producao" onclick="saveColecao()">
+                    <i class="fas fa-save me-2"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Projetos/coleções atuais carregados do servidor
+    let projetos = {{ projetos|tojson }};
+    let tipos = {{ tipos|tojson }};
+
+    function filtrarColecoes() {
+        const tipoSelecionado = document.getElementById('filtroTipo').value;
+        const nomeBusca = document.getElementById('buscaNome').value.toLowerCase();
+        
+        const linhas = document.querySelectorAll('#tbody-colecoes tr');
+        
+        linhas.forEach(linha => {
+            const tipoId = linha.getAttribute('data-tipo-id');
+            const nome = linha.getAttribute('data-nome');
+            
+            let mostrarTipo = !tipoSelecionado || tipoId === tipoSelecionado;
+            let mostrarNome = !nomeBusca || nome.includes(nomeBusca);
+            
+            if (mostrarTipo && mostrarNome) {
+                linha.style.display = '';
+            } else {
+                linha.style.display = 'none';
+            }
+        });
+    }
+
+    function limparFiltros() {
+        document.getElementById('filtroTipo').value = '';
+        document.getElementById('buscaNome').value = '';
+        filtrarColecoes();
+    }
+
+    function showAddColecaoModal() {
+        document.getElementById('modalTitle').textContent = 'Nova Coleção';
+        document.getElementById('colecaoId').value = '';
+        document.getElementById('addColecaoForm').reset();
+
+        const modal = new bootstrap.Modal(document.getElementById('addColecaoModal'));
+        modal.show();
+    }
+
+    function editColecao(id) {
+        const projeto = projetos.find(p => p.id === id);
+
+        if (!projeto) {
+            alert('Projeto não encontrado.');
+            return;
+        }
+
+        document.getElementById('modalTitle').textContent = 'Editar Coleção';
+        document.getElementById('colecaoId').value = projeto.id;
+        document.getElementById('colecaoNome').value = projeto.nome;
+        document.getElementById('colecaoDataInicio').value = projeto.data_inicio || '';
+        document.getElementById('colecaoDataFim').value = projeto.data_fim || '';
+        document.getElementById('colecaoTipo').value = projeto.tipo_id || '';
+
+        const modal = new bootstrap.Modal(document.getElementById('addColecaoModal'));
+        modal.show();
+    }
+
+    async function saveColecao() {
+        const id = document.getElementById('colecaoId').value;
+        const nome = document.getElementById('colecaoNome').value;
+        const dataInicio = document.getElementById('colecaoDataInicio').value;
+        const dataFim = document.getElementById('colecaoDataFim').value;
+        const tipoId = document.getElementById('colecaoTipo').value;
+
+        if (!nome.trim()) {
+            alert('Por favor, preencha o nome da coleção.');
+            return;
+        }
+
+        const dados = {
+            nome: nome.trim(),
+            data_inicio: dataInicio || null,
+            data_fim: dataFim || null,
+            tipo_id: tipoId || null
+        };
+
+        try {
+            let response;
+            
+            if (id) {
+                // Editar coleção existente
+                response = await fetch(`/api/producao/colecoes/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dados)
+                });
+            } else {
+                // Criar nova coleção
+                response = await fetch('/api/producao/colecoes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dados)
+                });
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addColecaoModal'));
+                modal.hide();
+
+                // Limpar formulário
+                document.getElementById('addColecaoForm').reset();
+
+                // Mostrar sucesso e recarregar página
+                alert(result.message);
+                location.reload();
+            } else {
+                alert('Erro: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Erro ao salvar coleção:', error);
+            alert('Erro ao salvar coleção. Tente novamente.');
+        }
+    }
+
+    async function deleteColecao(id) {
+        if (!confirm('Tem certeza que deseja excluir esta coleção?\n\nAVISO: Esta ação não pode ser desfeita!')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/producao/colecoes/${id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message);
+                location.reload();
+            } else {
+                alert('Erro: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Erro ao deletar coleção:', error);
+            alert('Erro ao deletar coleção. Tente novamente.');
+        }
+    }
+
+    // Validação de datas
+    document.getElementById('colecaoDataInicio').addEventListener('change', function() {
+        const dataInicio = this.value;
+        const dataFimInput = document.getElementById('colecaoDataFim');
+        
+        if (dataInicio) {
+            dataFimInput.min = dataInicio;
+        }
+    });
+
+    document.getElementById('colecaoDataFim').addEventListener('change', function() {
+        const dataFim = this.value;
+        const dataInicioInput = document.getElementById('colecaoDataInicio');
+        
+        if (dataFim && dataInicioInput.value && dataFim < dataInicioInput.value) {
+            alert('A data de fim não pode ser anterior à data de início.');
+            this.value = '';
+        }
+    });
+</script>
+{% endblock %}
