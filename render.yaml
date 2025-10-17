@@ -4,7 +4,8 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements_producao.txt
-    startCommand: gunicorn --config gunicorn.conf.py app_producao:app
+    startCommand: gunicorn --config gunicorn.conf.py render_app:app
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -15,6 +16,6 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: SUPABASE_URL
-        sync: false
+        value: https://zvdpuxggltqejplybzet.supabase.co
       - key: SUPABASE_KEY
-        sync: false 
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2ZHB1eGdnbHRxZWpwbHliemV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTcyOTAsImV4cCI6MjA2NTMzMzI5MH0.YaDt2gAl_FFolp8Gh5n18ZjwzkLLcQ2EuWzFZTTyEMI 

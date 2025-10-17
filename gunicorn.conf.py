@@ -10,8 +10,8 @@ import os
 os.makedirs('logs', exist_ok=True)
 
 # Configurações básicas
-bind = "0.0.0.0:5000"
-workers = multiprocessing.cpu_count() * 2 + 1
+bind = "0.0.0.0:" + str(os.environ.get('PORT', 5000))
+workers = 1  # Render Free tier tem limitações
 worker_class = "sync"  # Usar worker sync em vez de gevent
 worker_connections = 1000
 max_requests = 1000
