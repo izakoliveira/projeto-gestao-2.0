@@ -145,16 +145,6 @@ def status():
             "version": "2.0.0"
         })
 
-# Rota de teste simples
-@app.route('/')
-def index():
-    """Rota principal"""
-    return jsonify({
-        "message": "Sistema de Gestão de Projetos 2.0",
-        "status": "running",
-        "version": "2.0.0"
-    })
-
 if __name__ == '__main__':
     print("🚀 Iniciando aplicação de produção...")
     print("📋 Blueprints registrados:")
