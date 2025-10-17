@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements_producao.txt
-    startCommand: gunicorn --config gunicorn.conf.py app_minimal:app
+    startCommand: python app_minimal.py
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
