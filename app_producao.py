@@ -36,7 +36,9 @@ try:
     from routes.producao import producao_bp
     from routes.relatorio import relatorio_bp
 except ImportError as e:
-    # Erro ao importar módulos: {e}
+    print(f"⚠️ ERRO DE IMPORT: {e}")
+    print("🔍 Tentando importar módulos individualmente...")
+    
     # Criar blueprints vazios para evitar erros
     from flask import Blueprint
     auth_bp = Blueprint('auth', __name__)
@@ -47,6 +49,11 @@ except ImportError as e:
     main_bp = Blueprint('main', __name__)
     producao_bp = Blueprint('producao', __name__)
     relatorio_bp = Blueprint('relatorio', __name__)
+    
+    # Definir variáveis para evitar erros
+    Config = None
+    supabase = None
+    print("⚠️ Rodando com blueprints vazios devido a erro de importação")
 
 # Criar aplicação Flask
 app = Flask(__name__)
@@ -58,14 +65,19 @@ def utility_processor():
 
 # Configurar aplicação para produção
 try:
-    app.config.from_object(Config)
+    if Config:
+        app.config.from_object(Config)
+        print("✅ Config carregado com sucesso")
+    else:
+        raise Exception("Config não disponível")
 except Exception as e:
-    # Erro ao carregar configurações: {e}
-    # Configurações padrão
+    print(f"⚠️ Erro ao carregar configurações: {e}")
+    print("🔧 Usando configurações padrão...")
+    # Configurações padrão para Render/Produção
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sua-chave-secreta-producao-padrao-123456789')
     app.config['DEBUG'] = False
     app.config['SESSION_TYPE'] = 'filesystem'
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)  # 8 horas - usando timedelta para garantir
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
 # Registrar blueprints
 try:
@@ -87,7 +99,7 @@ def health_check():
     """Health check para monitoramento de produção"""
     try:
         # Testar conexão com banco
-        if supabase:
+        if 'supabase' in globals() and supabase:
             supabase_client = supabase.auth
             db_status = "healthy"
         else:
