@@ -13,12 +13,21 @@ from dotenv import load_dotenv
 # Carregar variáveis de ambiente
 load_dotenv()
 
+print("🔍 DEBUG RENDER - Iniciando app_producao.py...")
+print(f"🔍 PORT: {os.environ.get('PORT', 'NÃO DEFINIDA')}")
+print(f"🔍 SECRET_KEY: {'✅ DEFINIDA' if os.environ.get('SECRET_KEY') else '❌ NÃO DEFINIDA'}")
+print(f"🔍 SUPABASE_URL: {'✅ DEFINIDA' if os.environ.get('SUPABASE_URL') else '❌ NÃO DEFINIDA'}")
+
 # Configurar variáveis de ambiente padrão
 os.environ.setdefault('FLASK_ENV', 'production')
 os.environ.setdefault('FLASK_APP', 'app_producao.py')
 
+print("🔍 DEBUG RENDER - Criando diretórios...")
+
 # Criar diretórios necessários
 os.makedirs('static/uploads', exist_ok=True)
+
+print("🔍 DEBUG RENDER - Importando módulos...")
 
 try:
     from config.app_config import Config
@@ -35,6 +44,7 @@ try:
     from routes.main import main_bp
     from routes.producao import producao_bp
     from routes.relatorio import relatorio_bp
+    print("🔍 DEBUG RENDER - Imports bem-sucedidos!")
 except ImportError as e:
     print(f"⚠️ ERRO DE IMPORT: {e}")
     print("🔍 Tentando importar módulos individualmente...")
@@ -58,10 +68,14 @@ except ImportError as e:
 # Criar aplicação Flask
 app = Flask(__name__)
 
+print("🔍 DEBUG RENDER - Flask app criada!")
+
 # Expor função de dias úteis para Jinja2
 @app.context_processor
 def utility_processor():
     return dict(dias_uteis_entre_datas=dias_uteis_entre_datas)
+
+print("🔍 DEBUG RENDER - Context processor configurado!")
 
 # Configurar aplicação para produção
 try:
