@@ -49,21 +49,97 @@ except ImportError as e:
     print(f"⚠️ ERRO DE IMPORT: {e}")
     print("🔍 Tentando importar módulos individualmente...")
     
-    # Criar blueprints vazios para evitar erros
-    from flask import Blueprint
-    auth_bp = Blueprint('auth', __name__)
-    projetos_bp = Blueprint('projetos', __name__)
-    tarefas_bp = Blueprint('tarefas', __name__)
-    admin_bp = Blueprint('admin', __name__)
-    pastas_bp = Blueprint('pastas', __name__)
-    main_bp = Blueprint('main', __name__)
-    producao_bp = Blueprint('producao', __name__)
-    relatorio_bp = Blueprint('relatorio', __name__)
-    
-    # Definir variáveis para evitar erros
+    # Tentar importar cada módulo individualmente
     Config = None
     supabase = None
-    print("⚠️ Rodando com blueprints vazios devido a erro de importação")
+    
+    # Importar utilitários essenciais
+    try:
+        from config.app_config import Config
+        print("✅ Config importado")
+    except ImportError as ex:
+        print(f"⚠️ Config não disponível: {ex}")
+    
+    try:
+        from config.database import supabase
+        print("✅ Supabase importado")
+    except ImportError as ex:
+        print(f"⚠️ Supabase não disponível: {ex}")
+    
+    # Importar blueprints individualmente
+    auth_bp = None
+    projetos_bp = None  
+    tarefas_bp = None
+    admin_bp = None
+    pastas_bp = None
+    main_bp = None
+    producao_bp = None
+    relatorio_bp = None
+    
+    # Tentar importar cada blueprint
+    try:
+        from routes.auth import auth_bp
+        print("✅ Auth blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Auth blueprint falhou: {ex}")
+        from flask import Blueprint
+        auth_bp = Blueprint('auth', __name__)
+    
+    try:
+        from routes.projetos import projetos_bp
+        print("✅ Projetos blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Projetos blueprint falhou: {ex}")
+        from flask import Blueprint
+        projetos_bp = Blueprint('projetos', __name__)
+    
+    try:
+        from routes.tarefas import tarefas_bp
+        print("✅ Tarefas blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Tarefas blueprint falhou: {ex}")
+        from flask import Blueprint
+        tarefas_bp = Blueprint('tarefas', __name__)
+    
+    try:
+        from routes.admin import admin_bp
+        print("✅ Admin blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Admin blueprint falhou: {ex}")
+        from flask import Blueprint
+        admin_bp = Blueprint('admin', __name__)
+    
+    try:
+        from routes.pastas import pastas_bp
+        print("✅ Pastas blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Pastas blueprint falhou: {ex}")
+        from flask import Blueprint
+        pastas_bp = Blueprint('pastas', __name__)
+    
+    try:
+        from routes.main import main_bp
+        print("✅ Main blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Main blueprint falhou: {ex}")
+        from flask import Blueprint
+        main_bp = Blueprint('main', __name__)
+    
+    try:
+        from routes.producao import producao_bp
+        print("✅ Producao blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Producao blueprint falhou: {ex}")
+        from flask import Blueprint
+        producao_bp = Blueprint('producao', __name__)
+    
+    try:
+        from routes.relatorio import relatorio_bp
+        print("✅ Relatorio blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Relatorio blueprint falhou: {ex}")
+        from flask import Blueprint
+        relatorio_bp = Blueprint('relatorio', __name__)
 
 # Criar aplicação Flask
 app = Flask(__name__)
