@@ -3,11 +3,25 @@ from config.database import supabase
 from utils.dias_uteis import dias_uteis_entre_datas
 import os
 import base64
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from datetime import datetime
-import pandas as pd
 import io
+
+# Matplotlib imports opcionais para Render
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+    import pandas as pd
+    MATPLOTLIB_AVAILABLE = True
+    print('DEBUG: routes/relatorio.py - matplotlib carregado com sucesso')
+except ImportError as e:
+    print(f'DEBUG: routes/relatorio.py - matplotlib não disponível: {e}')
+    MATPLOTLIB_AVAILABLE = False
+    # Criar mocks para evitar erros
+    class MockModule:
+        def __getattr__(self, name): return lambda *args, **kwargs: None
+    plt = MockModule()
+    mdates = MockModule() 
+    pd = MockModule()
 
 relatorio_bp = Blueprint('relatorio', __name__)
 
