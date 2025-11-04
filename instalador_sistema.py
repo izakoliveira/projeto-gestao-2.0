@@ -312,6 +312,7 @@ na pasta de instalação do sistema.
             # Verificar Python antes de começar
             self.log_message("🔍 Verificando Python no sistema...")
             python_info = self._verificar_python_instalado()
+            self.python_info = python_info  # Guardar para uso posterior
             
             if python_info["instalado"]:
                 self.log_message(f"  ✓ Python {python_info['versao']} encontrado")
@@ -350,6 +351,16 @@ na pasta de instalação do sistema.
             # Criar ambiente virtual
             if self.instalar_dependencias.get():
                 self.log_message("🔄 Iniciando criação de ambiente virtual...")
+                
+                # Se python_path é None mas precisamos de Python Embedded, instalar agora
+                if python_path is None and not self.python_info.get("tem_venv", False):
+                    self.log_message("⚠️ Python do sistema não tem venv, instalando Python Embedded...")
+                    python_path = self.instalar_python_portable(pasta_destino)
+                    if python_path:
+                        self.log_message(f"✅ Python embarcado instalado em: {python_path}")
+                    else:
+                        raise Exception("Falha na instalação do Python embarcado")
+                
                 self.criar_ambiente_virtual(pasta_destino, python_path)
                 self.log_message("✅ Ambiente virtual criado com sucesso")
             else:
