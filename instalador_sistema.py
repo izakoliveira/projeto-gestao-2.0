@@ -605,48 +605,93 @@ na pasta de instalação do sistema.
             zip_path.unlink()
             self.log_message("  ✓ Python embarcado extraído")
             
-            # Baixar get-pip.py
-            self.log_message("  📥 Baixando get-pip...")
-            pip_url = "https://bootstrap.pypa.io/get-pip.py"
-            get_pip_path = python_dir / "get-pip.py"
-            urllib.request.urlretrieve(pip_url, get_pip_path)
+            python_exe = python_dir / "python.exe"
             
-            # Habilitar pip no Python embarcado
+            # PASSO 1: Habilitar site-packages ANTES de instalar pip
+            self.log_message("  � Configurando Python Embedded...")
             pth_file = None
             for file in python_dir.glob("*._pth"):
                 pth_file = file
                 break
             
             if pth_file:
+                self.log_message(f"  📝 Editando {pth_file.name}...")
                 content = pth_file.read_text()
-                if "import site" not in content:
-                    pth_file.write_text(content.replace("#import site", "import site"))
+                
+                # Descomentar import site E adicionar Scripts ao path
+                new_content = content.replace("#import site", "import site")
+                
+                # Adicionar Lib/site-packages se não existir
+                if "Lib\\site-packages" not in new_content:
+                    new_content += "\nLib\\site-packages\n"
+                if "Scripts" not in new_content:
+                    new_content += "Scripts\n"
+                
+                pth_file.write_text(new_content)
+                self.log_message("  ✓ Arquivo ._pth configurado")
+            else:
+                self.log_message("  ⚠️ Arquivo ._pth não encontrado")
             
-            # Instalar pip
-            python_exe = python_dir / "python.exe"
+            # PASSO 2: Criar estrutura de pastas necessária
+            lib_dir = python_dir / "Lib"
+            lib_dir.mkdir(exist_ok=True)
+            site_packages = lib_dir / "site-packages"
+            site_packages.mkdir(exist_ok=True)
+            scripts_dir = python_dir / "Scripts"
+            scripts_dir.mkdir(exist_ok=True)
+            self.log_message("  ✓ Estrutura de pastas criada")
+            
+            # PASSO 3: Baixar get-pip.py
+            self.log_message("  📥 Baixando get-pip...")
+            pip_url = "https://bootstrap.pypa.io/get-pip.py"
+            get_pip_path = python_dir / "get-pip.py"
+            urllib.request.urlretrieve(pip_url, get_pip_path)
+            
+            # PASSO 4: Instalar pip
             self.log_message("  🔧 Instalando pip...")
-            result = subprocess.run([str(python_exe), str(get_pip_path)], 
-                                  capture_output=True, text=True, timeout=300)
+            result = subprocess.run(
+                [str(python_exe), str(get_pip_path), "--no-warn-script-location"], 
+                capture_output=True, 
+                text=True, 
+                timeout=300,
+                cwd=str(python_dir)
+            )
             
             if result.returncode == 0:
                 self.log_message("  ✓ Pip instalado com sucesso")
-            
-            # IMPORTANTE: Python Embedded precisa ter venv instalado via pip
-            self.log_message("  🔧 Verificando módulo venv...")
-            venv_check = subprocess.run([str(python_exe), "-m", "venv", "--help"],
-                                       capture_output=True, text=True, timeout=10)
-            
-            if venv_check.returncode != 0:
-                self.log_message("  ⚠️ Módulo venv não encontrado, instalando...")
-                # Python Embedded não vem com venv, precisa instalar
-                result = subprocess.run([str(python_exe), "-m", "pip", "install", "virtualenv"],
-                                      capture_output=True, text=True, timeout=300)
-                if result.returncode == 0:
-                    self.log_message("  ✓ virtualenv instalado (substituto para venv)")
-                else:
-                    self.log_message(f"  ⚠️ Não foi possível instalar virtualenv: {result.stderr}")
             else:
-                self.log_message("  ✓ Módulo venv disponível")
+                self.log_message(f"  ⚠️ Aviso ao instalar pip:")
+                self.log_message(f"     STDOUT: {result.stdout[:200]}")
+                self.log_message(f"     STDERR: {result.stderr[:200]}")
+            
+            # PASSO 5: Verificar se pip funciona
+            self.log_message("  � Verificando pip...")
+            pip_check = subprocess.run(
+                [str(python_exe), "-m", "pip", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if pip_check.returncode == 0:
+                self.log_message(f"  ✓ Pip funcionando: {pip_check.stdout.strip()}")
+            else:
+                self.log_message(f"  ❌ Pip não está funcionando!")
+                return None
+            
+            # PASSO 6: Instalar virtualenv
+            self.log_message("  🔧 Instalando virtualenv...")
+            result = subprocess.run(
+                [str(python_exe), "-m", "pip", "install", "virtualenv", "--no-warn-script-location"],
+                capture_output=True,
+                text=True,
+                timeout=300
+            )
+            
+            if result.returncode == 0:
+                self.log_message("  ✓ virtualenv instalado")
+            else:
+                self.log_message(f"  ⚠️ Erro ao instalar virtualenv: {result.stderr[:200]}")
             
             return python_exe
             
