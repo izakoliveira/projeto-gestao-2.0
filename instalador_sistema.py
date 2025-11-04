@@ -1084,14 +1084,13 @@ python app_producao.py
                 desktop = Path.home() / "Área de Trabalho"
                 
             if desktop.exists():
-                atalho_path = desktop / "Sistema de Gestão de Projetos.lnk"
-                
-                # No Windows, usar um .bat simples
+                # No Windows, usar o VBS para execução oculta
                 if os.name == "nt":
                     bat_atalho = desktop / "Sistema de Gestão de Projetos.bat"
                     with open(bat_atalho, "w", encoding="utf-8") as f:
-                        f.write(f'@echo off\ncd /d "{destino}"\ncall executar_sistema.bat')
-                    self.log_message("  ✓ Atalho criado na área de trabalho")
+                        # Executar o VBS que inicia o sistema em modo oculto
+                        f.write(f'@echo off\ncd /d "{destino}"\nstart "" wscript.exe "iniciar_oculto.vbs"')
+                    self.log_message("  ✓ Atalho criado (modo oculto) na área de trabalho")
                 else:
                     # Para Linux, criar um .desktop file
                     desktop_file_content = f"""[Desktop Entry]
