@@ -180,32 +180,32 @@ na pasta de instalação do sistema.
         self.root.update()
     
     def _verificar_python_instalado(self):
-        """Verifica se Python está instalado no sistema"""
-        try:
-            result = subprocess.run(["python", "--version"], capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                versao = result.stdout.strip().replace("Python ", "")
-                return {"instalado": True, "versao": versao, "comando": "python"}
-        except:
-            pass
+        """Verifica se Python está instalado no sistema e se tem módulo venv"""
+        comandos = ["python", "python3", "py"]
         
-        try:
-            result = subprocess.run(["python3", "--version"], capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                versao = result.stdout.strip().replace("Python ", "")
-                return {"instalado": True, "versao": versao, "comando": "python3"}
-        except:
-            pass
+        for comando in comandos:
+            try:
+                # Verificar versão
+                result = subprocess.run([comando, "--version"], capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    versao = result.stdout.strip().replace("Python ", "")
+                    
+                    # Verificar se tem módulo venv
+                    venv_check = subprocess.run([comando, "-m", "venv", "--help"], 
+                                              capture_output=True, text=True, timeout=5)
+                    
+                    tem_venv = venv_check.returncode == 0
+                    
+                    return {
+                        "instalado": True, 
+                        "versao": versao, 
+                        "comando": comando,
+                        "tem_venv": tem_venv
+                    }
+            except:
+                continue
         
-        try:
-            result = subprocess.run(["py", "--version"], capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                versao = result.stdout.strip().replace("Python ", "")
-                return {"instalado": True, "versao": versao, "comando": "py"}
-        except:
-            pass
-        
-        return {"instalado": False, "versao": None, "comando": None}
+        return {"instalado": False, "versao": None, "comando": None, "tem_venv": False}
         
     def iniciar_instalacao(self):
         """Inicia o processo de instalação em thread separada"""
@@ -308,6 +308,23 @@ na pasta de instalação do sistema.
             self.log_message("🚀 Iniciando instalação do Sistema de Gestão de Projetos 2.0...")
             self.log_message(f"🔍 Executável atual: {sys.executable}")
             self.log_message(f"🔍 Script atual: {__file__}")
+            
+            # Verificar Python antes de começar
+            self.log_message("🔍 Verificando Python no sistema...")
+            python_info = self._verificar_python_instalado()
+            
+            if python_info["instalado"]:
+                self.log_message(f"  ✓ Python {python_info['versao']} encontrado")
+                if python_info.get("tem_venv"):
+                    self.log_message(f"  ✓ Módulo venv disponível")
+                else:
+                    self.log_message(f"  ⚠️ Módulo venv NÃO disponível")
+                    self.log_message(f"  🔄 Ativando instalação de Python Embedded automaticamente...")
+                    self.instalar_python_embarcado.set(True)
+            else:
+                self.log_message(f"  ⚠️ Python não encontrado no sistema")
+                self.log_message(f"  🔄 Ativando instalação de Python Embedded automaticamente...")
+                self.instalar_python_embarcado.set(True)
             
             # Criar pasta de instalação
             pasta_destino = Path(self.pasta_instalacao.get())
@@ -760,8 +777,14 @@ na pasta de instalação do sistema.
             # Opção 1: Tentar python no PATH
             result = subprocess.run(["python", "--version"], capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
-                self.log_message(f"  🔍 Python encontrado no PATH: {result.stdout.strip()}")
-                return "python"
+                # Verificar se tem módulo venv
+                venv_check = subprocess.run(["python", "-m", "venv", "--help"], 
+                                          capture_output=True, text=True, timeout=10)
+                if venv_check.returncode == 0:
+                    self.log_message(f"  🔍 Python encontrado no PATH: {result.stdout.strip()}")
+                    return "python"
+                else:
+                    self.log_message(f"  ⚠️ Python no PATH não tem módulo venv")
         except:
             pass
         
@@ -769,8 +792,14 @@ na pasta de instalação do sistema.
             # Opção 2: Tentar python3 no PATH  
             result = subprocess.run(["python3", "--version"], capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
-                self.log_message(f"  🔍 Python3 encontrado no PATH: {result.stdout.strip()}")
-                return "python3"
+                # Verificar se tem módulo venv
+                venv_check = subprocess.run(["python3", "-m", "venv", "--help"], 
+                                          capture_output=True, text=True, timeout=10)
+                if venv_check.returncode == 0:
+                    self.log_message(f"  🔍 Python3 encontrado no PATH: {result.stdout.strip()}")
+                    return "python3"
+                else:
+                    self.log_message(f"  ⚠️ Python3 no PATH não tem módulo venv")
         except:
             pass
             
@@ -790,8 +819,14 @@ na pasta de instalação do sistema.
                 try:
                     result = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=10)
                     if result.returncode == 0:
-                        self.log_message(f"  🔍 Python encontrado em: {path} - {result.stdout.strip()}")
-                        return path
+                        # Verificar se tem módulo venv
+                        venv_check = subprocess.run([path, "-m", "venv", "--help"], 
+                                                  capture_output=True, text=True, timeout=10)
+                        if venv_check.returncode == 0:
+                            self.log_message(f"  🔍 Python encontrado em: {path} - {result.stdout.strip()}")
+                            return path
+                        else:
+                            self.log_message(f"  ⚠️ Python em {path} não tem módulo venv")
                 except:
                     continue
         
@@ -799,13 +834,26 @@ na pasta de instalação do sistema.
         try:
             result = subprocess.run(["py", "--version"], capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
-                self.log_message(f"  🔍 Python encontrado via py launcher: {result.stdout.strip()}")
-                return "py"
+                # Verificar se tem módulo venv
+                venv_check = subprocess.run(["py", "-m", "venv", "--help"], 
+                                          capture_output=True, text=True, timeout=10)
+                if venv_check.returncode == 0:
+                    self.log_message(f"  🔍 Python encontrado via py launcher: {result.stdout.strip()}")
+                    return "py"
+                else:
+                    self.log_message(f"  ⚠️ Python via py launcher não tem módulo venv")
         except:
             pass
             
-        # Se chegou até aqui, não encontrou Python
-        raise Exception("Python não encontrado no sistema. Por favor, instale Python 3.8+ de python.org")
+        # Se chegou até aqui, não encontrou Python com venv
+        self.log_message("  ❌ Nenhum Python com módulo venv encontrado no sistema")
+        raise Exception(
+            "Python não encontrado ou não possui módulo venv.\n\n"
+            "SOLUÇÃO:\n"
+            "Marque a opção 'Instalar Python Embedded' na aba de Configuração\n"
+            "e clique em Instalar novamente.\n\n"
+            "OU instale Python 3.8+ completo de python.org"
+        )
         
     def criar_arquivo_env(self, destino):
         """Cria o arquivo .env com as configurações"""
