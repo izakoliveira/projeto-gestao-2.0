@@ -41,9 +41,6 @@ class InstaladorSistema:
         self.instalar_dependencias = tk.BooleanVar(value=True)
         self.instalar_python_embarcado = tk.BooleanVar(value=False)  # Nova opção
         
-        # Carregar configurações salvas
-        self.carregar_configuracoes()
-        
         self.setup_ui()
         
     def setup_ui(self):
