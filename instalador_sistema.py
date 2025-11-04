@@ -228,6 +228,30 @@ na pasta de instalação do sistema.
         if not self.supabase_url.get() or not self.supabase_key.get():
             messagebox.showerror("Erro", "Configure as credenciais do Supabase")
             return False
+        
+        # Verificar permissões de escrita na pasta
+        pasta_destino = Path(self.pasta_instalacao.get())
+        try:
+            # Criar a pasta se não existir
+            pasta_destino.mkdir(parents=True, exist_ok=True)
+            
+            # Testar permissão de escrita
+            test_file = pasta_destino / ".test_permission"
+            test_file.write_text("test")
+            test_file.unlink()
+        except PermissionError:
+            messagebox.showerror(
+                "Erro de Permissão", 
+                f"Sem permissão de escrita na pasta:\n{pasta_destino}\n\n"
+                "Sugestões:\n"
+                "1. Execute o instalador como Administrador\n"
+                "2. Escolha outra pasta (ex: C:\\SistemaGestao)\n"
+                "3. Desative temporariamente o antivírus"
+            )
+            return False
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao validar pasta: {e}")
+            return False
             
         return True
         
@@ -548,6 +572,25 @@ na pasta de instalação do sistema.
             # Criar ambiente virtual
             venv_path = destino / "venv"
             self.log_message(f"  📁 Criando venv em: {venv_path}")
+            
+            # Se a pasta venv já existe, tentar remover
+            if venv_path.exists():
+                self.log_message(f"  ⚠️ Pasta venv já existe, removendo...")
+                try:
+                    shutil.rmtree(venv_path)
+                    self.log_message(f"  ✓ Pasta antiga removida")
+                    time.sleep(1)  # Aguardar um pouco após remover
+                except Exception as e:
+                    self.log_message(f"  ❌ Erro ao remover pasta antiga: {e}")
+                    raise Exception(f"Não foi possível remover a pasta venv existente. Feche todos os programas e tente novamente.")
+            
+            # Verificar permissões de escrita
+            try:
+                test_file = destino / "test_permission.tmp"
+                test_file.write_text("test")
+                test_file.unlink()
+            except Exception as e:
+                raise Exception(f"Sem permissão de escrita na pasta: {destino}\nErro: {e}")
             
             result = subprocess.run(
                 [python_executable, "-m", "venv", str(venv_path)], 
@@ -893,8 +936,37 @@ Sistema_Gestao_Projetos.exe
         except Exception as e:
             self.log_message(f"  ⚠️ Erro ao atualizar scripts: {str(e)}")
 
+def is_admin():
+    """Verifica se o script está rodando como administrador"""
+    try:
+        import ctypes
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except:
+        return False
+
 def main():
     """Função principal"""
+    # No Windows, avisar se não for administrador
+    if os.name == 'nt' and not is_admin():
+        root = tk.Tk()
+        root.withdraw()  # Esconder janela principal temporariamente
+        
+        resposta = messagebox.askyesno(
+            "Privilégios de Administrador",
+            "⚠️ O instalador não está rodando como Administrador.\n\n"
+            "Isso pode causar erros de permissão durante a instalação.\n\n"
+            "Recomendações:\n"
+            "• Clique com botão direito no instalador\n"
+            "• Selecione 'Executar como administrador'\n\n"
+            "Deseja continuar mesmo assim?",
+            icon='warning'
+        )
+        
+        root.destroy()
+        
+        if not resposta:
+            sys.exit(0)
+    
     app = InstaladorSistema()
     app.root.mainloop()
 
