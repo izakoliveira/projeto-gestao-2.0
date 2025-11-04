@@ -41,6 +41,9 @@ class InstaladorSistema:
         self.instalar_dependencias = tk.BooleanVar(value=True)
         self.instalar_python_embarcado = tk.BooleanVar(value=False)  # Nova opção
         
+        # Inicializar python_info com valor padrão
+        self.python_info = {"instalado": False, "versao": None, "comando": None, "tem_venv": False}
+        
         self.setup_ui()
         
     def setup_ui(self):
@@ -337,10 +340,23 @@ na pasta de instalação do sistema.
             self.copiar_arquivos_sistema(pasta_destino)
             self.log_message("✅ Arquivos copiados com sucesso")
             
-            # Instalar Python embarcado se necessário
+            # Decidir qual Python usar ANTES de qualquer instalação
             python_path = None
-            if self.instalar_python_embarcado.get():
+            precisa_python_embarcado = (
+                self.instalar_python_embarcado.get() or  # Usuário marcou manualmente
+                not self.python_info.get("instalado", False) or  # Python não instalado
+                not self.python_info.get("tem_venv", False)  # Python sem venv
+            )
+            
+            # Instalar Python embarcado se necessário
+            if precisa_python_embarcado:
                 self.log_message("🔄 Baixando e instalando Python embarcado...")
+                self.log_message(f"   Motivo: " + (
+                    "Opção marcada pelo usuário" if self.instalar_python_embarcado.get() else
+                    "Python não encontrado no sistema" if not self.python_info.get("instalado") else
+                    "Python do sistema não possui módulo venv"
+                ))
+                
                 python_path = self.instalar_python_portable(pasta_destino)
                 if python_path:
                     self.log_message(f"✅ Python embarcado instalado em: {python_path}")
@@ -351,16 +367,6 @@ na pasta de instalação do sistema.
             # Criar ambiente virtual
             if self.instalar_dependencias.get():
                 self.log_message("🔄 Iniciando criação de ambiente virtual...")
-                
-                # Se python_path é None mas precisamos de Python Embedded, instalar agora
-                if python_path is None and not self.python_info.get("tem_venv", False):
-                    self.log_message("⚠️ Python do sistema não tem venv, instalando Python Embedded...")
-                    python_path = self.instalar_python_portable(pasta_destino)
-                    if python_path:
-                        self.log_message(f"✅ Python embarcado instalado em: {python_path}")
-                    else:
-                        raise Exception("Falha na instalação do Python embarcado")
-                
                 self.criar_ambiente_virtual(pasta_destino, python_path)
                 self.log_message("✅ Ambiente virtual criado com sucesso")
             else:
