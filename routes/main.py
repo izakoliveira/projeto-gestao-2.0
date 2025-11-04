@@ -152,6 +152,7 @@ def dashboard():
                          tarefas_recentes=tarefas_recentes)
 
 @main_bp.route('/projetos/<uuid:projeto_id>')
+@main_bp.route('/projeto/<uuid:projeto_id>')  # Rota alternativa para compatibilidade
 @login_required
 def detalhes_projeto(projeto_id):
     # Gerar variáveis de cabeçalho do Gantt (meses e dias)

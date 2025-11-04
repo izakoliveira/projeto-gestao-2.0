@@ -140,6 +140,14 @@ except ImportError as e:
         print(f"⚠️ Relatorio blueprint falhou: {ex}")
         from flask import Blueprint
         relatorio_bp = Blueprint('relatorio', __name__)
+    
+    try:
+        from debug_routes import debug_bp
+        print("✅ Debug blueprint importado")
+    except ImportError as ex:
+        print(f"⚠️ Debug blueprint falhou: {ex}")
+        from flask import Blueprint
+        debug_bp = Blueprint('debug', __name__)
 
 # Criar aplicação Flask
 app = Flask(__name__)
@@ -179,6 +187,9 @@ try:
     app.register_blueprint(main_bp)
     app.register_blueprint(producao_bp)
     app.register_blueprint(relatorio_bp)
+    # Registrar debug_bp apenas se foi importado com sucesso
+    if 'debug_bp' in globals() and debug_bp and hasattr(debug_bp, 'name'):
+        app.register_blueprint(debug_bp)
     print("✅ Blueprints registrados com sucesso!")
 except Exception as e:
     print(f"⚠️  Erro ao registrar blueprints: {e}")
@@ -242,4 +253,5 @@ if __name__ == '__main__':
         print(f"   - {blueprint_name}")
     print("✅ Sistema refatorado pronto para produção!")
     print("🌐 Acesse: http://localhost:5000")
-    app.run(debug=False, host='0.0.0.0', port=5000) 
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False) 

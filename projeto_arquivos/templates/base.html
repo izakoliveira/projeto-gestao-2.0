@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestão de Projetos{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1976d2">
+    <style>
+        /* Estilos personalizados para notificações */
+        .dropdown-menu {
+            max-width: 400px;
+            min-width: 350px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .dropdown-item {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 2px 4px;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item:active {
+            background-color: #e9ecef !important;
+        }
+
+        /* Badges personalizados */
+        .badge {
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Toast personalizado */
+        .toast {
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+
+        .toast-body {
+            padding: 1rem 1.25rem;
+        }
+
+        /* Scrollbar personalizada para o dropdown */
+        .dropdown-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Animações para notificações */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        /* Estado vazio mais atrativo */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Botão limpar mais atrativo */
+        #btnLimparNotificacoes {
+            border-radius: 20px;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        #btnLimparNotificacoes:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Indicador de notificação não lida */
+        .notification-unread {
+            position: relative;
+        }
+
+        .notification-unread::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: #007bff;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    {% if session.user_id %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <span class="navbar-brand">
+                <i class="fas fa-project-diagram"></i> Gestão de Projetos
+            </span>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('projetos.listar_projetos') }}">
+                            <i class="fas fa-project-diagram"></i> Projetos
+                        </a>
+                    </li>
+                    <!-- DEBUG: Email da sessão -->
+                    <!-- Email atual: {{ session.user_email }} -->
+                    {% if session.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('producao.producao_dashboard') }}">
+                            <i class="fas fa-calendar-alt"></i> Produção
+                        </a>
+                    </li>
+                    {% endif %}
+                    <!-- Dropdown de Relatórios -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="relatoriosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chart-line"></i> Relatórios
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="relatoriosDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('relatorio.pagina_exportacao') }}">
+                                    <i class="fas fa-download"></i> Exportação
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('relatorio.datas_conflitantes') }}">
+                                    <i class="fas fa-exclamation-triangle"></i> Datas Conflitantes
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% if session.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.admin_restricoes') }}">
+                            <i class="fas fa-user-shield"></i> Administração
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% if session.is_admin %}
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('pastas.listar_pastas') }}">Pastas</a>
+                    </li>
+                </ul>
+                {% endif %}
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Toggle de tema -->
+                    <li class="nav-item me-2">
+                        <button id="themeToggle" class="btn btn-outline-light btn-sm" type="button"
+                            title="Alternar tema">
+                            <i class="fas fa-moon" id="themeToggleIcon"></i>
+                        </button>
+                    </li>
+                    <!-- Ícone de sininho de notificações -->
+                    <li class="nav-item dropdown me-3" id="notificacaoDropdownLi" style="position:relative;">
+                        <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                id="notificacaoBadge" style="display:none;">0</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificacaoDropdown"
+                            style="min-width:350px; max-width:400px; max-height:400px; overflow-y:auto;">
+                            <li
+                                class="dropdown-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                                Notificações
+                                <button id="btnLimparNotificacoes" class="btn btn-outline-danger btn-sm ms-2"
+                                    style="font-size:0.8em; display:none;">Limpar</button>
+                            </li>
+                            <div id="notificacoesLista">
+                                <li class="text-center text-muted small p-2">Carregando...</li>
+                            </div>
+                        </ul>
+                    </li>
+                    <!-- Botão Logout visível na navbar -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </a>
+                    </li>
+                    <!-- Nome do usuário -->
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            <i class="fas fa-user"></i> {{ session.user_nome }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var toastContainer = document.getElementById('toastContainerGlobal');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainerGlobal';
+                toastContainer.className = 'position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = 1080;
+                toastContainer.style.minWidth = '300px';
+                document.body.appendChild(toastContainer);
+            }
+            {% for category, message in messages %}
+            var toastId = 'flashToast{{ loop.index }}_' + Date.now();
+            var icon = '';
+            var bg = 'bg-success';
+            var category = '{{ category }}';
+            if (category === 'error' || category === 'danger') { icon = '<i class=\'fas fa-times-circle me-2\'></i>'; bg = 'bg-danger'; }
+            else if (category === 'warning') { icon = '<i class=\'fas fa-exclamation-triangle me-2\'></i>'; bg = 'bg-warning text-dark'; }
+            else if (category === 'info') { icon = '<i class=\'fas fa-info-circle me-2\'></i>'; bg = 'bg-info text-dark'; }
+            else { icon = '<i class=\'fas fa-check-circle me-2\'></i>'; bg = 'bg-success'; }
+            var toastHtml = `
+                <div class=\"toast align-items-center text-white ${bg} border-0\" role=\"alert\" id=\"${toastId}\" data-bs-delay=\"4000\">
+                    <div class=\"d-flex\">
+                        <div class=\"toast-body\">
+                            ${icon} {{ message }}
+                        </div>
+                        <button type=\"button\" class=\"btn-close btn-close-white me-2 m-auto\" data-bs-dismiss=\"toast\" aria-label=\"Fechar\"></button>
+                    </div>
+                </div>`;
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            var toastEl = document.getElementById(toastId);
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+            toastEl.addEventListener('hidden.bs.toast', function () {
+                toastEl.remove();
+            });
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Container para notificações toast -->
+    <div id="toastContainerGlobal" class="position-fixed top-0 end-0 p-3" style="z-index: 1080; min-width: 350px;">
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-4 mt-5">
+        <div class="container">
+            <p>&copy; 2024 Sistema de Gestão de Projetos. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Removido script de dark mode -->
+    {% block scripts %}
+    <script>
+        // Tema: aplica tema salvo e configura toggle
+        (function () {
+            const THEME_KEY = 'themeMode';
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const saved = localStorage.getItem(THEME_KEY);
+            const body = document.body;
+            const apply = (mode) => {
+                if (mode === 'dark') {
+                    body.classList.add('dark');
+                } else {
+                    body.classList.remove('dark');
+                }
+                const icon = document.getElementById('themeToggleIcon');
+                if (icon) {
+                    icon.className = mode === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                }
+                const metaTheme = document.querySelector('meta[name="theme-color"]');
+                if (metaTheme) metaTheme.setAttribute('content', mode === 'dark' ? '#111111' : '#1976d2');
+            };
+            apply(saved || (prefersDark ? 'dark' : 'light'));
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const btn = document.getElementById('themeToggle');
+                if (!btn) return;
+                btn.addEventListener('click', function () {
+                    const isDark = document.body.classList.toggle('dark');
+                    const mode = isDark ? 'dark' : 'light';
+                    localStorage.setItem(THEME_KEY, mode);
+                    const icon = document.getElementById('themeToggleIcon');
+                    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    const metaTheme = document.querySelector('meta[name="theme-color"]');
+                    if (metaTheme) metaTheme.setAttribute('content', isDark ? '#111111' : '#1976d2');
+                });
+            });
+        })();
+
+        // Função para mostrar notificação toast
+        function mostrarNotificacaoToast(mensagem, tipo = 'info', duracao = 5000) {
+            const container = document.getElementById('toastContainerGlobal');
+            const toastId = 'toast_' + Date.now();
+
+            // Definir cores e ícones baseados no tipo
+            let bgClass, icon, title;
+            switch (tipo) {
+                case 'success':
+                    bgClass = 'bg-success';
+                    icon = 'fas fa-check-circle';
+                    title = 'Sucesso';
+                    break;
+                case 'error':
+                case 'danger':
+                    bgClass = 'bg-danger';
+                    icon = 'fas fa-times-circle';
+                    title = 'Erro';
+                    break;
+                case 'warning':
+                    bgClass = 'bg-warning text-dark';
+                    icon = 'fas fa-exclamation-triangle';
+                    title = 'Aviso';
+                    break;
+                case 'info':
+                default:
+                    bgClass = 'bg-info text-dark';
+                    icon = 'fas fa-info-circle';
+                    title = 'Informação';
+                    break;
+            }
+
+            const toastHtml = `
+                <div class="toast align-items-center text-white ${bgClass} border-0 shadow-lg" 
+                     role="alert" id="${toastId}" data-bs-delay="${duracao}">
+                    <div class="d-flex">
+                        <div class="toast-body d-flex align-items-center">
+                            <i class="${icon} me-2 fs-5"></i>
+                            <div>
+                                <div class="fw-bold mb-1">${title}</div>
+                                <div class="small">${mensagem}</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                                data-bs-dismiss="toast" aria-label="Fechar"></button>
+                    </div>
+                </div>`;
+
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { delay: duracao });
+            toast.show();
+
+            // Remover elemento após ser fechado
+            toastEl.addEventListener('hidden.bs.toast', function () {
+                toastEl.remove();
+            });
+        }
+
+        // Função para buscar notificações do usuário logado
+        document.addEventListener('DOMContentLoaded', function () {
+            const usuarioId = '{{ session.user_id }}';
+            const badge = document.getElementById('notificacaoBadge');
+            const lista = document.getElementById('notificacoesLista');
+            const btnLimpar = document.getElementById('btnLimparNotificacoes');
+
+            function mostrarBotaoLimpar(temNotificacoes) {
+                if (btnLimpar) btnLimpar.style.display = temNotificacoes ? 'inline-block' : 'none';
+            }
+
+            function carregarNotificacoes() {
+                fetch(`/notificacoes/${usuarioId}`)
+                    .then(resp => resp.json())
+                    .then(data => {
+                        lista.innerHTML = '';
+                        if (data.notificacoes && data.notificacoes.length > 0) {
+                            let naoLidas = 0;
+                            data.notificacoes.forEach(notif => {
+                                const lida = notif.lida;
+                                if (!lida) naoLidas++;
+
+                                const li = document.createElement('li');
+                                li.className = 'dropdown-item p-3 border-bottom' + (lida ? ' text-muted' : ' notification-unread');
+                                li.style.cursor = 'pointer';
+                                li.style.minHeight = '80px';
+
+                                // Determinar cor do badge baseado no tipo
+                                let badgeClass = 'bg-info';
+                                let badgeText = notif.tipo || 'info';
+                                switch (notif.tipo) {
+                                    case 'conclusao':
+                                        badgeClass = 'bg-success';
+                                        badgeText = 'Concluída';
+                                        break;
+                                    case 'designacao':
+                                        badgeClass = 'bg-primary';
+                                        badgeText = 'Designação';
+                                        break;
+                                    case 'remocao':
+                                        badgeClass = 'bg-danger';
+                                        badgeText = 'Remoção';
+                                        break;
+                                    case 'status':
+                                        badgeClass = 'bg-warning text-dark';
+                                        badgeText = 'Status';
+                                        break;
+                                }
+
+                                // Formatar data
+                                const data = new Date(notif.data_criacao);
+                                const dataFormatada = data.toLocaleDateString('pt-BR') + ' ' +
+                                    data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                                let linkProjeto = '';
+                                if (notif.projeto_id) {
+                                    linkProjeto = `
+                                        <a href="/projetos/${notif.projeto_id}" 
+                                           class="btn btn-outline-primary btn-sm ms-2" 
+                                           style="font-size:0.75em; padding:2px 8px;">
+                                            <i class="fas fa-external-link-alt me-1"></i>Ver projeto
+                                        </a>`;
+                                }
+
+                                li.innerHTML = `
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="badge ${badgeClass} text-uppercase" 
+                                              style="font-size:0.70em; font-weight:500; border-radius:8px; padding:4px 8px;">
+                                            ${badgeText}
+                                        </span>
+                                        <small class="text-muted">${dataFormatada}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <p class="mb-1 ${lida ? '' : 'fw-bold'}" style="font-size:0.9em; line-height:1.4;">
+                                            ${notif.mensagem}
+                                        </p>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-${lida ? 'check-double' : 'envelope'} me-1"></i>
+                                            ${lida ? 'Lida' : 'Nova'}
+                                        </small>
+                                        ${linkProjeto}
+                                    </div>
+                                `;
+
+                                // Adicionar efeito hover
+                                li.addEventListener('mouseenter', function () {
+                                    this.style.backgroundColor = '#f8f9fa';
+                                });
+                                li.addEventListener('mouseleave', function () {
+                                    this.style.backgroundColor = '';
+                                });
+
+                                // Marcar como lida ao clicar
+                                li.onclick = function () {
+                                    if (!lida) {
+                                        fetch(`/notificacoes/${notif.id}/ler`, { method: 'PATCH' })
+                                            .then(() => {
+                                                carregarNotificacoes();
+                                                // Mostrar toast de confirmação
+                                                mostrarNotificacaoToast('Notificação marcada como lida', 'success', 3000);
+                                            });
+                                    }
+                                };
+
+                                lista.appendChild(li);
+                            });
+
+                            badge.textContent = naoLidas;
+                            badge.style.display = naoLidas > 0 ? 'inline-block' : 'none';
+                            mostrarBotaoLimpar(true);
+                        } else {
+                            badge.style.display = 'none';
+                            lista.innerHTML = `
+                                <li class="dropdown-item empty-state">
+                                    <i class="fas fa-bell-slash"></i>
+                                    <div>Sem notificações</div>
+                                    <small>Você está em dia com tudo!</small>
+                                </li>`;
+                            mostrarBotaoLimpar(false);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar notificações:', error);
+                        lista.innerHTML = `
+                            <li class="dropdown-item empty-state text-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>Erro ao carregar notificações</div>
+                                <small>Tente novamente mais tarde</small>
+                            </li>`;
+                    });
+            }
+
+            // Carregar ao abrir o dropdown
+            document.getElementById('notificacaoDropdown').addEventListener('click', carregarNotificacoes);
+
+            // Carregar periodicamente
+            setInterval(carregarNotificacoes, 60000); // a cada 60s
+
+            // Carregar inicialmente
+            carregarNotificacoes();
+
+            // Botão limpar todas as notificações
+            document.getElementById('btnLimparNotificacoes').onclick = function () {
+                if (!confirm('Tem certeza que deseja limpar todas as notificações?')) return;
+
+                fetch(`/notificacoes/${usuarioId}/limpar`, { method: 'DELETE' })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        carregarNotificacoes();
+                        mostrarNotificacaoToast('Todas as notificações foram limpas com sucesso!', 'success');
+                    })
+                    .catch(error => {
+                        console.error('Erro ao limpar notificações:', error);
+                        mostrarNotificacaoToast('Erro ao limpar notificações. Tente novamente.', 'error');
+                    });
+            };
+        });
+    </script>
+    {% endblock %}
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(function (reg) { console.log('Service worker registrado!', reg); })
+                .catch(function (err) { console.log('Erro ao registrar service worker:', err); });
+        }
+    </script>
+
+    <!-- Sistema de Logging Configurável -->
+    <script src="{{ url_for('static', filename='js/logger.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/log-config.js') }}"></script>
+
+    <!-- Sistema de Drag & Drop para Tarefas -->
+    <script src="{{ url_for('static', filename='js/sortable-tarefas.js') }}"></script>
+    <script>
+        // Configurar logs baseado no ambiente
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Em desenvolvimento, logs detalhados por padrão
+            if (!localStorage.getItem('logLevel')) {
+                localStorage.setItem('logLevel', 'debug');
+            }
+        } else {
+            // Em produção, logs mínimos por padrão
+            if (!localStorage.getItem('logLevel')) {
+                localStorage.setItem('logLevel', 'warn');
+            }
+        }
+    </script>
+</body>
+
+</html>

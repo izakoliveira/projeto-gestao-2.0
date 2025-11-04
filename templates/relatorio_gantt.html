@@ -37,11 +37,8 @@
         {% endif %}
     {% endmacro %}
 
-    {# Ordena por nome primeiro #}
-    {% set projetos_nome = projetos|sort(attribute='nome') %}
-    {# Depois ordena por data de lançamento #}
-    {% set projetos_ordenados = projetos_nome|sort(attribute=data_inicio_lancamento) %}
-    {% for projeto in projetos_ordenados %}
+    {# Projetos já vêm ordenados do backend por data de lançamento #}
+    {% for projeto in projetos %}
     <h2>Tarefas - {{ projeto.nome }}</h2>
     <table>
         <thead>

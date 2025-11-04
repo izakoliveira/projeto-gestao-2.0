@@ -1,0 +1,259 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Projeções{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-chart-line"></i> Projeções de Produção
+                </h1>
+                <button class="btn btn-producao" onclick="showAddProjecaoModal()">
+                    <i class="fas fa-plus me-2"></i>Nova Projeção
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Projeções -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Projeções
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="projecoes-table">
+                        <p class="text-muted">Nenhuma projeção encontrada.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar/Editar Projeção -->
+<div class="modal fade" id="addProjecaoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header card-header-producao">
+                <h5 class="modal-title text-white" id="modalTitle">Nova Projeção</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addProjecaoForm">
+                    <input type="hidden" id="projecaoId">
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="projecaoDescricao" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Coleção</label>
+                        <select class="form-control" id="projecaoColecao" required>
+                            <option value="">Selecione uma coleção</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Projeção</label>
+                        <input type="date" class="form-control" id="projecaoData" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade Projetada</label>
+                        <input type="number" class="form-control" id="projecaoQuantidade" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" id="projecaoStatus">
+                            <option value="ATIVA">Ativa</option>
+                            <option value="INATIVA">Inativa</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-producao" onclick="saveProjecao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadProjecoes();
+    loadColecoes();
+});
+
+function loadProjecoes() {
+    const projecoes = JSON.parse(localStorage.getItem('projecoes')) || [];
+    const colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+    const container = document.getElementById('projecoes-table');
+    
+    if (projecoes.length === 0) {
+        container.innerHTML = '<p class="text-muted">Nenhuma projeção encontrada.</p>';
+        return;
+    }
+    
+    let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Coleção</th>
+                        <th>Data Projeção</th>
+                        <th>Qtd. Projetada</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    projecoes.forEach(projecao => {
+        const colecao = colecoes.find(c => c.id === projecao.colecao_id);
+        tableHtml += `
+            <tr>
+                <td><strong>${projecao.descricao}</strong></td>
+                <td>${colecao ? colecao.nome : '-'}</td>
+                <td>${formatDate(projecao.dt_projecao)}</td>
+                <td>${projecao.qt_projetada}</td>
+                <td>
+                    <span class="badge bg-${projecao.status === 'ATIVA' ? 'success' : 'secondary'}">
+                        ${projecao.status}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editProjecao('${projecao.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteProjecao('${projecao.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableHtml += '</tbody></table></div>';
+    container.innerHTML = tableHtml;
+}
+
+function loadColecoes() {
+    const colecoes = JSON.parse(localStorage.getItem('colecoes')) || [];
+    const select = document.getElementById('projecaoColecao');
+    
+    select.innerHTML = '<option value="">Selecione uma coleção</option>';
+    colecoes.forEach(colecao => {
+        select.innerHTML += `<option value="${colecao.id}">${colecao.nome}</option>`;
+    });
+}
+
+function showAddProjecaoModal() {
+    document.getElementById('modalTitle').textContent = 'Nova Projeção';
+    document.getElementById('projecaoId').value = '';
+    document.getElementById('addProjecaoForm').reset();
+    
+    const modal = new bootstrap.Modal(document.getElementById('addProjecaoModal'));
+    modal.show();
+}
+
+function editProjecao(id) {
+    const projecoes = JSON.parse(localStorage.getItem('projecoes')) || [];
+    const projecao = projecoes.find(p => p.id === id);
+    
+    if (!projecao) {
+        alert('Projeção não encontrada.');
+        return;
+    }
+    
+    document.getElementById('modalTitle').textContent = 'Editar Projeção';
+    document.getElementById('projecaoId').value = projecao.id;
+    document.getElementById('projecaoDescricao').value = projecao.descricao;
+    document.getElementById('projecaoColecao').value = projecao.colecao_id;
+    document.getElementById('projecaoData').value = projecao.dt_projecao;
+    document.getElementById('projecaoQuantidade').value = projecao.qt_projetada;
+    document.getElementById('projecaoStatus').value = projecao.status || 'ATIVA';
+    
+    const modal = new bootstrap.Modal(document.getElementById('addProjecaoModal'));
+    modal.show();
+}
+
+function saveProjecao() {
+    const id = document.getElementById('projecaoId').value;
+    const descricao = document.getElementById('projecaoDescricao').value;
+    const colecaoId = document.getElementById('projecaoColecao').value;
+    const data = document.getElementById('projecaoData').value;
+    const quantidade = document.getElementById('projecaoQuantidade').value;
+    const status = document.getElementById('projecaoStatus').value;
+    
+    if (!descricao || !colecaoId || !data || !quantidade) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+    
+    const projecoes = JSON.parse(localStorage.getItem('projecoes')) || [];
+    
+    if (id) {
+        // Editar projeção existente
+        const index = projecoes.findIndex(p => p.id === id);
+        if (index !== -1) {
+            projecoes[index] = {
+                ...projecoes[index],
+                descricao: descricao,
+                colecao_id: colecaoId,
+                dt_projecao: data,
+                qt_projetada: parseInt(quantidade),
+                status: status
+            };
+        }
+    } else {
+        // Criar nova projeção
+        const novaProjecao = {
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+            descricao: descricao,
+            colecao_id: colecaoId,
+            dt_projecao: data,
+            qt_projetada: parseInt(quantidade),
+            status: status,
+            created_at: new Date().toISOString()
+        };
+        projecoes.push(novaProjecao);
+    }
+    
+    localStorage.setItem('projecoes', JSON.stringify(projecoes));
+    
+    // Fechar modal e recarregar
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addProjecaoModal'));
+    modal.hide();
+    
+    // Limpar formulário
+    document.getElementById('addProjecaoForm').reset();
+    
+    // Recarregar lista
+    loadProjecoes();
+    
+    alert(id ? 'Projeção atualizada com sucesso!' : 'Projeção criada com sucesso!');
+}
+
+function deleteProjecao(id) {
+    if (confirm('Tem certeza que deseja excluir esta projeção?')) {
+        const projecoes = JSON.parse(localStorage.getItem('projecoes')) || [];
+        const filteredProjecoes = projecoes.filter(p => p.id !== id);
+        localStorage.setItem('projecoes', JSON.stringify(filteredProjecoes));
+        
+        loadProjecoes();
+        alert('Projeção excluída com sucesso!');
+    }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+}
+</script>
+{% endblock %} 

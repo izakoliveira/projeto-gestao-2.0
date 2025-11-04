@@ -75,17 +75,24 @@ def producao_colecoes():
         
         projetos = projetos_resp.data or []
         
-        # Como a tabela tipos não existe, vamos criar tipos temporários
-        # baseados nos tipo_id únicos dos projetos
-        tipos_unicos = list(set([p['tipo_id'] for p in projetos if p.get('tipo_id')]))
-        tipos = []
-        
-        # Criar tipos simulados com base nos IDs encontrados
-        for i, tipo_id in enumerate(tipos_unicos):
-            tipos.append({
-                'id': tipo_id,
-                'nome': f'Tipo {i + 1}'  # Nome genérico por enquanto
-            })
+        # Buscar tipos (pastas) disponíveis
+        try:
+            if is_admin_session():
+                tipos_resp = supabase.table("pastas").select("*").execute()
+            else:
+                usuario_id = session['user_id']
+                tipos_resp = supabase.table("pastas").select("*").eq("usuario_id", usuario_id).execute()
+            tipos = tipos_resp.data or []
+        except Exception as e:
+            print(f"Erro ao buscar tipos/pastas: {e}")
+            # Fallback: criar tipos baseados nos tipo_id únicos dos projetos
+            tipos_unicos = list(set([p['tipo_id'] for p in projetos if p.get('tipo_id')]))
+            tipos = []
+            for i, tipo_id in enumerate(tipos_unicos):
+                tipos.append({
+                    'id': tipo_id,
+                    'nome': f'Tipo {i + 1}'
+                })
         
         return render_template('producao/colecoes.html', projetos=projetos, tipos=tipos)
     except Exception as e:

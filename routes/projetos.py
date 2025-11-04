@@ -18,7 +18,7 @@ def listar_projetos():
     # DEBUG: Mostrar SUPABASE_URL e SUPABASE_KEY para garantir ambiente
     print(f"[DEBUG] SUPABASE_URL: {SUPABASE_URL}")
     print(f"[DEBUG] SUPABASE_KEY: {SUPABASE_KEY[:10]}... (truncada)")
-    nome_list = request.args.getlist('nome')  # Lista de nomes de projetos (múltiplo)
+    nome_list = request.args.getlist('nome[]')  # Lista de nomes de projetos (múltiplo)
     tarefa_list = request.args.getlist('tarefa')  # Lista de nomes de tarefas (múltiplo)
     # responsavel_list = request.args.getlist('responsavel')  # REMOVIDO: coluna não existe
     status_list = request.args.getlist('status')  # Lista de status (múltiplo)
@@ -485,7 +485,17 @@ def listar_projetos():
                              pode_excluir_projeto=pode_excluir_projeto,
                              alertas_projetos=alertas_projetos,
                              gantt_geral_data=gantt_geral_data,
-                             colecoes=colecoes)
+                             colecoes=colecoes,
+                             # Passar os valores dos filtros para manter seleções
+                             filtros_ativos={
+                                 'nome_list': nome_list,
+                                 'tarefa_list': tarefa_list,
+                                 'status_list': status_list,
+                                 'data_inicio': data_inicio,
+                                 'data_fim': data_fim,
+                                 'tipo_id': tipo_id,
+                                 'ambiente': ambiente
+                             })
     else:
         return render_template('projetos_gantt_basico.html', 
                              projetos=projetos, 
@@ -498,7 +508,17 @@ def listar_projetos():
                              pode_excluir_projeto=pode_excluir_projeto,
                              alertas_projetos=alertas_projetos,
                              gantt_geral_data=gantt_geral_data,
-                             colecoes=colecoes)
+                             colecoes=colecoes,
+                             # Passar os valores dos filtros para manter seleções
+                             filtros_ativos={
+                                 'nome_list': nome_list,
+                                 'tarefa_list': tarefa_list,
+                                 'status_list': status_list,
+                                 'data_inicio': data_inicio,
+                                 'data_fim': data_fim,
+                                 'tipo_id': tipo_id,
+                                 'ambiente': ambiente
+                             })
 
 @projetos_bp.route('/projetos/novo', methods=['GET', 'POST'])
 @projetos_bp.route('/projetos/criar', methods=['GET', 'POST'])

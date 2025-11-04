@@ -45,17 +45,17 @@
                         if (!sel) return [];
                         return Array.from(sel.selectedOptions).map(opt => opt.value).filter(v => v);
                     }
-                    // Pega o projeto_id do projeto selecionado (se houver)
-                    let projeto_id = '';
+                    // Pega todos os projeto_ids dos projetos selecionados
+                    let projeto_ids = [];
                     const nomeSelect = document.getElementById('nome-desktop');
                     if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
-                        // Busca o projeto pelo nome selecionado para obter o id
+                        // Busca todos os projetos pelos nomes selecionados para obter os ids
                         const projetosData = window.projetosData || [];
-                        const nomeSelecionado = nomeSelect.selectedOptions[0].value;
-                        const projeto = projetosData.find(p => p.nome === nomeSelecionado);
-                        if (projeto) {
-                            projeto_id = projeto.id;
-                        }
+                        const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
+                        projeto_ids = nomesSelecionados.map(nome => {
+                            const projeto = projetosData.find(p => p.nome === nome);
+                            return projeto ? projeto.id : null;
+                        }).filter(id => id !== null);
                     }
                     const status = getSelectValues(document.getElementById('status-desktop'));
                     const colecao = getSelectValues(document.getElementById('colecao-desktop'));
@@ -67,7 +67,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             gantt_base64: ganttBase64,
-                            projeto_id,
+                            projeto_ids,
                             status,
                             colecao,
                             data_inicio,
@@ -120,17 +120,51 @@
                         return Array.from(sel.selectedOptions).map(opt => opt.value).filter(v => v);
                     }
                     
-                    // Pega o projeto_id do projeto selecionado (se houver)
-                    let projeto_id = '';
+                    // Pega todos os projeto_ids dos projetos selecionados
+                    let projeto_ids = [];
                     const nomeSelect = document.getElementById('nome-desktop');
+                    console.log('🔍 [GANTT EXCEL DEBUG] nomeSelect:', nomeSelect);
+                    console.log('🔍 [GANTT EXCEL DEBUG] window.projetosData:', window.projetosData);
+                    console.log('🔍 [GANTT EXCEL DEBUG] window.projetosData type:', typeof window.projetosData);
+                    console.log('🔍 [GANTT EXCEL DEBUG] window.projetosData isArray:', Array.isArray(window.projetosData));
+                    
                     if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
+                        // Busca todos os projetos pelos nomes selecionados para obter os ids
                         const projetosData = window.projetosData || [];
-                        const nomeSelecionado = nomeSelect.selectedOptions[0].value;
-                        const projeto = projetosData.find(p => p.nome === nomeSelecionado);
-                        if (projeto) {
-                            projeto_id = projeto.id;
+                        const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
+                        console.log('🔍 [GANTT EXCEL DEBUG] nomesSelecionados:', nomesSelecionados);
+                        console.log('🔍 [GANTT EXCEL DEBUG] projetosData length:', projetosData.length);
+                        
+                        // Debug dos primeiros projetos em projetosData
+                        if (projetosData.length > 0) {
+                            console.log('🔍 [GANTT EXCEL DEBUG] Primeira entrada projetosData:', projetosData[0]);
+                            console.log('🔍 [GANTT EXCEL DEBUG] Estrutura:', Object.keys(projetosData[0]));
+                            console.log('🔍 [GANTT EXCEL DEBUG] Todos os nomes em projetosData:', projetosData.map(p => p.nome));
                         }
+                        
+                        projeto_ids = nomesSelecionados.map(nome => {
+                            // Ignorar opção vazia
+                            if (!nome || nome === '') {
+                                console.log(`🔍 [GANTT EXCEL DEBUG] Ignorando nome vazio`);
+                                return null;
+                            }
+                            
+                            const projeto = projetosData.find(p => p.nome === nome);
+                            console.log(`🔍 [GANTT EXCEL DEBUG] Nome '${nome}' -> Projeto encontrado:`, projeto);
+                            console.log(`🔍 [GANTT EXCEL DEBUG] Nome '${nome}' -> ID: ${projeto ? projeto.id : 'NOT FOUND'}`);
+                            
+                            if (!projeto) {
+                                // Tentar busca case-insensitive
+                                const projetoInsensitive = projetosData.find(p => p.nome && p.nome.toLowerCase() === nome.toLowerCase());
+                                console.log(`🔍 [GANTT EXCEL DEBUG] Busca case-insensitive para '${nome}':`, projetoInsensitive);
+                                return projetoInsensitive ? projetoInsensitive.id : null;
+                            }
+                            
+                            return projeto.id;
+                        }).filter(id => id !== null);
                     }
+                    
+                    console.log('🔍 [GANTT EXCEL DEBUG] projeto_ids final:', projeto_ids);
                     
                     // Coletar outros filtros
                     const tipo_id = new URLSearchParams(window.location.search).get('tipo_id') || '';
@@ -145,7 +179,7 @@
                         body: JSON.stringify({
                             gantt_base64: ganttBase64,
                             tipo_id,
-                            projeto_id,
+                            projeto_ids,
                             status,
                             colecao,
                             data_inicio,
@@ -294,13 +328,13 @@
                             <i class="fas fa-eraser"></i>
                         </button>
                     </label>
-                    <select id="nome-desktop" name="nome" multiple class="form-control"
+                    <select id="nome-desktop" name="nome[]" multiple class="form-control"
                         style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
                         onchange="mostrarSelecoes('nome-desktop', 'nome-display')"
                         onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('nome-display').style.display = 'flex'; }, 200);">
                         <option value="">Selecione o Projeto</option>
                         {% for projeto in projetos %}
-                        <option value="{{ projeto.nome }}" {% if request.args.get('nome', '' )==projeto.nome
+                        <option value="{{ projeto.nome }}" {% if projeto.nome in filtros_ativos.nome_list
                             %}selected{% endif %}>{{ projeto.nome }}</option>
                         {% endfor %}
                     </select>
@@ -2178,8 +2212,7 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         z-index: 20;
         opacity: 1 !important;
-        border: 2px solid rgba(255, 255, 255, 0.8) !important;
-        transform: scale(1.05);
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
     }
 
     .gantt-bar-compact.apagada {
@@ -2943,5 +2976,8 @@
                 }
             });
         });
+
+        // Debug para verificar seleções
+        console.log('🔍 [FILTRO DEBUG] Script carregado');
     });
 </script>
