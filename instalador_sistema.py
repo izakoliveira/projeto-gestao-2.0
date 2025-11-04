@@ -614,6 +614,23 @@ na pasta de instalação do sistema.
             if result.returncode == 0:
                 self.log_message("  ✓ Pip instalado com sucesso")
             
+            # IMPORTANTE: Python Embedded precisa ter venv instalado via pip
+            self.log_message("  🔧 Verificando módulo venv...")
+            venv_check = subprocess.run([str(python_exe), "-m", "venv", "--help"],
+                                       capture_output=True, text=True, timeout=10)
+            
+            if venv_check.returncode != 0:
+                self.log_message("  ⚠️ Módulo venv não encontrado, instalando...")
+                # Python Embedded não vem com venv, precisa instalar
+                result = subprocess.run([str(python_exe), "-m", "pip", "install", "virtualenv"],
+                                      capture_output=True, text=True, timeout=300)
+                if result.returncode == 0:
+                    self.log_message("  ✓ virtualenv instalado (substituto para venv)")
+                else:
+                    self.log_message(f"  ⚠️ Não foi possível instalar virtualenv: {result.stderr}")
+            else:
+                self.log_message("  ✓ Módulo venv disponível")
+            
             return python_exe
             
         except Exception as e:
@@ -694,20 +711,41 @@ na pasta de instalação do sistema.
             except Exception as e:
                 raise Exception(f"Sem permissão de escrita na pasta: {destino}\nErro: {e}")
             
+            # Tentar criar ambiente virtual com venv
+            self.log_message("  🔧 Tentando criar com 'python -m venv'...")
             result = subprocess.run(
                 [python_executable, "-m", "venv", str(venv_path)], 
                 capture_output=True, 
                 text=True,
-                timeout=300  # 5 minutos timeout
+                timeout=300
             )
             
             if result.returncode != 0:
-                self.log_message(f"  ❌ Erro ao criar venv:")
-                self.log_message(f"     STDOUT: {result.stdout}")
-                self.log_message(f"     STDERR: {result.stderr}")
-                raise Exception(f"Falha ao criar ambiente virtual: {result.stderr}")
-            
-            self.log_message("  ✓ Ambiente virtual criado")
+                self.log_message(f"  ⚠️ Falha com venv: {result.stderr}")
+                self.log_message(f"  🔧 Tentando criar com 'virtualenv'...")
+                
+                # Tentar com virtualenv como fallback
+                result = subprocess.run(
+                    [python_executable, "-m", "virtualenv", str(venv_path)], 
+                    capture_output=True, 
+                    text=True,
+                    timeout=300
+                )
+                
+                if result.returncode != 0:
+                    self.log_message(f"  ❌ Erro com virtualenv também:")
+                    self.log_message(f"     STDOUT: {result.stdout}")
+                    self.log_message(f"     STDERR: {result.stderr}")
+                    raise Exception(
+                        "Não foi possível criar ambiente virtual.\n\n"
+                        "O Python usado não possui 'venv' nem 'virtualenv'.\n\n"
+                        "SOLUÇÃO:\n"
+                        "Marque a opção 'Instalar Python Embedded' e tente novamente."
+                    )
+                else:
+                    self.log_message("  ✓ Ambiente virtual criado com virtualenv")
+            else:
+                self.log_message("  ✓ Ambiente virtual criado com venv")
             
             # Determinar o executável pip
             if os.name == "nt":  # Windows
