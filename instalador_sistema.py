@@ -231,6 +231,53 @@ na pasta de instalação do sistema.
         
         # Verificar permissões de escrita na pasta
         pasta_destino = Path(self.pasta_instalacao.get())
+        
+        # Se a pasta já existe, perguntar se quer limpar
+        if pasta_destino.exists() and any(pasta_destino.iterdir()):
+            resposta = messagebox.askyesnocancel(
+                "Pasta já existe",
+                f"A pasta de instalação já contém arquivos:\n{pasta_destino}\n\n"
+                "⚠️ IMPORTANTE: Se houver uma instalação anterior, é recomendado limpar.\n\n"
+                "Deseja REMOVER TUDO e fazer instalação limpa?\n\n"
+                "• Sim = Remove tudo e instala (RECOMENDADO)\n"
+                "• Não = Tenta instalar por cima (pode dar erro)\n"
+                "• Cancelar = Escolher outra pasta",
+                icon='warning'
+            )
+            
+            if resposta is None:  # Cancelar
+                return False
+            elif resposta:  # Sim - remover tudo
+                try:
+                    self.log_message(f"🗑️ Removendo pasta existente: {pasta_destino}")
+                    
+                    # Matar processos Python primeiro
+                    subprocess.run(["taskkill", "/F", "/IM", "python.exe", "/T"], 
+                                 capture_output=True, timeout=10)
+                    subprocess.run(["taskkill", "/F", "/IM", "pythonw.exe", "/T"], 
+                                 capture_output=True, timeout=10)
+                    time.sleep(2)
+                    
+                    # Remover pasta
+                    shutil.rmtree(pasta_destino)
+                    time.sleep(1)
+                    self.log_message("✓ Pasta antiga removida com sucesso")
+                    
+                    # Recriar pasta vazia
+                    pasta_destino.mkdir(parents=True, exist_ok=True)
+                    
+                except Exception as e:
+                    messagebox.showerror(
+                        "Erro ao Limpar",
+                        f"Não foi possível remover a pasta existente.\n\n"
+                        f"Erro: {e}\n\n"
+                        "Tente:\n"
+                        "1. Fechar todos os programas\n"
+                        "2. Abrir Gerenciador de Tarefas e finalizar python.exe\n"
+                        "3. Tentar novamente"
+                    )
+                    return False
+        
         try:
             # Criar a pasta se não existir
             pasta_destino.mkdir(parents=True, exist_ok=True)
@@ -575,14 +622,52 @@ na pasta de instalação do sistema.
             
             # Se a pasta venv já existe, tentar remover
             if venv_path.exists():
-                self.log_message(f"  ⚠️ Pasta venv já existe, removendo...")
+                self.log_message(f"  ⚠️ Pasta venv já existe, tentando remover...")
+                
+                # Primeiro, tentar matar processos Python que possam estar usando a pasta
                 try:
-                    shutil.rmtree(venv_path)
-                    self.log_message(f"  ✓ Pasta antiga removida")
-                    time.sleep(1)  # Aguardar um pouco após remover
-                except Exception as e:
-                    self.log_message(f"  ❌ Erro ao remover pasta antiga: {e}")
-                    raise Exception(f"Não foi possível remover a pasta venv existente. Feche todos os programas e tente novamente.")
+                    self.log_message(f"  🔄 Encerrando processos Python anteriores...")
+                    subprocess.run(
+                        ["taskkill", "/F", "/IM", "python.exe", "/T"],
+                        capture_output=True,
+                        timeout=10
+                    )
+                    subprocess.run(
+                        ["taskkill", "/F", "/IM", "pythonw.exe", "/T"],
+                        capture_output=True,
+                        timeout=10
+                    )
+                    time.sleep(2)  # Aguardar processos encerrarem
+                except:
+                    pass  # Não falha se não houver processos
+                
+                # Agora tentar remover a pasta
+                tentativas = 3
+                for i in range(tentativas):
+                    try:
+                        if venv_path.exists():
+                            shutil.rmtree(venv_path, ignore_errors=False)
+                            self.log_message(f"  ✓ Pasta antiga removida")
+                            time.sleep(1)
+                            break
+                    except PermissionError as e:
+                        if i < tentativas - 1:
+                            self.log_message(f"  ⚠️ Tentativa {i+1}/{tentativas} falhou, aguardando...")
+                            time.sleep(3)
+                        else:
+                            self.log_message(f"  ❌ Erro ao remover pasta antiga após {tentativas} tentativas")
+                            raise Exception(
+                                "Não foi possível remover a pasta venv existente.\n\n"
+                                "SOLUÇÕES:\n"
+                                "1. Feche TODOS os programas Python que estejam rodando\n"
+                                "2. Feche o VS Code e outros editores\n"
+                                "3. Abra o Gerenciador de Tarefas (Ctrl+Shift+Esc)\n"
+                                "4. Finalize todos os processos 'python.exe' e 'pythonw.exe'\n"
+                                "5. Tente instalar novamente\n\n"
+                                f"OU escolha outra pasta de instalação (não: {destino})"
+                            )
+                    except Exception as e:
+                        raise Exception(f"Erro inesperado ao remover venv: {e}")
             
             # Verificar permissões de escrita
             try:
