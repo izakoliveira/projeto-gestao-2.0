@@ -450,6 +450,7 @@ na pasta de instalação do sistema.
             # Arquivos e pastas essenciais
             items_para_copiar = [
                 'app_producao.py',
+                'gerenciador_sistema.py',
                 'requirements.txt',
                 'supabase_client.py',
                 'config/',
