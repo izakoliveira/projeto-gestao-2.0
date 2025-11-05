@@ -1,23 +1,98 @@
 from functools import wraps
 from flask import session, redirect, url_for, flash, jsonify, request
 import os
-from supabase_client import get_user_by_id
+from supabase_client import get_user_by_id, SUPABASE_URL, SUPABASE_KEY, headers
 import json
+import requests
 
 RESTRICOES_PATH = 'restricoes.json'
 
-# Função para carregar restrições
+# Função para carregar restrições do banco de dados
 def carregar_restricoes():
+    """
+    Carrega restrições de todos os usuários do banco de dados.
+    Retorna um dicionário: {user_id: {restr_criar_projeto: bool, ...}}
+    Fallback para arquivo JSON se banco não estiver disponível.
+    """
     try:
-        with open(RESTRICOES_PATH, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return {}
+        url = f"{SUPABASE_URL}/rest/v1/usuarios?select=*"
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200 and response.json():
+            usuarios = response.json()
+            restricoes = {}
+            campos_restricao = [
+                'restr_criar_projeto', 'restr_editar_projeto', 'restr_excluir_projeto',
+                'restr_criar_tarefa', 'restr_editar_tarefa', 'restr_excluir_tarefa',
+                'restr_editar_responsavel', 'restr_editar_duracao', 'restr_editar_datas',
+                'restr_editar_predecessoras', 'restr_editar_nome_tarefa'
+            ]
+            
+            for usuario in usuarios:
+                user_id = str(usuario['id'])
+                restricoes[user_id] = {}
+                
+                # Copiar campos de restrição
+                for campo in campos_restricao:
+                    restricoes[user_id][campo] = usuario.get(campo, False)
+                
+                # Manter campos de identificação
+                restricoes[user_id]['nome'] = usuario.get('nome')
+                restricoes[user_id]['email'] = usuario.get('email')
+            
+            return restricoes
+    except Exception as e:
+        print(f"Erro ao carregar restrições do banco: {e}")
+        # Fallback para arquivo local
+        try:
+            with open(RESTRICOES_PATH, 'r') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    
+    return {}
 
-# Função para salvar restrições
+# Função para salvar restrições no banco de dados
 def salvar_restricoes(restricoes):
-    with open(RESTRICOES_PATH, 'w') as f:
-        json.dump(restricoes, f)
+    """
+    Salva restrições no banco de dados.
+    Recebe dicionário: {user_id: {restr_criar_projeto: bool, ...}}
+    Também salva no arquivo JSON como backup.
+    """
+    try:
+        for user_id, dados in restricoes.items():
+            # Preparar dados de restrição (apenas campos booleanos)
+            campos_restricao = [
+                'restr_criar_projeto', 'restr_editar_projeto', 'restr_excluir_projeto',
+                'restr_criar_tarefa', 'restr_editar_tarefa', 'restr_excluir_tarefa',
+                'restr_editar_responsavel', 'restr_editar_duracao', 'restr_editar_datas',
+                'restr_editar_predecessoras', 'restr_editar_nome_tarefa'
+            ]
+            
+            dados_update = {}
+            for campo in campos_restricao:
+                if campo in dados:
+                    dados_update[campo] = bool(dados[campo])
+            
+            # Atualizar no banco
+            if dados_update:
+                url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{user_id}"
+                requests.patch(url, json=dados_update, headers=headers)
+        
+        # Backup em arquivo JSON
+        with open(RESTRICOES_PATH, 'w') as f:
+            json.dump(restricoes, f, indent=2)
+        
+        return True
+    except Exception as e:
+        print(f"Erro ao salvar restrições: {e}")
+        # Fallback para salvar apenas no arquivo
+        try:
+            with open(RESTRICOES_PATH, 'w') as f:
+                json.dump(restricoes, f, indent=2)
+            return True
+        except Exception:
+            return False
 
 # Função para checar se uma funcionalidade está restrita para o usuário atual
 def funcionalidade_restrita(nome_restricao):
