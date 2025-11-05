@@ -476,6 +476,14 @@ na pasta de instalação do sistema.
                         shutil.copytree(origem, destino_item, dirs_exist_ok=True)
                         self.log_message(f"  ✓ Extraída pasta: {item}")
                         sucesso = True
+            
+            # Copiar ícone da raiz do executável se não foi copiado de projeto_arquivos
+            if hasattr(sys, '_MEIPASS'):
+                icone_raiz = Path(sys._MEIPASS) / "sgp_icon.ico"
+                if icone_raiz.exists() and not (destino / "sgp_icon.ico").exists():
+                    shutil.copy2(icone_raiz, destino / "sgp_icon.ico")
+                    self.log_message(f"  ✓ Extraído: sgp_icon.ico (da raiz)")
+                    sucesso = True
                         
             return sucesso
             
