@@ -8,6 +8,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('projeto_arquivos', 'projeto_arquivos'),
+        ('sgp_icon.ico', '.'),  # Incluir ícone
     ],
     hiddenimports=[
         'tkinter',
@@ -55,5 +56,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,  # Adicione um ícone aqui se desejar
+    icon='sgp_icon.ico',  # Ícone do instalador
 )
