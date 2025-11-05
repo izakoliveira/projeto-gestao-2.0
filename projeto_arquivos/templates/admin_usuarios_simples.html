@@ -102,6 +102,16 @@
                                                 {% endif %}
                                             </td>
                                             <td class="text-center">
+                                                <!-- Botão de converter para usuário completo -->
+                                                {% if usuario.email.endswith('@sistema.local') %}
+                                                <button type="button" class="btn btn-primary btn-sm me-1" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modalConverter{{ usuario.id }}"
+                                                        title="Adicionar email e senha">
+                                                    <i class="fas fa-envelope"></i>
+                                                </button>
+                                                {% endif %}
+                                                
                                                 <!-- Botão de excluir -->
                                                 <form method="POST" style="display: inline;" 
                                                       onsubmit="return confirm('Tem certeza que deseja excluir o usuário {{ usuario.nome }}? Esta ação não pode ser desfeita.')">
@@ -144,6 +154,61 @@
             </div>
         </div>
     </div>
+
+    <!-- Modais para converter usuários simples em completos -->
+    {% for usuario in usuarios_simples %}
+    {% if usuario.email.endswith('@sistema.local') %}
+    <div class="modal fade" id="modalConverter{{ usuario.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-edit me-2"></i>Adicionar Email e Senha
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="acao" value="converter">
+                        <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Converter o usuário <strong>{{ usuario.nome }}</strong> em usuário completo com acesso ao sistema.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email{{ usuario.id }}" class="form-label">Email:</label>
+                            <input type="email" class="form-control" id="email{{ usuario.id }}" 
+                                   name="email" required placeholder="usuario@exemplo.com">
+                            <small class="text-muted">Este será o email de login do usuário</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="senha{{ usuario.id }}" class="form-label">Senha:</label>
+                            <input type="password" class="form-control" id="senha{{ usuario.id }}" 
+                                   name="senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+                            <small class="text-muted">O usuário poderá alterar depois</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmar_senha{{ usuario.id }}" class="form-label">Confirmar Senha:</label>
+                            <input type="password" class="form-control" id="confirmar_senha{{ usuario.id }}" 
+                                   name="confirmar_senha" required minlength="6" placeholder="Digite a senha novamente">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-1"></i>Converter Usuário
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
