@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Aplicação de Produção - Versão Refatorada
-Sistema de Gestão de Projetos
+SGP - Sistema de Gestão de Projetos
 """
 
 import os

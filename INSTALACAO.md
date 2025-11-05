@@ -1,14 +1,5 @@
 # 🚀 Instalação do Sistema de Gestão de Projetos 2.0
 
-## ✨ Novidade: Credenciais Pré-Configuradas!
-
-🎉 **Atenção:** Este instalador já vem com as credenciais do Supabase pré-configuradas!  
-Você não precisa mais copiar e colar URLs e chaves - tudo já está pronto para uso.
-
-📖 Para mais detalhes, consulte: [CREDENCIAIS_PRE_CONFIGURADAS.md](CREDENCIAIS_PRE_CONFIGURADAS.md)
-
----
-
 ## 📋 Pré-requisitos
 
 Antes de instalar o sistema, certifique-se de ter:
@@ -17,7 +8,6 @@ Antes de instalar o sistema, certifique-se de ter:
 - **Python 3.8 ou superior** instalado
   - Baixe em: https://www.python.org/downloads/
   - ⚠️ **IMPORTANTE**: Marque a opção "Add Python to PATH" durante a instalação
-  - 💡 **OU** deixe o instalador instalar o Python Embedded automaticamente
 - **Conexão com a internet** (apenas para a instalação inicial)
 
 ## 🎯 Como Instalar
@@ -29,33 +19,23 @@ Antes de instalar o sistema, certifique-se de ter:
    - Se aparecer um aviso do Windows Defender, clique em "Mais informações" e depois "Executar assim mesmo"
 
 2. **Configure o sistema**:
-   - **Aba "Configuração":**
-     - Escolha a pasta onde deseja instalar o sistema (padrão: `C:\Users\SeuUsuário\SistemaGestao`)
-     - Marque se deseja criar atalho na área de trabalho
-     - Marque se deseja instalar Python Embedded (caso não tenha Python instalado)
-   
-   - **Aba "Banco de Dados":**
-     - ✅ **Nada a fazer!** As credenciais já estão pré-configuradas
-     - Os campos aparecerão preenchidos e bloqueados (somente leitura)
-   
-   - **Aba "Instalação":**
-     - Clique em "Instalar Sistema" e aguarde
+   - Escolha a pasta onde deseja instalar o sistema
+   - Configure as credenciais do Supabase (banco de dados)
+   - Marque as opções desejadas (atalho na área de trabalho, etc.)
 
 3. **Aguarde a instalação**:
    - O instalador irá:
-     - Verificar se Python está instalado (ou instalar Python Embedded)
      - Extrair os arquivos do sistema
      - Criar um ambiente virtual Python
      - Instalar todas as dependências
-     - Configurar o banco de dados com as credenciais pré-configuradas
+     - Configurar o banco de dados
      - Criar atalhos e scripts de execução
 
 4. **Pronto!**
-   - Após a instalação, você pode iniciar o sistema de 4 formas:
+   - Após a instalação, você pode iniciar o sistema de 3 formas:
      - Duplo-clique no atalho da área de trabalho
      - Execute `Sistema_Gestao_Projetos.exe` na pasta de instalação
      - Execute `executar_sistema.bat` na pasta de instalação
-     - Execute `iniciar_oculto.vbs` para rodar em segundo plano (recomendado)
 
 ### Método 2: Instalação Manual (Avançado)
 

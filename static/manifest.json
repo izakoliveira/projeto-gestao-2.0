@@ -1,11 +1,11 @@
 {
-  "name": "Gestão de Projetos",
-  "short_name": "Gestão",
+  "name": "SGP - Sistema de Gestão de Projetos",
+  "short_name": "SGP",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1976d2",
   "theme_color": "#1976d2",
-  "description": "Gerencie seus projetos de forma fácil e rápida.",
+  "description": "Sistema de Gestão de Projetos - Gerencie seus projetos de forma fácil e rápida.",
   "icons": [
     {
       "src": "/static/icons/icon-192.png",

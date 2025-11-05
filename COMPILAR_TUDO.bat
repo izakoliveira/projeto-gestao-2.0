@@ -1,6 +1,6 @@
 @echo off
 echo ================================================================
-echo   COMPILADOR AUTOMATICO - Sistema de Gestao de Projetos 2.0
+echo   COMPILADOR AUTOMATICO - SGP - Sistema de Gestao de Projetos 2.0
 echo ================================================================
 echo.
 echo Este script vai:
@@ -16,7 +16,7 @@ pause
 echo.
 
 REM Executar o script de criação de executável
-python criar_executavel.py
+py criar_executavel.py
 
 echo.
 echo ================================================================

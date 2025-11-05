@@ -140,7 +140,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,  # Adicione um ícone aqui se desejar
+    icon='sgp_icon.ico',  # Ícone do SGP
 )
 """
     
@@ -196,7 +196,7 @@ from pathlib import Path
 def iniciar_sistema():
     """Inicia o servidor Flask e abre o navegador"""
     print("=" * 50)
-    print("  Sistema de Gestão de Projetos 2.0")
+    print("  SGP - Sistema de Gestão de Projetos 2.0")
     print("=" * 50)
     print()
     print("🚀 Iniciando sistema...")
@@ -320,7 +320,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon='sgp_icon.ico',
 )
 """
     

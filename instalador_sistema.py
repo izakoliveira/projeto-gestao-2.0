@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Instalador do Sistema de Gestão de Projetos 2.0
+Instalador do SGP - Sistema de Gestão de Projetos 2.0
 Automatiza a instalação e configuração completa do sistema
 """
 
@@ -22,7 +22,7 @@ import tempfile
 class InstaladorSistema:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Instalador - Sistema de Gestão de Projetos 2.0")
+        self.root.title("Instalador - SGP - Sistema de Gestão de Projetos 2.0")
         self.root.geometry("800x600")
         self.root.resizable(True, True)
         
@@ -52,7 +52,7 @@ class InstaladorSistema:
         title_frame = ttk.Frame(self.root)
         title_frame.pack(fill="x", padx=20, pady=10)
         
-        ttk.Label(title_frame, text="Sistema de Gestão de Projetos 2.0", 
+        ttk.Label(title_frame, text="SGP - Sistema de Gestão de Projetos 2.0", 
                  font=("Arial", 16, "bold")).pack()
         ttk.Label(title_frame, text="Instalador Automático", 
                  font=("Arial", 12)).pack()
@@ -458,7 +458,8 @@ na pasta de instalação do sistema.
                 'static/',
                 'utils/',
                 'gunicorn.conf.py',
-                'restricoes.json'
+                'restricoes.json',
+                'sgp_icon.ico'
             ]
             
             sucesso = False
@@ -1084,13 +1085,42 @@ python app_producao.py
                 desktop = Path.home() / "Área de Trabalho"
                 
             if desktop.exists():
-                # No Windows, usar o VBS para execução oculta
+                # No Windows, criar atalho .lnk com ícone
                 if os.name == "nt":
-                    bat_atalho = desktop / "Sistema de Gestão de Projetos.bat"
-                    with open(bat_atalho, "w", encoding="utf-8") as f:
-                        # Executar o VBS que inicia o sistema em modo oculto
+                    # Criar arquivo .bat temporário na pasta do sistema
+                    bat_file = destino / "iniciar_sgp.bat"
+                    with open(bat_file, "w", encoding="utf-8") as f:
                         f.write(f'@echo off\ncd /d "{destino}"\nstart "" wscript.exe "iniciar_oculto.vbs"')
-                    self.log_message("  ✓ Atalho criado (modo oculto) na área de trabalho")
+                    
+                    # Criar atalho .lnk no desktop com ícone
+                    atalho_lnk = desktop / "SGP.lnk"
+                    icon_path = destino / "sgp_icon.ico"
+                    
+                    # Script PowerShell para criar atalho com ícone
+                    ps_script = f"""
+$WshShell = New-Object -ComObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut("{atalho_lnk}")
+$Shortcut.TargetPath = "{bat_file}"
+$Shortcut.WorkingDirectory = "{destino}"
+$Shortcut.IconLocation = "{icon_path}"
+$Shortcut.Description = "Sistema de Gestão de Projetos"
+$Shortcut.Save()
+"""
+                    # Executar PowerShell para criar o atalho
+                    try:
+                        subprocess.run(
+                            ["powershell", "-NoProfile", "-Command", ps_script],
+                            capture_output=True,
+                            text=True,
+                            check=True
+                        )
+                        self.log_message("  ✓ Atalho 'SGP' criado com ícone na área de trabalho")
+                    except Exception as e:
+                        # Fallback: criar .bat sem ícone se PowerShell falhar
+                        bat_atalho = desktop / "SGP.bat"
+                        with open(bat_atalho, "w", encoding="utf-8") as f:
+                            f.write(f'@echo off\ncd /d "{destino}"\nstart "" wscript.exe "iniciar_oculto.vbs"')
+                        self.log_message("  ✓ Atalho 'SGP.bat' criado na área de trabalho (sem ícone)")
                 else:
                     # Para Linux, criar um .desktop file
                     desktop_file_content = f"""[Desktop Entry]

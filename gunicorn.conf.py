@@ -1,6 +1,6 @@
 """
 Configuração Simplificada do Gunicorn para Render
-Sistema de Gestão de Projetos v2.0.0
+SGP - Sistema de Gestão de Projetos v2.0.0
 """
 
 import os
