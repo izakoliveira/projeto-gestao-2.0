@@ -3,7 +3,6 @@ from utils.auth import login_required, apenas_admin_izak, carregar_restricoes, s
 from config.database import supabase
 from supabase_client import create_simple_user
 import json
-import bcrypt
 
 # Criar blueprint para administração
 admin_bp = Blueprint('admin', __name__)
@@ -205,61 +204,7 @@ def gerenciar_usuarios_simples():
     if request.method == 'POST':
         acao = request.form.get('acao')
         
-        if acao == 'converter':
-            usuario_id = request.form.get('usuario_id')
-            email = request.form.get('email', '').strip()
-            senha = request.form.get('senha', '')
-            confirmar_senha = request.form.get('confirmar_senha', '')
-            
-            # Validações
-            if not email or not senha:
-                flash('Email e senha são obrigatórios.')
-                return redirect(url_for('admin.gerenciar_usuarios_simples'))
-            
-            if senha != confirmar_senha:
-                flash('As senhas não coincidem.')
-                return redirect(url_for('admin.gerenciar_usuarios_simples'))
-            
-            if len(senha) < 6:
-                flash('A senha deve ter no mínimo 6 caracteres.')
-                return redirect(url_for('admin.gerenciar_usuarios_simples'))
-            
-            # Verificar se o email já está em uso
-            try:
-                email_check = supabase.table("usuarios").select("id").eq("email", email).execute()
-                if email_check.data:
-                    flash('Este email já está em uso por outro usuário.')
-                    return redirect(url_for('admin.gerenciar_usuarios_simples'))
-            except Exception as e:
-                print(f"Erro ao verificar email: {e}")
-            
-            # Converter usuário simples em completo
-            try:
-                senha_hash = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                
-                # Atualizar usuário com email e senha
-                resp = supabase.table("usuarios").update({
-                    "email": email,
-                    "senha_hash": senha_hash
-                }).eq("id", usuario_id).execute()
-                
-                if resp.data:
-                    # Remover todas as restrições (usuário completo tem acesso total por padrão)
-                    restricoes = carregar_restricoes()
-                    if usuario_id in restricoes:
-                        del restricoes[usuario_id]
-                        salvar_restricoes(restricoes)
-                    
-                    flash(f'Usuário convertido com sucesso! Agora pode fazer login com o email {email}')
-                else:
-                    flash('Erro ao converter usuário.')
-            except Exception as e:
-                print(f"Erro ao converter usuário: {e}")
-                flash(f'Erro ao converter usuário: {str(e)}')
-            
-            return redirect(url_for('admin.gerenciar_usuarios_simples'))
-        
-        elif acao == 'criar':
+        if acao == 'criar':
             nome = request.form.get('nome', '').strip()
             if not nome:
                 flash('Nome é obrigatório para criar um usuário simples.')
