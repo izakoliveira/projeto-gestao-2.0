@@ -81,7 +81,15 @@ def salvar_restricoes(restricoes):
             if dados_update:
                 try:
                     url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{user_id}"
+                    print(f"[DEBUG PATCH] URL: {url}")
+                    print(f"[DEBUG PATCH] Headers: {headers}")
+                    print(f"[DEBUG PATCH] Dados: {dados_update}")
+                    
                     response = requests.patch(url, json=dados_update, headers=headers)
+                    
+                    print(f"[DEBUG PATCH] Status Code: {response.status_code}")
+                    print(f"[DEBUG PATCH] Response Text: {response.text}")
+                    print(f"[DEBUG PATCH] Response Headers: {dict(response.headers)}")
                     
                     if response.status_code in [200, 204]:
                         print(f"✓ Restrições salvas para usuário {user_id}: {dados_update}")
@@ -91,6 +99,8 @@ def salvar_restricoes(restricoes):
                         erro_total += 1
                 except Exception as e:
                     print(f"✗ Exceção ao salvar restrições para {user_id}: {e}")
+                    import traceback
+                    traceback.print_exc()
                     erro_total += 1
         
         print(f"[INFO] Salvamento concluído: {sucesso_total} sucessos, {erro_total} erros")
