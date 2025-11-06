@@ -250,17 +250,25 @@
                             </div>
                         </ul>
                     </li>
-                    <!-- Botão Logout visível na navbar -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                            <i class="fas fa-sign-out-alt"></i> Sair
-                        </a>
-                    </li>
-                    <!-- Nome do usuário -->
-                    <li class="nav-item">
-                        <span class="nav-link">
+                    <!-- Nome do usuário com dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user"></i> {{ session.user_nome }}
-                        </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.alterar_senha') }}">
+                                    <i class="fas fa-key me-2"></i>Alterar Senha
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Sair
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
