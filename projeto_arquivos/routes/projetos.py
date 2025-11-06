@@ -571,6 +571,8 @@ def criar_projeto():
 
 # ROTA DE EDIÇÃO DE PROJETO
 @projetos_bp.route('/projetos/editar/<projeto_id>', methods=['GET', 'POST'])
+@login_required
+@funcionalidade_restrita('editar_projeto')
 def editar_projeto(projeto_id):
     print('DEBUG: Entrou na função editar_projeto')
     try:
