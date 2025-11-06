@@ -308,7 +308,7 @@ def gerenciar_usuarios_simples():
                 url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{usuario_id}"
                 dados_update = {
                     'email': email,
-                    'senha': senha_hash
+                    'senha_hash': senha_hash
                 }
                 
                 response = requests.patch(url, json=dados_update, headers=headers)
