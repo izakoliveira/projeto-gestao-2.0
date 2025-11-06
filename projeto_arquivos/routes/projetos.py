@@ -223,11 +223,15 @@ def listar_projetos():
     
     # Verificar permissões do usuário (carregar restrições do banco)
     from utils.auth import carregar_restricoes
-    restricoes = carregar_restricoes()
+    todas_restricoes = carregar_restricoes()
     
-    pode_criar_projeto = not restricoes.get('restr_criar_projeto', False)
-    pode_editar_projeto = not restricoes.get('restr_editar_projeto', False)
-    pode_excluir_projeto = not restricoes.get('restr_excluir_projeto', False)
+    # Pegar restrições do usuário logado
+    usuario_logado_id = str(session.get('user_id', ''))
+    restricoes_usuario = todas_restricoes.get(usuario_logado_id, {})
+    
+    pode_criar_projeto = not restricoes_usuario.get('restr_criar_projeto', False)
+    pode_editar_projeto = not restricoes_usuario.get('restr_editar_projeto', False)
+    pode_excluir_projeto = not restricoes_usuario.get('restr_excluir_projeto', False)
     
     # Agrupar tarefas por projeto
     tarefas_por_projeto = {}
