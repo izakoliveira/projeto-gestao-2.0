@@ -60,6 +60,9 @@ def salvar_restricoes(restricoes):
     Também salva no arquivo JSON como backup.
     """
     try:
+        sucesso_total = 0
+        erro_total = 0
+        
         for user_id, dados in restricoes.items():
             # Preparar dados de restrição (apenas campos booleanos)
             campos_restricao = [
@@ -76,8 +79,21 @@ def salvar_restricoes(restricoes):
             
             # Atualizar no banco
             if dados_update:
-                url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{user_id}"
-                requests.patch(url, json=dados_update, headers=headers)
+                try:
+                    url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{user_id}"
+                    response = requests.patch(url, json=dados_update, headers=headers)
+                    
+                    if response.status_code in [200, 204]:
+                        print(f"✓ Restrições salvas para usuário {user_id}: {dados_update}")
+                        sucesso_total += 1
+                    else:
+                        print(f"✗ Erro ao salvar restrições para {user_id}: {response.status_code} - {response.text}")
+                        erro_total += 1
+                except Exception as e:
+                    print(f"✗ Exceção ao salvar restrições para {user_id}: {e}")
+                    erro_total += 1
+        
+        print(f"[INFO] Salvamento concluído: {sucesso_total} sucessos, {erro_total} erros")
         
         # Backup em arquivo JSON
         with open(RESTRICOES_PATH, 'w') as f:
