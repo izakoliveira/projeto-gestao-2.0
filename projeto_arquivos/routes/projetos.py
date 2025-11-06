@@ -221,10 +221,13 @@ def listar_projetos():
     
     # Sistema para garantir cores únicas e bem diferenciadas será criado DEPOIS da ordenação
     
-    # Verificar permissões do usuário
-    pode_criar_projeto = True  # Por enquanto, sempre True
-    pode_editar_projeto = True
-    pode_excluir_projeto = True
+    # Verificar permissões do usuário (carregar restrições do banco)
+    from utils.auth import carregar_restricoes
+    restricoes = carregar_restricoes()
+    
+    pode_criar_projeto = not restricoes.get('restr_criar_projeto', False)
+    pode_editar_projeto = not restricoes.get('restr_editar_projeto', False)
+    pode_excluir_projeto = not restricoes.get('restr_excluir_projeto', False)
     
     # Agrupar tarefas por projeto
     tarefas_por_projeto = {}
