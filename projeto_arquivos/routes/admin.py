@@ -1,8 +1,18 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
 from utils.auth import login_required, apenas_admin_izak, carregar_restricoes, salvar_restricoes
-from config.database import supabase
+from config.database import supabase, SUPABASE_URL, SUPABASE_KEY
 from supabase_client import create_simple_user
 import json
+import requests
+import bcrypt
+
+# Headers para requisições Supabase
+headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': f'Bearer {SUPABASE_KEY}',
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+}
 
 # Criar blueprint para administração
 admin_bp = Blueprint('admin', __name__)
@@ -253,6 +263,65 @@ def gerenciar_usuarios_simples():
             except Exception as e:
                 print(f"Erro ao criar usuário simples: {e}")
                 flash(f'Erro ao criar usuário: {str(e)}')
+        
+        elif acao == 'converter':
+            usuario_id = request.form.get('usuario_id')
+            email = request.form.get('email', '').strip()
+            senha = request.form.get('senha', '').strip()
+            confirmar_senha = request.form.get('confirmar_senha', '').strip()
+            
+            # Validações
+            if not usuario_id or not email or not senha:
+                flash('Todos os campos são obrigatórios.')
+                return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            
+            if senha != confirmar_senha:
+                flash('As senhas não coincidem.')
+                return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            
+            if len(senha) < 6:
+                flash('A senha deve ter no mínimo 6 caracteres.')
+                return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            
+            # Validar formato de email
+            import re
+            email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_regex, email):
+                flash('Email inválido.')
+                return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            
+            # Verificar se o email já está em uso
+            try:
+                usuarios_resp = supabase.table("usuarios").select("id").eq("email", email).execute()
+                if usuarios_resp.data:
+                    flash('Este email já está em uso por outro usuário.')
+                    return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            except Exception as e:
+                print(f"Erro ao verificar email: {e}")
+            
+            # Converter usuário
+            try:
+                # Gerar hash da senha
+                senha_hash = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                
+                # Atualizar usuário no banco
+                url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{usuario_id}"
+                dados_update = {
+                    'email': email,
+                    'senha': senha_hash
+                }
+                
+                response = requests.patch(url, json=dados_update, headers=headers)
+                
+                if response.status_code in [200, 204]:
+                    flash(f'Usuário convertido com sucesso! Email: {email}')
+                    print(f"✓ Usuário {usuario_id} convertido para email: {email}")
+                else:
+                    flash(f'Erro ao converter usuário: {response.status_code}')
+                    print(f"✗ Erro ao converter usuário: {response.text}")
+            except Exception as e:
+                flash(f'Erro ao converter usuário: {str(e)}')
+                print(f"Exceção ao converter usuário: {e}")
         
         elif acao == 'excluir':
             usuario_id = request.form.get('usuario_id')
