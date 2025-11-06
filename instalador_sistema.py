@@ -22,9 +22,29 @@ import tempfile
 class InstaladorSistema:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Instalador - SGP - Sistema de Gestão de Projetos 2.0")
-        self.root.geometry("800x600")
-        self.root.resizable(True, True)
+        self.root.title("SGP - Sistema de Gestão de Projetos 2.0")
+        self.root.geometry("900x650")
+        self.root.resizable(False, False)
+        
+        # Cores Windows 11
+        self.cor_fundo = "#F3F3F3"  # Cinza claro
+        self.cor_card = "#FFFFFF"    # Branco
+        self.cor_primaria = "#0078D4"  # Azul Windows
+        self.cor_texto = "#1F1F1F"   # Cinza escuro
+        self.cor_texto_suave = "#616161"  # Cinza médio
+        self.cor_sucesso = "#107C10"  # Verde
+        self.cor_aviso = "#FF8C00"    # Laranja
+        
+        # Configurar cores da janela
+        self.root.configure(bg=self.cor_fundo)
+        
+        # Definir ícone da janela (buscar sgp_icon.ico)
+        try:
+            icon_path = self._encontrar_icone()
+            if icon_path and icon_path.exists():
+                self.root.iconbitmap(str(icon_path))
+        except:
+            pass  # Se não encontrar, usa o ícone padrão
         
         # Arquivo de configurações salvas
         self.config_file = Path.home() / ".sistema_gestao_config.json"
@@ -39,136 +59,584 @@ class InstaladorSistema:
         
         self.criar_desktop_shortcut = tk.BooleanVar(value=True)
         self.instalar_dependencias = tk.BooleanVar(value=True)
-        self.instalar_python_embarcado = tk.BooleanVar(value=False)  # Nova opção
+        self.instalar_python_embarcado = tk.BooleanVar(value=False)
         
         # Inicializar python_info com valor padrão
         self.python_info = {"instalado": False, "versao": None, "comando": None, "tem_venv": False}
         
+        # Etapa atual (para navegação wizard)
+        self.etapa_atual = 0
+        
         self.setup_ui()
+    
+    def _encontrar_icone(self):
+        """Encontra o arquivo sgp_icon.ico"""
+        # Opção 1: No executável PyInstaller
+        if hasattr(sys, '_MEIPASS'):
+            icone = Path(sys._MEIPASS) / "sgp_icon.ico"
+            if icone.exists():
+                return icone
+        
+        # Opção 2: Na pasta do script
+        icone = Path(__file__).parent / "sgp_icon.ico"
+        if icone.exists():
+            return icone
+        
+        # Opção 3: Na pasta projeto_arquivos
+        icone = Path(__file__).parent / "projeto_arquivos" / "sgp_icon.ico"
+        if icone.exists():
+            return icone
+        
+        return None
         
     def setup_ui(self):
-        """Configura a interface do usuário"""
+        """Configura a interface moderna estilo Windows 11"""
+        # Container principal
+        main_container = tk.Frame(self.root, bg=self.cor_fundo)
+        main_container.pack(fill="both", expand=True, padx=0, pady=0)
+        
+        # Header moderno
+        self.criar_header(main_container)
+        
+        # Container de conteúdo (cards)
+        self.content_frame = tk.Frame(main_container, bg=self.cor_fundo)
+        self.content_frame.pack(fill="both", expand=True, padx=40, pady=20)
+        
+        # Footer com botões (CRIAR ANTES de mostrar tela)
+        self.criar_footer(main_container)
+        
+        # Mostrar tela inicial
+        self.mostrar_tela_bem_vindo()
+    
+    def criar_header(self, parent):
+        """Cria o header moderno com gradiente"""
+        header = tk.Frame(parent, bg=self.cor_primaria, height=120)
+        header.pack(fill="x", side="top")
+        header.pack_propagate(False)
+        
+        # Ícone grande (emoji como placeholder)
+        icon_label = tk.Label(
+            header,
+            text="📊",
+            font=("Segoe UI", 48),
+            bg=self.cor_primaria,
+            fg="white"
+        )
+        icon_label.pack(pady=(20, 5))
+        
         # Título
-        title_frame = ttk.Frame(self.root)
-        title_frame.pack(fill="x", padx=20, pady=10)
+        title_label = tk.Label(
+            header,
+            text="Sistema de Gestão de Projetos",
+            font=("Segoe UI", 20, "bold"),
+            bg=self.cor_primaria,
+            fg="white"
+        )
+        title_label.pack()
         
-        ttk.Label(title_frame, text="SGP - Sistema de Gestão de Projetos 2.0", 
-                 font=("Arial", 16, "bold")).pack()
-        ttk.Label(title_frame, text="Instalador Automático", 
-                 font=("Arial", 12)).pack()
+        # Subtítulo
+        subtitle_label = tk.Label(
+            header,
+            text="Instalador v2.0",
+            font=("Segoe UI", 11),
+            bg=self.cor_primaria,
+            fg="white"
+        )
+        subtitle_label.pack()
+    
+    def criar_footer(self, parent):
+        """Cria o footer com botões modernos"""
+        self.footer = tk.Frame(parent, bg=self.cor_fundo, height=80)
+        self.footer.pack(fill="x", side="bottom", padx=40, pady=(0, 20))
+        self.footer.pack_propagate(False)
         
-        # Notebook para abas
-        notebook = ttk.Notebook(self.root)
-        notebook.pack(fill="both", expand=True, padx=20, pady=10)
+        # Separador
+        separator = tk.Frame(self.footer, bg="#E0E0E0", height=1)
+        separator.pack(fill="x", pady=(0, 20))
         
-        # Aba 1: Configurações Básicas
-        config_frame = ttk.Frame(notebook)
-        notebook.add(config_frame, text="Configurações")
-        self.setup_config_tab(config_frame)
+        # Container de botões
+        self.btn_container = tk.Frame(self.footer, bg=self.cor_fundo)
+        self.btn_container.pack(fill="x")
         
-        # Aba 2: Configurações do Supabase
-        supabase_frame = ttk.Frame(notebook)
-        notebook.add(supabase_frame, text="Banco de Dados")
-        self.setup_supabase_tab(supabase_frame)
+        # Botão Cancelar (esquerda)
+        self.btn_cancelar = self.criar_botao_moderno(
+            self.btn_container,
+            text="Cancelar",
+            command=self.root.quit,
+            primary=False
+        )
+        self.btn_cancelar.pack(side="left")
         
-        # Aba 3: Instalação
-        install_frame = ttk.Frame(notebook)
-        notebook.add(install_frame, text="Instalação")
-        self.setup_install_tab(install_frame)
+        # Botões Voltar e Avançar (direita)
+        self.btn_voltar = self.criar_botao_moderno(
+            self.btn_container,
+            text="← Voltar",
+            command=self.voltar_etapa,
+            primary=False
+        )
+        self.btn_voltar.pack(side="right", padx=(10, 0))
         
-        # Botões principais
-        button_frame = ttk.Frame(self.root)
-        button_frame.pack(fill="x", padx=20, pady=10)
+        self.btn_avancar = self.criar_botao_moderno(
+            self.btn_container,
+            text="Avançar →",
+            command=self.avancar_etapa,
+            primary=True
+        )
+        self.btn_avancar.pack(side="right")
         
-        ttk.Button(button_frame, text="Instalar Sistema", 
-                  command=self.iniciar_instalacao).pack(side="right", padx=5)
-        ttk.Button(button_frame, text="Sair", 
-                  command=self.root.quit).pack(side="right", padx=5)
+        # Inicialmente só mostra botão de avançar
+        self.btn_voltar.pack_forget()
+    
+    def criar_botao_moderno(self, parent, text, command, primary=False):
+        """Cria um botão com estilo moderno Windows 11"""
+        if primary:
+            bg_color = self.cor_primaria
+            fg_color = "white"
+            hover_color = "#005A9E"
+        else:
+            bg_color = "#E8E8E8"
+            fg_color = self.cor_texto
+            hover_color = "#D8D8D8"
         
-    def setup_config_tab(self, parent):
-        """Configura a aba de configurações básicas"""
+        # Frame para simular border radius
+        btn_frame = tk.Frame(parent, bg=bg_color, highlightthickness=0)
+        
+        btn = tk.Label(
+            btn_frame,
+            text=text,
+            font=("Segoe UI", 10, "bold" if primary else "normal"),
+            bg=bg_color,
+            fg=fg_color,
+            padx=30,
+            pady=12,
+            cursor="hand2"
+        )
+        btn.pack(padx=1, pady=1)
+        
+        # Eventos de hover
+        def on_enter(e):
+            btn.config(bg=hover_color)
+            btn_frame.config(bg=hover_color)
+        
+        def on_leave(e):
+            btn.config(bg=bg_color)
+            btn_frame.config(bg=bg_color)
+        
+        def on_click(e):
+            command()
+        
+        btn.bind("<Enter>", on_enter)
+        btn.bind("<Leave>", on_leave)
+        btn.bind("<Button-1>", on_click)
+        
+        return btn_frame
+    
+    def criar_card(self, parent, titulo=None):
+        """Cria um card moderno com sombra"""
+        # Frame externo para sombra
+        shadow_frame = tk.Frame(parent, bg="#D0D0D0")
+        shadow_frame.pack(fill="both", expand=True, pady=5)
+        
+        # Card principal
+        card = tk.Frame(shadow_frame, bg=self.cor_card)
+        card.pack(fill="both", expand=True, padx=2, pady=2)
+        
+        if titulo:
+            titulo_label = tk.Label(
+                card,
+                text=titulo,
+                font=("Segoe UI", 14, "bold"),
+                bg=self.cor_card,
+                fg=self.cor_texto,
+                anchor="w"
+            )
+            titulo_label.pack(fill="x", padx=25, pady=(20, 10))
+        
+        # Container de conteúdo do card
+        content = tk.Frame(card, bg=self.cor_card)
+        content.pack(fill="both", expand=True, padx=25, pady=(0, 20))
+        
+        return content
+    
+    def criar_checkbox_moderno(self, parent, texto, variable):
+        """Cria um checkbox com estilo moderno"""
+        frame = tk.Frame(parent, bg=self.cor_card)
+        frame.pack(fill="x", pady=5)
+        
+        check = tk.Checkbutton(
+            frame,
+            text=texto,
+            variable=variable,
+            font=("Segoe UI", 10),
+            bg=self.cor_card,
+            fg=self.cor_texto,
+            activebackground=self.cor_card,
+            activeforeground=self.cor_texto,
+            selectcolor="white",
+            relief="flat",
+            bd=0,
+            highlightthickness=0,
+            cursor="hand2"
+        )
+        check.pack(anchor="w")
+    
+    def limpar_conteudo(self):
+        """Limpa o conteúdo atual"""
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+    
+    def avancar_etapa(self):
+        """Avança para próxima etapa"""
+        self.etapa_atual += 1
+        
+        if self.etapa_atual == 1:
+            self.mostrar_tela_configuracao()
+        elif self.etapa_atual == 2:
+            if self.validar_configuracoes():
+                self.mostrar_tela_instalacao()
+            else:
+                self.etapa_atual -= 1
+    
+    def voltar_etapa(self):
+        """Volta para etapa anterior"""
+        self.etapa_atual -= 1
+        
+        if self.etapa_atual == 0:
+            self.mostrar_tela_bem_vindo()
+        elif self.etapa_atual == 1:
+            self.mostrar_tela_configuracao()
+    
+    def mostrar_tela_bem_vindo(self):
+        """Tela de boas-vindas moderna"""
+        self.limpar_conteudo()
+        
+        card = self.criar_card(self.content_frame)
+        
+        # Ícone grande
+        icon = tk.Label(
+            card,
+            text="🚀",
+            font=("Segoe UI", 72),
+            bg=self.cor_card
+        )
+        icon.pack(pady=(40, 20))
+        
+        # Título de boas-vindas
+        titulo = tk.Label(
+            card,
+            text="Bem-vindo ao Instalador!",
+            font=("Segoe UI", 24, "bold"),
+            bg=self.cor_card,
+            fg=self.cor_texto
+        )
+        titulo.pack(pady=(0, 10))
+        
+        # Descrição
+        desc = tk.Label(
+            card,
+            text="Este assistente irá guiá-lo através da instalação\ndo Sistema de Gestão de Projetos 2.0",
+            font=("Segoe UI", 11),
+            bg=self.cor_card,
+            fg=self.cor_texto_suave,
+            justify="center"
+        )
+        desc.pack(pady=(0, 30))
+        
+        # Lista de recursos
+        recursos_frame = tk.Frame(card, bg=self.cor_card)
+        recursos_frame.pack(pady=20)
+        
+        recursos = [
+            ("✓", "Instalação automatizada", self.cor_sucesso),
+            ("✓", "Banco de dados pré-configurado", self.cor_sucesso),
+            ("✓", "Ambiente Python isolado", self.cor_sucesso),
+            ("✓", "Atalho na área de trabalho", self.cor_sucesso)
+        ]
+        
+        for icone, texto, cor in recursos:
+            item_frame = tk.Frame(recursos_frame, bg=self.cor_card)
+            item_frame.pack(fill="x", pady=5)
+            
+            tk.Label(
+                item_frame,
+                text=icone,
+                font=("Segoe UI", 12, "bold"),
+                bg=self.cor_card,
+                fg=cor,
+                width=3
+            ).pack(side="left")
+            
+            tk.Label(
+                item_frame,
+                text=texto,
+                font=("Segoe UI", 11),
+                bg=self.cor_card,
+                fg=self.cor_texto,
+                anchor="w"
+            ).pack(side="left", fill="x")
+        
+        # Atualizar botões
+        self.btn_avancar.pack(side="right")
+        self.btn_voltar.pack_forget()
+        self.btn_cancelar.pack(side="left")
+    
+    def mostrar_tela_configuracao(self):
+        """Tela de configuração moderna"""
+        self.limpar_conteudo()
+        
+        card = self.criar_card(self.content_frame, "Configuração da Instalação")
+        
         # Pasta de instalação
-        ttk.Label(parent, text="Pasta de Instalação:").pack(anchor="w", pady=5)
-        pasta_frame = ttk.Frame(parent)
-        pasta_frame.pack(fill="x", pady=5)
+        pasta_label = tk.Label(
+            card,
+            text="Local de Instalação",
+            font=("Segoe UI", 11, "bold"),
+            bg=self.cor_card,
+            fg=self.cor_texto,
+            anchor="w"
+        )
+        pasta_label.pack(fill="x", pady=(10, 5))
         
-        ttk.Entry(pasta_frame, textvariable=self.pasta_instalacao, width=50).pack(side="left", fill="x", expand=True)
-        ttk.Button(pasta_frame, text="Procurar", command=self.escolher_pasta).pack(side="right", padx=5)
+        pasta_frame = tk.Frame(card, bg=self.cor_card)
+        pasta_frame.pack(fill="x", pady=(0, 20))
+        
+        pasta_entry = tk.Entry(
+            pasta_frame,
+            textvariable=self.pasta_instalacao,
+            font=("Segoe UI", 10),
+            bg="white",
+            fg=self.cor_texto,
+            relief="flat",
+            bd=1,
+            highlightthickness=1,
+            highlightbackground="#D0D0D0",
+            highlightcolor=self.cor_primaria
+        )
+        pasta_entry.pack(side="left", fill="x", expand=True, ipady=8)
+        
+        btn_procurar = tk.Button(
+            pasta_frame,
+            text="📁 Procurar",
+            font=("Segoe UI", 9),
+            bg="#E8E8E8",
+            fg=self.cor_texto,
+            relief="flat",
+            bd=0,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=self.escolher_pasta
+        )
+        btn_procurar.pack(side="right", padx=(10, 0))
+        
+        # Status do Python
+        python_label = tk.Label(
+            card,
+            text="Ambiente Python",
+            font=("Segoe UI", 11, "bold"),
+            bg=self.cor_card,
+            fg=self.cor_texto,
+            anchor="w"
+        )
+        python_label.pack(fill="x", pady=(20, 5))
+        
+        python_info = self._verificar_python_instalado()
+        self.python_info = python_info
+        
+        # Card de status
+        status_frame = tk.Frame(card, bg="#F8F8F8", relief="flat", bd=1)
+        status_frame.pack(fill="x", pady=(0, 20))
+        
+        if python_info["instalado"]:
+            status_icon = tk.Label(
+                status_frame,
+                text="✓",
+                font=("Segoe UI", 16, "bold"),
+                bg="#F8F8F8",
+                fg=self.cor_sucesso
+            )
+            status_icon.pack(side="left", padx=(15, 10), pady=10)
+            
+            status_text = tk.Label(
+                status_frame,
+                text=f"Python {python_info['versao']} detectado",
+                font=("Segoe UI", 10),
+                bg="#F8F8F8",
+                fg=self.cor_texto
+            )
+            status_text.pack(side="left", pady=10)
+        else:
+            status_icon = tk.Label(
+                status_frame,
+                text="⚠",
+                font=("Segoe UI", 16, "bold"),
+                bg="#F8F8F8",
+                fg=self.cor_aviso
+            )
+            status_icon.pack(side="left", padx=(15, 10), pady=10)
+            
+            status_text = tk.Label(
+                status_frame,
+                text="Python não detectado - será instalado automaticamente",
+                font=("Segoe UI", 10),
+                bg="#F8F8F8",
+                fg=self.cor_texto
+            )
+            status_text.pack(side="left", pady=10)
+            
+            self.instalar_python_embarcado.set(True)
         
         # Opções
-        ttk.Checkbutton(parent, text="Instalar dependências Python automaticamente", 
-                       variable=self.instalar_dependencias).pack(anchor="w", pady=5)
-        ttk.Checkbutton(parent, text="Criar atalho na área de trabalho", 
-                       variable=self.criar_desktop_shortcut).pack(anchor="w", pady=5)
+        opcoes_label = tk.Label(
+            card,
+            text="Opções",
+            font=("Segoe UI", 11, "bold"),
+            bg=self.cor_card,
+            fg=self.cor_texto,
+            anchor="w"
+        )
+        opcoes_label.pack(fill="x", pady=(20, 10))
         
-        # Verificar se Python está instalado
-        python_status = self._verificar_python_instalado()
-        if not python_status["instalado"]:
-            ttk.Label(parent, text="⚠️ Python não detectado no sistema!", 
-                     foreground="red", font=("Arial", 10, "bold")).pack(anchor="w", pady=(10,0))
-            ttk.Checkbutton(parent, text="Baixar e instalar Python embarcado (sem instalação no sistema)", 
-                           variable=self.instalar_python_embarcado).pack(anchor="w", pady=5)
-            self.instalar_python_embarcado.set(True)  # Marcar por padrão
-        else:
-            ttk.Label(parent, text=f"✅ Python {python_status['versao']} detectado", 
-                     foreground="green", font=("Arial", 10)).pack(anchor="w", pady=(10,0))
+        # Checkboxes modernos
+        self.criar_checkbox_moderno(
+            card,
+            "Criar atalho na área de trabalho",
+            self.criar_desktop_shortcut
+        )
         
-        # Email do administrador
-        ttk.Label(parent, text="Email do Administrador:").pack(anchor="w", pady=(20,5))
-        ttk.Entry(parent, textvariable=self.admin_email, width=50).pack(anchor="w", pady=5)
+        self.criar_checkbox_moderno(
+            card,
+            "Instalar dependências automaticamente",
+            self.instalar_dependencias
+        )
         
-    def setup_supabase_tab(self, parent):
-        """Configura a aba do Supabase"""
-        ttk.Label(parent, text="Configuração do Banco de Dados Supabase", 
-                 font=("Arial", 12, "bold")).pack(pady=10)
+        # Atualizar botões
+        self.btn_voltar.pack(side="right", padx=(10, 0))
+        self.btn_avancar.pack(side="right")
+        self.btn_cancelar.pack(side="left")
+    
+    def mostrar_tela_instalacao(self):
+        """Tela de instalação com progresso moderno"""
+        self.limpar_conteudo()
         
-        # Informação de que está pré-configurado
-        info_frame = ttk.Frame(parent)
-        info_frame.pack(fill="x", pady=10)
+        card = self.criar_card(self.content_frame, "Instalando Sistema...")
         
-        ttk.Label(info_frame, text="✅ Credenciais PRÉ-CONFIGURADAS", 
-                 font=("Arial", 10, "bold"), foreground="green").pack()
-        ttk.Label(info_frame, text="As credenciais do Supabase já estão configuradas neste instalador.", 
-                 font=("Arial", 9)).pack()
+        # Status atual
+        self.status_label = tk.Label(
+            card,
+            text="Preparando instalação...",
+            font=("Segoe UI", 12),
+            bg=self.cor_card,
+            fg=self.cor_texto,
+            anchor="w"
+        )
+        self.status_label.pack(fill="x", pady=(20, 10))
         
-        ttk.Label(parent, text="URL do Supabase:").pack(anchor="w", pady=5)
-        url_entry = ttk.Entry(parent, textvariable=self.supabase_url, width=70, state="readonly")
-        url_entry.pack(fill="x", pady=5)
+        # Barra de progresso moderna
+        progress_bg = tk.Frame(card, bg="#E8E8E8", height=8)
+        progress_bg.pack(fill="x", pady=(0, 20))
+        progress_bg.pack_propagate(False)
         
-        ttk.Label(parent, text="Chave do Supabase (anon key):").pack(anchor="w", pady=5)
-        key_entry = ttk.Entry(parent, textvariable=self.supabase_key, width=70, show="*", state="readonly")
-        key_entry.pack(fill="x", pady=5)
+        self.progress_bar = tk.Frame(progress_bg, bg=self.cor_primaria, width=0)
+        self.progress_bar.pack(side="left", fill="y")
         
-        # Instruções
-        instructions = """
-ℹ️ INFORMAÇÃO IMPORTANTE:
-
-Este instalador já vem com as credenciais do Supabase pré-configuradas.
-Você não precisa fazer nada nesta aba - tudo está pronto para uso!
-
-O sistema se conectará automaticamente ao banco de dados durante a instalação.
-
-Se futuramente precisar alterar as credenciais, você pode editar o arquivo .env
-na pasta de instalação do sistema.
-        """
+        # Log de instalação
+        log_frame = tk.Frame(card, bg="white", relief="flat", bd=1)
+        log_frame.pack(fill="both", expand=True, pady=(10, 0))
         
-        text_widget = tk.Text(parent, height=10, wrap="word")
-        text_widget.insert("1.0", instructions)
-        text_widget.config(state="disabled")
-        text_widget.pack(fill="x", pady=10)
-        
-    def setup_install_tab(self, parent):
-        """Configura a aba de instalação"""
-        self.log_text = tk.Text(parent, height=20, wrap="word")
-        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.log_text.yview)
-        self.log_text.configure(yscrollcommand=scrollbar.set)
-        
-        self.log_text.pack(side="left", fill="both", expand=True)
+        scrollbar = tk.Scrollbar(log_frame)
         scrollbar.pack(side="right", fill="y")
         
-        # Barra de progresso
-        self.progress = ttk.Progressbar(parent, mode='indeterminate')
-        self.progress.pack(fill="x", pady=5)
+        self.log_text = tk.Text(
+            log_frame,
+            font=("Consolas", 9),
+            bg="white",
+            fg="#333333",
+            relief="flat",
+            bd=0,
+            yscrollcommand=scrollbar.set,
+            wrap="word"
+        )
+        self.log_text.pack(fill="both", expand=True, padx=10, pady=10)
+        scrollbar.config(command=self.log_text.yview)
+        
+        # Progresso ttk também
+        self.progress = ttk.Progressbar(card, mode='indeterminate')
+        self.progress.pack(fill="x", pady=(5, 0))
+        
+        # Ocultar botões durante instalação
+        self.btn_voltar.pack_forget()
+        self.btn_avancar.pack_forget()
+        self.btn_cancelar.pack_forget()
+        
+        # Iniciar instalação
+        threading.Thread(target=self.executar_instalacao, daemon=True).start()
+    
+    def mostrar_tela_concluido(self):
+        """Tela de conclusão moderna"""
+        self.limpar_conteudo()
+        
+        card = self.criar_card(self.content_frame)
+        
+        # Ícone de sucesso
+        icon = tk.Label(
+            card,
+            text="✓",
+            font=("Segoe UI", 72, "bold"),
+            bg=self.cor_card,
+            fg=self.cor_sucesso
+        )
+        icon.pack(pady=(40, 20))
+        
+        # Título
+        titulo = tk.Label(
+            card,
+            text="Instalação Concluída!",
+            font=("Segoe UI", 24, "bold"),
+            bg=self.cor_card,
+            fg=self.cor_texto
+        )
+        titulo.pack(pady=(0, 10))
+        
+        # Mensagem
+        msg = tk.Label(
+            card,
+            text=f"O sistema foi instalado com sucesso em:\n{self.pasta_instalacao.get()}",
+            font=("Segoe UI", 11),
+            bg=self.cor_card,
+            fg=self.cor_texto_suave,
+            justify="center"
+        )
+        msg.pack(pady=(0, 30))
+        
+        # Informações
+        info_frame = tk.Frame(card, bg="#F8F8F8", relief="flat")
+        info_frame.pack(fill="x", padx=40, pady=20)
+        
+        info_text = tk.Label(
+            info_frame,
+            text="💡 Para iniciar o sistema, execute o arquivo 'executar_sistema.bat'\n"
+                 "ou use o atalho criado na área de trabalho.",
+            font=("Segoe UI", 10),
+            bg="#F8F8F8",
+            fg=self.cor_texto,
+            justify="center"
+        )
+        info_text.pack(pady=15, padx=15)
+        
+        # Atualizar botões
+        self.btn_avancar.pack_forget()
+        self.btn_voltar.pack_forget()
+        self.btn_cancelar.pack_forget()
+        
+        # Botão Concluir
+        btn_concluir = self.criar_botao_moderno(
+            self.btn_container,
+            text="Concluir",
+            command=self.root.quit,
+            primary=True
+        )
+        btn_concluir.pack(side="right")
         
     def escolher_pasta(self):
         """Permite escolher a pasta de instalação"""
@@ -178,9 +646,28 @@ na pasta de instalação do sistema.
             
     def log_message(self, message):
         """Adiciona mensagem ao log"""
-        self.log_text.insert(tk.END, f"{message}\n")
-        self.log_text.see(tk.END)
-        self.root.update()
+        if hasattr(self, 'log_text'):
+            self.log_text.insert(tk.END, f"{message}\n")
+            self.log_text.see(tk.END)
+            self.root.update()
+            
+        # Atualizar status
+        if hasattr(self, 'status_label'):
+            # Pegar primeira linha da mensagem
+            primeira_linha = message.split('\n')[0]
+            self.status_label.config(text=primeira_linha)
+    
+    def atualizar_progresso(self, porcentagem):
+        """Atualiza a barra de progresso moderna"""
+        if hasattr(self, 'progress_bar') and hasattr(self, 'content_frame'):
+            try:
+                largura_total = self.content_frame.winfo_width() - 100
+                if largura_total > 0:
+                    largura = int(largura_total * (porcentagem / 100))
+                    self.progress_bar.config(width=largura)
+                    self.root.update()
+            except:
+                pass
     
     def _verificar_python_instalado(self):
         """Verifica se Python está instalado no sistema e se tem módulo venv"""
@@ -209,18 +696,6 @@ na pasta de instalação do sistema.
                 continue
         
         return {"instalado": False, "versao": None, "comando": None, "tem_venv": False}
-        
-    def iniciar_instalacao(self):
-        """Inicia o processo de instalação em thread separada"""
-        self.log_message("🔘 Botão de instalação clicado")
-        
-        if not self.validar_configuracoes():
-            self.log_message("❌ Validação de configurações falhou")
-            return
-            
-        self.log_message("✅ Configurações validadas - iniciando instalação")
-        self.progress.start()
-        threading.Thread(target=self.executar_instalacao, daemon=True).start()
         
     def validar_configuracoes(self):
         """Valida as configurações antes da instalação"""
@@ -334,11 +809,13 @@ na pasta de instalação do sistema.
             pasta_destino = Path(self.pasta_instalacao.get())
             pasta_destino.mkdir(parents=True, exist_ok=True)
             self.log_message(f"📁 Pasta de instalação criada: {pasta_destino}")
+            self.atualizar_progresso(10)
             
             # Copiar arquivos do sistema
             self.log_message("🔄 Iniciando cópia de arquivos...")
             self.copiar_arquivos_sistema(pasta_destino)
             self.log_message("✅ Arquivos copiados com sucesso")
+            self.atualizar_progresso(30)
             
             # Decidir qual Python usar ANTES de qualquer instalação
             python_path = None
@@ -360,6 +837,7 @@ na pasta de instalação do sistema.
                 python_path = self.instalar_python_portable(pasta_destino)
                 if python_path:
                     self.log_message(f"✅ Python embarcado instalado em: {python_path}")
+                    self.atualizar_progresso(45)
                 else:
                     self.log_message("❌ Erro ao instalar Python embarcado")
                     raise Exception("Falha na instalação do Python embarcado")
@@ -369,37 +847,47 @@ na pasta de instalação do sistema.
                 self.log_message("🔄 Iniciando criação de ambiente virtual...")
                 self.criar_ambiente_virtual(pasta_destino, python_path)
                 self.log_message("✅ Ambiente virtual criado com sucesso")
+                self.atualizar_progresso(70)
             else:
                 self.log_message("⏭️ Pulando criação de ambiente virtual (desmarcado)")
+                self.atualizar_progresso(70)
                 
             # Configurar arquivo .env
             self.log_message("🔄 Criando arquivo de configuração...")
             self.criar_arquivo_env(pasta_destino)
             self.log_message("✅ Arquivo .env criado com sucesso")
+            self.atualizar_progresso(80)
             
             # Criar launcher executável
             self.criar_launcher_executavel(pasta_destino)
+            self.atualizar_progresso(85)
             
             # Criar scripts de execução
             self.log_message("🔄 Criando scripts de execução...")
             self.criar_scripts_execucao(pasta_destino)
             self.log_message("✅ Scripts criados com sucesso")
+            self.atualizar_progresso(90)
             
             # Criar atalho na área de trabalho
             if self.criar_desktop_shortcut.get():
                 self.log_message("🔄 Criando atalho na área de trabalho...")
                 self.criar_atalho_desktop(pasta_destino)
                 self.log_message("✅ Atalho criado com sucesso")
+                self.atualizar_progresso(95)
             else:
                 self.log_message("⏭️ Pulando criação de atalho (desmarcado)")
+                self.atualizar_progresso(95)
                 
             self.log_message("✅ Instalação concluída com sucesso!")
             self.log_message(f"📍 Sistema instalado em: {pasta_destino}")
             self.log_message("🎉 Você pode executar o sistema usando o arquivo 'executar_sistema.bat'")
             
-            # Mostrar mensagem de sucesso SEM executar nada
-            self.root.after(0, lambda: messagebox.showinfo("Sucesso", 
-                f"Sistema instalado com sucesso!\n\nLocalização: {pasta_destino}\n\nExecute 'executar_sistema.bat' para iniciar."))
+            # Atualizar progresso para 100%
+            self.atualizar_progresso(100)
+            
+            # Aguardar um pouco e mostrar tela de conclusão
+            time.sleep(2)
+            self.root.after(0, self.mostrar_tela_concluido)
             
         except Exception as e:
             error_msg = f"Erro durante a instalação: {str(e)}"
@@ -407,7 +895,8 @@ na pasta de instalação do sistema.
             # Mostrar erro na thread principal
             self.root.after(0, lambda: messagebox.showerror("Erro", error_msg))
         finally:
-            self.progress.stop()
+            if hasattr(self, 'progress'):
+                self.progress.stop()
             self.log_message("🔚 Processo de instalação finalizado")
             
     def copiar_arquivos_sistema(self, destino):
