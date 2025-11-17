@@ -76,7 +76,9 @@ def verificar_tarefa_atrasada(tarefa):
     Returns:
         bool: True se a tarefa está atrasada, False caso contrário
     """
+    print(f"[LOG] INICIO verificar_tarefa_atrasada - tarefa: {tarefa.get('nome', '')}, status: {tarefa.get('status', '')}, data_inicio: {tarefa.get('data_inicio', '')}, data_fim: {tarefa.get('data_fim', '')}")
     status = tarefa.get('status', '').lower()
+    data_inicio = tarefa.get('data_inicio') or tarefa.get('data_inicio_tarefa')
     data_fim = tarefa.get('data_fim') or tarefa.get('data_fim_tarefa')
     # Atraso é calculado apenas pela data de fim; data de início não torna a tarefa atrasada
     # para evitar falsos positivos no dia final do prazo
@@ -93,17 +95,23 @@ def verificar_tarefa_atrasada(tarefa):
         hoje_data = datetime.now().date()
     
     # LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
-    # Removido: não considerar data de início para marcar atraso
-    
+    if status == 'pendente' and data_inicio:
+        try:
+            data_inicio_obj = datetime.strptime(data_inicio.split('T')[0], '%Y-%m-%d').date()
+            if data_inicio_obj < hoje_data:
+                return True
+        except Exception:
+            pass
+
     # LÓGICA 2: Tarefa não concluída com data de fim passada (excluindo hoje)
     if data_fim:
         try:
             data_fim_obj = datetime.strptime(data_fim.split('T')[0], '%Y-%m-%d').date()
-            if data_fim_obj < hoje_data and status not in ['concluída', 'concluida']:  # Apenas datas ANTERIORES a hoje
+            if data_fim_obj < hoje_data and status not in ['concluída', 'concluida']:
                 return True
         except Exception:
             pass
-    
+
     return False
 
 def contar_tarefas_atrasadas(tarefas):

@@ -65,6 +65,7 @@ def is_mobile_device(user_agent):
     return any(keyword in user_agent_lower for keyword in mobile_keywords)
 
 def verificar_tarefa_atrasada(tarefa):
+    print(f"[LOG] INICIO verificar_tarefa_atrasada - tarefa: {tarefa.get('nome', '')}, status: {tarefa.get('status', '')}, data_inicio: {tarefa.get('data_inicio', '')}, data_fim: {tarefa.get('data_fim', '')}")
     """
     Verifica se uma tarefa está atrasada usando ambas as lógicas:
     - Lógica 1: Tarefa pendente com data de início passada (excluindo hoje)
@@ -77,12 +78,9 @@ def verificar_tarefa_atrasada(tarefa):
         bool: True se a tarefa está atrasada, False caso contrário
     """
     status = tarefa.get('status', '').lower()
+    data_inicio = tarefa.get('data_inicio') or tarefa.get('data_inicio_tarefa')
     data_fim = tarefa.get('data_fim') or tarefa.get('data_fim_tarefa')
-    # Atraso é calculado apenas pela data de fim; data de início não torna a tarefa atrasada
-    # para evitar falsos positivos no dia final do prazo
 
-    # Usar apenas a data (sem hora) para comparação e respeitar o fuso horário da aplicação
-    # Para evitar marcar como atrasada antes da virada de dia no fuso local
     try:
         tz_name = os.getenv('APP_TZ', 'America/Sao_Paulo')
         if ZoneInfo is not None:
@@ -91,19 +89,36 @@ def verificar_tarefa_atrasada(tarefa):
             hoje_data = datetime.now().date()
     except Exception:
         hoje_data = datetime.now().date()
-    
-    # LÓGICA 1: Tarefa pendente com data de início passada (excluindo hoje)
-    # Removido: não considerar data de início para marcar atraso
-    
+
+    # LÓGICA 1: Tarefa pendente com data de início igual ou anterior a hoje
+    print(f"[LOG] (FORÇADO) Verificando Lógica 1 - status: {status}, data_inicio: {data_inicio}, hoje: {hoje_data}")
+    if status == 'pendente' and data_inicio:
+        try:
+            # Tenta vários formatos de data
+            formatos = ['%Y-%m-%d', '%d/%m/%Y', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S']
+            data_inicio_str = data_inicio.split('T')[0] if 'T' in data_inicio else data_inicio
+            for fmt in formatos:
+                try:
+                    data_inicio_obj = datetime.strptime(data_inicio_str, fmt).date()
+                    print(f"[LOG] data_inicio_obj obtido: {data_inicio_obj} usando formato {fmt}")
+                    if data_inicio_obj <= hoje_data:
+                        print(f"[LOG] Tarefa considerada atrasada pela Lógica 1")
+                        return True
+                    break
+                except Exception as e:
+                    print(f"[LOG] Falha ao converter data_inicio '{data_inicio_str}' com formato {fmt}: {e}")
+        except Exception as e:
+            print(f"[LOG] Erro geral na Lógica 1: {e}")
+
     # LÓGICA 2: Tarefa não concluída com data de fim passada (excluindo hoje)
     if data_fim:
         try:
             data_fim_obj = datetime.strptime(data_fim.split('T')[0], '%Y-%m-%d').date()
-            if data_fim_obj < hoje_data and status not in ['concluída', 'concluida']:  # Apenas datas ANTERIORES a hoje
+            if data_fim_obj < hoje_data and status not in ['concluída', 'concluida']:
                 return True
         except Exception:
             pass
-    
+
     return False
 
 def contar_tarefas_atrasadas(tarefas):

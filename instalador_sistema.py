@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Instalador do SGP - Sistema de Gestão de Projetos 2.0
+Instalador do SGP - Sistema de Gestão de Projetos
 Automatiza a instalação e configuração completa do sistema
 """
 
@@ -22,8 +22,12 @@ import tempfile
 class InstaladorSistema:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("SGP - Sistema de Gestão de Projetos 2.0")
-        self.root.geometry("900x650")
+        
+        # APLICAR ÍCONE ANTES DE TUDO
+        self._aplicar_icone_windows()
+        
+        self.root.title("SGP - Sistema de Gestão de Projetos")
+        self.root.geometry("750x650")
         self.root.resizable(False, False)
         
         # Cores Windows 11
@@ -37,14 +41,6 @@ class InstaladorSistema:
         
         # Configurar cores da janela
         self.root.configure(bg=self.cor_fundo)
-        
-        # Definir ícone da janela (buscar sgp_icon.ico)
-        try:
-            icon_path = self._encontrar_icone()
-            if icon_path and icon_path.exists():
-                self.root.iconbitmap(str(icon_path))
-        except:
-            pass  # Se não encontrar, usa o ícone padrão
         
         # Arquivo de configurações salvas
         self.config_file = Path.home() / ".sistema_gestao_config.json"
@@ -88,6 +84,36 @@ class InstaladorSistema:
             return icone
         
         return None
+    
+    def _aplicar_icone_windows(self):
+        """Aplica o ícone na janela do Tkinter"""
+        try:
+            icon_path = self._encontrar_icone()
+            if icon_path and icon_path.exists():
+                # Tentar aplicar direto primeiro
+                try:
+                    self.root.iconbitmap(str(icon_path))
+                    return
+                except:
+                    pass
+                
+                # Se falhar, copiar para pasta temp
+                import tempfile
+                temp_icon = Path(tempfile.gettempdir()) / "sgp_installer_icon.ico"
+                try:
+                    shutil.copy2(str(icon_path), str(temp_icon))
+                    self.root.iconbitmap(str(temp_icon))
+                    return
+                except:
+                    pass
+                
+                # Última tentativa: usar default
+                try:
+                    self.root.iconbitmap(default=str(icon_path))
+                except:
+                    pass
+        except:
+            pass  # Se tudo falhar, usar ícone padrão
         
     def setup_ui(self):
         """Configura a interface moderna estilo Windows 11"""
@@ -100,7 +126,7 @@ class InstaladorSistema:
         
         # Container de conteúdo (cards)
         self.content_frame = tk.Frame(main_container, bg=self.cor_fundo)
-        self.content_frame.pack(fill="both", expand=True, padx=40, pady=20)
+        self.content_frame.pack(fill="both", expand=True, padx=30, pady=(15, 10))
         
         # Footer com botões (CRIAR ANTES de mostrar tela)
         self.criar_footer(main_container)
@@ -110,7 +136,7 @@ class InstaladorSistema:
     
     def criar_header(self, parent):
         """Cria o header moderno com gradiente"""
-        header = tk.Frame(parent, bg=self.cor_primaria, height=120)
+        header = tk.Frame(parent, bg=self.cor_primaria, height=150)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
         
@@ -118,41 +144,31 @@ class InstaladorSistema:
         icon_label = tk.Label(
             header,
             text="📊",
-            font=("Segoe UI", 48),
+            font=("Segoe UI", 44),
             bg=self.cor_primaria,
             fg="white"
         )
-        icon_label.pack(pady=(20, 5))
+        icon_label.pack(pady=(6, 3))
         
         # Título
         title_label = tk.Label(
             header,
             text="Sistema de Gestão de Projetos",
-            font=("Segoe UI", 20, "bold"),
+            font=("Segoe UI", 18, "bold"),
             bg=self.cor_primaria,
             fg="white"
         )
-        title_label.pack()
-        
-        # Subtítulo
-        subtitle_label = tk.Label(
-            header,
-            text="Instalador v2.0",
-            font=("Segoe UI", 11),
-            bg=self.cor_primaria,
-            fg="white"
-        )
-        subtitle_label.pack()
+        title_label.pack(pady=(0, 0))
     
     def criar_footer(self, parent):
         """Cria o footer com botões modernos"""
-        self.footer = tk.Frame(parent, bg=self.cor_fundo, height=80)
-        self.footer.pack(fill="x", side="bottom", padx=40, pady=(0, 20))
+        self.footer = tk.Frame(parent, bg=self.cor_fundo, height=75)
+        self.footer.pack(fill="x", side="bottom", padx=30, pady=(0, 15))
         self.footer.pack_propagate(False)
         
         # Separador
         separator = tk.Frame(self.footer, bg="#E0E0E0", height=1)
-        separator.pack(fill="x", pady=(0, 20))
+        separator.pack(fill="x", pady=(0, 15))
         
         # Container de botões
         self.btn_container = tk.Frame(self.footer, bg=self.cor_fundo)
@@ -207,8 +223,8 @@ class InstaladorSistema:
             font=("Segoe UI", 10, "bold" if primary else "normal"),
             bg=bg_color,
             fg=fg_color,
-            padx=30,
-            pady=12,
+            padx=25,
+            pady=10,
             cursor="hand2"
         )
         btn.pack(padx=1, pady=1)
@@ -232,35 +248,27 @@ class InstaladorSistema:
         return btn_frame
     
     def criar_card(self, parent, titulo=None):
-        """Cria um card moderno com sombra"""
-        # Frame externo para sombra
-        shadow_frame = tk.Frame(parent, bg="#D0D0D0")
-        shadow_frame.pack(fill="both", expand=True, pady=5)
-        
-        # Card principal
-        card = tk.Frame(shadow_frame, bg=self.cor_card)
-        card.pack(fill="both", expand=True, padx=2, pady=2)
+        """Cria um container sem card (fundo transparente)"""
+        # Container de conteúdo sem card branco
+        content = tk.Frame(parent, bg=self.cor_fundo)
+        content.pack(fill="both", expand=True, pady=5)
         
         if titulo:
             titulo_label = tk.Label(
-                card,
+                content,
                 text=titulo,
                 font=("Segoe UI", 14, "bold"),
-                bg=self.cor_card,
+                bg=self.cor_fundo,
                 fg=self.cor_texto,
                 anchor="w"
             )
-            titulo_label.pack(fill="x", padx=25, pady=(20, 10))
-        
-        # Container de conteúdo do card
-        content = tk.Frame(card, bg=self.cor_card)
-        content.pack(fill="both", expand=True, padx=25, pady=(0, 20))
+            titulo_label.pack(fill="x", padx=25, pady=(10, 10))
         
         return content
     
     def criar_checkbox_moderno(self, parent, texto, variable):
         """Cria um checkbox com estilo moderno"""
-        frame = tk.Frame(parent, bg=self.cor_card)
+        frame = tk.Frame(parent, bg=self.cor_fundo)
         frame.pack(fill="x", pady=5)
         
         check = tk.Checkbutton(
@@ -268,9 +276,9 @@ class InstaladorSistema:
             text=texto,
             variable=variable,
             font=("Segoe UI", 10),
-            bg=self.cor_card,
+            bg=self.cor_fundo,
             fg=self.cor_texto,
-            activebackground=self.cor_card,
+            activebackground=self.cor_fundo,
             activeforeground=self.cor_texto,
             selectcolor="white",
             relief="flat",
@@ -316,35 +324,35 @@ class InstaladorSistema:
         icon = tk.Label(
             card,
             text="🚀",
-            font=("Segoe UI", 72),
-            bg=self.cor_card
+            font=("Segoe UI", 48),
+            bg=self.cor_fundo
         )
-        icon.pack(pady=(40, 20))
+        icon.pack(pady=(15, 12))
         
         # Título de boas-vindas
         titulo = tk.Label(
             card,
             text="Bem-vindo ao Instalador!",
-            font=("Segoe UI", 24, "bold"),
-            bg=self.cor_card,
+            font=("Segoe UI", 19, "bold"),
+            bg=self.cor_fundo,
             fg=self.cor_texto
         )
-        titulo.pack(pady=(0, 10))
+        titulo.pack(pady=(0, 6))
         
         # Descrição
         desc = tk.Label(
             card,
-            text="Este assistente irá guiá-lo através da instalação\ndo Sistema de Gestão de Projetos 2.0",
-            font=("Segoe UI", 11),
-            bg=self.cor_card,
+            text="Este assistente irá guiá-lo através da instalação\ndo Sistema de Gestão de Projetos",
+            font=("Segoe UI", 9),
+            bg=self.cor_fundo,
             fg=self.cor_texto_suave,
             justify="center"
         )
-        desc.pack(pady=(0, 30))
+        desc.pack(pady=(0, 15))
         
         # Lista de recursos
-        recursos_frame = tk.Frame(card, bg=self.cor_card)
-        recursos_frame.pack(pady=20)
+        recursos_frame = tk.Frame(card, bg=self.cor_fundo)
+        recursos_frame.pack(pady=8)
         
         recursos = [
             ("✓", "Instalação automatizada", self.cor_sucesso),
@@ -354,14 +362,14 @@ class InstaladorSistema:
         ]
         
         for icone, texto, cor in recursos:
-            item_frame = tk.Frame(recursos_frame, bg=self.cor_card)
-            item_frame.pack(fill="x", pady=5)
+            item_frame = tk.Frame(recursos_frame, bg=self.cor_fundo)
+            item_frame.pack(fill="x", pady=3)
             
             tk.Label(
                 item_frame,
                 text=icone,
-                font=("Segoe UI", 12, "bold"),
-                bg=self.cor_card,
+                font=("Segoe UI", 11, "bold"),
+                bg=self.cor_fundo,
                 fg=cor,
                 width=3
             ).pack(side="left")
@@ -369,11 +377,14 @@ class InstaladorSistema:
             tk.Label(
                 item_frame,
                 text=texto,
-                font=("Segoe UI", 11),
-                bg=self.cor_card,
+                font=("Segoe UI", 10),
+                bg=self.cor_fundo,
                 fg=self.cor_texto,
                 anchor="w"
             ).pack(side="left", fill="x")
+        
+        # Espaço inferior para não colar no fundo
+        tk.Label(card, text="", bg=self.cor_fundo, height=1).pack()
         
         # Atualizar botões
         self.btn_avancar.pack(side="right")
@@ -391,13 +402,13 @@ class InstaladorSistema:
             card,
             text="Local de Instalação",
             font=("Segoe UI", 11, "bold"),
-            bg=self.cor_card,
+            bg=self.cor_fundo,
             fg=self.cor_texto,
             anchor="w"
         )
         pasta_label.pack(fill="x", pady=(10, 5))
         
-        pasta_frame = tk.Frame(card, bg=self.cor_card)
+        pasta_frame = tk.Frame(card, bg=self.cor_fundo)
         pasta_frame.pack(fill="x", pady=(0, 20))
         
         pasta_entry = tk.Entry(
@@ -434,7 +445,7 @@ class InstaladorSistema:
             card,
             text="Ambiente Python",
             font=("Segoe UI", 11, "bold"),
-            bg=self.cor_card,
+            bg=self.cor_fundo,
             fg=self.cor_texto,
             anchor="w"
         )
@@ -491,7 +502,7 @@ class InstaladorSistema:
             card,
             text="Opções",
             font=("Segoe UI", 11, "bold"),
-            bg=self.cor_card,
+            bg=self.cor_fundo,
             fg=self.cor_texto,
             anchor="w"
         )
@@ -526,7 +537,7 @@ class InstaladorSistema:
             card,
             text="Preparando instalação...",
             font=("Segoe UI", 12),
-            bg=self.cor_card,
+            bg=self.cor_fundo,
             fg=self.cor_texto,
             anchor="w"
         )
@@ -582,47 +593,48 @@ class InstaladorSistema:
         icon = tk.Label(
             card,
             text="✓",
-            font=("Segoe UI", 72, "bold"),
-            bg=self.cor_card,
+            font=("Segoe UI", 48, "bold"),
+            bg=self.cor_fundo,
             fg=self.cor_sucesso
         )
-        icon.pack(pady=(40, 20))
+        icon.pack(pady=(15, 12))
         
         # Título
         titulo = tk.Label(
             card,
             text="Instalação Concluída!",
-            font=("Segoe UI", 24, "bold"),
-            bg=self.cor_card,
+            font=("Segoe UI", 19, "bold"),
+            bg=self.cor_fundo,
             fg=self.cor_texto
         )
-        titulo.pack(pady=(0, 10))
+        titulo.pack(pady=(0, 6))
         
         # Mensagem
         msg = tk.Label(
             card,
             text=f"O sistema foi instalado com sucesso em:\n{self.pasta_instalacao.get()}",
-            font=("Segoe UI", 11),
-            bg=self.cor_card,
+            font=("Segoe UI", 9),
+            bg=self.cor_fundo,
             fg=self.cor_texto_suave,
-            justify="center"
+            justify="center",
+            wraplength=650
         )
-        msg.pack(pady=(0, 30))
+        msg.pack(pady=(0, 15))
         
         # Informações
         info_frame = tk.Frame(card, bg="#F8F8F8", relief="flat")
-        info_frame.pack(fill="x", padx=40, pady=20)
+        info_frame.pack(fill="x", padx=30, pady=12)
         
         info_text = tk.Label(
             info_frame,
             text="💡 Para iniciar o sistema, execute o arquivo 'executar_sistema.bat'\n"
                  "ou use o atalho criado na área de trabalho.",
-            font=("Segoe UI", 10),
+            font=("Segoe UI", 9),
             bg="#F8F8F8",
             fg=self.cor_texto,
             justify="center"
         )
-        info_text.pack(pady=15, padx=15)
+        info_text.pack(pady=12, padx=15)
         
         # Atualizar botões
         self.btn_avancar.pack_forget()
@@ -783,7 +795,7 @@ class InstaladorSistema:
     def executar_instalacao(self):
         """Executa o processo de instalação"""
         try:
-            self.log_message("🚀 Iniciando instalação do Sistema de Gestão de Projetos 2.0...")
+            self.log_message("🚀 Iniciando instalação do Sistema de Gestão de Projetos...")
             self.log_message(f"🔍 Executável atual: {sys.executable}")
             self.log_message(f"🔍 Script atual: {__file__}")
             
@@ -1487,7 +1499,7 @@ FLASK_APP=app_producao.py
         bat_content = f"""@echo off
 cd /d "{destino}"
 call venv\\Scripts\\activate
-echo Iniciando Sistema de Gestao de Projetos 2.0...
+echo Iniciando Sistema de Gestao de Projetos...
 echo.
 echo Sistema rodando em: http://localhost:5000
 echo.
@@ -1556,7 +1568,7 @@ pause
         sh_content = f"""#!/bin/bash
 cd "{destino}"
 source venv/bin/activate
-echo "Iniciando Sistema de Gestao de Projetos 2.0..."
+echo "Iniciando Sistema de Gestao de Projetos..."
 python app_producao.py
 """
         
@@ -1623,7 +1635,7 @@ $Shortcut.Save()
                     # Para Linux, criar um .desktop file
                     desktop_file_content = f"""[Desktop Entry]
 Name=Sistema de Gestão de Projetos
-Comment=Sistema de Gestão de Projetos 2.0
+Comment=Sistema de Gestão de Projetos
 Exec={destino}/executar_sistema.sh
 Icon=applications-office
 Terminal=true

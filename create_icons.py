@@ -2,46 +2,62 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 
 def create_icon(size, filename, text="SGP"):
-    # Criar uma imagem com fundo gradiente azul moderno
-    img = Image.new('RGB', (size, size), color='#1976d2')
-    draw = ImageDraw.Draw(img)
+    # Criar em resolução muito alta para máxima qualidade
+    scale = 16
+    large_size = size * scale
     
-    # Adicionar círculo de fundo para destaque
-    margin = size // 10
-    draw.ellipse([margin, margin, size-margin, size-margin], fill='#1565c0')
+    # Criar imagem RGBA
+    img = Image.new('RGBA', (large_size, large_size), color=(0, 0, 0, 0))
+    draw = ImageDraw.Draw(img, 'RGBA')
     
-    # Adicionar texto "SGP"
+    # Fundo azul sólido - retângulo com cantos arredondados
+    radius = large_size // 8  # Cantos levemente arredondados
+    draw.rounded_rectangle(
+        [0, 0, large_size, large_size],
+        radius=radius,
+        fill=(0, 120, 212, 255)  # Azul Microsoft
+    )
+    
+    # Adicionar texto "SGP" - estilo simples e limpo
     try:
-        # Tentar usar fonte do sistema (em ordem de preferência)
-        font_size = size // 3
-        fonts = ["arialbd.ttf", "arial.ttf", "calibrib.ttf", "calibri.ttf"]
+        # Texto bem grande e legível
+        font_size = int(large_size // 1.9)
+        fonts = [
+            "C:\\Windows\\Fonts\\segoeuib.ttf",  # Segoe UI Bold
+            "C:\\Windows\\Fonts\\ariblk.ttf",     # Arial Black
+            "C:\\Windows\\Fonts\\arialbd.ttf",    # Arial Bold
+            "arialbd.ttf"
+        ]
         font = None
-        for font_name in fonts:
+        for font_path in fonts:
             try:
-                font = ImageFont.truetype(font_name, font_size)
+                font = ImageFont.truetype(font_path, font_size)
                 break
             except:
                 continue
+        
         if font is None:
             font = ImageFont.load_default()
     except:
         font = ImageFont.load_default()
     
+    # Centralizar texto
     bbox = draw.textbbox((0, 0), text, font=font)
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
     
-    x = (size - text_width) // 2
-    y = (size - text_height) // 2
+    x = (large_size - text_width) // 2 - bbox[0]
+    y = (large_size - text_height) // 2 - bbox[1]
     
-    # Adicionar sombra ao texto
-    shadow_offset = size // 80
-    draw.text((x + shadow_offset, y + shadow_offset), text, fill='#0d47a1', font=font)
-    draw.text((x, y), text, fill='white', font=font)
+    # Texto branco limpo - SEM sombra para estilo minimalista
+    draw.text((x, y), text, fill=(255, 255, 255, 255), font=font)
     
-    # Salvar a imagem
+    # Redimensionar com LANCZOS
+    img = img.resize((size, size), Image.Resampling.LANCZOS)
+    
+    # Salvar
     os.makedirs('static/icons', exist_ok=True)
-    img.save(f'static/icons/{filename}')
+    img.save(f'static/icons/{filename}', quality=100, optimize=False)
     
     return img
 
@@ -49,26 +65,47 @@ def create_icon(size, filename, text="SGP"):
 icon_192 = create_icon(192, 'icon-192.png')
 icon_512 = create_icon(512, 'icon-512.png')
 
-# Criar ícone .ico para o instalador (múltiplos tamanhos)
+print("✅ Ícones PNG criados com sucesso!")
+
+# Criar ícone .ico para o instalador (múltiplos tamanhos em alta resolução)
 try:
-    icon_16 = create_icon(16, 'temp_16.png')
-    icon_32 = create_icon(32, 'temp_32.png')
-    icon_48 = create_icon(48, 'temp_48.png')
-    icon_64 = create_icon(64, 'temp_64.png')
-    icon_128 = create_icon(128, 'temp_128.png')
+    # Criar ícones em todas as resoluções necessárias
+    sizes = [16, 24, 32, 48, 64, 128, 256]
+    
+    print("   Gerando ícone 256x256 (base)...")
     icon_256 = create_icon(256, 'temp_256.png')
     
-    # Combinar todos os tamanhos em um arquivo .ico
-    icon_256.save('sgp_icon.ico', format='ICO', sizes=[(16,16), (32,32), (48,48), (64,64), (128,128), (256,256)])
+    # Criar lista de todas as imagens redimensionadas
+    all_sizes = []
+    for sz in sizes:
+        if sz != 256:
+            print(f"   Gerando ícone {sz}x{sz}...")
+            icon_resized = create_icon(sz, f'temp_{sz}.png')
+            all_sizes.append(icon_resized)
+        else:
+            all_sizes.append(icon_256)
+    
+    # Salvar o .ico com múltiplas resoluções (método correto)
+    icon_256.save(
+        'sgp_icon.ico',
+        format='ICO',
+        sizes=[(sz, sz) for sz in sizes],
+        append_images=all_sizes[1:] if len(all_sizes) > 1 else []
+    )
     
     # Limpar arquivos temporários
-    for temp_file in ['temp_16.png', 'temp_32.png', 'temp_48.png', 'temp_64.png', 'temp_128.png', 'temp_256.png']:
-        temp_path = f'static/icons/{temp_file}'
+    for sz in sizes:
+        temp_path = f'static/icons/temp_{sz}.png'
         if os.path.exists(temp_path):
             os.remove(temp_path)
     
-    print("✅ Ícones PNG criados com sucesso!")
-    print("✅ Ícone ICO criado: sgp_icon.ico")
+    # Verificar tamanho do arquivo gerado
+    import os
+    ico_size = os.path.getsize('sgp_icon.ico')
+    print("✅ Ícone ICO de alta qualidade criado: sgp_icon.ico")
+    print(f"   Tamanho do arquivo: {ico_size:,} bytes")
+    print(f"   Resoluções incluídas: {', '.join([f'{sz}x{sz}' for sz in sizes])}")
 except Exception as e:
-    print(f"⚠️ Ícones PNG criados, mas erro ao criar ICO: {e}")
-    print("   (O arquivo ICO pode não ser necessário para todos os casos)") 
+    print(f"⚠️ Erro ao criar ICO: {e}")
+    import traceback
+    traceback.print_exc() 
