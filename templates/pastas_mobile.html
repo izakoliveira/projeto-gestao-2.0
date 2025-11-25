@@ -11,7 +11,7 @@
   <!-- Seção: Projetos Sem Pasta -->
   {% if projetos_sem_pasta %}
   <div class="mb-4">
-    <h5 class="mb-3" style="color: #495057; font-weight: 600;">
+    <h5 class="mb-3" style="color: var(--muted-text); font-weight: 600;">
       <i class="fas fa-box-open"></i> Projetos Sem Pasta
     </h5>
     <div class="row g-0">
@@ -26,7 +26,7 @@
               <div style="font-size: 1.5em; color: #6c757d; margin-bottom: 0.2em;">
                 <i class="fas fa-box-open"></i>
               </div>
-              <div style="font-size: 0.7em; font-weight: 600; color: #495057; line-height: 1.1;">
+              <div style="font-size: 0.7em; font-weight: 600; color: var(--muted-text); line-height: 1.1;">
                 {{ projeto.nome[:12] }}{% if projeto.nome|length > 12 %}...{% endif %}
               </div>
             </a>
@@ -59,7 +59,7 @@
   <!-- Seção: Pastas -->
   {% if tipos %}
   <div class="mb-4">
-    <h5 class="mb-3" style="color: #495057; font-weight: 600;">
+    <h5 class="mb-3" style="color: var(--muted-text); font-weight: 600;">
       <i class="fas fa-folder"></i> Suas Pastas
     </h5>
     <div class="row g-0">
@@ -72,7 +72,7 @@
               <div style="font-size: 2em; color: #28a745; margin-bottom: 0.2em;">
                 <i class="fas fa-folder-plus"></i>
               </div>
-              <div style="font-size: 0.8em; font-weight: 600; color: #495057; line-height: 1.1; margin-bottom: 0.2em;">
+              <div style="font-size: 0.8em; font-weight: 600; color: var(--muted-text); line-height: 1.1; margin-bottom: 0.2em;">
                 Nova Pasta
               </div>
               <div class="badge bg-success" style="font-size: 0.6em; padding: 0.2em 0.4em;">
@@ -114,7 +114,7 @@
               <div style="font-size: 2em; color: #ffc107; margin-bottom: 0.2em;">
                 <i class="fas fa-folder"></i>
               </div>
-              <div style="font-size: 0.8em; font-weight: 600; color: #495057; line-height: 1.1; margin-bottom: 0.2em;">
+              <div style="font-size: 0.8em; font-weight: 600; color: var(--muted-text); line-height: 1.1; margin-bottom: 0.2em;">
                 {{ tipo.nome[:12] }}{% if tipo.nome|length > 12 %}...{% endif %}
               </div>
               <div class="badge bg-secondary" style="font-size: 0.6em; padding: 0.2em 0.4em;">

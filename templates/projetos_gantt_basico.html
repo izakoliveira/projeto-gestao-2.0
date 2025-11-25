@@ -93,7 +93,6 @@
         const btnExportarExcel = document.getElementById('btn-exportar-excel-projetos');
         if (btnExportarExcel) {
             btnExportarExcel.addEventListener('click', function() {
-                console.log('🔄 Iniciando exportação de Excel dos projetos...');
                 
                 const ganttDiv = document.getElementById('gantt-cronograma-area');
                 if (!ganttDiv) {
@@ -123,40 +122,27 @@
                     // Pega todos os projeto_ids dos projetos selecionados
                     let projeto_ids = [];
                     const nomeSelect = document.getElementById('nome-desktop');
-                    console.log('🔍 [GANTT EXCEL DEBUG] nomeSelect:', nomeSelect);
-                    console.log('🔍 [GANTT EXCEL DEBUG] window.projetosData:', window.projetosData);
-                    console.log('🔍 [GANTT EXCEL DEBUG] window.projetosData type:', typeof window.projetosData);
-                    console.log('🔍 [GANTT EXCEL DEBUG] window.projetosData isArray:', Array.isArray(window.projetosData));
                     
                     if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
                         // Busca todos os projetos pelos nomes selecionados para obter os ids
                         const projetosData = window.projetosData || [];
                         const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
-                        console.log('🔍 [GANTT EXCEL DEBUG] nomesSelecionados:', nomesSelecionados);
-                        console.log('🔍 [GANTT EXCEL DEBUG] projetosData length:', projetosData.length);
                         
                         // Debug dos primeiros projetos em projetosData
                         if (projetosData.length > 0) {
-                            console.log('🔍 [GANTT EXCEL DEBUG] Primeira entrada projetosData:', projetosData[0]);
-                            console.log('🔍 [GANTT EXCEL DEBUG] Estrutura:', Object.keys(projetosData[0]));
-                            console.log('🔍 [GANTT EXCEL DEBUG] Todos os nomes em projetosData:', projetosData.map(p => p.nome));
                         }
                         
                         projeto_ids = nomesSelecionados.map(nome => {
                             // Ignorar opção vazia
                             if (!nome || nome === '') {
-                                console.log(`🔍 [GANTT EXCEL DEBUG] Ignorando nome vazio`);
                                 return null;
                             }
                             
                             const projeto = projetosData.find(p => p.nome === nome);
-                            console.log(`🔍 [GANTT EXCEL DEBUG] Nome '${nome}' -> Projeto encontrado:`, projeto);
-                            console.log(`🔍 [GANTT EXCEL DEBUG] Nome '${nome}' -> ID: ${projeto ? projeto.id : 'NOT FOUND'}`);
                             
                             if (!projeto) {
                                 // Tentar busca case-insensitive
                                 const projetoInsensitive = projetosData.find(p => p.nome && p.nome.toLowerCase() === nome.toLowerCase());
-                                console.log(`🔍 [GANTT EXCEL DEBUG] Busca case-insensitive para '${nome}':`, projetoInsensitive);
                                 return projetoInsensitive ? projetoInsensitive.id : null;
                             }
                             
@@ -164,7 +150,6 @@
                         }).filter(id => id !== null);
                     }
                     
-                    console.log('🔍 [GANTT EXCEL DEBUG] projeto_ids final:', projeto_ids);
                     
                     // Coletar outros filtros
                     const tipo_id = new URLSearchParams(window.location.search).get('tipo_id') || '';
@@ -202,7 +187,6 @@
                         a.click();
                         window.URL.revokeObjectURL(url);
                         document.body.removeChild(a);
-                        console.log('✅ Excel exportado com sucesso!');
                     })
                     .catch(error => {
                         console.error('❌ Erro ao exportar Excel:', error);
@@ -287,9 +271,6 @@
         <button class="carousel-arrow left" type="button" aria-label="Anterior"><i
                 class="fas fa-chevron-left"></i></button>
         <div class="projetos-carousel" id="projetos-carousel-js"></div>
-        <script>
-            window.projetosData = {{ projetos | tojson | safe }};
-        </script>
         <button class="carousel-arrow right" type="button" aria-label="Próximo"><i
                 class="fas fa-chevron-right"></i></button>
 
@@ -329,7 +310,7 @@
                         </button>
                     </label>
                     <select id="nome-desktop" name="nome[]" multiple class="form-control"
-                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto; display: none; scrollbar-width: none; -ms-overflow-style: none;"
                         onchange="mostrarSelecoes('nome-desktop', 'nome-display')"
                         onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('nome-display').style.display = 'flex'; }, 200);">
                         <option value="">Selecione o Projeto</option>
@@ -358,7 +339,7 @@
                         </button>
                     </label>
                     <select id="status-desktop" name="status" multiple class="form-control"
-                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto; display: none; scrollbar-width: none; -ms-overflow-style: none;"
                         onchange="mostrarSelecoes('status-desktop', 'status-display')"
                         onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('status-display').style.display = 'flex'; }, 200);">
                         <option value="">Selecione o Status</option>
@@ -391,7 +372,7 @@
                         </button>
                     </label>
                     <select id="colecao-desktop" name="colecao" multiple class="form-control"
-                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto;"
+                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto; display: none; scrollbar-width: none; -ms-overflow-style: none;"
                         onchange="mostrarSelecoes('colecao-desktop', 'colecao-display')"
                         onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('colecao-display').style.display = 'flex'; }, 200);">
                         <option value="">Selecione a Coleção</option>
@@ -513,15 +494,15 @@
             </div>
             <!-- Legenda colorida por projeto -->
             <div class="legend mt-3"
-                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
                 <div style="width: 100%; text-align: center; margin-bottom: 12px;">
-                    <h6 style="margin: 0; color: #495057; font-weight: 600;">
+                    <h6 style="margin: 0; color: var(--muted-text); font-weight: 600;">
                         <i class="fas fa-palette"></i> Cores dos Projetos
                     </h6>
                 </div>
                 {% for projeto, cor in projects_colors.items() %}
                 <div class="legend-item"
-                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease; border: 1px solid transparent;"
+                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted-text); cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease; border: 1px solid transparent;"
                     data-projeto="{{ projeto }}">
                     <div class="legend-color"
                         style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }}; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
@@ -555,8 +536,15 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+window.projetosData = {{ projetos | tojson | safe }};
+const podeCriarProjeto = {{ pode_criar_projeto | tojson | safe }};
+const podeEditarProjeto = {{ pode_editar_projeto | tojson | safe }};
+const podeExcluirProjeto = {{ pode_excluir_projeto | tojson | safe }};
+const alertasProjetos = {{ alertas_projetos | tojson | safe }};
+</script>
+<script>
+    // window.projetosData já está definido antes deste bloco
     $(document).ready(function () {
-        console.log('Lazy rendering iniciado');
         const projetos = window.projetosData || [];
         const carousel = document.getElementById('projetos-carousel-js');
         const leftArrow = document.querySelector('.carousel-arrow.left');
@@ -569,12 +557,6 @@
         const CARD_WIDTH = 260;
         const CARD_GAP = 18;
         const BUFFER = 2; // Quantos cards extras renderizar antes/depois
-
-        // --- NOVO: variáveis de permissão ---
-        const podeCriarProjeto = {{ pode_criar_projeto| tojson }};
-        const podeEditarProjeto = {{ pode_editar_projeto| tojson }};
-        const podeExcluirProjeto = {{ pode_excluir_projeto| tojson }};
-    const alertasProjetos = {{ alertas_projetos| tojson }};
 
     // Renderiza o card de "Novo Projeto" somente se permitido
     function renderNovoProjetoCard() {
@@ -595,15 +577,12 @@
     // Renderiza um card de projeto
     function renderProjetoCard(projeto) {
         try {
-            console.log('Renderizando projeto:', projeto);
             if (!projeto) {
                 console.error('Projeto inválido:', projeto);
                 return '';
             }
-
             // Verificar se há alertas para este projeto
             const alerta = alertasProjetos[projeto.id];
-            console.log('Alerta para projeto', projeto.id, ':', alerta);
 
             let tarefasHtml = '';
             if (projeto.tarefas && projeto.tarefas.length > 0) {
@@ -615,7 +594,7 @@
                     tarefasFiltradas.forEach(tarefa => {
                         tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
                         <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
-                        <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info text-dark' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
+                        <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
                             ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
                         </span>
                     </div>`;
@@ -635,54 +614,48 @@
             let statusProjeto = 'normal';
             let statusText = 'NORMAL';
             let statusColor = '#6c757d';
-
-            if (projeto.status === 'Concluído' || projeto.status === 'concluído' || projeto.status === 'concluída' || projeto.status === 'concluida') {
-                statusProjeto = 'concluido';
-                statusText = 'CONCLUÍDO';
-                statusColor = '#28a745';
-            } else if (alerta) {
-                if (alerta.tipo === 'atrasado') {
-                    cardStyle = 'border-left: 4px solid #dc3545;';
-                    statusProjeto = 'atrasado';
-                    statusText = 'ATRASADO';
-                    statusColor = '#dc3545';
-                } else if (alerta.tipo === 'pendente') {
-                    cardStyle = 'border-left: 4px solid #e0a800;';
-                    statusProjeto = 'pendente';
-                    statusText = 'PENDENTE';
-                    statusColor = '#e0a800';
-                }
+            if (projeto.status) {
+                const statusNorm = (projeto.status || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ /g, '');
+                const statusMap = {
+                    'atrasado': { projeto: 'atrasado', texto: 'ATRASADO', cor: '#dc3545', borda: 'border-left: 4px solid #dc3545;' },
+                    'emprogresso': { projeto: 'emprogresso', texto: 'EM PROGRESSO', cor: '#17a2b8', borda: 'border-left: 4px solid #17a2b8;' },
+                    'concluido': { projeto: 'concluido', texto: 'CONCLUÍDO', cor: '#28a745', borda: 'border-left: 4px solid #28a745;' },
+                    'concluida': { projeto: 'concluido', texto: 'CONCLUÍDO', cor: '#28a745', borda: 'border-left: 4px solid #28a745;' },
+                    'pendente': { projeto: 'pendente', texto: 'PENDENTE', cor: '#ffc107', borda: 'border-left: 4px solid #ffc107;' },
+                    'normal': { projeto: 'normal', texto: 'NORMAL', cor: '#6c757d', borda: 'border-left: 4px solid #6c757d;' }
+                };
+                const statusInfo = statusMap[statusNorm] || { projeto: 'normal', texto: 'NORMAL', cor: '#6c757d', borda: 'border-left: 4px solid #6c757d;' };
+                statusProjeto = statusInfo.projeto;
+                statusText = statusInfo.texto;
+                statusColor = statusInfo.cor;
+                cardStyle = statusInfo.borda;
             }
 
-            console.log('HTML do card gerado com sucesso');
             return `<div class="carousel-item">
-            <div class="card compact-card shadow-sm projeto-card-with-watermark" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; overflow: hidden;">
+            <div class="card compact-card shadow-sm projeto-card-with-watermark" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; cursor:pointer;" onclick="window.location='/projetos/${projeto.id}'">
                 <!-- Marca d'água diagonal - estilo carimbo -->
                 <div class="projeto-watermark status-${statusProjeto}" style="
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%) rotate(-45deg);
-                    font-size: 24px;
-                    font-weight: 900;
-                    color: ${statusColor};
-                    text-transform: uppercase;
-                    letter-spacing: 2px;
-                    white-space: nowrap;
-                    pointer-events: none;
-                    z-index: 1;
-                    padding: 8px 16px;
-                    border-radius: 8px;
-                    border: 5px solid ${statusColor};
-                    background: rgba(255, 255, 255, 0.95);
-                    box-shadow: 
-                        0 4px 8px rgba(0, 0, 0, 0.2),
-                        inset 0 2px 4px rgba(255, 255, 255, 0.8),
-                        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 24px;
+                font-weight: 900;
+                color: #2ecc40;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                white-space: nowrap;
+                pointer-events: none;
+                z-index: 10;
+                padding: 8px 16px;
+                border-radius: 8px;
+                border: 5px solid #2ecc40;
+                background: transparent !important;
+                box-shadow: 0 2px 8px rgba(46,204,64,0.18);
                 ">${statusText}</div>
                 
                 <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="position: relative; z-index: 2;">
-                    <h6 class="mb-0">
+                    <h6 class="mb-0 w-100 text-center" style="justify-content: center; align-items: center; display: flex; gap: 0.5em;">
                         ${alerta && alerta.tipo === 'atrasado' ?
                     `<i class="fas fa-exclamation-triangle text-danger me-1" title="${alerta.quantidade} tarefa(s) atrasada(s)"></i>` :
                     alerta && alerta.tipo === 'pendente' ?
@@ -700,19 +673,10 @@
                     <div class="compact-tasks">${tarefasHtml}</div>
                 </div>
                 <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-center py-2" style="position: relative; z-index: 2;">
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Ações do projeto" style="gap: 1em;">
-                        <a href="/projetos/${projeto.id}" class="btn btn-info" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
-                        ${podeEditarProjeto ? `<a href="/projetos/editar/${projeto.id}" class="btn btn-warning" title="Editar"><i class="fas fa-edit"></i></a>` : ''}
-                        ${podeCriarProjeto ? `<button type="button" class="btn btn-duplicar-projeto" style="background:none;border:none;padding:0;" data-projeto-id="${projeto.id}" onclick="document.getElementById('form-duplicar-${projeto.id}').submit();" title="Duplicar Projeto"><span style='display:inline-block;width:2em;height:2em;vertical-align:middle;'>
-<svg width='2em' height='2em' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg' style='background:none;'>
-<g id='duplicate'>
-<g id='duplicate_2'>
-<path id='Combined Shape' fill-rule='evenodd' clip-rule='evenodd' d='M29.2827 4.88487C28.7191 4.31826 27.954 4 27.1556 4H14.9996C13.3433 4 11.9996 5.34372 11.9996 7V37C11.9996 38.6563 13.3433 40 14.9996 40H31.9992V41C31.9992 41.5526 31.5521 42 30.9992 42H10.9992C10.4475 42 9.99921 41.5517 9.99921 41V9C9.99921 8.44772 9.55149 8 8.99921 8C8.44692 8 7.99921 8.44772 7.99921 9V41C7.99921 42.6563 9.34292 44 10.9992 44H30.9992C32.657 44 33.9992 42.6568 33.9992 41V40H34.9996C36.6574 40 37.9996 38.6568 37.9996 37V17.0162H39.0226C39.5749 17.0162 40.0226 16.5685 40.0226 16.0162C40.0226 15.4639 39.5749 15.0162 39.0226 15.0162H37.9996V14.888C37.9996 14.0969 37.6859 13.3381 37.1285 12.7747L29.2827 4.88487ZM27.0266 15.0162H35.9996V14.888C35.9996 14.6251 35.8947 14.3713 35.7085 14.1831L27.8646 6.29523C27.6764 6.10599 27.4216 6 27.1556 6H14.9996C14.4479 6 13.9996 6.44828 13.9996 7V37C13.9996 37.5517 14.4479 38 14.9996 38H34.9996C35.5525 38 35.9996 37.5526 35.9996 37V17.0162H26.2286C25.5662 17.0162 25.0266 16.4803 25.0266 15.8162V8.9482C25.0266 8.39592 25.4743 7.9482 26.0266 7.9482C26.5789 7.9482 27.0266 8.39592 27.0266 8.9482V15.0162Z' fill='#000'/>
-</g>
-</g>
-</svg>
-</span></button>` : ''}
-                        ${podeExcluirProjeto ? `<button type="button" class="btn" style="background:none;border:none;padding:0;" onclick="if(confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) document.getElementById('form-excluir-${projeto.id}').submit();" title="Excluir"><img src='{{ url_for('static', filename='eco-trash_17168939.svg') }}' alt='Excluir' style='width:2em;height:2em;vertical-align:middle;'/></button>` : ''}
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Ações do projeto" style="gap: 0.5em;">
+                        ${podeEditarProjeto ? `<a href="/projetos/editar/${projeto.id}" class="btn" title="Editar Projeto" style="margin-right:0.3em;"><svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="editIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-2px;"><title id="editIconTitle">Editar Projeto</title><path d="M18.4142136 4.41421356L19.5857864 5.58578644C20.366835 6.36683502 20.366835 7.63316498 19.5857864 8.41421356L8 20 4 20 4 16 15.5857864 4.41421356C16.366835 3.63316498 17.633165 3.63316498 18.4142136 4.41421356zM14 6L18 10"></path></svg></a>` : ''}
+                        ${podeCriarProjeto ? `<button type="button" class="btn btn-duplicar-projeto" style="background:none;border:none;padding:0;margin-right:1em;" data-projeto-id="${projeto.id}" onclick="event.stopPropagation();document.getElementById('form-duplicar-${projeto.id}').submit();" title="Duplicar Projeto"><span style='display:inline-block;width:2em;height:2em;vertical-align:middle;'><svg width="24px" height="24px" viewBox="0 0 18 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"><title>Duplicar Projeto</title><desc>Created with Sketch.</desc><defs></defs><g id="out" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><path d="M13.6666667,4 L6.33333333,4 C5.6,4 5,4.6 5,5.33333333 L5,14.6666667 C5,15.4 5.6,16 6.33333333,16 L13.6666667,16 C14.4,16 15,15.4 15,14.6666667 L15,5.33333333 C15,4.6 14.4,4 13.6666667,4 L13.6666667,4 Z M6,5 L14,5 L14,15 L6,15 L6,5 L6,5 Z M4.03408486,13.9659151 C3.4435752,13.8291651 3,13.297202 3,12.6666667 L3,3.33333333 C3,2.6 3.6,2 4.33333333,2 L11.6666667,2 C12.297202,2 12.8291651,2.4435752 12.9659151,3.03408486 C12.8696426,3.01179011 12.7694647,3 12.6666667,3 L8.66666667,3 L4,3 L4,8.66666667 L4,13.6666667 C4,13.7694647 4.01179011,13.8696426 4.03408486,13.9659151 L4.03408486,13.9659151 Z" id="path" fill="currentColor" sketch:type="MSShapeGroup"></path></g></svg></span></button>` : ''}
+                        ${podeExcluirProjeto ? `<button type="button" class="btn" style="background:none;border:none;padding:0;color:#111;" onclick="event.stopPropagation();if(confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) document.getElementById('form-excluir-${projeto.id}').submit();" title="Excluir Projeto"><svg width="26px" height="26px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-3px;"><title id="binIconTitle">Excluir Projeto</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg></button>` : ''}
                     </div>
                     ${podeCriarProjeto ? `<form id="form-duplicar-${projeto.id}" action="/projetos/duplicar/${projeto.id}" method="POST" style="display:none;"></form>` : ''}
                     ${podeExcluirProjeto ? `<form id="form-excluir-${projeto.id}" action="/projetos/excluir/${projeto.id}" method="POST" style="display:none;"></form>` : ''}
@@ -728,24 +692,17 @@
     // Renderiza todos os cards
     function renderCards() {
         try {
-            console.log('Iniciando renderCards...');
-            console.log('Projetos disponíveis:', projetos.length);
-            console.log('Carousel:', carousel);
 
             let html = renderNovoProjetoCard();
-            console.log('Card novo projeto gerado');
 
             // Renderizar todos os projetos
             for (let i = 0; i < projetos.length; i++) {
                 if (projetos[i]) {
-                    console.log('Renderizando projeto', i, ':', projetos[i].nome);
                     html += renderProjetoCard(projetos[i]);
                 }
             }
 
-            console.log('HTML final gerado, aplicando ao carousel...');
             carousel.innerHTML = html;
-            console.log('HTML aplicado com sucesso');
 
             // Reaplicar eventos de expandir tarefas
             document.querySelectorAll('.expand-tasks-btn').forEach(btn => {
@@ -830,8 +787,6 @@
     });
 
     // Inicializa
-    console.log('Iniciando renderização dos cards...');
-    console.log('Projetos disponíveis:', projetos.length);
     renderCards();
 
     // Garantir que o carousel funcione corretamente
@@ -845,16 +800,6 @@
 
             // Verificar se há scroll horizontal
             const temScroll = carousel.scrollWidth > carousel.clientWidth;
-            console.log('Carousel scrollWidth:', carousel.scrollWidth, 'clientWidth:', carousel.clientWidth, 'Tem scroll:', temScroll);
-
-            // Debug: mostrar informações do carousel
-            console.log('Carousel CSS:', {
-                display: getComputedStyle(carousel).display,
-                flexDirection: getComputedStyle(carousel).flexDirection,
-                overflowX: getComputedStyle(carousel).overflowX,
-                width: getComputedStyle(carousel).width,
-                maxWidth: getComputedStyle(carousel).maxWidth
-            });
 
             // Mostrar/ocultar setas baseado no scroll
             const leftArrow = document.querySelector('.carousel-arrow.left');
@@ -887,7 +832,6 @@
 
 
     if ($('#colecao').length) {
-        console.log('Inicializando Select2 para coleção...');
         try {
             if ($.fn.select2 && $('#colecao').data('select2')) {
                 $('#colecao').select2('destroy');
@@ -902,16 +846,13 @@
                 minimumResultsForSearch: -1,
                 dropdownParent: $('body')
             });
-            console.log('Select2 inicializado com sucesso');
         } catch (error) {
             console.error('Erro ao inicializar Select2:', error);
         }
     } else {
-        console.log('Campo coleção não encontrado');
     }
 
     if ($('#status').length) {
-        console.log('Inicializando Select2 para status...');
         try {
             if ($.fn.select2 && $('#status').data('select2')) {
                 $('#status').select2('destroy');
@@ -926,12 +867,10 @@
                 minimumResultsForSearch: -1,
                 dropdownParent: $('body')
             });
-            console.log('Select2 inicializado com sucesso');
         } catch (error) {
             console.error('Erro ao inicializar Select2:', error);
         }
     } else {
-        console.log('Campo status não encontrado');
     }
     });
 </script>
@@ -1069,6 +1008,10 @@
         overflow: hidden;
     }
 
+    body.dark .projeto-watermark {
+        z-index: 10 !important;
+        opacity: 0.25;
+    }
     .projeto-watermark {
         position: absolute;
         top: 50%;
@@ -1149,6 +1092,12 @@
         background: rgba(255, 255, 255, 0.95) !important;
     }
 
+    .projeto-watermark.status-emprogresso {
+        color: #17a2b8 !important;
+        border-color: #17a2b8 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
     .projeto-watermark.status-concluido {
         color: #28a745 !important;
         border-color: #28a745 !important;
@@ -1185,7 +1134,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.3em;
-        color: #333;
+        color: var(--text-color);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         cursor: pointer;
         position: absolute;
@@ -1263,6 +1212,24 @@
         justify-content: center;
     }
 
+    /* Tema escuro para filtros */
+    body.dark .filters-container {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Tema escuro para o painel lateral de filtros */
+    body.dark #offcanvas-filtros-desktop {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+    }
+
+    /* Tema escuro para o cabeçalho do painel de filtros */
+    body.dark #filtros-header-desktop {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
     .filters-form {
         width: 100%;
         display: flex;
@@ -1300,6 +1267,11 @@
         text-align: left;
     }
 
+    /* Tema escuro para labels dos filtros */
+    body.dark .filter-label {
+        color: #e0e0e0 !important;
+    }
+
     .filter-label i {
         margin-right: 5px;
         opacity: 0.9;
@@ -1318,7 +1290,7 @@
         border-radius: 10px !important;
         background: #fff !important;
         font-size: 1rem !important;
-        color: #333 !important;
+        color: var(--text-color) !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
         box-sizing: border-box;
         transition: all 0.3s;
@@ -1326,7 +1298,7 @@
 
     .select2-selection__rendered {
         line-height: 28px !important;
-        color: #333 !important;
+        color: var(--text-color) !important;
     }
 
     .filter-select:focus,
@@ -1335,6 +1307,26 @@
     .select2-container--default .select2-selection--multiple:focus {
         outline: none !important;
         background: #fff !important;
+        border-color: #4a47a3 !important;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25) !important;
+    }
+
+    /* Tema escuro para campos de filtro */
+    body.dark .filter-select,
+    body.dark .filter-input,
+    body.dark .select2-container--default .select2-selection--single,
+    body.dark .select2-container--default .select2-selection--multiple {
+        background: var(--card-bg) !important;
+        border-color: var(--card-border) !important;
+        color: var(--text-color) !important;
+    }
+
+    /* Tema escuro para foco dos campos de filtro */
+    body.dark .filter-select:focus,
+    body.dark .filter-input:focus,
+    body.dark .select2-container--default .select2-selection--single:focus,
+    body.dark .select2-container--default .select2-selection--multiple:focus {
+        background: var(--card-bg) !important;
         border-color: #4a47a3 !important;
         box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25) !important;
     }
@@ -1367,8 +1359,17 @@
         text-decoration: none;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         background: #fff;
-        color: #333;
+        color: var(--text-color);
         border: 1px solid #e9ecef;
+    }
+
+    /* Tema escuro para botões dos filtros */
+    body.dark .btn-filter,
+    body.dark .btn-clear {
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--card-border) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
     }
 
     .btn-filter {
@@ -1391,9 +1392,15 @@
 
     .btn-clear:hover {
         background: #f8f9fa;
-        color: #495057;
+        color: var(--muted-text);
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Tema escuro para hover dos botões */
+    body.dark .btn-clear:hover {
+        background: #2a2a2a !important;
+        color: var(--muted-text) !important;
     }
 
     /* Responsividade */
@@ -1530,8 +1537,8 @@
     }
 
     .task-item {
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 0.8rem;
+    border-bottom: none !important;
+    font-size: 0.8rem;
     }
 
     .task-item:last-child {
@@ -1551,13 +1558,11 @@
     }
 
     .expand-tasks-btn:hover {
-        color: #0056b3 !important;
-        text-decoration: underline;
+        color: #dc3545;
     }
 
     .hidden-tasks {
         border-top: 1px solid #e9ecef;
-        margin-top: 0.5rem;
         padding-top: 0.5rem;
     }
 
@@ -1566,7 +1571,6 @@
         display: flex;
         border-bottom: 2px solid #dee2e6;
         background: #f8f9fa;
-        font-weight: bold;
     }
 
     .gantt-header-cell {
@@ -1819,8 +1823,8 @@
     .gantt-bar-compact {
         height: 18px !important;
         line-height: 18px !important;
-        font-size: 11px !important;
-        top: 2px !important;
+        font-size: 10px !important;
+        top: 2.5px !important;
     }
 
     .gantt-tooltip-detalhado {
@@ -1924,7 +1928,7 @@
         border-radius: 12px !important;
         background: rgba(255, 255, 255, 0.95) !important;
         font-size: 1rem !important;
-        color: #333 !important;
+        color: var(--text-color) !important;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
         box-sizing: border-box;
         transition: all 0.3s;
@@ -1932,7 +1936,7 @@
 
     #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
         line-height: 28px !important;
-        color: #333 !important;
+        color: var(--text-color) !important;
         padding: 0 !important;
         justify-content: flex-start !important;
         align-items: center !important;
@@ -2181,6 +2185,14 @@
         box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25);
     }
 
+    /* Ocultar barra de rolagem dos selects dos filtros */
+    #offcanvas-filtros-desktop select::-webkit-scrollbar {
+        display: none;
+    }
+    #offcanvas-filtros-desktop select {
+        -webkit-scrollbar: none;
+    }
+
     .legend-item:hover {
         background: rgba(0, 0, 0, 0.05);
         border-color: #dee2e6;
@@ -2199,11 +2211,10 @@
     /* Melhorar a aparência das barras do Gantt */
     .gantt-bar-compact {
         position: absolute;
-        height: 18px !important;
-        line-height: 18px !important;
-        font-size: 11px !important;
-        top: 2px !important;
-        border-radius: 4px;
+        height: 16px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 0px;
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -2228,16 +2239,13 @@
         filter: grayscale(0.5);
     }
 
-    /* Linha vertical que segue o cursor no Gantt */
-    .gantt-cursor-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: rgba(0, 0, 0, 0.35);
-        z-index: 15;
-        pointer-events: none;
-        display: none;
+    /* Ocultar barra de scroll do Gantt */
+    #gantt-custom {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE e Edge */
+    }
+    #gantt-custom::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Edge */
     }
 </style>
 
@@ -2299,7 +2307,6 @@
 
     // Função para cor da borda baseada no status
     function corBordaStatus(tarefa) {
-        console.log('Status da tarefa:', tarefa.status, 'Nome:', tarefa.name);
         if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
         if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
         if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
@@ -2396,16 +2403,13 @@
             return;
         }
         const tarefas = dados.filter(t => !t.type || t.type !== 'project');
-        console.log('DEBUG: Tarefas antes da ordenação:', tarefas.map(t => ({ nome: t.name, ordem: t.ordem })));
         tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
-        console.log('DEBUG: Tarefas depois da ordenação:', tarefas.map(t => ({ nome: t.name, ordem: t.ordem })));
         const grupos = agruparTarefasPorNome(tarefas);
         const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
             const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
             const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
             return ordemA - ordemB;
         });
-        console.log('DEBUG: Nomes ordenados:', nomesOrdenados);
         const periodo = obterPeriodo(tarefas);
         if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
             if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
@@ -2445,7 +2449,6 @@
                 hojeLabel.style.fontSize = '12px';
                 hojeLabel.style.color = '#e74c3c';
                 hojeLabel.style.fontWeight = 'bold';
-                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
                 hojeLabel.style.padding = '2px 6px';
                 hojeLabel.style.borderRadius = '4px';
                 hojeLabel.style.zIndex = '20';
@@ -2489,7 +2492,6 @@
             const tdCrono = document.createElement('td');
             tdCrono.style.position = "relative";
             tdCrono.style.height = "16px";
-            tdCrono.style.background = "#f8f9fa";
             tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
             // Adicionar linha horizontal de grade
             const linhaH = document.createElement('div');
@@ -2512,8 +2514,8 @@
                 div.className = 'gantt-bar-compact';
                 div.style.position = "absolute";
                 div.style.left = (offset * larguraDia) + "px";
-                div.style.top = "2px";
-                div.style.height = "12px";
+                div.style.top = "8px";
+                div.style.height = "16px";
                 // Ajustar largura para evitar ultrapassar visualmente o último dia
                 div.style.width = ((largura * larguraDia) - 1) + "px";
                 div.style.background = barra.bar_color || corStatus(barra);
@@ -2633,10 +2635,8 @@
 
                 // Adicionar feedback visual
                 if (projetosSelecionados.length > 0) {
-                    console.log(`Projetos selecionados: ${projetosSelecionados.join(', ')}`);
                     mostrarEstatisticasProjetos(projetosSelecionados);
                 } else {
-                    console.log('Nenhum projeto selecionado - mostrando todos');
                     esconderEstatisticasProjetos();
                 }
             });
@@ -2816,7 +2816,6 @@
         const cursorLine = document.getElementById('gantt-cursor-line');
 
         if (cronogramaArea && cursorLine) {
-            console.log('Elementos da linha do cursor encontrados, adicionando event listeners...');
 
             // Mostrar e mover linha do cursor
             cronogramaArea.addEventListener('mousemove', function (e) {
@@ -2830,9 +2829,7 @@
                 cursorLine.style.display = 'none';
             });
 
-            console.log('Event listeners da linha do cursor adicionados com sucesso!');
         } else {
-            console.log('Elementos da linha do cursor não encontrados, tentando novamente em 100ms...');
             setTimeout(configurarLinhaCursor, 100);
         }
     }
@@ -2896,7 +2893,7 @@
 
         let estatisticas = `
             <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div style="ba: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
                     <strong>Projetos:</strong> ${projetosUnicos.length}
                 </div>
                 <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
@@ -2928,7 +2925,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="modalConfirmarExclusaoProjetoLabel"><i class="fas fa-trash"></i> Confirmar
+                <h5 class="modal-title" id="modalConfirmarExclusaoProjetoLabel"><svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg> Confirmar
                     Exclusão</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
@@ -2937,8 +2934,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoProjeto"><i
-                        class="fas fa-trash"></i> Excluir</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoProjeto">
+                    <svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg> Excluir
+                </button>
             </div>
         </div>
     </div>
@@ -2948,7 +2946,6 @@
     let projetoIdParaExcluir = null;
     
     document.addEventListener('DOMContentLoaded', function () {
-        console.log('JavaScript carregado!');
         
         // Event delegation simples para botões de exclusão
         document.addEventListener('click', function(e) {
@@ -2986,6 +2983,5 @@
         });
 
         // Debug para verificar seleções
-        console.log('🔍 [FILTRO DEBUG] Script carregado');
     });
 </script>

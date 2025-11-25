@@ -241,9 +241,6 @@ def listar_projetos():
             if projeto_id not in tarefas_por_projeto:
                 tarefas_por_projeto[projeto_id] = []
             tarefas_por_projeto[projeto_id].append(tarefa)
-    print('[DEBUG] Agrupamento de tarefas por projeto:')
-    for pid, tarefas in tarefas_por_projeto.items():
-        print(f'Projeto {pid}: {len(tarefas)} tarefas')
     
     # Gerar alertas de projetos baseado nas tarefas
     alertas_projetos = {}
@@ -253,29 +250,53 @@ def listar_projetos():
         
         # Contar tarefas por status
         tarefas_atrasadas = 0
+        tarefas_em_progresso = 0
         tarefas_pendentes = 0
+        tarefas_concluidas = 0
+        total_tarefas = len(tarefas_projeto)
         
         for tarefa in tarefas_projeto:
-            # Verificar se está atrasada usando a função utilitária
+            status = tarefa.get('status', '').lower()
             if verificar_tarefa_atrasada(tarefa):
                 tarefas_atrasadas += 1
-            
-            # Contar pendentes
-            status = tarefa.get('status', '').lower()
-            if status in ['pendente', 'em progresso']:
+            if status == 'em progresso':
+                tarefas_em_progresso += 1
+            if status == 'pendente':
                 tarefas_pendentes += 1
+            if status == 'concluída':
+                tarefas_concluidas += 1
         
-        # Definir alerta baseado nas contagens
+        # Lógica do status do projeto
         if tarefas_atrasadas > 0:
+            status_final = 'atrasado'
             alertas_projetos[projeto_id] = {
                 'tipo': 'atrasado',
                 'quantidade': tarefas_atrasadas
             }
-        elif tarefas_pendentes > 0:
+        elif tarefas_em_progresso > 0:
+            status_final = 'em progresso'
+            alertas_projetos[projeto_id] = {
+                'tipo': 'em progresso',
+                'quantidade': tarefas_em_progresso
+            }
+        elif total_tarefas > 0 and tarefas_concluidas == total_tarefas:
+            status_final = 'concluído'
+            alertas_projetos[projeto_id] = {
+                'tipo': 'concluído',
+                'quantidade': tarefas_concluidas
+            }
+        else:
+            status_final = 'pendente'
             alertas_projetos[projeto_id] = {
                 'tipo': 'pendente',
                 'quantidade': tarefas_pendentes
             }
+        projeto['status'] = status_final
+        # Atualiza status no banco de dados
+        try:
+            supabase.table("projetos").update({"status": status_final}).eq("id", projeto_id).execute()
+        except Exception as e:
+            print(f"[ERRO] Falha ao atualizar status do projeto {projeto_id} no banco: {e}")
     
     # Adicionar tarefas aos projetos
     from utils.validators import normaliza_opcional
@@ -417,21 +438,6 @@ def listar_projetos():
     for item in gantt_geral_data:
         projeto_nome = item.get('projeto_nome', '')
         item['bar_color'] = str(projects_colors.get(projeto_nome, '#4ECDC4'))
-
-    # Lógica para definir status do projeto
-    for projeto in projetos:
-        tarefas = projeto.get('tarefas', [])
-        if not tarefas:
-            projeto['status'] = 'Normal'
-        else:
-            # Considera concluído se TODAS as tarefas têm status equivalente a 'concluído' (com ou sem acento, maiúsculo/minúsculo)
-            def is_concluida(status):
-                s = (status or '').strip().lower()
-                return s in ['concluido', 'concluida', 'concluído', 'concluída']
-            if all(is_concluida(t.get('status', '')) for t in tarefas):
-                projeto['status'] = 'Concluído'
-            else:
-                projeto['status'] = 'Normal'
 
     # DEBUG: Exibir status de todos os projetos carregados
     print('DEBUG STATUS PROJETOS:')

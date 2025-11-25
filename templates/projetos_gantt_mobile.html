@@ -407,7 +407,7 @@
                     <!-- Tarefas filtradas por status -->
                     {% if projeto.tarefas %}
                     <div class="mt-2" style="text-align: center; max-height: 80px; overflow-y: auto;">
-                        <small style="font-size: 0.6em; font-weight: bold; color: #495057;">
+                        <small style="font-size: 0.6em; font-weight: bold; color: var(--muted-text);">
                             Tarefas ({{ projeto.tarefas|length }}):
                         </small>
                         <div style="font-size: 0.55em; color: #6c757d; margin-top: 2px;">
@@ -531,7 +531,7 @@
             style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
             {% for projeto, cor in projects_colors.items() %}
             <div class="legend-item"
-                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted-text); cursor: pointer;"
                 data-projeto="{{ projeto }}">
                 <div class="legend-color"
                     style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};"></div>
@@ -910,10 +910,10 @@
     }
 
     .gantt-bar-compact {
-        height: 18px !important;
-        line-height: 18px !important;
-        font-size: 11px !important;
-        top: 2px !important;
+        height: 16px !important;
+        line-height: 16px !important;
+        font-size: 9px !important;
+        top: 8px !important;
     }
 
     .gantt-tooltip-detalhado {
@@ -1009,6 +1009,15 @@
     .gantt-row-evidenciada td {
         background: #e3f0ff !important;
         font-weight: bold !important;
+    }
+
+    /* Ocultar barra de scroll do Gantt */
+    #gantt-custom {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE e Edge */
+    }
+    #gantt-custom::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Edge */
     }
 </style>
 {% endblock %}
@@ -1671,7 +1680,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     hojeLabel.style.fontSize = '12px';
                     hojeLabel.style.color = '#e74c3c';
                     hojeLabel.style.fontWeight = 'bold';
-                    hojeLabel.style.background = 'rgba(255,255,255,0.9)';
                     hojeLabel.style.padding = '2px 6px';
                     hojeLabel.style.borderRadius = '4px';
                     hojeLabel.style.zIndex = '20';
@@ -1703,7 +1711,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const tdCrono = document.createElement('td');
                 tdCrono.style.position = "relative";
                 tdCrono.style.height = "16px";
-                tdCrono.style.background = "#f8f9fa";
                 tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
                 const linhaH = document.createElement('div');
                 linhaH.className = 'gantt-h-linha';
@@ -1725,8 +1732,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     div.className = 'gantt-bar-compact';
                     div.style.position = "absolute";
                     div.style.left = (offset * larguraDia) + "px";
-                    div.style.top = "2px";
-                    div.style.height = "8px";
+                    div.style.top = "8px";
+                    div.style.height = "16px";
                     // Ajustar largura para evitar ultrapassar visualmente o último dia
                     div.style.width = ((largura * larguraDia) - 1) + "px";
                     div.style.background = corStatus(barra);

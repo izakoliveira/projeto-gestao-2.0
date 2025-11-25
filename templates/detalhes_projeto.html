@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+
 {% block scripts %}
 <script>
     // Garante que o Gantt seja montado após o carregamento
@@ -8,7 +10,6 @@
     });
 </script>
 {% endblock %}
-{% extends "base.html" %}
 
 <!-- Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -289,7 +290,7 @@
 
     #tabela-tarefas-inline td.drag-handle:hover {
         color: #555;
-        background-color: #f8f9fa;
+        background-color: var(--bg-color);
     }
 
     /* Classes do SortableJS */
@@ -555,7 +556,7 @@
                                 {% for tarefa in tarefas %}
                                 <tr class="{% if tarefa.colecao %}linha-colecao{% endif %}{% if tarefa.atrasada %} tarefa-atrasada{% endif %}"
                                     {% if tarefa.atrasada
-                                    %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: #333;"
+                                    %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: var(--text-color);"
                                     {% endif %}>
                                     <td class="drag-handle"
                                         style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
@@ -653,7 +654,9 @@
                                         {% endif %}
                                         {% if pode_excluir_tarefa %}
                                         <button class="btn btn-danger btn-sm btn-excluir-tarefa"
-                                            data-tarefa-id="{{ tarefa.id }}"><i class="fas fa-trash"></i></button>
+                                            data-tarefa-id="{{ tarefa.id }}">
+                                            <svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg>
+                                        </button>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -799,7 +802,7 @@
                                 <i class="fas fa-eye"></i> Prévia do Código:
                             </label>
                             <div id="previewCodigo" class="form-control"
-                                style="background-color: #f8f9fa; font-family: monospace; font-weight: bold; color: #495057;">
+                                style="background-color: var(--bg-color); font-family: monospace; font-weight: bold; color: var(--muted-text);">
                                 Código será gerado automaticamente...
                             </div>
                         </div>
@@ -844,7 +847,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="modalConfirmarExclusaoTarefaLabel"><i class="fas fa-trash"></i> Confirmar
+                <h5 class="modal-title" id="modalConfirmarExclusaoTarefaLabel"><svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg> Confirmar
                     Exclusão</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
@@ -853,8 +856,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoTarefa"><i
-                        class="fas fa-trash"></i> Excluir</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoTarefa">
+                    <svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg> Excluir
+                </button>
             </div>
         </div>
     </div>
@@ -962,16 +966,20 @@
     }
 
     .gantt-row-compact:hover {
-        background-color: #f8f9fa;
+        background-color: var(--bg-color);
     }
 
     .gantt-bar-compact {
-        height: 18px !important;
-        line-height: 18px !important;
+        position: absolute;
+        height: 8px !important;
+        line-height: 8px !important;
         font-size: 11px !important;
-        top: 2px !important;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        top: 12px !important;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
     .gantt-tooltip-detalhado {
@@ -1193,7 +1201,7 @@
     }
 
     #tabela-tarefas-inline td.numero-tarefa:hover {
-        background-color: #f8f9fa;
+        background-color: var(--bg-color);
         border-color: #dee2e6;
         cursor: pointer;
     }
@@ -1255,10 +1263,10 @@
     }
     .gantt-bar-compact {
         position: absolute;
-        height: 18px !important;
-        line-height: 18px !important;
+        height: 16px !important;
+        line-height: 16px !important;
         font-size: 11px !important;
-        top: 2px !important;
+        top: 8px !important;
         border-radius: 4px;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -1289,6 +1297,17 @@
         z-index: 15;
         pointer-events: none;
         display: none;
+    }
+</style>
+<!-- Estilos do Gantt Customizado -->
+<style>
+    /* Ocultar barra de scroll do Gantt */
+    #gantt-custom {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE e Edge */
+    }
+    #gantt-custom::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Edge */
     }
 </style>
 <!-- Gantt removido conforme solicitado -->
@@ -1610,7 +1629,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 hojeLabel.style.fontSize = '12px';
                 hojeLabel.style.color = '#e74c3c';
                 hojeLabel.style.fontWeight = 'bold';
-                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
                 hojeLabel.style.padding = '2px 6px';
                 hojeLabel.style.borderRadius = '4px';
                 hojeLabel.style.zIndex = '20';
@@ -1667,7 +1685,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const tdCrono = document.createElement('td');
             tdCrono.style.position = "relative";
             tdCrono.style.height = "16px";
-            tdCrono.style.background = "#f8f9fa";
             tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
             // Adicionar linha horizontal de grade
             const linhaH = document.createElement('div');
@@ -1690,8 +1707,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.className = 'gantt-bar-compact';
                 div.style.position = "absolute";
                 div.style.left = (offset * larguraDia) + "px";
-                div.style.top = "2px";
-                div.style.height = "8px";
+                div.style.top = "8px";
+                div.style.height = "16px";
                 div.style.width = (largura * larguraDia) + "px";
                 div.style.background = corStatus(barra);
                 div.style.borderRadius = "4px";

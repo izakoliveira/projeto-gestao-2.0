@@ -1,3 +1,136 @@
+body.dark .badge.bg-warning.text-dark {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+body.dark .badge.bg-info.text-dark {
+    background-color: #17a2b8 !important;
+    color: #212529 !important;
+}
+body.dark .badge-warning,
+body.dark .badge-info,
+body.dark .badge-success,
+body.dark .badge-danger,
+body.dark .badge-secondary,
+body.dark .badge.bg-warning,
+body.dark .badge.bg-info,
+body.dark .badge.bg-success,
+body.dark .badge.bg-danger,
+body.dark .badge.bg-secondary {
+    color: #000000 !important;
+}
+body.dark .badge {
+    color: #000000 !important;
+}
+
+/* Estilos para badges no modo claro - garantir cores corretas */
+.badge-warning {
+    background-color: #ffc107 !important;
+    color: white !important;
+}
+.badge-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+}
+.badge-success {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+.badge-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+.badge-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+.bg-warning.text-dark {
+    color: white !important;
+}
+.bg-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+}
+.bg-success {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+.bg-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+.bg-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+body.dark .task-list {
+    z-index: 1 !important;
+}
+.task-list {
+    z-index: 1 !important;
+    opacity: 1 !important;
+}
+body.dark .task-list {
+    background: transparent !important;
+    border: none !important;
+    opacity: 1 !important;
+}
+.projetos-carousel {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important; /* Firefox */
+}
+.projetos-carousel::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera */
+}
+.card-body,
+.compact-body,
+.task-list {
+    overflow: auto !important;
+    scrollbar-width: none; /* Firefox */
+    background: transparent !important;
+    border: none !important;
+}
+.card-body::-webkit-scrollbar,
+.compact-body::-webkit-scrollbar,
+.task-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+.compact-card {
+    overflow: hidden !important;
+    scrollbar-width: none; /* Firefox */
+}
+.compact-card::-webkit-scrollbar {
+    display: none !important;
+}
+/* Oculta a barra de rolagem dos cards de projeto */
+.compact-card {
+    scrollbar-width: none; /* Firefox */
+}
+.compact-card::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+/* No modo escuro, o container dos botões (card-footer) fica igual ao card */
+body.dark .card-footer,
+body.dark .compact-footer {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-top: 1px solid var(--card-border) !important;
+}
+/* Remove margem/borda ao clicar nos botões dentro dos cards */
+.card .btn:focus, .card .btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+/* Força cor dos ícones SVG dos botões duplicar e lixeira no modo escuro */
+body.dark .btn svg {
+    color: #e0e0e0 !important;
+    stroke: #e0e0e0 !important;
+    fill: none !important;
+}
 /* Estilos personalizados para o Sistema de Gestão de Projetos */
 
 /* Tema base (claro) e suporte a modo escuro via classe .dark no <body> */
@@ -91,8 +224,7 @@ body.dark .text-muted {
 }
 
 body.dark .badge.bg-light,
-body.dark .badge.bg-light.text-dark,
-body.dark .badge.text-dark {
+body.dark .badge.bg-light.text-dark {
     background-color: #2a2a2a !important;
     color: var(--text-color) !important;
     border: 1px solid var(--card-border) !important;

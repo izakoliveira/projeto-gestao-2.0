@@ -36,7 +36,7 @@
     }
 
     .mobile-card h3 {
-        color: #333;
+        color: var(--text-color);
         font-size: 1.2rem;
         margin-bottom: 15px;
         display: flex;
@@ -478,7 +478,7 @@
     .gantt-title {
         text-align: center;
         margin-bottom: 20px;
-        color: #333;
+        color: var(--text-color);
         font-weight: 600;
     }
 
@@ -533,7 +533,7 @@
     .gantt-title {
         text-align: center;
         margin-bottom: 20px;
-        color: #333;
+        color: var(--text-color);
         font-weight: 600;
     }
 
@@ -633,10 +633,16 @@
     }
 
     .gantt-bar-compact {
-        height: 18px !important;
-        line-height: 18px !important;
+        position: absolute;
+        height: 16px !important;
+        line-height: 16px !important;
         font-size: 11px !important;
-        top: 2px !important;
+        top: 8px !important;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
     .gantt-tooltip-detalhado {
@@ -721,6 +727,12 @@
     #gantt-custom.dragging {
         cursor: grabbing !important;
         user-select: none !important;
+    }
+
+    /* Ocultar barra de scroll do Gantt */
+    #gantt-custom {
+        scrollbar-width: none; /* Firefox */
+        -webkit-scrollbar: none; /* Webkit browsers */
     }
 </style>
 
@@ -900,7 +912,7 @@
                     {% for tarefa in tarefas %}
                     <tr class="{% if tarefa.colecao %}linha-colecao{% endif %}{% if tarefa.atrasada %} tarefa-atrasada{% endif %}"
                         {% if tarefa.atrasada
-                        %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: #333;"
+                        %}style="background-color: #ffe6e6 !important; border-left: 5px solid #dc2626 !important; color: var(--text-color);"
                         {% endif %}>
                         <td class="drag-handle"
                             style="cursor: grab; text-align:center; font-size:1.3em; color:#888;{% if not pode_editar_nome_tarefa %} opacity:0.4; pointer-events:none; cursor:default;{% endif %}">
@@ -1125,7 +1137,7 @@
             style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;">
             {% for projeto, cor in projects_colors.items() %}
             <div class="legend-item"
-                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; cursor: pointer;"
+                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted-text); cursor: pointer;"
                 data-projeto="{{ projeto }}">
                 <div class="legend-color"
                     style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }};">
@@ -2052,7 +2064,6 @@
                 hojeLabel.style.fontSize = '12px';
                 hojeLabel.style.color = '#e74c3c';
                 hojeLabel.style.fontWeight = 'bold';
-                hojeLabel.style.background = 'rgba(255,255,255,0.9)';
                 hojeLabel.style.padding = '2px 6px';
                 hojeLabel.style.borderRadius = '4px';
                 hojeLabel.style.zIndex = '20';
@@ -2110,7 +2121,6 @@
             const tdCrono = document.createElement('td');
             tdCrono.style.position = "relative";
             tdCrono.style.height = "16px";
-            tdCrono.style.background = "#f8f9fa";
             tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
             // Adicionar linha horizontal de grade
             const linhaH = document.createElement('div');
@@ -2133,8 +2143,8 @@
                 div.className = 'gantt-bar-compact';
                 div.style.position = "absolute";
                 div.style.left = (offset * larguraDia) + "px";
-                div.style.top = "2px";
-                div.style.height = "8px";
+                div.style.top = "8px";
+                div.style.height = "16px";
                 div.style.width = (largura * larguraDia) + "px";
                 div.style.background = corStatus(barra);
                 div.style.borderRadius = "4px";
