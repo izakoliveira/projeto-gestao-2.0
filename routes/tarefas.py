@@ -5,14 +5,282 @@ from utils.email_notifications import (
     notificar_tarefa_designada, 
     notificar_tarefa_removida, 
     notificar_status_alterado,
-    notificar_tarefa_concluida
+    notificar_tarefa_concluida,
+    notificar_tarefa_concluida_admin,
+    notificar_tarefa_progresso_admin
 )
 from config.database import supabase, SUPABASE_URL, SUPABASE_KEY
+import threading
+import time
 import requests
 from datetime import datetime
 
 # Criar blueprint para tarefas
 tarefas_bp = Blueprint('tarefas', __name__)
+
+def atualizar_status_notificacao_email(usuario_id, tipo, sucesso, erro_msg=None):
+    """
+    Atualiza o status de envio de email de uma notificação no banco de dados
+    """
+    try:
+        update_data = {
+            'email_tentativas': 1,  # Simplificado - sempre incrementa
+        }
+
+        if sucesso:
+            update_data['email_enviado'] = True
+            update_data['email_enviado_em'] = 'now()'
+            update_data['email_erro'] = None
+        else:
+            update_data['email_enviado'] = False
+            update_data['email_erro'] = erro_msg or 'Erro desconhecido'
+
+
+        # Buscar a notificação mais recente do usuário com esse tipo
+        notif_resp = supabase.table('notificacoes') \
+            .select('id') \
+            .eq('usuario_id', str(usuario_id)) \
+            .eq('tipo', tipo) \
+            .order('data_criacao', desc=True) \
+            .limit(1) \
+            .execute()
+
+        if notif_resp.data and len(notif_resp.data) > 0:
+            notif_id = notif_resp.data[0]['id']
+            supabase.table('notificacoes').update(update_data).eq('id', notif_id).execute()
+        else:
+            print(f"[ERRO-STATUS] Nenhuma notificação encontrada para atualizar status do email (usuario_id={usuario_id}, tipo={tipo})")
+
+    except Exception as e:
+        print(f"[ERRO-STATUS] Falha ao atualizar status da notificação {tipo} para usuário {usuario_id}: {e}")
+
+def processar_notificacoes_background(notificacoes_data):
+    """
+    Processa notificações em background para não bloquear a resposta da API
+    Inclui logs detalhados para rastreamento de status
+    """
+    def _processar():
+        try:
+            # CARREGAR .ENV NO CONTEXTO DA THREAD E FORÇAR VARIÁVEIS
+            try:
+                from dotenv import load_dotenv
+                import os
+                load_dotenv(override=True)
+                print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] .env carregado na thread")
+                
+                # FORÇAR DEFINIÇÃO DAS VARIÁVEIS DE AMBIENTE NA THREAD
+                os.environ['SMTP_SERVER'] = 'webmail.dipaula.com.br'
+                os.environ['SMTP_PORT'] = '465'
+                os.environ['SMTP_USER'] = 'izak.oliveira@dipaula.com.br'
+                os.environ['SMTP_PASS'] = 'Oli@2115'
+                os.environ['FROM_NAME'] = 'Sistema de Gestão de Projetos'
+                
+                print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] Variáveis SMTP forçadas na thread")
+                
+                # RECRIAR INSTÂNCIA DO EMAIL NOTIFIER COM AS NOVAS VARIÁVEIS
+                from utils.email_notifications import EmailNotifier
+                global email_notifier
+                email_notifier = EmailNotifier()
+                print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] EmailNotifier recriado com variáveis forçadas")
+                
+            except Exception as e:
+                print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] Erro ao configurar email: {e}")
+                print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] Erro ao carregar .env: {e}")
+
+            time.sleep(0.1)  # Pequena pausa para garantir que a transação principal foi commitada
+
+            print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] Iniciando processamento de {len(notificacoes_data)} notificação(ões)")
+
+            for i, notificacao in enumerate(notificacoes_data, 1):
+                tipo = notificacao.get('tipo')
+                usuario_id = notificacao.get('usuario_id')
+
+                print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] Processando {i}/{len(notificacoes_data)}: {tipo} para usuário {usuario_id}")
+
+                try:
+                    if tipo == 'designacao':
+                        # Notificação de nova tarefa designada
+                        tarefa_info = notificacao.get('tarefa_info')
+                        projeto_url = notificacao.get('projeto_url')
+
+                        # Buscar dados do usuário
+                        usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                        usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+
+                        if usuario:
+                            sucesso = notificar_tarefa_designada(
+                                usuario['email'],
+                                usuario['nome'],
+                                tarefa_info,
+                                projeto_url
+                            )
+                            atualizar_status_notificacao_email(usuario_id, 'designacao', sucesso)
+                            if sucesso:
+                                print(f"[BACKGROUND-✅] Email de designação enviado com sucesso para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                            else:
+                                print(f"[BACKGROUND-❌] Falha ao enviar email de designação para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                        else:
+                            print(f"[BACKGROUND-⚠️] Usuário {usuario_id} não encontrado para notificação de designação")
+
+                    elif tipo == 'remocao':
+                        # Notificação de tarefa removida
+                        tarefa_info = notificacao.get('tarefa_info')
+
+                        # Buscar dados do usuário
+                        usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                        usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+
+                        if usuario:
+                            sucesso = notificar_tarefa_removida(
+                                usuario['email'],
+                                usuario['nome'],
+                                tarefa_info
+                            )
+                            atualizar_status_notificacao_email(usuario_id, 'remocao', sucesso)
+                            if sucesso:
+                                print(f"[BACKGROUND-✅] Email de remoção enviado com sucesso para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                            else:
+                                print(f"[BACKGROUND-❌] Falha ao enviar email de remoção para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                        else:
+                            print(f"[BACKGROUND-⚠️] Usuário {usuario_id} não encontrado para notificação de remoção")
+
+                    elif tipo == 'status_alterado':
+                        # Notificação de status alterado
+                        tarefa_info = notificacao.get('tarefa_info')
+                        novo_status = notificacao.get('novo_status')
+                        status_anterior = notificacao.get('status_anterior')
+                        projeto_url = notificacao.get('projeto_url')
+
+                        # Buscar dados do usuário
+                        usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                        usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+
+                        if usuario:
+                            sucesso = notificar_status_alterado(
+                                usuario['email'],
+                                usuario['nome'],
+                                tarefa_info,
+                                novo_status,
+                                status_anterior,
+                                projeto_url
+                            )
+                            atualizar_status_notificacao_email(usuario_id, 'status_alterado', sucesso)
+                            if sucesso:
+                                print(f"[BACKGROUND-✅] Email de status alterado enviado com sucesso para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')} ({status_anterior} → {novo_status})")
+                            else:
+                                print(f"[BACKGROUND-❌] Falha ao enviar email de status alterado para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                        else:
+                            print(f"[BACKGROUND-⚠️] Usuário {usuario_id} não encontrado para notificação de status alterado")
+
+                    elif tipo == 'conclusao':
+                        # Notificação de tarefa concluída
+                        tarefa_info = notificacao.get('tarefa_info')
+                        projeto_url = notificacao.get('projeto_url')
+
+                        # Buscar dados do usuário
+                        usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                        usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+
+                        if usuario:
+                            sucesso = notificar_tarefa_concluida(
+                                usuario['email'],
+                                usuario['nome'],
+                                tarefa_info,
+                                projeto_url
+                            )
+                            atualizar_status_notificacao_email(usuario_id, 'conclusao', sucesso)
+                            if sucesso:
+                                print(f"[BACKGROUND-✅] Email de conclusão enviado com sucesso para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                            else:
+                                print(f"[BACKGROUND-❌] Falha ao enviar email de conclusão para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                        else:
+                            print(f"[BACKGROUND-⚠️] Usuário {usuario_id} não encontrado para notificação de conclusão")
+
+                    elif tipo == 'conclusao_admin':
+                        # Notificação de tarefa concluída para administradores
+                        tarefa_info = notificacao.get('tarefa_info')
+                        usuario_alteracao = notificacao.get('usuario_alteracao', 'Sistema')
+                        projeto_url = notificacao.get('projeto_url')
+
+                        # Buscar dados do admin
+                        usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                        usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+
+                        if usuario:
+                            # Usar template específico para admins com informação de quem concluiu
+                            sucesso = notificar_tarefa_concluida_admin(
+                                usuario['email'],
+                                usuario['nome'],
+                                tarefa_info,
+                                usuario_alteracao,
+                                projeto_url
+                            )
+                            atualizar_status_notificacao_email(usuario_id, 'conclusao_admin', sucesso)
+                            if sucesso:
+                                print(f"[BACKGROUND-✅] Email de conclusão (admin) enviado com sucesso para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')} (concluída por {usuario_alteracao})")
+                            else:
+                                print(f"[BACKGROUND-❌] Falha ao enviar email de conclusão (admin) para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                        else:
+                            print(f"[BACKGROUND-⚠️] Admin {usuario_id} não encontrado para notificação de conclusão")
+
+                    elif tipo == 'progresso_admin':
+                        # Notificação de tarefa em progresso para administradores
+                        tarefa_info = notificacao.get('tarefa_info')
+                        usuario_alteracao = notificacao.get('usuario_alteracao', 'Sistema')
+                        projeto_url = notificacao.get('projeto_url')
+
+                        # Buscar dados do admin
+                        usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                        usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+
+                        if usuario:
+                            # Usar template específico para admins com informação de quem iniciou o progresso
+                            sucesso = notificar_tarefa_progresso_admin(
+                                usuario['email'],
+                                usuario['nome'],
+                                tarefa_info,
+                                usuario_alteracao,
+                                projeto_url
+                            )
+                            atualizar_status_notificacao_email(usuario_id, 'progresso_admin', sucesso)
+                            if sucesso:
+                                print(f"[BACKGROUND-✅] Email de progresso (admin) enviado com sucesso para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')} (iniciada por {usuario_alteracao})")
+                            else:
+                                print(f"[BACKGROUND-❌] Falha ao enviar email de progresso (admin) para {usuario['email']} - Tarefa: {tarefa_info.get('nome', 'N/A')}")
+                        else:
+                            print(f"[BACKGROUND-⚠️] Admin {usuario_id} não encontrado para notificação de progresso")
+
+                except Exception as e:
+                    print(f"[BACKGROUND-💥] Erro ao processar notificação {tipo} para usuário {usuario_id}: {e}")
+
+            print(f"[BACKGROUND-{time.strftime('%H:%M:%S')}] Processamento concluído - {len(notificacoes_data)} notificação(ões) processada(s)")
+
+        except Exception as e:
+            print(f"[BACKGROUND-💥] Erro geral no processamento de notificações em background: {e}")
+
+    # Iniciar thread em background
+    thread = threading.Thread(target=_processar, daemon=True)
+    thread.start()
+
+def usuario_tem_acesso_projeto(usuario_id, projeto_id):
+    """Verifica se um usuário tem acesso a um projeto (é dono ou tem permissão de visualização)"""
+    try:
+        # Verificar se é o dono do projeto
+        projeto_resp = supabase.table("projetos").select("usuario_id").eq("id", str(projeto_id)).single().execute()
+        projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+        
+        if projeto and str(projeto.get('usuario_id')) == str(usuario_id):
+            return True
+        
+        # Verificar se tem permissão de visualização
+        permissao_resp = supabase.table("projetos_usuarios_visiveis").select("*").eq("projeto_id", str(projeto_id)).eq("usuario_id", str(usuario_id)).execute()
+        if permissao_resp.data:
+            return True
+        
+        return False
+    except Exception as e:
+        print(f"Erro ao verificar acesso do usuário ao projeto: {e}")
+        return False
 
 @tarefas_bp.route('/tarefas/criar/<uuid:projeto_id>', methods=['GET', 'POST'])
 @login_required
@@ -37,6 +305,9 @@ def criar_tarefa(projeto_id):
         usuario_id = normaliza_opcional(request.form.get('usuario_id'))
         status = request.form.get('status', 'pendente')
         colecao = normaliza_opcional(request.form.get('colecao'))
+        # Se coleção não foi fornecida, usar o nome do projeto como padrão
+        if not colecao:
+            colecao = projeto.get('nome', '')
         predecessoras = normaliza_opcional(request.form.get('predecessoras'))
 
         # Validação básica
@@ -110,7 +381,9 @@ def editar_tarefa(tarefa_id):
 
     if request.method == 'POST':
         # Verificar se é uma requisição JSON
-        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        is_json_request = request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        if is_json_request:
             data = request.get_json() or {}
             print(f"[DEBUG] Dados JSON recebidos: {data}")
             nome = data.get('nome', '')
@@ -121,18 +394,27 @@ def editar_tarefa(tarefa_id):
             status = data.get('status', 'pendente')
             colecao = normaliza_opcional(data.get('colecao'))
             predecessoras = normaliza_opcional(data.get('predecessoras'))
-            usuario_id = normaliza_opcional(data.get('usuario_id'))
+            # Para JSON, se o campo não foi enviado, preservar o valor existente
+            if 'colecao' not in data:
+                colecao = tarefa.get('colecao') if tarefa else None
+            if 'predecessoras' not in data:
+                predecessoras = tarefa.get('predecessoras') if tarefa else None
+            if 'duracao' not in data:
+                duracao = tarefa.get('duracao') if tarefa else None
+            if 'usuario_id' not in data:
+                usuario_id = tarefa.get('usuario_id') if tarefa else None
         else:
-            # Dados de formulário
+            # Dados de formulário - preservar valores existentes se campos vierem vazios
             nome = request.form.get('nome', '')
             data_inicio = request.form.get('data_inicio', '')
             data_fim = request.form.get('data_fim', '')
             duracao = normaliza_opcional(request.form.get('duracao'))
             usuario_id = normaliza_opcional(request.form.get('usuario_id'))
             status = request.form.get('status', 'pendente')
-            colecao = normaliza_opcional(request.form.get('colecao'))
+            # Para colecao, preservar valor existente se vier vazio
+            colecao_form = request.form.get('colecao', '').strip()
+            colecao = colecao_form if colecao_form else (tarefa.get('colecao') if tarefa else None)
             predecessoras = normaliza_opcional(request.form.get('predecessoras'))
-            usuario_id = normaliza_opcional(request.form.get('usuario_id'))
         
         print(f"[DEBUG] Dados processados: nome={nome}, data_inicio={data_inicio}, data_fim={data_fim}, duracao={duracao}, status={status}")
         
@@ -173,21 +455,13 @@ def editar_tarefa(tarefa_id):
             if pode_alterar_status:
                 tarefa_data["status"] = status
             
-            # Adicionar campos opcionais apenas se não forem None
-            if data_inicio:
-                tarefa_data["data_inicio"] = data_inicio
-            if data_fim:
-                tarefa_data["data_fim"] = data_fim
-            if duracao:
-                tarefa_data["duracao"] = duracao
-            if usuario_id:
-                tarefa_data["usuario_id"] = usuario_id
-            if colecao:
-                tarefa_data["colecao"] = colecao
-            if predecessoras:
-                tarefa_data["predecessoras"] = predecessoras
-            # Sempre incluir usuario_id (pode ser None para remover designação)
-            tarefa_data["usuario_id"] = usuario_id
+            # Sempre incluir todos os campos, mesmo que vazios (para permitir limpeza)
+            tarefa_data["data_inicio"] = data_inicio if data_inicio else None
+            tarefa_data["data_fim"] = data_fim if data_fim else None
+            tarefa_data["duracao"] = duracao if duracao else None
+            tarefa_data["usuario_id"] = usuario_id if usuario_id else None
+            tarefa_data["colecao"] = colecao if colecao else None
+            tarefa_data["predecessoras"] = predecessoras if predecessoras else None
             
             print(f"[DEBUG] Dados para atualização: {tarefa_data}")
             
@@ -209,65 +483,83 @@ def editar_tarefa(tarefa_id):
                     
                     # Responsável alterado (designação ou remoção)
                     if str(usuario_id) != str(old_usuario_id):
-                        # Buscar dados do novo usuário
-                        try:
-                            novo_usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
-                            novo_usuario = novo_usuario_resp.data if hasattr(novo_usuario_resp, 'data') else None
-                            
-                            if novo_usuario:
-                                # Notificação no sistema
-                                supabase.table('notificacoes').insert({
-                                    'usuario_id': str(usuario_id),
-                                    'mensagem': f"Você foi designado para a tarefa '{nome_tarefa_ref or nome}'",
-                                    'tipo': 'designacao',
-                                    'projeto_id': str(projeto_id_ref)
-                                }).execute()
-                                
-                                # Email para o novo responsável
-                                tarefa_info = {
-                                    'nome': nome_tarefa_ref or nome,
-                                    'projeto_nome': projeto_nome,
-                                    'data_inicio': data_inicio or 'Não definida',
-                                    'data_fim': data_fim or 'Não definida',
-                                    'duracao': duracao or 'Não definida',
-                                    'colecao': colecao or 'Não definida'
-                                }
-                                notificar_tarefa_designada(
-                                    novo_usuario['email'], 
-                                    novo_usuario['nome'], 
-                                    tarefa_info, 
-                                    projeto_url
-                                )
-                        except Exception as e:
-                            print(f"Erro ao notificar novo responsável: {e}")
+                        # Preparar dados para notificações em background
+                        notificacoes_background = []
                         
-                        # Notificar usuário anterior se existir (sempre que houver mudança)
+                        # Novo responsável
+                        if usuario_id:
+                            try:
+                                novo_usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+                                novo_usuario = novo_usuario_resp.data if hasattr(novo_usuario_resp, 'data') else None
+                                
+                                if novo_usuario:
+                                    # Verificar se o usuário tem acesso ao projeto antes de notificar
+                                    if usuario_tem_acesso_projeto(usuario_id, projeto_id_ref):
+                                        # Notificação no sistema (síncrona)
+                                        supabase.table('notificacoes').insert({
+                                            'usuario_id': str(usuario_id),
+                                            'mensagem': f"Você foi designado para a tarefa '{nome_tarefa_ref or nome}'",
+                                            'tipo': 'designacao',
+                                            'projeto_id': str(projeto_id_ref)
+                                        }).execute()
+                                        
+                                        # Preparar notificação por email para background
+                                        tarefa_info = {
+                                            'nome': nome_tarefa_ref or nome,
+                                            'projeto_nome': projeto_nome,
+                                            'data_inicio': data_inicio or 'Não definida',
+                                            'data_fim': data_fim or 'Não definida',
+                                            'duracao': duracao or 'Não definida',
+                                            'colecao': colecao or 'Não definida'
+                                        }
+                                        
+                                        notificacoes_background.append({
+                                            'tipo': 'designacao',
+                                            'usuario_id': usuario_id,
+                                            'tarefa_info': tarefa_info,
+                                            'projeto_url': projeto_url
+                                        })
+                                    else:
+                                        print(f"[INFO] Notificação NÃO enviada: usuário {usuario_id} não tem acesso ao projeto {projeto_id_ref}")
+                            except Exception as e:
+                                print(f"Erro ao preparar notificação para novo responsável: {e}")
+                        
+                        # Usuário anterior (sempre que houver mudança)
                         if old_usuario_id and old_usuario_id != usuario_id:
                             try:
                                 antigo_usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(old_usuario_id)).single().execute()
                                 antigo_usuario = antigo_usuario_resp.data if hasattr(antigo_usuario_resp, 'data') else None
                                 
                                 if antigo_usuario:
-                                    # Notificação no sistema
-                                    supabase.table('notificacoes').insert({
-                                        'usuario_id': str(old_usuario_id),
-                                        'mensagem': f"Você foi removido da tarefa '{nome_tarefa_ref or nome}'",
-                                        'tipo': 'remocao',
-                                        'projeto_id': str(projeto_id_ref)
-                                    }).execute()
-                                    
-                                    # Email para o usuário removido
-                                    tarefa_info = {
-                                        'nome': nome_tarefa_ref or nome,
-                                        'projeto_nome': projeto_nome
-                                    }
-                                    notificar_tarefa_removida(
-                                        antigo_usuario['email'], 
-                                        antigo_usuario['nome'], 
-                                        tarefa_info
-                                    )
+                                    # Verificar se o usuário tinha acesso ao projeto antes de notificar
+                                    if usuario_tem_acesso_projeto(old_usuario_id, projeto_id_ref):
+                                        # Notificação no sistema (síncrona)
+                                        supabase.table('notificacoes').insert({
+                                            'usuario_id': str(old_usuario_id),
+                                            'mensagem': f"Você foi removido da tarefa '{nome_tarefa_ref or nome}'",
+                                            'tipo': 'remocao',
+                                            'projeto_id': str(projeto_id_ref)
+                                        }).execute()
+                                        
+                                        # Preparar notificação por email para background
+                                        tarefa_info = {
+                                            'nome': nome_tarefa_ref or nome,
+                                            'projeto_nome': projeto_nome
+                                        }
+                                        
+                                        notificacoes_background.append({
+                                            'tipo': 'remocao',
+                                            'usuario_id': old_usuario_id,
+                                            'tarefa_info': tarefa_info
+                                        })
+                                    else:
+                                        print(f"[INFO] Notificação de remoção NÃO enviada: usuário {old_usuario_id} não tem acesso ao projeto {projeto_id_ref}")
                             except Exception as e:
-                                print(f"Erro ao notificar usuário removido: {e}")
+                                print(f"Erro ao preparar notificação para usuário removido: {e}")
+                        
+                        # Iniciar processamento de notificações em background
+                        if notificacoes_background:
+                            processar_notificacoes_background(notificacoes_background)
                     
                     # Status alterado
                     if pode_alterar_status and status and status != old_status:
@@ -279,29 +571,91 @@ def editar_tarefa(tarefa_id):
                                 usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
                                 
                                 if usuario:
-                                    # Notificação no sistema
-                                    supabase.table('notificacoes').insert({
-                                        'usuario_id': str(destinatario_status),
-                                        'mensagem': f"Status da tarefa '{nome_tarefa_ref or nome}' atualizado para '{status}'",
-                                        'tipo': 'conclusao' if status == 'concluída' else 'status',
-                                        'projeto_id': str(projeto_id_ref)
-                                    }).execute()
-                                    
-                                    # Email para o usuário
-                                    tarefa_info = {
-                                        'nome': nome_tarefa_ref or nome,
-                                        'projeto_nome': projeto_nome
-                                    }
-                                    notificar_status_alterado(
-                                        usuario['email'], 
-                                        usuario['nome'], 
-                                        tarefa_info, 
-                                        status, 
-                                        old_status, 
-                                        projeto_url
-                                    )
+                                    # Verificar se o usuário tem acesso ao projeto antes de notificar
+                                    if usuario_tem_acesso_projeto(destinatario_status, projeto_id_ref):
+                                        # Notificação no sistema (síncrona)
+                                        supabase.table('notificacoes').insert({
+                                            'usuario_id': str(destinatario_status),
+                                            'mensagem': f"Status da tarefa '{nome_tarefa_ref or nome}' atualizado para '{status}'",
+                                            'tipo': 'conclusao' if status == 'concluída' else 'status',
+                                            'projeto_id': str(projeto_id_ref)
+                                        }).execute()
+                                        
+                                        # Preparar notificação por email para background
+                                        tarefa_info = {
+                                            'nome': nome_tarefa_ref or nome,
+                                            'projeto_nome': projeto_nome
+                                        }
+                                        
+                                        notificacao_status = {
+                                            'tipo': 'status_alterado',
+                                            'usuario_id': destinatario_status,
+                                            'tarefa_info': tarefa_info,
+                                            'novo_status': status,
+                                            'status_anterior': old_status,
+                                            'projeto_url': projeto_url
+                                        }
+                                        
+                                        # Processar em background
+                                        processar_notificacoes_background([notificacao_status])
+                                    else:
+                                        print(f"[INFO] Notificação de status NÃO enviada: usuário {destinatario_status} não tem acesso ao projeto {projeto_id_ref}")
                             except Exception as e:
-                                print(f"Erro ao notificar alteração de status: {e}")
+                                print(f"Erro ao preparar notificação de alteração de status: {e}")
+                        
+                        # Se o status mudou para "concluída" ou "em progresso", notificar também os administradores por email
+                        if status in ['concluída', 'em progresso']:
+                            try:
+                                # Buscar lista de administradores
+                                admins_resp = supabase.table("usuarios_admin").select("usuario_id").execute()
+                                admin_ids = [a['usuario_id'] for a in admins_resp.data] if admins_resp.data else []
+                                
+                                # Buscar nome do usuário que fez a alteração
+                                usuario_alteracao = "Sistema"
+                                try:
+                                    usuario_resp = supabase.table("usuarios").select("nome").eq("id", str(session.get('user_id'))).single().execute()
+                                    usuario_alteracao = usuario_resp.data.get('nome', 'Usuário') if hasattr(usuario_resp, 'data') and usuario_resp.data else 'Usuário'
+                                except Exception:
+                                    pass
+                                
+                                # Preparar notificações por email para admins
+                                notificacoes_admins = []
+                                for admin_id in admin_ids:
+                                    try:
+                                        # Buscar dados do admin
+                                        admin_resp = supabase.table("usuarios").select("nome, email").eq("id", str(admin_id)).single().execute()
+                                        admin_data = admin_resp.data if hasattr(admin_resp, 'data') else None
+                                        
+                                        if admin_data:
+                                            tarefa_info_admin = {
+                                                'nome': nome_tarefa_ref or nome,
+                                                'projeto_nome': projeto_nome
+                                            }
+                                            
+                                            # Usar tipo específico baseado no status
+                                            tipo_notificacao = 'conclusao_admin' if status == 'concluída' else 'progresso_admin'
+                                            
+                                            notificacao_admin = {
+                                                'tipo': tipo_notificacao,
+                                                'usuario_id': admin_id,
+                                                'tarefa_info': tarefa_info_admin,
+                                                'usuario_alteracao': usuario_alteracao,
+                                                'projeto_url': projeto_url
+                                            }
+                                            
+                                            notificacoes_admins.append(notificacao_admin)
+                                            print(f"[INFO] Preparando notificação de {status} para admin {admin_id} ({admin_data.get('email', 'sem email')})")
+                                    except Exception as e:
+                                        print(f"[ERRO] Falha ao preparar notificação para admin {admin_id}: {e}")
+                                
+                                # Enviar notificações para admins em background
+                                if notificacoes_admins:
+                                    processar_notificacoes_background(notificacoes_admins)
+                                    print(f"[INFO] {len(notificacoes_admins)} notificações de {status} enviadas para admins")
+                            
+                            except Exception as e:
+                                print(f"[ERRO] Falha ao preparar notificações de {status} para admins: {e}")
+                
                 except Exception as e:
                     print(f"Erro geral nas notificações: {e}")
                 if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -329,7 +683,21 @@ def editar_tarefa(tarefa_id):
     except Exception as e:
         usuarios = []
     
-    return render_template('editar_tarefa.html', tarefa=tarefa, projeto=projeto, usuarios=usuarios)
+    # Definir permissões de edição baseadas nas restrições do usuário
+    usuario_id = session.get('user_id')
+    restricoes = carregar_restricoes()
+    restricoes_usuario = restricoes.get(str(usuario_id), {}) if usuario_id else {}
+    
+    if is_admin_session():
+        pode_editar_data_inicio = True
+        pode_editar_data_termino = True
+    else:
+        pode_editar_data_inicio = not restricoes_usuario.get('restr_editar_datas', False)
+        pode_editar_data_termino = not restricoes_usuario.get('restr_editar_datas', False)
+    
+    return render_template('editar_tarefa.html', tarefa=tarefa, projeto=projeto, usuarios=usuarios, 
+                          pode_editar_data_inicio=pode_editar_data_inicio, 
+                          pode_editar_data_termino=pode_editar_data_termino)
 
 @tarefas_bp.route('/tarefas/excluir/<uuid:tarefa_id>', methods=['POST'])
 @login_required
@@ -435,6 +803,46 @@ def atualizar_status_tarefa(tarefa_id, novo_status):
         
         if resp.data:
             flash(f"Status da tarefa atualizado para '{novo_status}'!")
+            
+            # Notificar administradores sobre alteração de status
+            try:
+                # Buscar lista de administradores
+                admins_resp = supabase.table("usuarios_admin").select("usuario_id").execute()
+                admin_ids = [a['usuario_id'] for a in admins_resp.data] if admins_resp.data else []
+                
+                # Buscar informações do projeto
+                projeto_info = None
+                try:
+                    projeto_resp = supabase.table("projetos").select("nome").eq("id", str(tarefa.get('projeto_id'))).single().execute()
+                    projeto_info = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+                except Exception:
+                    pass
+                projeto_nome = projeto_info.get('nome', 'Projeto') if projeto_info else 'Projeto'
+                
+                # Buscar nome do usuário que fez a alteração
+                usuario_alteracao = None
+                try:
+                    usuario_resp = supabase.table("usuarios").select("nome").eq("id", str(session.get('user_id'))).single().execute()
+                    usuario_alteracao = usuario_resp.data.get('nome', 'Usuário') if hasattr(usuario_resp, 'data') and usuario_resp.data else 'Usuário'
+                except Exception:
+                    usuario_alteracao = 'Usuário'
+                
+                # Criar notificação para cada administrador
+                for admin_id in admin_ids:
+                    try:
+                        supabase.table('notificacoes').insert({
+                            'usuario_id': str(admin_id),
+                            'mensagem': f"Status da tarefa '{tarefa.get('nome','')}' alterado para '{novo_status}' por {usuario_alteracao} no projeto '{projeto_nome}'",
+                            'tipo': 'status',
+                            'projeto_id': str(tarefa.get('projeto_id'))
+                        }).execute()
+                        print(f"[INFO] Notificação enviada para admin {admin_id} sobre alteração de status da tarefa {tarefa_id}")
+                    except Exception as e:
+                        print(f"[ERRO] Falha ao notificar admin {admin_id}: {e}")
+                        
+            except Exception as e:
+                print(f"[ERRO] Falha ao buscar administradores para notificação: {e}")
+            
             # Notificação ao responsável
             try:
                 usuario_id = tarefa.get('usuario_id')
@@ -443,44 +851,50 @@ def atualizar_status_tarefa(tarefa_id, novo_status):
                     usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
                     usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
                     if usuario:
-                        # Buscar informações do projeto
-                        projeto_info = None
-                        try:
-                            projeto_resp = supabase.table("projetos").select("nome").eq("id", str(tarefa.get('projeto_id'))).single().execute()
-                            projeto_info = projeto_resp.data if hasattr(projeto_resp, 'data') else None
-                        except Exception:
-                            pass
-                        projeto_nome = projeto_info.get('nome', 'Projeto') if projeto_info else 'Projeto'
-                        projeto_url = f"http://localhost:5000/projetos/{tarefa.get('projeto_id')}"
-                        # Notificação no sistema
-                        supabase.table('notificacoes').insert({
-                            'usuario_id': str(usuario_id),
-                            'mensagem': f"Status da tarefa '{tarefa.get('nome','')}' atualizado para '{novo_status}'",
-                            'tipo': 'conclusao' if novo_status == 'concluída' else 'status',
-                            'projeto_id': str(tarefa.get('projeto_id'))
-                        }).execute()
-                        # Email para o usuário
-                        tarefa_info = {
-                            'nome': tarefa.get('nome', ''),
-                            'projeto_nome': projeto_nome
-                        }
-                        
-                        if novo_status == 'concluída':
-                            notificar_tarefa_concluida(
-                                usuario['email'], 
-                                usuario['nome'], 
-                                tarefa_info, 
-                                projeto_url
-                            )
+                        # Verificar se o usuário tem acesso ao projeto antes de notificar
+                        projeto_id = tarefa.get('projeto_id')
+                        if usuario_tem_acesso_projeto(usuario_id, projeto_id):
+                            # Buscar informações do projeto
+                            projeto_info = None
+                            try:
+                                projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id)).single().execute()
+                                projeto_info = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+                            except Exception:
+                                pass
+                            projeto_nome = projeto_info.get('nome', 'Projeto') if projeto_info else 'Projeto'
+                            projeto_url = f"http://localhost:5000/projetos/{projeto_id}"
+                            # Notificação no sistema (síncrona)
+                            supabase.table('notificacoes').insert({
+                                'usuario_id': str(usuario_id),
+                                'mensagem': f"Status da tarefa '{tarefa.get('nome','')}' atualizado para '{novo_status}'",
+                                'tipo': 'conclusao' if novo_status == 'concluída' else 'status',
+                                'projeto_id': str(projeto_id)
+                            }).execute()
+                            
+                            # Preparar notificação por email para background
+                            tarefa_info = {
+                                'nome': tarefa.get('nome', ''),
+                                'projeto_nome': projeto_nome
+                            }
+                            
+                            if novo_status == 'concluída':
+                                notificacao_tipo = 'conclusao'
+                            else:
+                                notificacao_tipo = 'status_alterado'
+                            
+                            notificacao_status = {
+                                'tipo': notificacao_tipo,
+                                'usuario_id': usuario_id,
+                                'tarefa_info': tarefa_info,
+                                'novo_status': novo_status,
+                                'status_anterior': 'pendente',  # Status anterior padrão
+                                'projeto_url': projeto_url
+                            }
+                            
+                            # Processar em background
+                            processar_notificacoes_background([notificacao_status])
                         else:
-                            notificar_status_alterado(
-                                usuario['email'], 
-                                usuario['nome'], 
-                                tarefa_info, 
-                                novo_status, 
-                                'pendente',  # Status anterior padrão
-                                projeto_url
-                            )
+                            print(f"[INFO] Notificação de status NÃO enviada: usuário {usuario_id} não tem acesso ao projeto {projeto_id}")
             except Exception as e:
                 print(f"Erro ao notificar responsável: {e}")
         else:

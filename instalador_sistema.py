@@ -53,6 +53,13 @@ class InstaladorSistema:
         self.supabase_key = tk.StringVar(value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2ZHB1eGdnbHRxZWpwbHliemV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTcyOTAsImV4cCI6MjA2NTMzMzI5MH0.YaDt2gAl_FFolp8Gh5n18ZjwzkLLcQ2EuWzFZTTyEMI")
         self.admin_email = tk.StringVar(value="izak.gomes59@gmail.com")
         
+        # Configurações SMTP para notificações por email
+        self.smtp_server = tk.StringVar(value="webmail.dipaula.com.br")
+        self.smtp_port = tk.StringVar(value="465")
+        self.smtp_user = tk.StringVar(value="izak.oliveira@dipaula.com.br")
+        self.smtp_pass = tk.StringVar(value="Oli@2115")
+        self.from_name = tk.StringVar(value="Sistema de Gestão de Projetos")
+        
         self.criar_desktop_shortcut = tk.BooleanVar(value=True)
         self.instalar_dependencias = tk.BooleanVar(value=True)
         self.instalar_python_embarcado = tk.BooleanVar(value=False)
@@ -658,16 +665,20 @@ class InstaladorSistema:
             
     def log_message(self, message):
         """Adiciona mensagem ao log"""
-        if hasattr(self, 'log_text'):
-            self.log_text.insert(tk.END, f"{message}\n")
-            self.log_text.see(tk.END)
-            self.root.update()
-            
-        # Atualizar status
-        if hasattr(self, 'status_label'):
-            # Pegar primeira linha da mensagem
-            primeira_linha = message.split('\n')[0]
-            self.status_label.config(text=primeira_linha)
+        try:
+            if hasattr(self, 'log_text') and self.log_text and self.log_text.winfo_exists():
+                self.log_text.insert(tk.END, f"{message}\n")
+                self.log_text.see(tk.END)
+                self.root.update_idletasks()
+                
+            # Atualizar status
+            if hasattr(self, 'status_label') and self.status_label and self.status_label.winfo_exists():
+                # Pegar primeira linha da mensagem
+                primeira_linha = message.split('\n')[0]
+                self.status_label.config(text=primeira_linha)
+        except tk.TclError:
+            # Widget foi destruído, ignorar
+            pass
     
     def atualizar_progresso(self, porcentagem):
         """Atualiza a barra de progresso moderna"""
@@ -907,8 +918,11 @@ class InstaladorSistema:
             # Mostrar erro na thread principal
             self.root.after(0, lambda: messagebox.showerror("Erro", error_msg))
         finally:
-            if hasattr(self, 'progress'):
-                self.progress.stop()
+            if hasattr(self, 'progress') and self.progress:
+                try:
+                    self.progress.stop()
+                except:
+                    pass  # Ignorar erros ao parar progresso
             self.log_message("🔚 Processo de instalação finalizado")
             
     def copiar_arquivos_sistema(self, destino):
@@ -1480,6 +1494,13 @@ FLASK_SECRET_KEY={os.urandom(24).hex()}
 # Configurações de email
 ADMIN_EMAIL={self.admin_email.get()}
 
+# Configurações SMTP para notificações por email
+SMTP_SERVER={self.smtp_server.get()}
+SMTP_PORT={self.smtp_port.get()}
+SMTP_USER={self.smtp_user.get()}
+SMTP_PASS={self.smtp_pass.get()}
+FROM_NAME={self.from_name.get()}
+
 # Configurações de ambiente
 FLASK_ENV=production
 FLASK_APP=app_producao.py
@@ -1716,8 +1737,86 @@ def is_admin():
     except:
         return False
 
+def testar_arquivos_embarcados():
+    """Testa se os arquivos embarcados estão acessíveis"""
+    print("🔍 Testando arquivos embarcados no instalador...")
+
+    if hasattr(sys, '_MEIPASS'):
+        print("✓ Executando como executável PyInstaller")
+        base_path = Path(sys._MEIPASS)
+        projeto_path = base_path / 'projeto_arquivos'
+
+        print(f"📁 Caminho base: {base_path}")
+        print(f"📁 Caminho projeto_arquivos: {projeto_path}")
+
+        if projeto_path.exists():
+            print("✅ Pasta projeto_arquivos encontrada!")
+
+            # Listar conteúdo
+            print("\n📋 Conteúdo da pasta projeto_arquivos:")
+            for item in projeto_path.iterdir():
+                if item.is_file():
+                    tamanho = item.stat().st_size
+                    print(f"  📄 {item.name} ({tamanho} bytes)")
+                else:
+                    print(f"  📁 {item.name}/")
+
+            # Verificar arquivos específicos
+            arquivos_essenciais = [
+                'app_producao.py',
+                'requirements.txt',
+                'supabase_client.py',
+                'config',
+                'routes',
+                'templates',
+                'static',
+                'utils'
+            ]
+
+            print("\n🔍 Verificando arquivos essenciais:")
+            todos_ok = True
+            for arquivo in arquivos_essenciais:
+                caminho = projeto_path / arquivo
+                if caminho.exists():
+                    if caminho.is_file():
+                        tamanho = caminho.stat().st_size
+                        print(f"  ✅ {arquivo} ({tamanho} bytes)")
+                    else:
+                        print(f"  ✅ {arquivo}/ (pasta)")
+                else:
+                    print(f"  ❌ {arquivo} - NÃO ENCONTRADO!")
+                    todos_ok = False
+
+            if todos_ok:
+                print("\n🎉 Todos os arquivos essenciais estão presentes!")
+                return True
+            else:
+                print("\n❌ Alguns arquivos essenciais estão faltando!")
+                return False
+        else:
+            print("❌ Pasta projeto_arquivos NÃO encontrada!")
+            print("Conteúdo do _MEIPASS:")
+            for item in base_path.iterdir():
+                print(f"  - {item.name}")
+            return False
+    else:
+        print("❌ Não está executando como executável PyInstaller")
+        print("Execute: .\\dist\\Instalador_Sistema_Gestao.exe")
+        return False
+
 def main():
     """Função principal"""
+    # Verificar se foi chamado com argumentos de teste
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "teste_arquivos_instalador":
+            # Executar apenas o teste de arquivos
+            testar_arquivos_embarcados()
+            return
+        elif sys.argv[1] == "--help":
+            print("Instalador do Sistema de Gestão de Projetos")
+            print("Uso: instalador_sistema.py [teste_arquivos_instalador|--help]")
+            return
+    
     # No Windows, avisar se não for administrador
     if os.name == 'nt' and not is_admin():
         root = tk.Tk()

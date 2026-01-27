@@ -1,14 +1,62 @@
 {% extends "base.html" %}
 
 {% block scripts %}
+{# Bloco vazio para não injetar scripts antes do jQuery #}
+{% endblock %}
+
+{# --- MOVER SCRIPTS PARA O FINAL DO BODY --- #}
+{% block extra_scripts %}
 <script>
-    // Garante que o Gantt seja montado após o carregamento
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof montarGanttAgrupado === 'function') {
-            montarGanttAgrupado();
+    // INJEÇÃO DOS FERIADOS DO BACKEND
+    window.feriadosManuaisBackend = {{ feriados_manuais|tojson|safe }};
+    window.feriadosApiBackend = {{ feriados_api|tojson|safe }};
+    // JavaScript para alternância de tema (isolado para não sobrescrever outros DOMContentLoaded)
+    (function() {
+        function initThemeToggle() {
+            const THEME_KEY = 'themeMode';
+            const btn = document.getElementById('themeToggle');
+            const icon = document.getElementById('themeToggleIcon');
+            if (!btn) {
+                console.error('Tema: Botão não encontrado');
+                return;
+            }
+            // Aplicar tema salvo
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+            document.body.classList.toggle('dark', savedTheme === 'dark');
+            btn.classList.toggle('dark-mode', savedTheme === 'dark');
+            // Handler do clique
+            function toggleTheme(event) {
+                event.preventDefault();
+                const wasDark = document.body.classList.contains('dark');
+                const newTheme = wasDark ? 'light' : 'dark';
+                if (newTheme === 'dark') {
+                    document.body.classList.add('dark');
+                    document.documentElement.classList.add('dark-mode-loading');
+                    document.body.style.backgroundColor = '#1a1a1a';
+                    document.body.style.color = '#e0e0e0';
+                    document.documentElement.style.backgroundColor = '#1a1a1a';
+                    document.documentElement.style.color = '#e0e0e0';
+                } else {
+                    document.body.classList.remove('dark');
+                    document.documentElement.classList.remove('dark-mode-loading');
+                    document.body.style.backgroundColor = '';
+                    document.body.style.color = '';
+                    document.documentElement.style.backgroundColor = '';
+                    document.documentElement.style.color = '';
+                }
+                localStorage.setItem(THEME_KEY, newTheme);
+                btn.classList.toggle('dark-mode', newTheme === 'dark');
+            }
+            btn.addEventListener('click', toggleTheme);
         }
-    });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeToggle);
+        } else {
+            initThemeToggle();
+        }
+    })();
 </script>
+{# --- FIM DOS SCRIPTS MOVIDOS --- #}
 {% endblock %}
 
 <!-- Select2 CSS -->
@@ -17,10 +65,24 @@
     rel="stylesheet" />
 
 <style>
+    /* Ocultar scrollbar da página */
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    html,
+    body {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
+
     /* Estilo para tarefas atrasadas - VERSÃO ULTRA SIMPLIFICADA */
     .tarefa-atrasada {
-        background-color: #ffe6e6 !important;
-        border-left: 5px solid #dc2626 !important;
+        background-color: var(--tarefa-atrasada-bg, #ffe6e6) !important;
+        border-left: 5px solid var(--tarefa-atrasada-border, #dc2626) !important;
     }
 
     /* Estilos responsivos para a coluna Nome */
@@ -73,15 +135,15 @@
     }
 
     .tarefa-atrasada td {
-        background-color: #ffe6e6 !important;
+        background-color: var(--tarefa-atrasada-bg, #ffe6e6) !important;
     }
 
     .tarefa-atrasada:hover {
-        background-color: #ffcccc !important;
+        background-color: var(--tarefa-atrasada-hover, #ffcccc) !important;
     }
 
     .tarefa-atrasada:hover td {
-        background-color: #ffcccc !important;
+        background-color: var(--tarefa-atrasada-hover, #ffcccc) !important;
     }
 
     /* Ícone de aviso para tarefas atrasadas */
@@ -92,79 +154,79 @@
         top: 50%;
         transform: translateY(-50%);
         font-size: 12px;
-        color: #dc2626;
+        color: var(--tarefa-atrasada-icon, #dc2626);
         z-index: 10;
     }
 
     /* Estilo para linha de coleção quando atrasada */
     tr.linha-colecao.tarefa-atrasada {
-        background-color: #fff0f0 !important;
-        border-left: 3px solid #dc2626 !important;
+        background-color: var(--linha-colecao-atrasada-bg, #fff0f0) !important;
+        border-left: 3px solid var(--linha-colecao-atrasada-border, #dc2626) !important;
     }
 
     tr.linha-colecao.tarefa-atrasada td {
-        background-color: #fff0f0 !important;
+        background-color: var(--linha-colecao-atrasada-bg, #fff0f0) !important;
     }
 
     tr.linha-colecao.tarefa-atrasada:hover {
-        background-color: #ffe0e0 !important;
+        background-color: var(--linha-colecao-atrasada-hover, #ffe0e0) !important;
     }
 
     tr.linha-colecao.tarefa-atrasada:hover td {
-        background-color: #ffe0e0 !important;
+        background-color: var(--linha-colecao-atrasada-hover, #ffe0e0) !important;
     }
 
     /* Garantir que os estilos sejam aplicados mesmo com outros estilos */
     table tbody tr.tarefa-atrasada {
-        background-color: #ffe6e6 !important;
-        border-left: 5px solid #dc2626 !important;
+        background-color: var(--tarefa-atrasada-bg, #ffe6e6) !important;
+        border-left: 5px solid var(--tarefa-atrasada-border, #dc2626) !important;
     }
 
     table tbody tr.tarefa-atrasada td {
-        background-color: #ffe6e6 !important;
+        background-color: var(--tarefa-atrasada-bg, #ffe6e6) !important;
     }
 
     table tbody tr.tarefa-atrasada:hover {
-        background-color: #ffcccc !important;
+        background-color: var(--tarefa-atrasada-hover, #ffcccc) !important;
     }
 
     table tbody tr.tarefa-atrasada:hover td {
-        background-color: #ffcccc !important;
+        background-color: var(--tarefa-atrasada-hover, #ffcccc) !important;
     }
 
     /* Estilo específico para tabelas responsivas */
     .table-responsive tbody tr.tarefa-atrasada {
-        background-color: #ffe6e6 !important;
-        border-left: 5px solid #dc2626 !important;
+        background-color: var(--tarefa-atrasada-bg, #ffe6e6) !important;
+        border-left: 5px solid var(--tarefa-atrasada-border, #dc2626) !important;
     }
 
     .table-responsive tbody tr.tarefa-atrasada td {
-        background-color: #ffe6e6 !important;
+        background-color: var(--tarefa-atrasada-bg, #ffe6e6) !important;
     }
 
     .table-responsive tbody tr.tarefa-atrasada:hover {
-        background-color: #ffcccc !important;
+        background-color: var(--tarefa-atrasada-hover, #ffcccc) !important;
     }
 
     .table-responsive tbody tr.tarefa-atrasada:hover td {
-        background-color: #ffcccc !important;
+        background-color: var(--tarefa-atrasada-hover, #ffcccc) !important;
     }
 
     .icone-atrasada {
-        color: #dc2626;
+        color: var(--tarefa-atrasada-icon, #dc2626);
         margin-right: 5px;
         font-size: 12px;
     }
 
     /* Estilos para datas calculadas por predecessoras */
     .data-calculada {
-        background-color: #fffbe6 !important;
-        border-color: #ffc107 !important;
+        background-color: var(--data-calculada-bg, #fffbe6) !important;
+        border-color: var(--data-calculada-border, #ffc107) !important;
     }
 
     .data-calculada:focus {
-        background-color: #fffbe6 !important;
-        border-color: #ffc107 !important;
+        background-color: var(--data-calculada-bg, #fffbe6) !important;
+        border-color: var(--data-calculada-border, #ffc107) !important;
         box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
     }
 
@@ -175,6 +237,17 @@
     }
 
     input[data-calculada="1"]:focus {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
+
+    #tabela-tarefas-inline input[data-calculada="1"] {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+    }
+
+    #tabela-tarefas-inline input[data-calculada="1"]:focus {
         background-color: #fffbe6 !important;
         border-color: #ffc107 !important;
         box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
@@ -239,33 +312,36 @@
         }
     }
 
-    /* Coluna fixa para Tarefa no Gantt (igual à tela de projetos) */
-    #gantt-custom th:first-child,
-    #gantt-custom td:first-child {
-        position: sticky;
-        left: 0;
-        background: #fff;
-        z-index: 50;
-        width: 480px;
-        min-width: 480px;
-        max-width: 480px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    /* Ocultar scrollbar da tabela de tarefas */
+    .tabela-tarefas-wrap::-webkit-scrollbar,
+    .table-responsive::-webkit-scrollbar,
+    div[style*="overflow-y"]::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
+
+    .tabela-tarefas-wrap,
+    .table-responsive,
+    div[style*="overflow-y"] {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
+
+
 
     /* Estilos da legenda igual à tela de projetos */
     .legend-item:hover {
-        background: rgba(0, 0, 0, 0.05);
-        border-color: #dee2e6;
+        background: var(--legend-hover-bg, rgba(0, 0, 0, 0.05));
+        border-color: var(--card-border, #dee2e6);
         transform: translateY(-1px);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .legend-item.selecionada {
-        outline: 2px solid #222;
+        outline: 2px solid var(--legend-selected-outline, #222);
         outline-offset: 2px;
-        background: #f3f3f3;
+        background: var(--legend-selected-bg, #f3f3f3);
         border-radius: 5px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
@@ -289,26 +365,468 @@
     }
 
     #tabela-tarefas-inline td.drag-handle:hover {
-        color: #555;
+        color: var(--drag-handle-hover, #555);
         background-color: var(--bg-color);
     }
 
     /* Classes do SortableJS */
     .sortable-ghost {
         opacity: 0.5;
-        background: #c8e6c9 !important;
+        background: var(--sortable-ghost-bg, #c8e6c9) !important;
     }
 
     .sortable-chosen {
-        background: #e3f2fd !important;
+        background: var(--sortable-chosen-bg, #e3f2fd) !important;
     }
 
     .sortable-drag {
         opacity: 0.8;
-        background: #fff3e0 !important;
+        background: var(--sortable-drag-bg, #fff3e0) !important;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 </style>
+
+<!-- Dark Mode Styles for detalhes_projeto.html -->
+<style>
+    /* Dark mode overrides for hardcoded colors */
+    body.dark .tarefa-atrasada td {
+        background-color: #2d1b1b !important;
+        color: white !important;
+    }
+
+    body.dark table tbody tr.tarefa-atrasada td {
+        background-color: #2d1b1b !important;
+    }
+
+    body.dark .tarefa-atrasada td {
+        background-color: #2d1b1b !important;
+    }
+
+    body.dark .tarefa-atrasada:hover {
+        background-color: #451a1a !important;
+    }
+
+    body.dark .tarefa-atrasada:hover td {
+        background-color: #451a1a !important;
+    }
+
+    body.dark tr.tarefa-atrasada::before {
+        color: #ef4444;
+    }
+
+    body.dark tr.linha-colecao.tarefa-atrasada {
+        background-color: #2d1b1b !important;
+        border-left: 3px solid #b91c1c !important;
+    }
+
+    body.dark tr.linha-colecao.tarefa-atrasada td {
+        background-color: #2d1b1b !important;
+    }
+
+    body.dark tr.linha-colecao.tarefa-atrasada:hover {
+        background-color: #451a1a !important;
+    }
+
+    body.dark tr.linha-colecao.tarefa-atrasada:hover td {
+        background-color: #451a1a !important;
+    }
+
+    body.dark table tbody tr.tarefa-atrasada {
+        background-color: #2d1b1b !important;
+        border-left: 5px solid #b91c1c !important;
+    }
+
+    body.dark table tbody tr.tarefa-atrasada td {
+        background-color: #2d1b1b !important;
+    }
+
+    body.dark table tbody tr.tarefa-atrasada:hover {
+        background-color: #451a1a !important;
+    }
+
+    body.dark table tbody tr.tarefa-atrasada:hover td {
+        background-color: #451a1a !important;
+    }
+
+    body.dark .table-responsive tbody tr.tarefa-atrasada {
+        background-color: #2d1b1b !important;
+        border-left: 5px solid #b91c1c !important;
+    }
+
+    body.dark .table-responsive tbody tr.tarefa-atrasada td {
+        background-color: #2d1b1b !important;
+    }
+
+    body.dark .table-responsive tbody tr.tarefa-atrasada:hover {
+        background-color: #451a1a !important;
+    }
+
+    body.dark .table-responsive tbody tr.tarefa-atrasada:hover td {
+        background-color: #451a1a !important;
+    }
+
+    body.dark .icone-atrasada {
+        color: #ef4444;
+    }
+
+    body.dark .data-calculada {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+    }
+
+    body.dark .data-calculada:focus {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+        box-shadow: 0 0 0 0.2rem rgba(217, 119, 6, 0.25) !important;
+    }
+
+    body.dark input[data-calculada="1"] {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+    }
+
+    body.dark input[data-calculada="1"]:focus {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+        box-shadow: 0 0 0 0.2rem rgba(217, 119, 6, 0.25) !important;
+    }
+
+    body.dark #tabela-tarefas-inline input[data-calculada="1"] {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+    }
+
+    body.dark #tabela-tarefas-inline input[data-calculada="1"]:focus {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+        box-shadow: 0 0 0 0.2rem rgba(217, 119, 6, 0.25) !important;
+    }
+
+
+
+    body.dark .legend-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--card-border);
+    }
+
+    body.dark .legend-item.selecionada {
+        outline: 2px solid #e0e0e0;
+        background: var(--card-bg);
+    }
+
+    body.dark #tabela-tarefas-inline td.drag-handle {
+        color: #aaa;
+    }
+
+    body.dark #tabela-tarefas-inline td.drag-handle:hover {
+        color: #ccc;
+        background-color: var(--card-bg);
+    }
+
+    /* Override inline styles for drag handles */
+    body.dark [style*="color:#888"] {
+        color: #aaa !important;
+    }
+
+    body.dark [style*="color: #888"] {
+        color: #aaa !important;
+    }
+
+    /* Override inline styles for info icons */
+    body.dark [style*="color: #888"] i.fas.fa-info-circle {
+        color: #aaa !important;
+    }
+
+    body.dark .sortable-ghost {
+        background: #1a4d1a !important;
+    }
+
+    body.dark .sortable-chosen {
+        background: #1a3a5c !important;
+    }
+
+    body.dark .sortable-drag {
+        background: #4d3a1a !important;
+    }
+
+    /* Dark mode for card backgrounds */
+    body.dark .card.bg-light {
+        background-color: var(--card-bg) !important;
+        border: 1px solid var(--card-border);
+    }
+
+    body.dark .card.bg-light .card-body {
+        background-color: var(--card-bg) !important;
+    }
+
+    /* Dark mode for text colors */
+    body.dark .text-muted {
+        color: var(--muted-text) !important;
+    }
+
+    /* Dark mode for table headers */
+    body.dark .table-dark {
+        background-color: #2a2a2a !important;
+        border-color: #404040 !important;
+    }
+
+    body.dark .table-dark th {
+        background-color: #2a2a2a !important;
+        border-color: #404040 !important;
+        color: #e0e0e0 !important;
+    }
+
+    /* Dark mode for form elements in overdue tasks */
+    body.dark .tarefa-atrasada input,
+    body.dark .tarefa-atrasada select,
+    body.dark .tarefa-atrasada textarea {
+        color: white !important;
+        background-color: #2d1b1b !important;
+        border-color: #b91c1c !important;
+    }
+
+    body.dark .tarefa-atrasada input:focus,
+    body.dark .tarefa-atrasada select:focus,
+    body.dark .tarefa-atrasada textarea:focus {
+        color: white !important;
+        background-color: #2d1b1b !important;
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25) !important;
+    }
+
+    body.dark table tbody tr.tarefa-atrasada input,
+    body.dark table tbody tr.tarefa-atrasada select,
+    body.dark table tbody tr.tarefa-atrasada textarea {
+        color: white !important;
+        background-color: #2d1b1b !important;
+        border-color: #b91c1c !important;
+    }
+
+    body.dark table tbody tr.tarefa-atrasada input:focus,
+    body.dark table tbody tr.tarefa-atrasada select:focus,
+    body.dark table tbody tr.tarefa-atrasada textarea:focus {
+        color: white !important;
+        background-color: #2d1b1b !important;
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25) !important;
+    }
+
+    body.dark .table-responsive tbody tr.tarefa-atrasada input,
+    body.dark .table-responsive tbody tr.tarefa-atrasada select,
+    body.dark .table-responsive tbody tr.tarefa-atrasada textarea {
+        color: white !important;
+        background-color: #2d1b1b !important;
+        border-color: #b91c1c !important;
+    }
+
+    body.dark .table-responsive tbody tr.tarefa-atrasada input:focus,
+    body.dark .table-responsive tbody tr.tarefa-atrasada select:focus,
+    body.dark .table-responsive tbody tr.tarefa-atrasada textarea:focus {
+        color: white !important;
+        background-color: #2d1b1b !important;
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25) !important;
+    }
+
+    /* Estilos globais para form controls no modo escuro */
+    body.dark .form-control,
+    body.dark .form-select,
+    body.dark select,
+    body.dark input[type="date"],
+    body.dark input[type="number"],
+    body.dark input[type="text"],
+    body.dark #tabela-tarefas-inline select[name="status"],
+    body.dark #tabela-tarefas-inline .form-select,
+    body.dark #tabela-tarefas-inline input,
+    body.dark #tabela-tarefas-inline select {
+        color: white !important;
+        background-color: #2c3e50 !important;
+        border-color: #495057 !important;
+    }
+
+    body.dark .form-control:focus,
+    body.dark .form-select:focus,
+    body.dark select:focus,
+    body.dark input[type="date"]:focus,
+    body.dark input[type="number"]:focus,
+    body.dark input[type="text"]:focus,
+    body.dark #tabela-tarefas-inline select[name="status"]:focus,
+    body.dark #tabela-tarefas-inline .form-select:focus,
+    body.dark #tabela-tarefas-inline input:focus,
+    body.dark #tabela-tarefas-inline select:focus {
+        color: white !important;
+        background-color: #2c3e50 !important;
+        border-color: #6c757d !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25) !important;
+    }
+
+    /* Texto de aviso de data em fim de semana ou feriado */
+    .motivo-data-vermelha {
+        color: #dc2626 !important;
+        font-size: 0.75em !important;
+        font-style: italic !important;
+        margin-bottom: 2px !important;
+        display: block !important;
+        text-align: center !important;
+        font-weight: bold !important;
+        background-color: #fee2e2 !important;
+        padding: 2px 4px !important;
+        border-radius: 3px !important;
+    }
+
+    body.dark .motivo-data-vermelha {
+        color: #7f1d1d !important;
+        background-color: #fef2f2 !important;
+    }
+
+    /* Garante que o nome do feriado fique acima do input */
+    .data-tooltip-container {
+        position: relative !important;
+        display: inline-block !important;
+    }
+    
+    .data-tooltip-container .motivo-data-vermelha {
+        position: absolute !important;
+        top: -28px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+
+</style>
+
+<!-- JavaScript para corrigir estilos inline no modo escuro -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        console.log('[DEBUG] Script de correção de modo escuro carregado');
+
+    // Função para atualizar estilos inline quando o modo escuro muda
+    function updateInlineStylesForDarkMode() {
+        console.log('[DEBUG] Executando updateInlineStylesForDarkMode');
+        const isDark = document.body.classList.contains('dark');
+        console.log('[DEBUG] Modo escuro ativo:', isDark);
+
+        // Atualizar tarefas atrasadas
+        const tarefasAtrasadas = document.querySelectorAll('.tarefa-atrasada');
+        console.log('[DEBUG] Tarefas atrasadas encontradas:', tarefasAtrasadas.length);
+        tarefasAtrasadas.forEach(el => {
+            if (isDark) {
+                // Aplicar estilos dark diretamente nas propriedades
+                el.style.setProperty('background-color', '#2d1b1b', 'important');
+                el.style.setProperty('border-left', '5px solid #b91c1c', 'important');
+                el.style.setProperty('color', 'var(--text-color)', 'important');
+            } else {
+                // Aplicar estilos light diretamente nas propriedades
+                el.style.setProperty('background-color', '#ffe6e6', 'important');
+                el.style.setProperty('border-left', '5px solid #dc2626', 'important');
+                el.style.setProperty('color', 'var(--text-color)', 'important');
+            }
+        });
+
+        // Atualizar células de tarefas atrasadas
+        const celulasAtrasadas = document.querySelectorAll('.tarefa-atrasada td');
+        celulasAtrasadas.forEach(td => {
+            td.style.setProperty('background-color', isDark ? '#2d1b1b' : '#ffe6e6', 'important');
+            td.style.setProperty('color', isDark ? 'white' : 'var(--text-color)', 'important');
+        });        // Atualizar hover de tarefas atrasadas
+        const tarefasHover = document.querySelectorAll('.tarefa-atrasada:hover');
+        tarefasHover.forEach(el => {
+            el.style.setProperty('background-color', isDark ? '#451a1a' : '#ffcccc', 'important');
+        });
+
+        // Atualizar ícones de atraso
+        const iconesAtraso = document.querySelectorAll('.icone-atrasada');
+        iconesAtraso.forEach(icon => {
+            icon.style.setProperty('color', isDark ? '#ef4444' : '#dc2626', 'important');
+        });
+
+        // Atualizar campos de data calculada
+        const camposCalculados = document.querySelectorAll('.data-calculada, input[data-calculada="1"]');
+        camposCalculados.forEach(campo => {
+            campo.style.setProperty('background-color', isDark ? '#2d2a1a' : '#fffbe6', 'important');
+            campo.style.setProperty('border-color', isDark ? '#d97706' : '#ffc107', 'important');
+        });
+
+        // Atualizar drag handles
+        const dragHandles = document.querySelectorAll('#tabela-tarefas-inline td.drag-handle');
+        dragHandles.forEach(handle => {
+            handle.style.setProperty('color', isDark ? '#aaa' : '#888', 'important');
+        });
+
+        // Atualizar ícones info
+        const infoIcons = document.querySelectorAll('i.fas.fa-info-circle[style*="color"]');
+        infoIcons.forEach(icon => {
+            icon.style.setProperty('color', isDark ? '#aaa' : '#888', 'important');
+        });
+
+        // Atualizar linhas de tarefas atrasadas (duplicado, mas mantido para consistência)
+        const linhasAtrasadas = document.querySelectorAll('.tarefa-atrasada');
+        linhasAtrasadas.forEach(row => {
+            row.style.setProperty('background-color', isDark ? '#2d1b1b' : '#ffe6e6', 'important');
+            row.style.setProperty('border-left', isDark ? '5px solid #b91c1c' : '5px solid #dc2626', 'important');
+            row.style.setProperty('color', isDark ? 'white' : 'var(--text-color)', 'important');
+        });
+
+        // Atualizar elementos de formulário em tarefas atrasadas
+        const formElementsAtrasados = document.querySelectorAll('.tarefa-atrasada input, .tarefa-atrasada select, .tarefa-atrasada textarea');
+        formElementsAtrasados.forEach(element => {
+            element.style.setProperty('color', isDark ? 'white' : '', 'important');
+            element.style.setProperty('background-color', isDark ? '#2d1b1b' : '', 'important');
+            element.style.setProperty('border-color', isDark ? '#b91c1c' : '', 'important');
+        });
+
+        // Atualizar textos de aviso de data (fim de semana/feriado)
+        const motivosData = document.querySelectorAll('.motivo-data-vermelha');
+        motivosData.forEach(motivo => {
+            motivo.style.setProperty('color', '#dc2626', 'important');
+            motivo.style.setProperty('background-color', isDark ? '#fef2f2' : '#fee2e2', 'important');
+            motivo.style.setProperty('padding', '2px 4px', 'important');
+            motivo.style.setProperty('border-radius', '3px', 'important');
+            motivo.style.setProperty('font-weight', 'bold', 'important');
+        });
+
+        // Ocultar scrollbar da tabela
+        const tabelaWrap = document.querySelector('.tabela-tarefas-wrap');
+        if (tabelaWrap) {
+            tabelaWrap.style.setProperty('overflow-y', 'scroll', 'important');
+            tabelaWrap.style.setProperty('scrollbar-width', 'none', 'important');
+            tabelaWrap.style.setProperty('-ms-overflow-style', 'none', 'important');
+        }
+    }
+
+    // Executar na carga da página - COM DELAY para garantir que o DOM esteja pronto
+    setTimeout(updateInlineStylesForDarkMode, 100);
+
+    // Observar mudanças na classe 'dark' do body
+    const observer = new MutationObserver(function(mutations) {
+        console.log('[DEBUG] MutationObserver detectou mudança');
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                console.log('[DEBUG] Classe do body mudou');
+                updateInlineStylesForDarkMode();
+            }
+        });
+    });
+
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+    console.log('[DEBUG] MutationObserver configurado');
+
+    // Também escutar o evento de clique no botão de tema
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        console.log('[DEBUG] Botão themeToggle encontrado');
+        themeToggle.addEventListener('click', function() {
+            console.log('[DEBUG] Botão themeToggle clicado');
+            // Pequeno delay para garantir que a classe foi aplicada
+            setTimeout(updateInlineStylesForDarkMode, 10);
+        });
+    } else {
+        console.log('[DEBUG] Botão themeToggle NÃO encontrado');
+    }
+});
+</script>
 
 <!-- TESTE SIMPLES DE JAVASCRIPT -->
 <script>
@@ -427,10 +945,6 @@
 
 {% block content %}
 <!-- Bloco do Gantt removido conforme solicitado -->
-{% macro dias_uteis(data_inicio, data_fim) %}
-    {# Chama função Python para calcular dias úteis #}
-    {{ dias_uteis_entre_datas(data_inicio, data_fim) }}
-{% endmacro %}
 
 <div class="container-fluid mt-4" style="padding-left: 15px; padding-right: 0px; padding-bottom: 24px;">
     <div class="row">
@@ -441,12 +955,50 @@
                         <h2 class="mb-0">
                             <i class="fas fa-project-diagram"></i> {{ projeto.nome }}
                         </h2>
-                        <a href="/relatorio/pdf?projeto_id={{ projeto.id }}" class="btn btn-success" style="margin-left: 16px; border-radius: 10px; font-weight: bold;">
-                            <i class="fas fa-file-pdf"></i> Baixar Relatório PDF
-                        </a>
-                        <button id="btn-exportar-excel-projeto" class="btn btn-success" style="margin-left: 8px; border-radius: 10px; font-weight: bold;">
-                            <i class="fas fa-file-excel"></i> Exportar Gantt para Excel
-                        </button>
+                        <div>
+                            <a href="/relatorio/pdf?projeto_id={{ projeto.id }}" class="btn btn-success" style="margin-left: 4px; border-radius: 10px; font-weight: bold;" target="_blank" rel="noopener noreferrer">
+                                <i class="fas fa-print"></i> Imprimir
+                            </a>
+                            <button id="btn-exportar-excel-projeto" class="btn btn-primary" style="margin-left: 8px; border-radius: 10px; font-weight: bold;">
+                                <i class="fas fa-file-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const btnExportarExcel = document.getElementById('btn-exportar-excel-projeto');
+                        if (btnExportarExcel) {
+                            btnExportarExcel.addEventListener('click', function() {
+                                const projeto_id = '{{ projeto.id }}';
+                                const projeto_nome = '{{ projeto.nome|replace("/", "-")|replace("\\", "-") }}';
+                                const agora = new Date();
+                                const dia = String(agora.getDate()).padStart(2, '0');
+                                const mes = String(agora.getMonth() + 1).padStart(2, '0');
+                                const ano = agora.getFullYear();
+                                const hora = String(agora.getHours()).padStart(2, '0');
+                                const min = String(agora.getMinutes()).padStart(2, '0');
+                                const nomeArquivo = `Relatório ${projeto_nome} ${dia}-${mes}-${ano}  ${hora}h${min}.xlsx`;
+                                fetch('/relatorio/exportar_excel_projetos', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ projeto_ids: [projeto_id] })
+                                })
+                                .then(resp => resp.blob())
+                                .then(blob => {
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = nomeArquivo;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    setTimeout(() => {
+                                        document.body.removeChild(a);
+                                        URL.revokeObjectURL(url);
+                                    }, 100);
+                                });
+                            });
+                        }
+                    });
+                    </script>
                     </div>
                 </div>
                 <div class="card-body p-3">
@@ -456,25 +1008,41 @@
                             <p class="text-muted">{{ projeto.descricao or 'Sem descrição' }}</p>
                         </div>
                         <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body">
+                            <div class="card bg-light" style="max-width: 420px; margin-left: auto; margin-right: 0;">
+                                <div class="card-body" style="padding: 16px;">
                                     <h6><i class="fas fa-calendar"></i> Período do Projeto:</h6>
-                                    <p class="mb-1">
-                                            <strong>Início:</strong> {% if projeto.data_inicio %}{% if projeto.data_inicio
-                                            is string %}{% set __p = projeto.data_inicio.split('-') %}
-                                            <span title="Dias úteis até o término: {{ dias_uteis(projeto.data_inicio, projeto.data_fim) }}">{{ __p[2] ~ '/' ~ __p[1] ~ '/' ~ __p[0] }}</span>
+                                    <div class="d-flex justify-content-between align-items-start mb-0" style="gap: 8px; padding-bottom: 0;">
+                                        <div>
+                                            <strong>Início:</strong> {% if projeto.data_inicio %}{% if projeto.data_inicio is string %}{% set __p = projeto.data_inicio.split('-') %}
+                                            <span>{{ __p[2] ~ '/' ~ __p[1] ~ '/' ~ __p[0] }}</span>
                                             {% else %}
-                                            <span title="Dias úteis até o término: {{ dias_uteis(projeto.data_inicio, projeto.data_fim) }}">{{ projeto.data_inicio.strftime('%d/%m/%Y') }}</span>
-                                            {% endif %}{% else %}-{% endif %}
-                                    </p>
-                                    <p class="mb-0">
-                                            <strong>Término:</strong> {% if projeto.data_fim %}{% if projeto.data_fim is
-                                            string %}{% set __p2 = projeto.data_fim.split('-') %}
-                                            <span title="Dias úteis desde o início: {{ dias_uteis(projeto.data_inicio, projeto.data_fim) }}">{{ __p2[2] ~ '/' ~ __p2[1] ~ '/' ~ __p2[0] }}</span>
+                                            <span>{{ projeto.data_inicio.strftime('%d/%m/%Y') }}</span>
+                                            {% endif %}{% else %}-{% endif %}<br>
+                                            <strong>Término:</strong> {% if projeto.data_fim %}{% if projeto.data_fim is string %}{% set __p2 = projeto.data_fim.split('-') %}
+                                            <span>{{ __p2[2] ~ '/' ~ __p2[1] ~ '/' ~ __p2[0] }}</span>
                                             {% else %}
-                                            <span title="Dias úteis desde o início: {{ dias_uteis(projeto.data_inicio, projeto.data_fim) }}">{{ projeto.data_fim.strftime('%d/%m/%Y') }}</span>
+                                            <span>{{ projeto.data_fim.strftime('%d/%m/%Y') }}</span>
                                             {% endif %}{% else %}-{% endif %}
-                                    </p>
+                                        </div>
+                                        <div class="text-end">
+                                            <div>
+                                                <strong>Duração:</strong>
+                                                {% if dias_corridos is not none %}
+                                                    <span>{{ dias_corridos }} Dias</span>
+                                                {% else %}
+                                                    <span>-</span>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <strong>Dias Úteis:</strong>
+                                                {% if dias_uteis is not none %}
+                                                    <span>{{ dias_uteis }} Dias</span>
+                                                {% else %}
+                                                    <span>-</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -483,22 +1051,73 @@
                     <div class="mt-4">
                         <!-- Removido: bloco duplicado de botões acima do título Tarefas do Projeto -->
                     </div>
+
+                    <!-- Filtro de Responsável Customizado -->
+                    <div class="d-flex justify-content-end align-items-start mb-2" style="gap: 12px;">
+                        <div class="custom-select-wrapper" data-select-id="filtro-responsavel" style="max-width: 300px;">
+                            <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; white-space: nowrap; font-size: 0.95em;">
+                                <span><i class="fas fa-user"></i> Filtrar por Responsável</span>
+                                <button type="button" class="btn btn-link p-0 m-0 clear-btn" style="color: #b0b0b0; font-size: 1em; margin-left: 8px;" title="Limpar filtro">
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+                            </label>
+                            
+                            <!-- Select nativo hidden -->
+                            <select id="filtro-responsavel" name="filtro_responsavel" multiple style="display: none !important;">
+                                {% if usuarios_filtro %}
+                                {% for usuario in usuarios_filtro %}
+                                <option value="{{ usuario.id }}">{{ usuario.nome }}</option>
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                            
+                            <!-- Display customizado -->
+                            <div class="custom-select-display">
+                                <div class="custom-select-value">
+                                    <span class="placeholder">... Selecione o Responsável</span>
+                                </div>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                                </svg>
+                            </div>
+                            
+                            <!-- Dropdown -->
+                            <div class="custom-select-dropdown">
+                                <div class="custom-select-search">
+                                    <input type="text" placeholder="Buscar..." class="search-input">
+                                </div>
+                                <div class="custom-select-options">
+                                    {% if usuarios_filtro %}
+                                    {% for usuario in usuarios_filtro %}
+                                    <div class="custom-option" data-value="{{ usuario.id }}">
+                                        <input type="checkbox" value="{{ usuario.id }}">
+                                        <span>{{ usuario.nome }}</span>
+                                    </div>
+                                    {% endfor %}
+                                    {% else %}
+                                    <div style="padding: 12px; text-align: center; color: #6c757d;">Nenhum responsável disponível</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between align-items-center mb-0" style="min-height:44px;">
                         <h5 class="mb-0"><i class="fas fa-tasks"></i> Tarefas do Projeto</h5>
                         <div class="d-flex align-items-center p-0" style="gap: 8px;">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-toggle-tarefas"
-                                onclick="toggleTarefas()" title="Expandir/Colapsar lista de tarefas">
+                            <button type="button" class="btn m-0" id="btn-toggle-tarefas" style="background:none;border:none;padding:0.375rem 0.75rem;color:currentColor;"
+                                onclick="toggleTarefas()" title="Expandir/Recolher lista de tarefas">
                                 <i class="fas fa-expand-alt" id="icon-toggle-tarefas"></i>
                                 <span id="text-toggle-tarefas">Expandir</span>
                             </button>
                             {% if pode_editar_projeto %}
                             <a href="{{ url_for('main.editar_projeto', projeto_id=projeto.id) }}"
-                                class="btn btn-warning m-0">
-                                <i class="fas fa-edit"></i> Editar Projeto
+                                class="btn m-0" style="background:none;border:none;padding:0.375rem 0.75rem;color:currentColor;" title="Editar Projeto">
+                                Editar Projeto
                             </a>
                             {% endif %}
                             {% if pode_criar_tarefa %}
-                            <a href="/tarefas/criar/{{ projeto.id }}" class="btn btn-success m-0">Criar Tarefa</a>
+                            <a href="/tarefas/criar/{{ projeto.id }}" class="btn m-0" style="background:none;border:none;padding:0.375rem 0.75rem;color:currentColor;">Criar Tarefa</a>
                             {% endif %}
                         </div>
                     </div>
@@ -532,9 +1151,7 @@
                                 <col style="width: 130px;"> {# Status #}
                                 <col class="col-responsavel" style="width: {{ responsavel_width }}px;"> {# Responsável
                                 #}
-                                {% if pode_editar_tarefa or pode_excluir_tarefa %}
-                                <col style="width: 100px;"> {# Ações #}
-                                {% endif %}
+                                <col style="width: {% if pode_editar_tarefa or pode_excluir_tarefa %}100px{% else %}60px{% endif %};"> {# Ações #}
                             </colgroup>
                             <thead class="table-dark">
                                 <tr>
@@ -549,7 +1166,7 @@
                                     <th>Duração (dias)</th>
                                     <th>Status</th>
                                     <th class="col-responsavel">Responsável</th>
-                                    <th>Ações</th>
+                                    <th style="text-align: center;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -565,7 +1182,7 @@
                                         style="cursor: pointer; text-align: center; font-weight: bold; padding: 0 !important; min-width: 30px; max-width: 40px;"
                                         onblur="atualizarOrdemTarefa(this)" onkeydown="handleOrdemKeydown(event, this)"
                                         title="Clique para editar a ordem">{{ tarefa.ordem or '' }}</td>
-                                    <td class="td-nome-responsiva">
+                                    <td class="td-nome-responsiva" title="{% if tarefa.colecao %}Coleção: {{ tarefa.colecao }}{% endif %}">
                                         <input type="text" class="form-control form-control-sm input-nome-responsivo"
                                             value="{{ tarefa.nome }}" data-id="{{ tarefa.id }}" name="nome" {% if not
                                             pode_editar_nome_tarefa %}disabled{% endif %}>
@@ -582,36 +1199,22 @@
                                     </td>
                                     {% endif %}
                     <td>
-                        {% set data_inicio = tarefa.data_inicio_iso %}
-                        {% if pode_editar_data_inicio %}
-                            <input type="date" class="form-control form-control-sm"
-                                value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
-                                name="data_inicio" {% if tarefa.data_inicio_calculada %} data-calculada="1"
-                                readonly style="background:#fffbe6;" {% endif %}
-                                oninput="onInicioOuFimEdit(this)">
-                        {% else %}
-                            <span title="Dias úteis até o término: {{ dias_uteis_entre_datas(tarefa.data_inicio_iso, tarefa.data_fim_iso) }}">
-                                {% if data_inicio %}{{ data_inicio[8:10] }}/{{ data_inicio[5:7] }}/{{ data_inicio[0:4] }}{% endif %}
-                            </span>
-                        {% endif %}
+                        <input type="date" class="form-control form-control-sm"
+                            value="{{ tarefa.data_inicio_iso }}" data-id="{{ tarefa.id }}"
+                            name="data_inicio" {% if tarefa.data_inicio_calculada %} data-calculada="1"
+                            readonly {% endif %} {% if not pode_editar_data_inicio %}disabled{% endif %}
+                            {% if pode_editar_data_inicio %}oninput="onInicioOuFimEdit(this)"{% endif %}>
                     </td>
                     <td style="position: relative;">
-                        {% set data_fim = tarefa.data_fim_iso %}
-                        {% if pode_editar_data_termino %}
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                <input type="date" class="form-control form-control-sm"
-                                    value="{{ tarefa.data_fim_iso }}" data-id="{{ tarefa.id }}" name="data_fim"
-                                    {% if tarefa.data_fim_calculada %} data-calculada="1" readonly
-                                    style="background:#fffbe6;" {% endif %}
-                                    oninput="onDuracaoOuFimEdit(this)"
-                                    onblur="onDuracaoOuFimEdit(this, true)">
-                                <i class="fas fa-info-circle" style="color: #888; cursor: pointer; font-size: 1.1em; align-self: center;" title="Dias úteis entre as datas: {{ dias_uteis_entre_datas(tarefa.data_inicio_iso, tarefa.data_fim_iso) }}"></i>
-                            </div>
-                        {% else %}
-                            <span title="Dias úteis desde o início: {{ dias_uteis_entre_datas(tarefa.data_inicio_iso, tarefa.data_fim_iso) }}">
-                                {% if data_fim %}{{ data_fim[8:10] }}/{{ data_fim[5:7] }}/{{ data_fim[0:4] }}{% endif %}
-                            </span>
-                        {% endif %}
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <input type="date" class="form-control form-control-sm"
+                                value="{{ tarefa.data_fim_iso }}" data-id="{{ tarefa.id }}" name="data_fim"
+                                {% if tarefa.data_fim_calculada %} data-calculada="1" readonly
+                                {% endif %} {% if not pode_editar_data_termino %}disabled{% endif %}
+                                {% if pode_editar_data_termino %}oninput="onDuracaoOuFimEdit(this)"
+                                onblur="onDuracaoOuFimEdit(this, true)"{% endif %}>
+                            <i class="fas fa-info-circle" style="color: #888; cursor: pointer; font-size: 1.1em; align-self: center;" title="Dias úteis entre as datas: {{ dias_uteis_entre_datas(tarefa.data_inicio_iso, tarefa.data_fim_iso) }}"></i>
+                        </div>
                     </td>
                                     <td><input type="number" class="form-control form-control-sm" name="duracao" min="1"
                                             value="" oninput="onDuracaoOuFimEdit(this)"
@@ -644,18 +1247,22 @@
                                             {% endfor %}
                                         </select>
                                     </td>
-                                    <td>
-                                        <button class="btn btn-success btn-sm" onclick="salvarLinhaTarefa(this)"><i
-                                                class="fas fa-save"></i></button>
+                                    <td style="text-align: center;">
+                                        {% if pode_editar_nome_tarefa or pode_editar_data_inicio or pode_editar_data_termino or pode_editar_responsavel or pode_editar_tarefa or tarefa.usuario_id == usuario_id %}
+                                        <button class="btn btn-sm" style="background:none;border:none;padding:0.25rem 0.5rem;" onclick="salvarLinhaTarefa(this)">
+                                            <svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="saveIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;"><title id="saveIconTitle">Save</title><path d="M17.2928932,3.29289322 L21,7 L21,20 C21,20.5522847 20.5522847,21 20,21 L4,21 C3.44771525,21 3,20.5522847 3,20 L3,4 C3,3.44771525 3.44771525,3 4,3 L16.5857864,3 C16.8510029,3 17.1053568,3.10535684 17.2928932,3.29289322 Z"></path><rect width="10" height="8" x="7" y="13"></rect><rect width="8" height="5" x="8" y="3"></rect></svg>
+                                        </button>
+                                        {% endif %}
                                         {% if pode_editar_tarefa %}
                                         <a href="{{ url_for('tarefas.editar_tarefa', tarefa_id=tarefa.id) }}"
-                                            class="btn btn-warning btn-sm" title="Editar tarefa"><i
-                                                class="fas fa-edit"></i></a>
+                                            class="btn btn-sm" style="background:none;border:none;padding:0.25rem 0.5rem;" title="Editar tarefa">
+                                            <svg viewBox="0 0 24 24" width="28px" height="28px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="editIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:2px;"><title id="editIconTitle">Editar</title><path d="M18.4142136 4.41421356L19.5857864 5.58578644C20.366835 6.36683502 20.366835 7.63316498 19.5857864 8.41421356L8 20 4 20 4 16 15.5857864 4.41421356C16.366835 3.63316498 17.633165 3.63316498 18.4142136 4.41421356zM14 6L18 10"></path></svg>
+                                        </a>
                                         {% endif %}
                                         {% if pode_excluir_tarefa %}
-                                        <button class="btn btn-danger btn-sm btn-excluir-tarefa"
-                                            data-tarefa-id="{{ tarefa.id }}">
-                                            <svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg>
+                                        <button class="btn btn-sm btn-excluir-tarefa"
+                                            data-tarefa-id="{{ tarefa.id }}" style="background:none;border:none;padding:0.25rem 0.5rem;" title="Excluir tarefa">
+                                            <svg width="28px" height="28px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:2px;"><title id="binIconTitle">Excluir</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg>
                                         </button>
                                         {% endif %}
                                     </td>
@@ -704,7 +1311,7 @@
                                             {% endfor %}
                                         </select>
                                     </td>
-                                    <td>
+                                    <td style="text-align: center;">
                                         <button class="btn btn-success btn-sm" onclick="criarTarefaNovaLinha(this)"><i
                                                 class="fas fa-plus"></i></button>
                                     </td>
@@ -864,221 +1471,214 @@
     </div>
 </div>
 
-<!-- Estilos do Gantt Customizado -->
 <style>
-    /* Estilos do Gantt Customizado */
-    .gantt-header {
-        display: flex;
-        border-bottom: 2px solid #dee2e6;
-        background: #f8f9fa;
-        font-weight: bold;
-    }
-
-    .gantt-header-cell {
-        padding: 10px;
-        text-align: center;
-        border-right: 1px solid #dee2e6;
-        min-width: 100px;
-        transition: min-width 0.3s ease;
-    }
-
-    .gantt-day {
-        padding: 10px;
-        border-right: 1px solid #dee2e6;
-        min-width: 100px;
-        text-align: center;
+    /* Custom Select Styles para o filtro de responsável */
+    .custom-select-wrapper {
         position: relative;
-        transition: min-width 0.3s ease;
+        width: 100%;
     }
-
-    .gantt-row {
-        display: flex;
-        border-bottom: 1px solid #dee2e6;
-        min-height: 40px;
-    }
-
-    .gantt-row:nth-child(even) {
-        background: #f8f9fa;
-    }
-
-    .gantt-task-bar {
-        position: absolute;
-        height: 20px;
-        background: #007bff;
-        border-radius: 3px;
-        margin-top: 10px;
-        cursor: pointer;
-        transition: background 0.3s;
-        z-index: 10;
-        opacity: 1;
-    }
-
-    .gantt-task-bar:hover {
-        background: #0056b3;
-    }
-
-    /* Coluna fixa para Tarefa */
-    #gantt-custom th:first-child,
-    #gantt-custom td:first-child {
-        position: sticky;
-        left: 0;
+    
+    /* Display (campo que mostra as seleções) */
+    .custom-select-display {
+        min-height: 48px;
+        height: 48px;
+        border-radius: 10px;
         background: #fff;
-        z-index: 50;
-        width: 480px;
-        min-width: 480px;
-        max-width: 480px;
-        white-space: nowrap;
+        border: 1px solid #e9ecef;
+        padding: 0 40px 0 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        transition: border-color 0.2s;
+        position: relative;
+    }
+    
+    .custom-select-display:hover {
+        border-color: #4a47a3;
+    }
+    
+    .custom-select-display .chevron {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: transform 0.2s;
+        pointer-events: none;
+    }
+    
+    .custom-select-wrapper.open .custom-select-display .chevron {
+        transform: translateY(-50%) rotate(180deg);
+    }
+    
+    .custom-select-value {
+        flex: 1;
+        display: flex;
+        align-items: center;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.5;
+        min-height: auto;
+        background: transparent;
     }
-
-    .gantt-hoje-linha {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: repeating-linear-gradient(to bottom,
-                #e74c3c 0px, #e74c3c 8px,
-                transparent 8px, transparent 16px);
-        z-index: 5;
-        pointer-events: none;
+    
+    .custom-select-value .placeholder {
+        color: #6c757d !important;
+        font-size: 1em !important;
+        line-height: 1.5 !important;
+        background: transparent !important;
+        pointer-events: none !important;
+        cursor: pointer !important;
     }
-
-    #gantt-hoje-container {
+    
+    .custom-select-value .text {
+        color: #212529;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 1em;
+        line-height: 1.5;
+        background: transparent;
+    }
+    
+    body.dark .custom-select-value .text {
+        color: var(--text-color);
+    }
+    
+    /* Dropdown */
+    .custom-select-dropdown {
         position: absolute;
-        top: 0;
+        top: calc(100% + 4px);
         left: 0;
         right: 0;
-        bottom: 0;
-        pointer-events: none;
-    }
-
-    #gantt-cronograma-area {
-        position: relative;
-        min-height: 200px;
-        border: 1px solid #dee2e6;
-        background: #fff;
-    }
-
-    .gantt-row-compact {
-        height: 16px !important;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    .gantt-row-compact:hover {
-        background-color: var(--bg-color);
-    }
-
-    .gantt-bar-compact {
-        position: absolute;
-        height: 8px !important;
-        line-height: 8px !important;
-        font-size: 11px !important;
-        top: 12px !important;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .gantt-tooltip-detalhado {
-        position: fixed;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        padding: 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        max-width: 300px;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 1000;
-        pointer-events: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-height: 300px;
+        display: none;
+        flex-direction: column;
     }
-
-    .gantt-tooltip-detalhado .gantt-tooltip-title {
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 8px;
-        color: #fff;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-        padding-bottom: 4px;
-    }
-
-    .gantt-tooltip-detalhado .gantt-tooltip-info {
-        margin-bottom: 4px;
+    
+    .custom-select-wrapper.open .custom-select-dropdown {
         display: flex;
-        justify-content: space-between;
     }
-
-    .gantt-tooltip-detalhado .gantt-tooltip-label {
-        color: #ccc;
-        font-size: 11px;
+    
+    /* Campo de busca */
+    .custom-select-search {
+        padding: 10px;
+        border-bottom: 1px solid #e9ecef;
     }
-
-    .gantt-tooltip-detalhado .gantt-tooltip-value {
-        color: #fff;
-        font-weight: 500;
-        text-align: right;
+    
+    .custom-select-search .search-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        outline: none;
+        font-size: 0.9em;
     }
-
-    .gantt-row-compact td,
-    .gantt-row-compact th {
-        height: 16px !important;
-        min-height: 16px !important;
-        max-height: 24px !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        font-size: 13px !important;
-        border: 1px solid #f0f0f0;
-        vertical-align: middle;
+    
+    .custom-select-search .search-input:focus {
+        border-color: #4a47a3;
     }
-
-    .gantt-h-linha {
+    
+    /* Lista de opções */
+    .custom-select-options {
+        overflow-y: auto;
+        max-height: 240px;
+        padding: 4px;
+    }
+    
+    .custom-option {
+        padding: 10px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 6px;
+        transition: background 0.15s;
+    }
+    
+    .custom-option:hover {
+        background: #f8f9fa;
+    }
+    
+    .custom-option input[type="checkbox"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        accent-color: #4a47a3;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        border: 2px solid #4a47a3;
+        border-radius: 3px;
+        background-color: transparent;
+        position: relative;
+    }
+    
+    .custom-option input[type="checkbox"]:checked {
+        background-color: transparent;
+    }
+    
+    .custom-option input[type="checkbox"]:checked::before {
+        content: '✓';
         position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 1px;
-        background: #dee2e6;
-        z-index: 0;
+        top: -2px;
+        left: 2px;
+        color: #4a47a3;
+        font-size: 14px;
+        font-weight: bold;
     }
-
-    .gantt-bar-compact.evidencia {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        z-index: 20;
-        opacity: 1 !important;
+    
+    .custom-option span {
+        flex: 1;
+        font-size: 0.95em;
     }
-
-    /* Linha vertical que segue o cursor no Gantt */
-    .gantt-cursor-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: rgba(0, 0, 0, 0.35);
-        z-index: 15;
-        pointer-events: none;
+    
+    .custom-option.hidden {
         display: none;
     }
-
-
-
-    .gantt-bar-compact.apagada {
-        opacity: 0.25 !important;
-        filter: grayscale(0.5);
+    
+    /* Modo escuro */
+    body.dark .custom-select-display {
+        background: var(--card-bg);
+        border-color: var(--card-border);
+        color: var(--text-color);
     }
-
-    .legend-item.selecionada {
-        outline: 2px solid #222;
-        outline-offset: 2px;
-        background: #f3f3f3;
-        border-radius: 5px;
+    
+    body.dark .custom-select-display .chevron path {
+        fill: #adb5bd;
     }
-
-    #gantt-custom.dragging {
-        cursor: grabbing !important;
-        user-select: none !important;
+    
+    body.dark .custom-select-dropdown {
+        background: var(--card-bg);
+        border-color: var(--card-border);
+    }
+    
+    body.dark .custom-select-search {
+        border-bottom-color: var(--card-border);
+    }
+    
+    body.dark .custom-select-search .search-input {
+        background: var(--input-bg);
+        color: var(--text-color);
+        border-color: var(--card-border);
+    }
+    
+    body.dark .custom-select-search .search-input:focus {
+        border-color: #4a47a3;
+    }
+    
+    body.dark .custom-option:hover {
+        background: rgba(74, 71, 163, 0.1);
+    }
+    
+    body.dark .custom-option span {
+        color: var(--text-color);
     }
 
     #tabela-tarefas-inline input[name="duracao"] {
@@ -1099,6 +1699,33 @@
         text-align: center;
     }
 
+    /* Campos calculados no modo claro - devem vir DEPOIS para sobrescrever */
+    #tabela-tarefas-inline input[data-calculada="1"],
+    #tabela-tarefas-inline input[type="date"][data-calculada="1"] {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+    }
+
+    #tabela-tarefas-inline input[data-calculada="1"]:focus,
+    #tabela-tarefas-inline input[type="date"][data-calculada="1"]:focus {
+        background-color: #fffbe6 !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
+
+    body.dark #tabela-tarefas-inline input[type="date"] {
+        background-color: #2c3e50 !important;
+        color: white !important;
+        border-color: #495057 !important;
+    }
+
+    body.dark #tabela-tarefas-inline input[type="date"]:focus {
+        background-color: #2c3e50 !important;
+        color: white !important;
+        border-color: #6c757d !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25) !important;
+    }
+
     #tabela-tarefas-inline select[name="status"] {
         width: 120px !important;
         max-width: 150px !important;
@@ -1108,12 +1735,57 @@
         text-align: left;
     }
 
+    body.dark #tabela-tarefas-inline select[name="status"] {
+        background-color: #2c3e50 !important;
+        color: white !important;
+        border-color: #495057 !important;
+    }
+
+    body.dark #tabela-tarefas-inline select[name="status"]:focus {
+        background-color: #2c3e50 !important;
+        color: white !important;
+        border-color: #6c757d !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25) !important;
+    }
+
+    body.dark #tabela-tarefas-inline input[type="number"],
+    body.dark #tabela-tarefas-inline input[type="text"],
+    body.dark #tabela-tarefas-inline select[name="usuario_id"] {
+        background-color: #2c3e50 !important;
+        color: white !important;
+        border-color: #495057 !important;
+    }
+
+    body.dark #tabela-tarefas-inline input[type="number"]:focus,
+    body.dark #tabela-tarefas-inline input[type="text"]:focus,
+    body.dark #tabela-tarefas-inline select[name="usuario_id"]:focus {
+        background-color: #2c3e50 !important;
+        color: white !important;
+        border-color: #6c757d !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25) !important;
+    }
+
+    /* Campos calculados - devem vir DEPOIS para sobrescrever as regras gerais */
+    body.dark #tabela-tarefas-inline input[data-calculada="1"],
+    body.dark #tabela-tarefas-inline input[type="date"][data-calculada="1"] {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+    }
+
+    body.dark #tabela-tarefas-inline input[data-calculada="1"]:focus,
+    body.dark #tabela-tarefas-inline input[type="date"][data-calculada="1"]:focus {
+        background-color: #2d2a1a !important;
+        border-color: #d97706 !important;
+        box-shadow: 0 0 0 0.2rem rgba(217, 119, 6, 0.25) !important;
+    }
+
     #tabela-tarefas-inline td,
     #tabela-tarefas-inline th {
         padding-left: 4px;
         padding-right: 4px;
         padding-top: 10px;
         padding-bottom: 10px;
+        background: var(--bg-color);
     }
 
     #tabela-tarefas-inline input,
@@ -1201,27 +1873,62 @@
     }
 
     #tabela-tarefas-inline td.numero-tarefa:hover {
-        background-color: var(--bg-color);
         border-color: #dee2e6;
         cursor: pointer;
     }
 
     #tabela-tarefas-inline td.numero-tarefa:focus {
         outline: none;
-        background-color: #fff3cd !important;
         border-color: #ffc107 !important;
         box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
     }
 
-    #tabela-tarefas-inline td.numero-tarefa[contenteditable="true"] {
-        min-height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     .linha-colecao {
         background-color: #e0e7ef !important;
+    }
+
+    .linha-colecao td {
+        background-color: #e0e7ef !important;
+    }
+
+    body.dark .linha-colecao {
+        background-color: #000000 !important;
+    }
+
+    body.dark .linha-colecao td {
+        background-color: #000000 !important;
+    }
+
+    /* Garantir que a coluna numero-tarefa também receba o background correto */
+    body.dark .linha-colecao td.numero-tarefa {
+        background-color: #000000 !important;
+    }
+
+    /* Hover background para linhas de coleção */
+    #tabela-tarefas-inline .linha-colecao:hover {
+        background-color: #e0e7ef !important;
+    }
+
+    #tabela-tarefas-inline .linha-colecao:hover td {
+        background-color: #e0e7ef !important;
+    }
+
+    /* Especificamente para elementos contenteditable na coluna numero-tarefa */
+    #tabela-tarefas-inline .linha-colecao:hover td.numero-tarefa[contenteditable="true"] {
+        background-color: #e0e7ef !important;
+    }
+
+    body.dark #tabela-tarefas-inline .linha-colecao:hover {
+        background-color: #000000 !important;
+    }
+
+    body.dark #tabela-tarefas-inline .linha-colecao:hover td {
+        background-color: #000000 !important;
+    }
+
+    /* Especificamente para elementos contenteditable na coluna numero-tarefa no modo escuro */
+    body.dark #tabela-tarefas-inline .linha-colecao:hover td.numero-tarefa[contenteditable="true"] {
+        background-color: #000000 !important;
     }
 
     #tabela-tarefas-inline thead th {
@@ -1246,71 +1953,8 @@
         cursor: not-allowed;
     }
 </style>
-<style>
-    /* Estilos do Gantt copiados do projetos_gantt_basico.html para garantir identidade visual */
-    .legend-item:hover {
-        background: rgba(0, 0, 0, 0.05);
-        border-color: #dee2e6;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .legend-item.selecionada {
-        outline: 2px solid #222;
-        outline-offset: 2px;
-        background: #f3f3f3;
-        border-radius: 5px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
-    .gantt-bar-compact {
-        position: absolute;
-        height: 16px !important;
-        line-height: 16px !important;
-        font-size: 11px !important;
-        top: 8px !important;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    .gantt-bar-compact:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-        z-index: 25;
-    }
-    .gantt-bar-compact.evidencia {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        z-index: 20;
-        opacity: 1 !important;
-        border: 1px solid rgba(255, 255, 255, 0.9) !important;
-    }
-    .gantt-bar-compact.apagada {
-        opacity: 0.25 !important;
-        filter: grayscale(0.5);
-    }
-    .gantt-cursor-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: rgba(0, 0, 0, 0.35);
-        z-index: 15;
-        pointer-events: none;
-        display: none;
-    }
-</style>
-<!-- Estilos do Gantt Customizado -->
-<style>
-    /* Ocultar barra de scroll do Gantt */
-    #gantt-custom {
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE e Edge */
-    }
-    #gantt-custom::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, Edge */
-    }
-</style>
-<!-- Gantt removido conforme solicitado -->
+
+
 <!-- O bloco scripts já existe no início do arquivo ou no base.html, não deve ser duplicado aqui. -->
 <script>
     // Copiado e alinhado com projetos_gantt_basico.html
@@ -1347,9 +1991,7 @@ function toggleTarefas() {
         tabelaWrap.style.maxHeight = 'none';
         tabelaWrap.style.overflowY = 'visible';
         iconToggle.className = 'fas fa-compress-alt';
-        textToggle.textContent = 'Colapsar';
-        btnToggle.classList.remove('btn-outline-secondary');
-        btnToggle.classList.add('btn-secondary');
+        textToggle.textContent = 'Recolher';
         localStorage.setItem(storageKey, 'true');
     } else {
         // Colapsar
@@ -1357,8 +1999,6 @@ function toggleTarefas() {
         tabelaWrap.style.overflowY = 'auto';
         iconToggle.className = 'fas fa-expand-alt';
         textToggle.textContent = 'Expandir';
-        btnToggle.classList.remove('btn-secondary');
-        btnToggle.classList.add('btn-outline-secondary');
         localStorage.setItem(storageKey, 'false');
     }
 }
@@ -1376,16 +2016,12 @@ document.addEventListener('DOMContentLoaded', function() {
         tabelaWrap.style.maxHeight = 'none';
         tabelaWrap.style.overflowY = 'visible';
         iconToggle.className = 'fas fa-compress-alt';
-        textToggle.textContent = 'Colapsar';
-        btnToggle.classList.remove('btn-outline-secondary');
-        btnToggle.classList.add('btn-secondary');
+        textToggle.textContent = 'Recolher';
     } else {
         tabelaWrap.style.maxHeight = '350px';
         tabelaWrap.style.overflowY = 'auto';
         iconToggle.className = 'fas fa-expand-alt';
         textToggle.textContent = 'Expandir';
-        btnToggle.classList.remove('btn-secondary');
-        btnToggle.classList.add('btn-outline-secondary');
     }
 });
 
@@ -1500,504 +2136,27 @@ document.addEventListener('DOMContentLoaded', function() {
         return diasUteis;
     }
 
-    function mostrarTooltipDetalhado(event, barra) {
-        console.log('💬 Mostrando tooltip detalhado para:', barra.name);
-        esconderTooltipDetalhado();
-        // Criar datas no fuso horário local para evitar problemas de UTC
-        const startDate = new Date(barra.start + 'T00:00:00');
-        const endDate = new Date(barra.end + 'T00:00:00');
-        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-        const diasUteis = calcularDiasUteis(startDate, endDate);
-        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
-        const tooltip = document.createElement('div');
-        tooltip.className = 'gantt-tooltip-detalhado';
-        tooltip.id = 'gantt-tooltip-detalhado';
-        const dataInicio = startDate.toLocaleDateString('pt-BR');
-        const dataFim = endDate.toLocaleDateString('pt-BR');
-        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
-        tooltip.innerHTML = `
-            <div class="gantt-tooltip-title">${barra.name || 'Tarefa sem nome'}</div>
-            <div style="color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;">${nomeProjeto}</div>
-            <div style="color:#fff;font-size:11px;margin-bottom:6px;line-height:1.2;font-weight:bold;"><b>Coleção:</b> ${barra.colecao || '-'} </div>
-            <div class="gantt-tooltip-info" style="gap: 12px;">
-                <span class="gantt-tooltip-label">🏁 Início:</span>
-                <span class="gantt-tooltip-value">${dataInicio}</span>
-                <span class="gantt-tooltip-label">🎯 Fim:</span>
-                <span class="gantt-tooltip-value">${dataFim}</span>
-            </div>
-            <div class="gantt-tooltip-info">
-                <span class="gantt-tooltip-label">📆 Dias Corridos:</span>
-                <span class="gantt-tooltip-value">${diasCorridos} dias</span>
-            </div>
-            <div class="gantt-tooltip-info">
-                <span class="gantt-tooltip-label">📆 Dias Úteis:</span>
-                <span class="gantt-tooltip-value">${diasUteis} ${diasUteisTexto}</span>
-            </div>
-        `;
-        document.body.appendChild(tooltip);
-        atualizarPosicaoTooltipDetalhado(event);
-        console.log('✅ Tooltip detalhado criado e posicionado');
-    }
-
-    function esconderTooltipDetalhado() {
-        const tooltip = document.getElementById('gantt-tooltip-detalhado');
-        if (tooltip) {
-            tooltip.remove();
-            console.log('💬 Tooltip detalhado removido');
-        }
-    }
-
-    function atualizarPosicaoTooltipDetalhado(event) {
-        const tooltip = document.getElementById('gantt-tooltip-detalhado');
-        if (tooltip) {
-            const tooltipRect = tooltip.getBoundingClientRect();
-            let left = event.clientX + 12;
-            let top = event.clientY + 12;
-            if (left + tooltipRect.width > window.innerWidth) {
-                left = window.innerWidth - tooltipRect.width - 8;
-            }
-            if (top + tooltipRect.height > window.innerHeight) {
-                top = window.innerHeight - tooltipRect.height - 8;
-            }
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = top + 'px';
-            console.log('💬 Tooltip posicionado em:', left, top);
-        }
-    }
-
-    // Função principal para montar o Gantt (sem virtualização)
-    function montarGanttAgrupado() {
-        console.log('🚀 Iniciando montagem do Gantt...');
-        const dados = window.ganttData || [];
-        console.log('📊 Dados do Gantt:', dados);
-        const body = document.getElementById('gantt-body');
-        console.log('📋 Elemento body:', body);
-        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
-        if (!dados.length) {
-            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
-            console.log('❌ Nenhum dado para exibir');
-            return;
-        }
-        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
-        console.log('🔍 Tarefas filtradas:', tarefas);
-        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
-        console.log('📝 Tarefas ordenadas:', tarefas);
-        const grupos = agruparTarefasPorNome(tarefas);
-        console.log('📦 Grupos criados:', grupos);
-        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
-            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
-            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
-            return ordemA - ordemB;
-        });
-        console.log('📋 Nomes ordenados:', nomesOrdenados);
-        const periodo = obterPeriodo(tarefas);
-        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
-            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
-            return;
-        }
-        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
-        // Linha de hoje, cabeçalhos, etc (igual ao projetos_gantt_basico.html)
-        const hojeContainer = document.getElementById('gantt-hoje-container');
-        if (hojeContainer) {
-            hojeContainer.innerHTML = '';
-            hojeContainer.style.position = 'absolute';
-            hojeContainer.style.top = '0';
-            hojeContainer.style.left = '0';
-            hojeContainer.style.bottom = '0';
-            hojeContainer.style.right = '0';
-            hojeContainer.style.zIndex = '10';
-            hojeContainer.style.pointerEvents = 'none';
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            if (hoje >= periodo.min && hoje <= periodo.max) {
-                const offset = diasEntre(periodo.min, hoje);
-                const left = 320 + (offset * larguraDia); // 320px da coluna tarefa (padronizado)
-                const linhaHoje = document.createElement('div');
-                linhaHoje.className = 'gantt-hoje-linha';
-                linhaHoje.style.left = left + 'px';
-                linhaHoje.style.height = '100%';
-                hojeContainer.appendChild(linhaHoje);
-                // Adicionar label com a data
-                const hojeLabel = document.createElement('div');
-                const dia = String(hoje.getDate()).padStart(2, '0');
-                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
-                hojeLabel.style.position = 'absolute';
-                hojeLabel.style.top = '0px';
-                hojeLabel.style.left = (left + 6) + 'px'; // 6px à direita da linha
-                hojeLabel.style.transform = 'none';
-                hojeLabel.style.fontSize = '12px';
-                hojeLabel.style.color = '#e74c3c';
-                hojeLabel.style.fontWeight = 'bold';
-                hojeLabel.style.padding = '2px 6px';
-                hojeLabel.style.borderRadius = '4px';
-                hojeLabel.style.zIndex = '20';
-                hojeContainer.appendChild(hojeLabel);
-            }
-        }
-        // Cabeçalho de datas de um nível (apenas dias)
-        const dateHeader = document.getElementById('gantt-date-header');
-        if (dateHeader) {
-            dateHeader.innerHTML = '';
-            // Espaço à esquerda para alinhar com a coluna Tarefa
-            const espacoTarefa = document.createElement('div');
-            espacoTarefa.style.width = '320px';
-            espacoTarefa.style.minWidth = '320px';
-            espacoTarefa.style.maxWidth = '320px';
-            espacoTarefa.style.display = 'inline-block';
-            espacoTarefa.style.height = '19px';
-            espacoTarefa.style.background = 'transparent';
-            dateHeader.appendChild(espacoTarefa);
-        }
-        // Renderizar todas as linhas de uma vez
-        body.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-        nomesOrdenados.forEach((nome, idx) => {
-            const barras = grupos[nome];
-            const tr = document.createElement('tr');
-            tr.className = 'gantt-row-compact';
-
-            // Verificar se alguma barra está atrasada para aplicar estilo vermelho na linha
-            const temTarefaAtrasada = barras.some(barra => tarefaAtrasada(barra));
-            console.log('Tarefa:', nome, 'Tem tarefa atrasada:', temTarefaAtrasada);
-            if (temTarefaAtrasada) {
-                tr.classList.add('tarefa-atrasada');
-                console.log('Aplicando classe tarefa-atrasada para:', nome);
-            }
-            // Nome da tarefa
-            const tdNome = document.createElement('td');
-            tdNome.textContent = nome;
-            tdNome.title = nome;
-
-            // Adicionar ícone de alerta para tarefas atrasadas
-            if (temTarefaAtrasada) {
-                tdNome.innerHTML = `<span class="icone-atrasada">⚠️</span>${nome}`;
-                tdNome.title = nome + ' (ATRASADA)';
-            }
-            tdNome.style.padding = "2px 8px";
-            tdNome.style.whiteSpace = "nowrap";
-            tdNome.style.overflow = "hidden";
-            tdNome.style.textOverflow = "ellipsis";
-            tdNome.style.height = "16px";
-            tdNome.style.fontSize = "13px";
-            tr.appendChild(tdNome);
-            // Cronograma
-            const tdCrono = document.createElement('td');
-            tdCrono.style.position = "relative";
-            tdCrono.style.height = "16px";
-            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
-            // Adicionar linha horizontal de grade
-            const linhaH = document.createElement('div');
-            linhaH.className = 'gantt-h-linha';
-            linhaH.style.position = 'absolute';
-            linhaH.style.left = '0';
-            linhaH.style.right = '0';
-            linhaH.style.bottom = '0';
-            linhaH.style.height = '1px';
-            linhaH.style.background = '#dee2e6';
-            linhaH.style.zIndex = '1';
-            tdCrono.appendChild(linhaH);
-            barras.forEach((barra, idx) => {
-                // Criar datas no fuso horário local para evitar problemas de UTC
-                const inicio = new Date(barra.start + 'T00:00:00');
-                const fim = new Date(barra.end + 'T00:00:00');
-                const offset = diasEntre(periodo.min, inicio);
-                const largura = diasEntre(inicio, fim) + 1;
-                const div = document.createElement('div');
-                div.className = 'gantt-bar-compact';
-                div.style.position = "absolute";
-                div.style.left = (offset * larguraDia) + "px";
-                div.style.top = "8px";
-                div.style.height = "16px";
-                div.style.width = (largura * larguraDia) + "px";
-                div.style.background = corStatus(barra);
-                div.style.borderRadius = "4px";
-                div.style.textAlign = "center";
-                div.style.color = "#fff";
-                div.style.fontSize = "11px";
-                div.style.lineHeight = "14px";
-                div.style.cursor = "pointer";
-                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
-                tdCrono.appendChild(div);
-                div.onmouseenter = function (e) {
-                    mostrarTooltipDetalhado(e, barra);
-                    this._mousemoveHandler = function (ev) {
-                        atualizarPosicaoTooltipDetalhado(ev);
-                    };
-                    this.addEventListener('mousemove', this._mousemoveHandler);
-                };
-                div.onmouseleave = function () {
-                    esconderTooltipDetalhado();
-                    if (this._mousemoveHandler) {
-                        this.removeEventListener('mousemove', this._mousemoveHandler);
-                        this._mousemoveHandler = null;
-                    }
-                };
-            });
-            tr.appendChild(tdCrono);
-            fragment.appendChild(tr);
-        });
-        body.appendChild(fragment);
-        console.log('✅ Gantt montado com sucesso!');
-    }
-
-    // Evento de scroll para atualizar as linhas visíveis
-    document.addEventListener('DOMContentLoaded', function () {
-        console.log('📱 DOM carregado, chamando montarGanttAgrupado...');
-        try {
-            montarGanttAgrupado();
-        } catch (error) {
-            console.error('❌ Erro ao montar Gantt:', error);
-        }
-        // Também chamar quando a página carregar completamente
-        window.addEventListener('load', function () {
-            console.log('🌐 Página carregada completamente, chamando montarGanttAgrupado novamente...');
-            try {
-                montarGanttAgrupado();
-            } catch (error) {
-                console.error('❌ Erro ao montar Gantt na segunda tentativa:', error);
-            }
-        });
-        // Também chamar após um pequeno delay para garantir que tudo esteja carregado
-        setTimeout(function () {
-            console.log('⏰ Timeout executado, chamando montarGanttAgrupado...');
-            try {
-                montarGanttAgrupado();
-            } catch (error) {
-                console.error('❌ Erro ao montar Gantt no timeout:', error);
-            }
-        }, 1000);
-        // Também chamar após um delay maior para garantir que tudo esteja carregado
-        setTimeout(function () {
-            console.log('⏰ Timeout longo executado, chamando montarGanttAgrupado...');
-            try {
-                montarGanttAgrupado();
-            } catch (error) {
-                console.error('❌ Erro ao montar Gantt no timeout longo:', error);
-            }
-        }, 3000);
-        // Também chamar após um delay muito longo para garantir que tudo esteja carregado
-        setTimeout(function () {
-            console.log('⏰ Timeout muito longo executado, chamando montarGanttAgrupado...');
-            try {
-                montarGanttAgrupado();
-            } catch (error) {
-                console.error('❌ Erro ao montar Gantt no timeout muito longo:', error);
-            }
-        }, 5000);
-        // Também chamar após um delay extremamente longo para garantir que tudo esteja carregado
-        setTimeout(function () {
-            console.log('⏰ Timeout extremamente longo executado, chamando montarGanttAgrupado...');
-            try {
-                montarGanttAgrupado();
-            } catch (error) {
-                console.error('❌ Erro ao montar Gantt no timeout extremamente longo:', error);
-            }
-        }, 10000);
-        // Também chamar após um delay infinito para garantir que tudo esteja carregado
-        setTimeout(function () {
-            console.log('⏰ Timeout infinito executado, chamando montarGanttAgrupado...');
-            try {
-                montarGanttAgrupado();
-            } catch (error) {
-                console.error('❌ Erro ao montar Gantt no timeout infinito:', error);
-            }
-        }, 30000);
-        // Também chamar após um delay eterno para garantir que tudo esteja carregado
-        setTimeout(function () {
-            console.log('⏰ Timeout eterno executado, chamando montarGanttAgrupado...');
-            try {
-                montarGanttAgrupado();
-            } catch (error) {
-                console.error('❌ Erro ao montar Gantt no timeout eterno:', error);
-            }
-        }, 60000);
-        function atualizarZoomLabel() {
-            const zoomLabel = document.getElementById('zoom-label');
-            if (zoomLabel) {
-                const percent = Math.round((larguraDia / larguraBase) * 100);
-                zoomLabel.textContent = percent + '%';
-            }
-        }
-        atualizarZoomLabel();
-        document.getElementById('zoom-in').onclick = function () {
-            if (larguraDia < larguraMax) {
-                larguraDia += larguraBase * 0.1;
-                if (larguraDia > larguraMax) larguraDia = larguraMax;
-                try {
-                    montarGanttAgrupado();
-                } catch (error) {
-                    console.error('❌ Erro ao montar Gantt no zoom in:', error);
-                }
-                atualizarZoomLabel();
-            }
-        };
-        document.getElementById('zoom-out').onclick = function () {
-            if (larguraDia > larguraMin) {
-                larguraDia -= larguraBase * 0.1;
-                if (larguraDia < larguraMin) larguraDia = larguraMin;
-                try {
-                    montarGanttAgrupado();
-                } catch (error) {
-                    console.error('❌ Erro ao montar Gantt no zoom out:', error);
-                }
-                atualizarZoomLabel();
-            }
-        };
-
-        // Evidenciar barras ao clicar na legenda (agora com seleção múltipla via Ctrl)
-        let projetosSelecionados = [];
-        document.querySelectorAll('.legend-item').forEach(item => {
-            item.addEventListener('click', function (e) {
-                console.log('🎯 Clicou na legenda:', this.getAttribute('data-projeto'));
-                const projeto = this.getAttribute('data-projeto');
-                if (e.ctrlKey || e.metaKey) {
-                    // Seleção múltipla
-                    const index = projetosSelecionados.indexOf(projeto);
-                    if (index > -1) {
-                        projetosSelecionados.splice(index, 1);
-                    } else {
-                        projetosSelecionados.push(projeto);
-                    }
-                } else {
-                    // Seleção única
-                    projetosSelecionados = [projeto];
-                }
-                console.log('📋 Projetos selecionados:', projetosSelecionados);
-                if (projetosSelecionados.length === 0) {
-                    // Mostrar todas as barras
-                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
-                        bar.classList.remove('evidencia', 'apagada');
-                    });
-                    document.querySelectorAll('.legend-item').forEach(l => {
-                        l.classList.remove('selecionada');
-                    });
-                } else {
-                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
-                        if (projetosSelecionados.includes(bar.getAttribute('data-projeto'))) {
-                            bar.classList.add('evidencia');
-                            bar.classList.remove('apagada');
-                        } else {
-                            bar.classList.remove('evidencia');
-                            bar.classList.add('apagada');
-                        }
-                    });
-                    document.querySelectorAll('.legend-item').forEach(l => {
-                        const p = l.getAttribute('data-projeto');
-                        if (projetosSelecionados.includes(p)) {
-                            l.classList.add('selecionada');
-                        } else {
-                            l.classList.remove('selecionada');
-                        }
-                    });
-                }
-            });
-        });
-    });
-
-    // Sincronizar scroll horizontal do cabeçalho e do corpo do Gantt
-    const ganttCustom = document.getElementById('gantt-custom');
-    const dateHeader = document.getElementById('gantt-date-header');
-    const cronogramaArea = document.getElementById('gantt-cronograma-area');
-    console.log('🔧 Elementos do Gantt encontrados:', { ganttCustom, dateHeader, cronogramaArea });
-    if (ganttCustom && dateHeader && cronogramaArea) {
-        ganttCustom.addEventListener('scroll', function () {
-            dateHeader.scrollLeft = ganttCustom.scrollLeft;
-            cronogramaArea.scrollLeft = ganttCustom.scrollLeft;
-        });
-        console.log('✅ Scroll sincronizado configurado');
-    } else {
-        console.log('❌ Elementos do Gantt não encontrados');
-    }
-
-    // Função para configurar a linha do cursor
-    function configurarLinhaCursor() {
-        const cronogramaArea = document.getElementById('gantt-cronograma-area');
-        const cursorLine = document.getElementById('gantt-cursor-line');
-
-        if (cronogramaArea && cursorLine) {
-            console.log('✅ Elementos da linha do cursor encontrados, adicionando event listeners...');
-
-            // Mostrar e mover linha do cursor
-            cronogramaArea.addEventListener('mousemove', function (e) {
-                const rect = cronogramaArea.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                cursorLine.style.left = x + 'px';
-                cursorLine.style.display = 'block';
-            });
-
-            cronogramaArea.addEventListener('mouseleave', function () {
-                cursorLine.style.display = 'none';
-            });
-
-            console.log('✅ Event listeners da linha do cursor adicionados com sucesso!');
-        } else {
-            console.log('❌ Elementos da linha do cursor não encontrados, tentando novamente em 100ms...');
-            setTimeout(configurarLinhaCursor, 100);
-        }
-    }
-
-    // Chamar a função quando o DOM estiver pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', configurarLinhaCursor);
-    } else {
-        configurarLinhaCursor();
-    }
-
-    // Pan/drag horizontal no Gantt
-    (function () {
-        const ganttCustom = document.getElementById('gantt-custom');
-        console.log('🔧 Configurando pan/drag para:', ganttCustom);
-        let isDown = false;
-        let startX, scrollLeft;
-        if (ganttCustom) {
-            console.log('✅ Configurando eventos de pan/drag para o Gantt');
-            ganttCustom.addEventListener('mousedown', function (e) {
-                if (e.button !== 0) return; // só botão esquerdo
-                isDown = true;
-                ganttCustom.classList.add('dragging');
-                startX = e.pageX - ganttCustom.offsetLeft;
-                scrollLeft = ganttCustom.scrollLeft;
-                document.body.style.cursor = 'grabbing';
-                e.preventDefault();
-            });
-            document.addEventListener('mousemove', function (e) {
-                if (!isDown) return;
-                const x = e.pageX - ganttCustom.offsetLeft;
-                const walk = (x - startX) * -1; // sentido inverso
-                ganttCustom.scrollLeft = scrollLeft + walk;
-            });
-            document.addEventListener('mouseup', function () {
-                isDown = false;
-                ganttCustom.classList.remove('dragging');
-                document.body.style.cursor = '';
-            });
-            // Evita seleção de texto durante o drag
-            ganttCustom.addEventListener('mouseleave', function () {
-                isDown = false;
-                ganttCustom.classList.remove('dragging');
-                document.body.style.cursor = '';
-            });
-            console.log('✅ Eventos de pan/drag configurados com sucesso');
-        } else {
-            console.log('❌ Elemento gantt-custom não encontrado para pan/drag');
-        }
-    })();
 
     function isFeriado(val) {
         // val: yyyy-mm-dd
-        const [yyyy, mm, dd] = val.split('-');
-        const feriadosManuais = getTodosFeriadosManuais();
-        const dataBR = `${dd}/${mm}/${yyyy}`;
-        const feriadoManual = feriadosManuais.find(f => f.data === dataBR);
-        if (feriadoManual) {
-            return feriadoManual.nome || 'Feriado';
+        // Checar feriados manuais do banco
+        if (window.feriadosManuaisBackend && window.feriadosManuaisBackend[val]) {
+            return window.feriadosManuaisBackend[val];
         }
-        if (window.feriadosNacionaisDetalhes) {
-            const feriado = window.feriadosNacionaisDetalhes.find(f => f.date === val);
-            if (feriado) return feriado.name || 'Feriado Nacional';
+        // Checar feriados nacionais da API (backend) e buscar nome real
+        if (Array.isArray(window.feriadosApiBackend) && window.feriadosApiBackend.includes(val)) {
+            if (Array.isArray(window.feriadosNacionaisDetalhes)) {
+                const feriado = window.feriadosNacionaisDetalhes.find(f => f.date === val);
+                if (feriado && feriado.name) return feriado.name;
+            }
+            return 'Feriado Nacional';
         }
-        if (window.feriadosNacionais && window.feriadosNacionais.includes(val)) {
+        // Checar feriados nacionais carregados dinamicamente e buscar nome real
+        if (Array.isArray(window.feriadosNacionais) && window.feriadosNacionais.includes(val)) {
+            if (Array.isArray(window.feriadosNacionaisDetalhes)) {
+                const feriado = window.feriadosNacionaisDetalhes.find(f => f.date === val);
+                if (feriado && feriado.name) return feriado.name;
+            }
             return 'Feriado Nacional';
         }
         return null;
@@ -2009,7 +2168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let container = input.parentNode;
             if (!container.classList.contains('data-tooltip-container')) {
                 // Cria um container e move o input para dentro dele
-                const wrapper = document.createElement('span');
+                const wrapper = document.createElement('div');
                 wrapper.className = 'data-tooltip-container';
                 container.insertBefore(wrapper, input);
                 wrapper.appendChild(input);
@@ -2041,7 +2200,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 motivoDiv = document.createElement('div');
                 motivoDiv.className = 'motivo-data-vermelha';
                 motivoDiv.textContent = motivo;
-                container.appendChild(motivoDiv);
+                // Forçar cor baseada no tema atual
+                const isDark = document.body.classList.contains('dark');
+                motivoDiv.style.setProperty('color', '#dc2626', 'important');
+                motivoDiv.style.setProperty('background-color', isDark ? '#fef2f2' : '#fee2e2', 'important');
+                // Inserir acima do input
+                container.insertBefore(motivoDiv, input);
             } else {
                 input.classList.remove('data-vermelha');
                 input.removeAttribute('title');
@@ -2477,7 +2641,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.classList.add('btn-success');
                     btn.innerHTML = '<i class="fas fa-check"></i>';
                     setTimeout(() => {
-                        btn.innerHTML = '<i class="fas fa-save"></i>';
+                        btn.innerHTML = '<svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="saveIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;"><title id="saveIconTitle">Save</title><path d="M17.2928932,3.29289322 L21,7 L21,20 C21,20.5522847 20.5522847,21 20,21 L4,21 C3.44771525,21 3,20.5522847 3,20 L3,4 C3,3.44771525 3.44771525,3 4,3 L16.5857864,3 C16.8510029,3 17.1053568,3.10535684 17.2928932,3.29289322 Z"></path><rect width="10" height="8" x="7" y="13"></rect><rect width="8" height="5" x="8" y="3"></rect></svg>';
                         btn.disabled = false;
                     }, 1000);
                 } else {
@@ -2486,7 +2650,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
                     alert(data.erro || 'Erro ao salvar tarefa.');
                     setTimeout(() => {
-                        btn.innerHTML = '<i class="fas fa-save"></i>';
+                        btn.innerHTML = '<svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="saveIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;"><title id="saveIconTitle">Save</title><path d="M17.2928932,3.29289322 L21,7 L21,20 C21,20.5522847 20.5522847,21 20,21 L4,21 C3.44771525,21 3,20.5522847 3,20 L3,4 C3,3.44771525 3.44771525,3 4,3 L16.5857864,3 C16.8510029,3 17.1053568,3.10535684 17.2928932,3.29289322 Z"></path><rect width="10" height="8" x="7" y="13"></rect><rect width="8" height="5" x="8" y="3"></rect></svg>';
                         btn.disabled = false;
                     }, 2000);
                 }
@@ -2498,7 +2662,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
                 alert('Erro ao salvar tarefa: ' + error.message);
                 setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-save"></i>';
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="saveIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;"><title id="saveIconTitle">Save</title><path d="M17.2928932,3.29289322 L21,7 L21,20 C21,20.5522847 20.5522847,21 20,21 L4,21 C3.44771525,21 3,20.5522847 3,20 L3,4 C3,3.44771525 3.44771525,3 4,3 L16.5857864,3 C16.8510029,3 17.1053568,3.10535684 17.2928932,3.29289322 Z"></path><rect width="10" height="8" x="7" y="13"></rect><rect width="8" height="5" x="8" y="3"></rect></svg>';
                     btn.disabled = false;
                 }, 2000);
             });
@@ -2522,9 +2686,104 @@ document.addEventListener('DOMContentLoaded', function() {
         var modal = new bootstrap.Modal(document.getElementById('modalPredecessora'));
         modal.show();
 
-        // Inicializar Select2 após o modal estar visível
+        // Configurar botão salvar SEMPRE (independente do Select2)
+        const btnSalvar = document.getElementById('btnSalvarPredecessoras');
+        if (btnSalvar) {
+            // Remover eventos anteriores
+            btnSalvar.removeEventListener('click', window._salvarPredecessorasHandler);
+            
+            // Adicionar novo evento
+            window._salvarPredecessorasHandler = function (e) {
+                console.log('=== EVENTO CLICK DISPARADO ===');
+                e.preventDefault();
+                e.stopPropagation();
+
+                const selectTarefa = document.getElementById('selectTarefa');
+                const selectTipo = document.getElementById('selectTipo');
+                const inputDeslocamento = document.getElementById('inputDeslocamento');
+
+                const tarefaId = selectTarefa.value;
+                const tipo = selectTipo.value;
+                const deslocamento = inputDeslocamento.value;
+
+                console.log('Valores:', { tarefaId, tipo, deslocamento });
+
+                if (!tarefaId || !tipo) {
+                    alert('Por favor, selecione uma tarefa e um tipo de relação.');
+                    return;
+                }
+
+                const tarefaOption = selectTarefa.options[selectTarefa.selectedIndex];
+                const ordem = tarefaOption.getAttribute('data-ordem');
+
+                console.log('Ordem da tarefa:', ordem);
+
+                // Gerar código no formato: ordem + tipo + deslocamento
+                let codigo = `${ordem}${tipo}`;
+                if (deslocamento && deslocamento !== '0') {
+                    const sinal = parseInt(deslocamento) > 0 ? '+' : '';
+                    codigo += `${sinal}${deslocamento}d`;
+                }
+
+                console.log('Código final:', codigo);
+
+                // Adicionar ao campo de predecessoras
+                if (window._inputPredecessorasAtivo) {
+                    const valorAtual = window._inputPredecessorasAtivo.value.trim();
+                    let novasPredecessoras = valorAtual ? valorAtual.split(';') : [];
+
+                    console.log('Predecessoras atuais:', novasPredecessoras);
+
+                    // Verificar se já existe uma predecessora para esta tarefa
+                    const indexExistente = novasPredecessoras.findIndex(pred => {
+                        const match = pred.match(/^(\d+)/);
+                        return match && match[1] === ordem;
+                    });
+
+                    if (indexExistente > -1) {
+                        // Substituir predecessora existente
+                        novasPredecessoras[indexExistente] = codigo;
+                        console.log('Predecessora substituída');
+                    } else {
+                        // Adicionar nova predecessora
+                        novasPredecessoras.push(codigo);
+                        console.log('Nova predecessora adicionada');
+                    }
+
+                    // Atualizar campo
+                    window._inputPredecessorasAtivo.value = novasPredecessoras.join(';');
+                    console.log('Campo atualizado:', window._inputPredecessorasAtivo.value);
+
+                    // Disparar evento de mudança
+                    window._inputPredecessorasAtivo.dispatchEvent(new Event('input', { bubbles: true }));
+
+                    // Fechar modal
+                    modal.hide();
+
+                    // Limpar campos
+                    selectTarefa.value = '';
+                    selectTipo.value = '';
+                    inputDeslocamento.value = '0';
+
+                    console.log('Predecessora salva com sucesso!');
+                } else {
+                    console.error('Input de predecessoras não está ativo');
+                }
+            };
+            
+            btnSalvar.addEventListener('click', window._salvarPredecessorasHandler);
+            console.log('✅ Evento do botão salvar configurado');
+        }
+
+        // Inicializar Select2 após o modal estar visível (opcional, para melhor UX)
         setTimeout(function () {
             try {
+                // Verificar se jQuery e Select2 estão disponíveis
+                if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+                    console.warn('⚠️ jQuery ou Select2 não disponíveis, usando selects nativos');
+                    return;
+                }
+
                 // Destruir instâncias existentes
                 if ($('#selectTarefa').data('select2')) {
                     $('#selectTarefa').select2('destroy');
@@ -2550,111 +2809,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 console.log('Select2 inicializado no modal');
 
-                // Adicionar eventos para preview
-                $('#selectTarefa, #selectTipo').on('change', function () {
-                    atualizarPreviewCodigo();
-                });
-                $('#inputDeslocamento').on('input', function () {
-                    atualizarPreviewCodigo();
-                });
-
-                // Inicializar evento do botão salvar AQUI
-                console.log('Inicializando evento do botão salvar...');
-                const btnSalvar = document.getElementById('btnSalvarPredecessoras');
-                console.log('Botão salvar encontrado:', btnSalvar);
-
-                if (btnSalvar) {
-                    // Remover eventos anteriores
-                    $('#btnSalvarPredecessoras').off('click');
-                    btnSalvar.removeEventListener('click', window._salvarPredecessorasHandler);
-
-                    // Adicionar novo evento
-                    window._salvarPredecessorasHandler = function (e) {
-                        console.log('=== EVENTO CLICK DISPARADO ===');
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        console.log('Botão salvar clicado');
-
-                        const tarefaId = $('#selectTarefa').val();
-                        const tipo = $('#selectTipo').val();
-                        const deslocamento = $('#inputDeslocamento').val();
-
-                        console.log('Valores:', { tarefaId, tipo, deslocamento });
-
-                        if (!tarefaId || !tipo) {
-                            alert('Por favor, selecione uma tarefa e um tipo de relação.');
-                            return;
-                        }
-
-                        const tarefaOption = $('#selectTarefa option:selected');
-                        const ordem = tarefaOption.data('ordem');
-
-                        console.log('Ordem da tarefa:', ordem);
-
-                        // Gerar código no formato: ordem + tipo + deslocamento
-                        let codigo = `${ordem}${tipo}`;
-                        if (deslocamento && deslocamento !== '0') {
-                            const sinal = parseInt(deslocamento) > 0 ? '+' : '';
-                            codigo += `${sinal}${deslocamento}d`;
-                        }
-
-                        console.log('Código final:', codigo);
-
-                        // Adicionar ao campo de predecessoras
-                        if (window._inputPredecessorasAtivo) {
-                            const valorAtual = window._inputPredecessorasAtivo.value.trim();
-                            let novasPredecessoras = valorAtual ? valorAtual.split(';') : [];
-
-                            console.log('Predecessoras atuais:', novasPredecessoras);
-
-                            // Verificar se já existe uma predecessora para esta tarefa
-                            const indexExistente = novasPredecessoras.findIndex(pred => {
-                                const match = pred.match(/^(\d+)/);
-                                return match && match[1] === ordem;
-                            });
-
-                            if (indexExistente >= 0) {
-                                // Substituir predecessora existente
-                                novasPredecessoras[indexExistente] = codigo;
-                                console.log('Substituindo predecessora existente');
-                            } else {
-                                // Adicionar nova predecessora
-                                novasPredecessoras.push(codigo);
-                                console.log('Adicionando nova predecessora');
-                            }
-
-                            const novoValor = novasPredecessoras.join(';');
-                            console.log('Novo valor:', novoValor);
-
-                            window._inputPredecessorasAtivo.value = novoValor;
-                            window._inputPredecessorasAtivo.dispatchEvent(new Event('change'));
-
-                            console.log('Campo atualizado com sucesso');
-                        } else {
-                            console.error('Input ativo não encontrado');
-                        }
-
-                        // Fechar modal
-                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalPredecessora'));
-                        modal.hide();
-
-                        // Mostrar feedback
-                        const btn = document.getElementById('btnSalvarPredecessoras');
-                        const textoOriginal = btn.innerHTML;
-                        btn.innerHTML = '<i class="fas fa-check"></i> Salvo!';
-                        btn.classList.add('btn-success');
-                        setTimeout(() => {
-                            btn.innerHTML = textoOriginal;
-                            btn.classList.remove('btn-success');
-                        }, 1500);
-                    };
-
-                    btnSalvar.addEventListener('click', window._salvarPredecessorasHandler);
-                    console.log('Evento do botão salvar adicionado com sucesso');
-                } else {
-                    console.error('Botão salvar não encontrado!');
-                }
+                // Adicionar eventos para preview (usando JavaScript puro como fallback)
+                document.getElementById('selectTarefa').addEventListener('change', atualizarPreviewCodigo);
+                document.getElementById('selectTipo').addEventListener('change', atualizarPreviewCodigo);
+                document.getElementById('inputDeslocamento').addEventListener('input', atualizarPreviewCodigo);
 
             } catch (error) {
                 console.error('Erro ao inicializar Select2 no modal:', error);
@@ -2664,15 +2822,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Função para atualizar preview do código
     function atualizarPreviewCodigo() {
-        const tarefaId = $('#selectTarefa').val();
-        const tipo = $('#selectTipo').val();
-        const deslocamento = $('#inputDeslocamento').val();
+        const selectTarefa = document.getElementById('selectTarefa');
+        const selectTipo = document.getElementById('selectTipo');
+        const deslocamento = document.getElementById('inputDeslocamento').value;
+
+        const tarefaId = selectTarefa.value;
+        const tipo = selectTipo.value;
 
         console.log('Atualizando preview:', { tarefaId, tipo, deslocamento });
 
         if (tarefaId && tipo) {
-            const tarefaOption = $('#selectTarefa option:selected');
-            const ordem = tarefaOption.data('ordem');
+            const tarefaOption = selectTarefa.options[selectTarefa.selectedIndex];
+            const ordem = tarefaOption.getAttribute('data-ordem');
 
             let codigo = `${ordem}${tipo}`;
             if (deslocamento && deslocamento !== '0') {
@@ -3099,7 +3260,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function salvarTodasTarefas() {
         // Seleciona todos os botões de salvar das linhas de tarefa (exceto a linha de nova tarefa)
-        document.querySelectorAll('#tabela-tarefas-inline tbody tr:not(#linha-nova-tarefa) .btn-success').forEach(btn => {
+        // Os botões têm onclick="salvarLinhaTarefa(this)" mas não têm classe específica
+        document.querySelectorAll('#tabela-tarefas-inline tbody tr:not(#linha-nova-tarefa) button[onclick*="salvarLinhaTarefa"]').forEach(btn => {
             salvarLinhaTarefa(btn);
         });
     }
@@ -3526,13 +3688,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Salvar valor original ao focar
             td.addEventListener('focus', function () {
                 this.setAttribute('data-original-value', this.textContent.trim());
-                this.style.backgroundColor = '#fff3cd';
                 this.style.border = '1px solid #ffc107';
             });
 
             // Restaurar estilo ao perder foco
             td.addEventListener('blur', function () {
-                this.style.backgroundColor = '';
                 this.style.border = '';
             });
 
@@ -4164,55 +4324,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-<!-- JavaScript para funcionalidade da legenda igual à tela de projetos -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Funcionalidade da legenda - igual à tela de projetos
-        const legendItems = document.querySelectorAll('.legend-item');
 
-        legendItems.forEach(item => {
-            item.addEventListener('click', function () {
-                const projeto = this.getAttribute('data-projeto');
-
-                // Toggle seleção
-                if (this.classList.contains('selecionada')) {
-                    this.classList.remove('selecionada');
-                    // Mostrar todas as tarefas
-                    mostrarTarefasPorProjeto(null);
-                } else {
-                    // Remover seleção de outros itens
-                    legendItems.forEach(li => li.classList.remove('selecionada'));
-                    // Selecionar este item
-                    this.classList.add('selecionada');
-                    // Mostrar apenas tarefas deste projeto
-                    mostrarTarefasPorProjeto(projeto);
-                }
-            });
-        });
-
-        function mostrarTarefasPorProjeto(projetoSelecionado) {
-            const tarefas = document.querySelectorAll('#gantt-body tr');
-
-            tarefas.forEach(tarefa => {
-                if (!projetoSelecionado) {
-                    // Mostrar todas as tarefas
-                    tarefa.style.display = '';
-                    tarefa.style.opacity = '1';
-                } else {
-                    // Verificar se a tarefa pertence ao projeto selecionado
-                    const projetoTarefa = tarefa.getAttribute('data-projeto');
-                    if (projetoTarefa === projetoSelecionado) {
-                        tarefa.style.display = '';
-                        tarefa.style.opacity = '1';
-                    } else {
-                        tarefa.style.display = 'none';
-                        tarefa.style.opacity = '0.3';
-                    }
-                }
-            });
-        }
-    });
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
@@ -4304,60 +4416,284 @@ document.addEventListener('DOMContentLoaded', function() {
     // Iniciar verificação
     aguardarJQuery();
 
-    // JavaScript para exportar Gantt do projeto para Excel
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnExportarExcel = document.getElementById('btn-exportar-excel-projeto');
-        if (btnExportarExcel) {
-            btnExportarExcel.addEventListener('click', function() {
-                console.log('🔄 Iniciando exportação de Excel do projeto...');
-                
-                // Mostrar loading no botão
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
-                this.disabled = true;
-                
-                // Fazer requisição para exportar apenas este projeto
-                const projetoId = '{{ projeto.id }}';
-                console.log('📊 Exportando projeto ID:', projetoId);
-                
-                fetch('/relatorio/gantt_excel?projeto_id=' + projetoId, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro na resposta: ' + response.status);
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    // Criar link de download
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = 'gantt_projeto_{{ projeto.nome|replace(" ", "_") }}.xlsx';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
+    // Script de exportação para Excel removido para reescrita
+</script>
+
+<!-- JavaScript para corrigir estilos inline no modo escuro -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[DEBUG] Script de correção de modo escuro carregado no final da página');
+
+    // Função para atualizar estilos inline quando o modo escuro muda
+    function updateInlineStylesForDarkMode() {
+        console.log('[DEBUG] Executando updateInlineStylesForDarkMode');
+        const isDark = document.body.classList.contains('dark');
+        console.log('[DEBUG] Modo escuro ativo:', isDark);
+
+        // Atualizar tarefas atrasadas
+        const tarefasAtrasadas = document.querySelectorAll('.tarefa-atrasada');
+        console.log('[DEBUG] Tarefas atrasadas encontradas:', tarefasAtrasadas.length);
+        tarefasAtrasadas.forEach(el => {
+            if (isDark) {
+                // Aplicar estilos dark diretamente nas propriedades
+                el.style.setProperty('background-color', '#2d1b1b', 'important');
+                el.style.setProperty('border-left', '5px solid #b91c1c', 'important');
+                el.style.setProperty('color', 'var(--text-color)', 'important');
+            } else {
+                // Aplicar estilos light diretamente nas propriedades
+                el.style.setProperty('background-color', '#ffe6e6', 'important');
+                el.style.setProperty('border-left', '5px solid #dc2626', 'important');
+                el.style.setProperty('color', 'var(--text-color)', 'important');
+            }
+        });
+
+        // Atualizar células de tarefas atrasadas
+        const celulasAtrasadas = document.querySelectorAll('.tarefa-atrasada td');
+        celulasAtrasadas.forEach(td => {
+            td.style.setProperty('background-color', isDark ? '#2d1b1b' : '#ffe6e6', 'important');
+            td.style.setProperty('color', isDark ? 'white' : 'var(--text-color)', 'important');
+        });
+
+        // Atualizar hover de tarefas atrasadas
+        const tarefasHover = document.querySelectorAll('.tarefa-atrasada:hover');
+        tarefasHover.forEach(el => {
+            el.style.setProperty('background-color', isDark ? '#451a1a' : '#ffcccc', 'important');
+        });
+
+        // Atualizar ícones de atraso
+        const iconesAtraso = document.querySelectorAll('.icone-atrasada');
+        iconesAtraso.forEach(icon => {
+            icon.style.setProperty('color', isDark ? '#ef4444' : '#dc2626', 'important');
+        });
+
+        // Atualizar campos de data calculada
+        const camposCalculados = document.querySelectorAll('.data-calculada, input[data-calculada="1"]');
+        camposCalculados.forEach(campo => {
+            campo.style.setProperty('background-color', isDark ? '#2d2a1a' : '#fffbe6', 'important');
+            campo.style.setProperty('border-color', isDark ? '#d97706' : '#ffc107', 'important');
+        });
+
+        // Atualizar drag handles
+        const dragHandles = document.querySelectorAll('#tabela-tarefas-inline td.drag-handle');
+        dragHandles.forEach(handle => {
+            handle.style.setProperty('color', isDark ? '#aaa' : '#888', 'important');
+        });
+
+        // Atualizar ícones info
+        const infoIcons = document.querySelectorAll('i.fas.fa-info-circle[style*="color"]');
+        infoIcons.forEach(icon => {
+            icon.style.setProperty('color', isDark ? '#aaa' : '#888', 'important');
+        });
+
+        // Atualizar textos de aviso de data (fim de semana/feriado)
+        const motivosData = document.querySelectorAll('.motivo-data-vermelha');
+        motivosData.forEach(motivo => {
+            motivo.style.setProperty('color', '#dc2626', 'important');
+            motivo.style.setProperty('background-color', isDark ? '#fef2f2' : '#fee2e2', 'important');
+            motivo.style.setProperty('padding', '2px 4px', 'important');
+            motivo.style.setProperty('border-radius', '3px', 'important');
+            motivo.style.setProperty('font-weight', 'bold', 'important');
+        });
+
+        // Ocultar scrollbar da tabela
+        const tabelaWrap = document.querySelector('.tabela-tarefas-wrap');
+        if (tabelaWrap) {
+            tabelaWrap.style.setProperty('overflow-y', 'scroll', 'important');
+            tabelaWrap.style.setProperty('scrollbar-width', 'none', 'important');
+            tabelaWrap.style.setProperty('-ms-overflow-style', 'none', 'important');
+        }
+    }
+
+    // Executar na carga da página
+    updateInlineStylesForDarkMode();
+
+    // Observar mudanças na classe 'dark' do body
+    const observer = new MutationObserver(function(mutations) {
+        console.log('[DEBUG] MutationObserver detectou mudança');
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                console.log('[DEBUG] Classe do body mudou');
+                updateInlineStylesForDarkMode();
+            }
+        });
+    });
+
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+    console.log('[DEBUG] MutationObserver configurado');
+
+    // Também escutar o evento de clique no botão de tema
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        console.log('[DEBUG] Botão themeToggle encontrado');
+        themeToggle.addEventListener('click', function() {
+            console.log('[DEBUG] Botão themeToggle clicado');
+            // Pequeno delay para garantir que a classe foi aplicada
+            setTimeout(updateInlineStylesForDarkMode, 10);
+        });
+    } else {
+        console.log('[DEBUG] Botão themeToggle NÃO encontrado');
+    }
+
+    // ========== CUSTOM SELECT FUNCTIONALITY ==========
+    // Inicializar custom selects
+    function initCustomSelects() {
+        const wrappers = document.querySelectorAll('.custom-select-wrapper');
+        
+        wrappers.forEach(wrapper => {
+            const display = wrapper.querySelector('.custom-select-display');
+            const dropdown = wrapper.querySelector('.custom-select-dropdown');
+            const nativeSelect = wrapper.querySelector('select');
+            const searchInput = wrapper.querySelector('.custom-select-search .search-input');
+            const checkboxes = wrapper.querySelectorAll('.custom-option input[type="checkbox"]');
+            const clearBtn = wrapper.querySelector('.clear-btn');
+            
+            if (!display || !dropdown) return;
+            
+            // Toggle dropdown on display click
+            display.addEventListener('click', (e) => {
+                e.stopPropagation();
+                wrapper.classList.toggle('open');
+                if (searchInput && wrapper.classList.contains('open')) {
+                    setTimeout(() => searchInput.focus(), 100);
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('open');
+                }
+            });
+            
+            // Clear button functionality
+            if (clearBtn) {
+                clearBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     
-                    console.log('✅ Excel exportado com sucesso!');
-                })
-                .catch(error => {
-                    console.error('❌ Erro ao exportar Excel:', error);
-                    alert('Erro ao exportar Excel: ' + error.message);
-                })
-                .finally(() => {
-                    // Restaurar botão
-                    this.innerHTML = originalText;
-                    this.disabled = false;
+                    // Uncheck all checkboxes
+                    checkboxes.forEach(cb => cb.checked = false);
+                    
+                    // Clear native select
+                    Array.from(nativeSelect.options).forEach(option => option.selected = false);
+                    
+                    // Update display
+                    updateCustomSelectDisplay(wrapper, []);
+                    
+                    // Clear search
+                    if (searchInput) searchInput.value = '';
+                    
+                    // Show all options
+                    wrapper.querySelectorAll('.custom-option').forEach(opt => {
+                        opt.classList.remove('hidden');
+                    });
+                    
+                    // Trigger change event
+                    nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    console.log('✅ Filtro de responsável limpo');
+                });
+            }
+            
+            // Search functionality
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const options = wrapper.querySelectorAll('.custom-option');
+                    
+                    options.forEach(option => {
+                        const text = option.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            option.classList.remove('hidden');
+                        } else {
+                            option.classList.add('hidden');
+                        }
+                    });
+                });
+            }
+            
+            // Checkbox selection
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    // Sync with native select
+                    const selectedValues = Array.from(checkboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+                    
+                    // Update native select
+                    Array.from(nativeSelect.options).forEach(option => {
+                        option.selected = selectedValues.includes(option.value);
+                    });
+                    
+                    // Update display text
+                    updateCustomSelectDisplay(wrapper, selectedValues);
+                    
+                    // Trigger change event on native select
+                    nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 });
             });
+            
+            // Initialize display text
+            const initialValues = Array.from(nativeSelect.selectedOptions).map(opt => opt.value);
+            updateCustomSelectDisplay(wrapper, initialValues);
+        });
+    }
+    
+    // Update custom select display text
+    function updateCustomSelectDisplay(wrapper, selectedValues) {
+        const display = wrapper.querySelector('.custom-select-display');
+        const valueDiv = display.querySelector('.custom-select-value');
+        
+        if (selectedValues.length === 0) {
+            valueDiv.innerHTML = '<span class="placeholder">Selecione o Responsável</span>';
+        } else {
+            const selectedTexts = Array.from(wrapper.querySelectorAll('.custom-option input[type="checkbox"]:checked'))
+                .map(cb => cb.parentElement.querySelector('span').textContent);
+            
+            if (selectedTexts.length === 1) {
+                valueDiv.innerHTML = `<span class="text">${selectedTexts[0]}</span>`;
+            } else {
+                valueDiv.innerHTML = `<span class="text">${selectedTexts.length} selecionados</span>`;
+            }
         }
-    });
+    }
+    
+    // Initialize on page load and when content changes
+    initCustomSelects();
+    
+    // ========== END CUSTOM SELECT FUNCTIONALITY ==========
+    
+    // Filtro de Responsável nas Tarefas (seleção múltipla)
+    const filtroResponsavel = document.getElementById('filtro-responsavel');
+    if (filtroResponsavel) {
+        filtroResponsavel.addEventListener('change', function() {
+            const opcoesSelecionadas = Array.from(this.selectedOptions).map(opt => opt.value);
+            const tbody = document.querySelector('#tabela-tarefas-inline tbody');
+            if (!tbody) return;
+
+            const linhas = tbody.querySelectorAll('tr:not(#linha-nova-tarefa)');
+            
+            linhas.forEach(function(linha) {
+                const selectResponsavel = linha.querySelector('select[name="usuario_id"]');
+                if (!selectResponsavel) return;
+
+                const linhaResponsavelId = selectResponsavel.value;
+
+                // Se nenhum responsável selecionado, mostra todas as linhas
+                if (opcoesSelecionadas.length === 0 || opcoesSelecionadas.includes(linhaResponsavelId)) {
+                    linha.style.display = '';
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+
+            console.log('✅ Filtro de responsável aplicado:', opcoesSelecionadas.length > 0 ? opcoesSelecionadas : 'Todos');
+        });
+    }
+});
 </script>
 
 {% endblock %}

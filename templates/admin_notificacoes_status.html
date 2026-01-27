@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status das Notificações - Sistema de Gestão</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card.success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        .stat-card.warning { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); }
+        .stat-card.danger { background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%); }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .notificacao-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+        }
+
+        .notificacao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .notificacao-tipo {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-enviado { background: #d4edda; color: #155724; }
+        .status-erro { background: #f8d7da; color: #721c24; }
+        .status-pendente { background: #fff3cd; color: #856404; }
+
+        .notificacao-detalhes {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .notificacao-erro {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            color: #721c24;
+        }
+
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Status das Notificações por Email</h1>
+            <p>Monitore o envio de notificações automáticas do sistema</p>
+        </div>
+
+        <div class="content">
+            <!-- Estatísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total }}</div>
+                    <div class="stat-label">Total de Notificações</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-number">{{ enviadas }}</div>
+                    <div class="stat-label">Emails Enviados</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-number">{{ pendentes }}</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-number">{{ erros }}</div>
+                    <div class="stat-label">Com Erro</div>
+                </div>
+            </div>
+
+            <!-- Botão de atualização -->
+            <button class="refresh-btn" onclick="location.reload()">🔄 Atualizar Status</button>
+
+            <!-- Lista de notificações -->
+            <div class="status-card">
+                <h2>📋 Histórico de Notificações</h2>
+
+                {% if notificacoes %}
+                    {% for notificacao in notificacoes %}
+                    <div class="notificacao-item">
+                        <div class="notificacao-header">
+                            <div>
+                                <span class="notificacao-tipo">{{ notificacao.tipo|title }}</span>
+                                <span class="notificacao-detalhes">
+                                    {{ notificacao.usuarios.nome }} ({{ notificacao.usuarios.email }})
+                                </span>
+                            </div>
+                            <div>
+                                {% if notificacao.email_enviado %}
+                                    <span class="status-badge status-enviado">✅ Enviado</span>
+                                {% elif notificacao.email_erro %}
+                                    <span class="status-badge status-erro">❌ Erro</span>
+                                {% else %}
+                                    <span class="status-badge status-pendente">⏳ Pendente</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="notificacao-detalhes">
+                            <strong>Mensagem:</strong> {{ notificacao.mensagem }}<br>
+                            <strong>Data:</strong> {{ notificacao.created_at|strftime('%d/%m/%Y %H:%M') }}<br>
+                            {% if notificacao.email_enviado_em %}
+                                <strong>Email enviado:</strong> {{ notificacao.email_enviado_em|strftime('%d/%m/%Y %H:%M') }}<br>
+                            {% endif %}
+                            {% if notificacao.email_tentativas %}
+                                <strong>Tentativas:</strong> {{ notificacao.email_tentativas }}<br>
+                            {% endif %}
+                        </div>
+
+                        {% if notificacao.email_erro %}
+                        <div class="notificacao-erro">
+                            <strong>Erro:</strong> {{ notificacao.email_erro }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Nenhuma notificação encontrada.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="{{ url_for('admin.admin_restricoes') }}">← Voltar ao Admin</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -132,7 +132,11 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            return redirect(url_for('auth.login'))
+            # Verificar se é uma requisição AJAX/API
+            if request.is_json or request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'message': 'Usuario nao autenticado'}), 401
+            else:
+                return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -141,6 +145,11 @@ def apenas_admin_izak(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not is_admin_session():
+            # Verificar se é uma requisição AJAX
+            from flask import request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'message': 'Acesso negado. Apenas administradores podem acessar esta funcionalidade.'}), 403
+            
             flash('Acesso negado. Apenas administradores podem acessar esta página.')
             return redirect(url_for('main.dashboard'))
         return f(*args, **kwargs)
@@ -152,15 +161,38 @@ def is_admin_session():
         # 1) Preferir flag vinda da sessão (carregada do BD no login). Se existir, respeitar True ou False.
         if 'is_admin' in session:
             return bool(session.get('is_admin'))
-        # 1.1) Se o usuário está logado mas a flag não existe (sessão antiga), buscar no BD e salvar em sessão
+        
+        # 1.1) Se o usuário está logado mas a flag não existe (sessão antiga), buscar na tabela usuarios_admin
         if session.get('user_id'):
             try:
-                usuario = get_user_by_id(str(session.get('user_id')))
-                if usuario is not None and 'is_admin' in usuario:
-                    session['is_admin'] = bool(usuario.get('is_admin', False))
-                    return session['is_admin']
-            except Exception:
+                print(f"[DEBUG] Verificando admin para user_id: {session.get('user_id')}")
+                # Usar requests diretamente como no resto do código
+                from supabase_client import SUPABASE_URL, SUPABASE_KEY, headers
+                url = f"{SUPABASE_URL}/rest/v1/usuarios_admin?select=*&usuario_id=eq.{session.get('user_id')}&ativo=eq.true"
+                resp = requests.get(url, headers=headers)
+                print(f"[DEBUG] Admin check status: {resp.status_code}")
+                
+                if resp.status_code == 200:
+                    admin_data = resp.json()
+                    print(f"[DEBUG] Admin check result: {admin_data}")
+                    
+                    if admin_data and len(admin_data) > 0:
+                        session['is_admin'] = True
+                        session['admin_nivel'] = admin_data[0].get('nivel_acesso', 'admin')
+                        print(f"[DEBUG] Admin encontrado: {admin_data[0]}")
+                        return True
+                    else:
+                        session['is_admin'] = False
+                        print("[DEBUG] Admin não encontrado")
+                        return False
+                else:
+                    print(f"[DEBUG] Erro na query: {resp.text}")
+                    session['is_admin'] = False
+                    return False
+            except Exception as e:
+                print(f"[DEBUG] Erro ao verificar admin: {e}")
                 pass
+        
         # 2) Fallback por variáveis de ambiente (emergencial)
         admin_email = os.getenv('ADMIN_EMAIL', 'izak.gomes59@gmail.com')
         admin_user_id = os.getenv('ADMIN_USER_ID', 'd0d784bd-f2bb-44b2-8096-5c10ec4d57be')
@@ -171,3 +203,43 @@ def is_admin_session():
         return False
     except Exception:
         return False
+
+
+def get_admin_nivel():
+    """Retorna o nível de acesso do admin atual (admin, super_admin, master) ou None se não for admin"""
+    try:
+        if is_admin_session():
+            # Se já está em sessão
+            if 'admin_nivel' in session:
+                return session.get('admin_nivel')
+            
+            # Buscar no banco
+            if session.get('user_id'):
+                from supabase_client import SUPABASE_URL, SUPABASE_KEY, headers
+                import requests
+                url = f"{SUPABASE_URL}/rest/v1/usuarios_admin?select=nivel_acesso&usuario_id=eq.{session.get('user_id')}&ativo=eq.true"
+                resp = requests.get(url, headers=headers)
+                if resp.status_code == 200:
+                    admin_data = resp.json()
+                    if admin_data and len(admin_data) > 0:
+                        nivel = admin_data[0].get('nivel_acesso', 'admin')
+                        session['admin_nivel'] = nivel
+                        return nivel
+            
+            # Fallback: se é admin mas não tem registro na tabela usuarios_admin, considerar admin básico
+            return 'admin'
+        return None
+    except Exception:
+        return None
+
+
+def is_super_admin():
+    """Verifica se o usuário é super_admin ou master"""
+    nivel = get_admin_nivel()
+    return nivel in ['super_admin', 'master']
+
+
+def is_master_admin():
+    """Verifica se o usuário é master"""
+    nivel = get_admin_nivel()
+    return nivel == 'master'

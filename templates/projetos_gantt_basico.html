@@ -1,6 +1,35 @@
+<style>
+                /* Modo escuro para estatísticas dos projetos */
+                body.dark #estatisticas-projetos {
+                    background: #23272e !important;
+                    border: 1px solid #374151 !important;
+                }
+                body.dark #estatisticas-projetos .fas.fa-chart-bar,
+                body.dark #estatisticas-projetos span {
+                    color: #90caf9 !important;
+                }
+                body.dark #estatisticas-conteudo {
+                    color: #e0e0e0 !important;
+                }
+                body.dark #estatisticas-projetos div[style*="background: white"] {
+                    background: #181a20 !important;
+                    border: 1px solid #333a47 !important;
+                    color: #e0e0e0 !important;
+                }
+        /* Modo escuro para botões do carousel */
+        body.dark .carousel-arrow {
+            background: none !important;
+            color: #fff !important;
+            border: none !important;
+        }
+        body.dark .carousel-arrow i {
+            color: #fff !important;
+        }
+</style>
 {% extends "base.html" %}
 
 {% block content %}
+<!-- Cache Buster: 2026-01-06-10:40 -->
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <h1 class="mb-0">
@@ -12,191 +41,62 @@
             {{ nome_pasta }}
         </h1>
         <div>
-            <button id="btn-exportar-excel-projetos" class="btn btn-success" style="margin-right: 8px; border-radius: 10px; font-weight: bold;">
-                <i class="fas fa-file-excel"></i> Exportar Gantt para Excel
-            </button>
             <button id="btn-relatorio-gantt" class="btn btn-success" style="border-radius: 10px; font-weight: bold;">
-                <i class="fas fa-file-pdf"></i> Baixar Relatório Gantt
+                <i class="fas fa-print"></i> Imprimir
             </button>
         </div>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
+    console.log('🔥 SCRIPT INICIADO - Verificando se JavaScript está funcionando');
     document.addEventListener('DOMContentLoaded', function() {
         const btnRelatorio = document.getElementById('btn-relatorio-gantt');
         if (btnRelatorio) {
             btnRelatorio.addEventListener('click', function() {
-                const ganttDiv = document.getElementById('gantt-cronograma-area');
-                if (!ganttDiv) {
-                    alert('Gráfico de Gantt não encontrado na página.');
-                    return;
+                // Coletar filtros ativos (sem imagem do Gantt)
+                function getSelectValues(sel) {
+                    if (!sel) return [];
+                    return Array.from(sel.selectedOptions).map(opt => opt.value).filter(v => v);
                 }
-                // Salva largura original
-                const originalWidth = ganttDiv.scrollWidth;
-                const originalStyle = ganttDiv.style.width;
-                // Ajusta para mostrar tudo
-                ganttDiv.style.width = originalWidth + 'px';
-                ganttDiv.scrollLeft = 0;
-                html2canvas(ganttDiv).then(canvas => {
-                    // Restaura o tamanho original
-                    ganttDiv.style.width = originalStyle;
-                    const ganttBase64 = canvas.toDataURL('image/png').split(',')[1];
-                    // Coletar filtros ativos
-                    function getSelectValues(sel) {
-                        if (!sel) return [];
-                        return Array.from(sel.selectedOptions).map(opt => opt.value).filter(v => v);
-                    }
-                    // Pega todos os projeto_ids dos projetos selecionados
-                    let projeto_ids = [];
-                    const nomeSelect = document.getElementById('nome-desktop');
-                    if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
-                        // Busca todos os projetos pelos nomes selecionados para obter os ids
-                        const projetosData = window.projetosData || [];
-                        const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
-                        projeto_ids = nomesSelecionados.map(nome => {
-                            const projeto = projetosData.find(p => p.nome === nome);
-                            return projeto ? projeto.id : null;
-                        }).filter(id => id !== null);
-                    }
-                    const status = getSelectValues(document.getElementById('status-desktop'));
+                // Pega todos os projeto_ids dos projetos selecionados
+                let projeto_ids = [];
+                const nomeSelect = document.getElementById('nome-desktop');
+                if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
+                    const projetosData = window.projetosData || [];
+                    const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
+                    projeto_ids = nomesSelecionados.map(nome => {
+                        const projeto = projetosData.find(p => p.nome === nome);
+                        return projeto ? projeto.id : null;
+                    }).filter(id => id !== null);
+                }
+                    // Coletar status do projeto (não da tarefa)
+                    const statusProjeto = getSelectValues(document.getElementById('status-projeto-desktop'));
                     const colecao = getSelectValues(document.getElementById('colecao-desktop'));
                     const data_inicio = document.getElementById('data_inicio-desktop')?.value || '';
                     const data_fim = document.getElementById('data_fim-desktop')?.value || '';
                     const responsavel = getSelectValues(document.getElementById('responsavel-desktop'));
+
                     fetch('/relatorio/pdf', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            gantt_base64: ganttBase64,
                             projeto_ids,
-                            status,
+                            status: statusProjeto,
                             colecao,
                             data_inicio,
                             data_fim
                         })
                     })
-                    .then(resp => resp.text())
-                    .then(html => {
-                        const novaAba = window.open();
-                        novaAba.document.open();
-                        novaAba.document.write(html);
-                        novaAba.document.close();
+                    .then(resp => resp.blob())
+                    .then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
                     });
-                });
             });
         }
+
     });
     </script>
 
-    <!-- JavaScript para exportar Gantt dos projetos para Excel -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnExportarExcel = document.getElementById('btn-exportar-excel-projetos');
-        if (btnExportarExcel) {
-            btnExportarExcel.addEventListener('click', function() {
-                
-                const ganttDiv = document.getElementById('gantt-cronograma-area');
-                if (!ganttDiv) {
-                    alert('Gráfico de Gantt não encontrado na página.');
-                    return;
-                }
-                
-                // Salva largura original
-                const originalWidth = ganttDiv.scrollWidth;
-                const originalStyle = ganttDiv.style.width;
-                
-                // Ajusta para mostrar tudo
-                ganttDiv.style.width = originalWidth + 'px';
-                ganttDiv.scrollLeft = 0;
-                
-                html2canvas(ganttDiv).then(canvas => {
-                    // Restaura o tamanho original
-                    ganttDiv.style.width = originalStyle;
-                    const ganttBase64 = canvas.toDataURL('image/png').split(',')[1];
-                    
-                    // Coletar filtros ativos
-                    function getSelectValues(sel) {
-                        if (!sel) return [];
-                        return Array.from(sel.selectedOptions).map(opt => opt.value).filter(v => v);
-                    }
-                    
-                    // Pega todos os projeto_ids dos projetos selecionados
-                    let projeto_ids = [];
-                    const nomeSelect = document.getElementById('nome-desktop');
-                    
-                    if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
-                        // Busca todos os projetos pelos nomes selecionados para obter os ids
-                        const projetosData = window.projetosData || [];
-                        const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
-                        
-                        // Debug dos primeiros projetos em projetosData
-                        if (projetosData.length > 0) {
-                        }
-                        
-                        projeto_ids = nomesSelecionados.map(nome => {
-                            // Ignorar opção vazia
-                            if (!nome || nome === '') {
-                                return null;
-                            }
-                            
-                            const projeto = projetosData.find(p => p.nome === nome);
-                            
-                            if (!projeto) {
-                                // Tentar busca case-insensitive
-                                const projetoInsensitive = projetosData.find(p => p.nome && p.nome.toLowerCase() === nome.toLowerCase());
-                                return projetoInsensitive ? projetoInsensitive.id : null;
-                            }
-                            
-                            return projeto.id;
-                        }).filter(id => id !== null);
-                    }
-                    
-                    
-                    // Coletar outros filtros
-                    const tipo_id = new URLSearchParams(window.location.search).get('tipo_id') || '';
-                    const status = getSelectValues(document.getElementById('status-desktop'));
-                    const colecao = getSelectValues(document.getElementById('colecao-desktop'));
-                    const data_inicio = document.getElementById('data_inicio-desktop')?.value || '';
-                    const data_fim = document.getElementById('data_fim-desktop')?.value || '';
-                    
-                    fetch('/relatorio/gantt_excel', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            gantt_base64: ganttBase64,
-                            tipo_id,
-                            projeto_ids,
-                            status,
-                            colecao,
-                            data_inicio,
-                            data_fim
-                        })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Erro na resposta do servidor');
-                        }
-                        return response.blob();
-                    })
-                    .then(blob => {
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.style.display = 'none';
-                        a.href = url;
-                        a.download = 'relatorio_gantt.xlsx';
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                        document.body.removeChild(a);
-                    })
-                    .catch(error => {
-                        console.error('❌ Erro ao exportar Excel:', error);
-                        alert('Erro ao exportar Excel: ' + error.message);
-                    });
-                });
-            });
-        }
-    });
-    </script>
+    <!-- Script de exportação para Excel removido para reescrita -->
         <!-- Botão de menu para filtros -->
         <button id="btn-abrir-filtros-desktop" type="button" class="btn btn-primary"
             style="border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
@@ -222,6 +122,279 @@
         {% endfor %}
     </div>
     <style>
+        /* VERSION: 3.0.0 - Custom Select Component 20260105-010 */
+        
+        /* Botão de limpar (borracha) */
+        .clear-btn {
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        .clear-btn:focus,
+        .clear-btn:active,
+        .clear-btn:hover {
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        /* Wrapper do select customizado */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        /* Display (campo que mostra as seleções) */
+        .custom-select-display {
+            min-height: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #e9ecef;
+            padding: 0 40px 0 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+        
+        .custom-select-display:hover {
+            border-color: #4a47a3;
+        }
+        
+        .custom-select-display .chevron {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.2s;
+            pointer-events: none;
+        }
+        
+        .custom-select-wrapper.open .custom-select-display .chevron {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        
+        .custom-select-value {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.5;
+            min-height: auto;
+            background: transparent;
+        }
+        
+        .custom-select-value .placeholder {
+            color: #6c757d !important;
+            font-size: 1em !important;
+            line-height: 1.5 !important;
+            background: transparent !important;
+            pointer-events: none !important;
+            cursor: pointer !important;
+        }
+        
+        .custom-select-value .text {
+            color: #212529;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 1em;
+            line-height: 1.5;
+            background: transparent;
+        }
+        
+        body.dark .custom-select-value .text {
+            color: var(--text-color);
+        }
+        
+        /* Dropdown */
+        .custom-select-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 300px;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .custom-select-wrapper.open .custom-select-dropdown {
+            display: flex;
+        }
+        
+        /* Campo de busca */
+        .custom-select-search {
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .custom-select-search .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.9em;
+        }
+        
+        .custom-select-search .search-input:focus {
+            border-color: #4a47a3;
+        }
+        
+        /* Lista de opções */
+        .custom-select-options {
+            overflow-y: auto;
+            max-height: 240px;
+            padding: 4px;
+        }
+        
+        .custom-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+        
+        .custom-option:hover {
+            background: #f8f9fa;
+        }
+        
+        .custom-option input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #4a47a3;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid #4a47a3;
+            border-radius: 3px;
+            background-color: transparent;
+            position: relative;
+        }
+        
+        .custom-option input[type="checkbox"]:checked {
+            background-color: transparent;
+        }
+        
+        .custom-option input[type="checkbox"]:checked::before {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: #4a47a3;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .custom-option span {
+            flex: 1;
+            font-size: 0.95em;
+        }
+        
+        .custom-option.hidden {
+            display: none;
+        }
+        
+        /* Modo escuro */
+        body.dark .custom-select-display {
+            background: var(--card-bg);
+            border-color: var(--card-border);
+            color: var(--text-color);
+        }
+        
+        body.dark .custom-select-display .chevron path {
+            fill: #adb5bd;
+        }
+        
+        body.dark .custom-select-value .placeholder {
+            color: #adb5bd;
+        }
+        
+        body.dark .custom-select-dropdown {
+            background: var(--card-bg);
+            border-color: var(--card-border);
+        }
+        
+        body.dark .custom-select-search {
+            border-bottom-color: var(--card-border);
+        }
+        
+        body.dark .custom-select-search .search-input {
+            background: var(--bg-color);
+            border-color: var(--card-border);
+            color: var(--text-color);
+        }
+        
+        body.dark .custom-option:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        body.dark .custom-option span {
+            color: var(--text-color);
+        }
+
+        /* Estilos para modo escuro - selects e campos de filtro */
+        body.dark select.form-control,
+        body.dark .form-control {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-color: var(--card-border) !important;
+        }
+
+        body.dark select.form-control option {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Estilos para modo escuro - selects e campos de filtro */
+        body.dark select.form-control,
+        body.dark .form-control {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-color: var(--card-border) !important;
+        }
+
+        body.dark select.form-control option {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Modo escuro - chevrons */
+        body.dark .fa-chevron-down,
+        body.dark .fa-chevron-up,
+        body.dark i.fa-chevron-down,
+        body.dark i.fa-chevron-up,
+        body.dark div[id$="-display"] > i {
+            color: #adb5bd !important;
+        }
+
+        body.dark .fa-chevron-down:hover,
+        body.dark .fa-chevron-up:hover,
+        body.dark .fa-chevron-down:active,
+        body.dark .fa-chevron-up:active,
+        body.dark div[id$="-display"]:hover > i,
+        body.dark div[id$="-display"]:active > i,
+        body.dark [id$="-display"]:focus i.fa-chevron-down,
+        body.dark [id$="-display"]:focus i.fa-chevron-up,
+        body.dark [id$="-display"]:focus i {
+            color: #adb5bd !important;
+        }
+
         .tipos-scroll {
             display: flex !important;
             flex-direction: row !important;
@@ -299,96 +472,239 @@
             <form id="filtros-desktop" method="GET" action="/projetos"
                 style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
                 <!-- Filtro Projeto -->
-                <div style="position: relative;">
-                    <label for="nome-desktop"
-                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                <div class="custom-select-wrapper" data-select-id="nome">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                         <span><i class="fas fa-search"></i> Projeto</span>
-                        <button type="button" class="btn btn-link p-0 m-0"
-                            onclick="limparSelect('nome-desktop'); event.preventDefault();"
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
                             style="color: #b0b0b0; font-size: 1.1em;">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </label>
-                    <select id="nome-desktop" name="nome[]" multiple class="form-control"
-                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto; display: none; scrollbar-width: none; -ms-overflow-style: none;"
-                        onchange="mostrarSelecoes('nome-desktop', 'nome-display')"
-                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('nome-display').style.display = 'flex'; }, 200);">
-                        <option value="">Selecione o Projeto</option>
-                        {% for projeto in projetos %}
-                        <option value="{{ projeto.nome }}" {% if projeto.nome in filtros_ativos.nome_list
-                            %}selected{% endif %}>{{ projeto.nome }}</option>
+                    
+                    <!-- Select nativo hidden para enviar os valores -->
+                    <select id="nome-desktop" name="nome[]" multiple style="display: none !important;">
+                        {% for projeto in todos_projetos %}
+                        <option value="{{ projeto.nome }}" {% if projeto.nome in filtros_ativos.nome_list %}selected{% endif %}>{{ projeto.nome }}</option>
                         {% endfor %}
                     </select>
-                    <div id="nome-display" class="form-control"
-                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
-                        onclick="toggleSelect('nome-desktop')">
-                        <span id="nome-text">Selecione o Projeto</span>
-                        <i class="fas fa-chevron-down"></i>
+                    
+                    <!-- Display customizado -->
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione o Projeto</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- Dropdown -->
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            {% for projeto in todos_projetos %}
+                            <div class="custom-option" data-value="{{ projeto.nome }}">
+                                <input type="checkbox" {% if projeto.nome in filtros_ativos.nome_list %}checked{% endif %}>
+                                <span>{{ projeto.nome }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
 
-                <!-- Filtro Status -->
-                <div style="position: relative;">
-                    <label for="status-desktop"
-                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
-                        <span><i class="fas fa-tasks"></i> Status</span>
-                        <button type="button" class="btn btn-link p-0 m-0"
-                            onclick="limparSelect('status-desktop'); event.preventDefault();"
+                <!-- Filtro Status da Tarefa -->
+                <div class="custom-select-wrapper" data-select-id="status">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-tasks"></i> Status da Tarefa</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
                             style="color: #b0b0b0; font-size: 1.1em;">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </label>
-                    <select id="status-desktop" name="status" multiple class="form-control"
-                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto; display: none; scrollbar-width: none; -ms-overflow-style: none;"
-                        onchange="mostrarSelecoes('status-desktop', 'status-display')"
-                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('status-display').style.display = 'flex'; }, 200);">
-                        <option value="">Selecione o Status</option>
-                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif
-                            %}>Pendente</option>
-                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{%
-                            endif %}>Em Progresso</option>
-                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif
-                            %}>Concluída</option>
-                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif
-                            %}>Atrasado</option>
+                    
+                    <select id="status-desktop" name="status" multiple style="display: none !important;">
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif %}>Pendente</option>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{% endif %}>Em Progresso</option>
+                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif %}>Concluída</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif %}>Atrasado</option>
                     </select>
-                    <div id="status-display" class="form-control"
-                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
-                        onclick="toggleSelect('status-desktop')">
-                        <span id="status-text">Selecione o Status</span>
-                        <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline;">Selecione o Status</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option" data-value="pendente">
+                                <input type="checkbox" {% if 'pendente' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Pendente</span>
+                            </div>
+                            <div class="custom-option" data-value="em progresso">
+                                <input type="checkbox" {% if 'em progresso' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Em Progresso</span>
+                            </div>
+                            <div class="custom-option" data-value="concluída">
+                                <input type="checkbox" {% if 'concluída' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Concluída</span>
+                            </div>
+                            <div class="custom-option" data-value="atrasado">
+                                <input type="checkbox" {% if 'atrasado' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Atrasado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtro Status do Projeto -->
+                <div class="custom-select-wrapper" data-select-id="status-projeto">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-project-diagram"></i> Status do Projeto</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <select id="status-projeto-desktop" name="status_projeto" multiple style="display: none !important;">
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status_projeto') %}selected{% endif %}>Pendente</option>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status_projeto') %}selected{% endif %}>Em Progresso</option>
+                        <option value="concluído" {% if 'concluído' in request.args.getlist('status_projeto') %}selected{% endif %}>Concluído</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status_projeto') %}selected{% endif %}>Atrasado</option>
+                    </select>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline;">Selecione o Status</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option" data-value="pendente">
+                                <input type="checkbox" {% if 'pendente' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Pendente</span>
+                            </div>
+                            <div class="custom-option" data-value="em progresso">
+                                <input type="checkbox" {% if 'em progresso' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Em Progresso</span>
+                            </div>
+                            <div class="custom-option" data-value="concluído">
+                                <input type="checkbox" {% if 'concluído' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Concluído</span>
+                            </div>
+                            <div class="custom-option" data-value="atrasado">
+                                <input type="checkbox" {% if 'atrasado' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Atrasado</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Filtro Coleção -->
-                <div style="position: relative;">
-                    <label for="colecao-desktop"
-                        style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                <div class="custom-select-wrapper" data-select-id="colecao">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
                         <span><i class="fas fa-layer-group"></i> Coleção</span>
-                        <button type="button" class="btn btn-link p-0 m-0"
-                            onclick="limparSelect('colecao-desktop'); event.preventDefault();"
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
                             style="color: #b0b0b0; font-size: 1.1em;">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </label>
-                    <select id="colecao-desktop" name="colecao" multiple class="form-control"
-                        style="min-height: 48px; border-radius: 10px; max-height: 120px; overflow-y: auto; display: none; scrollbar-width: none; -ms-overflow-style: none;"
-                        onchange="mostrarSelecoes('colecao-desktop', 'colecao-display')"
-                        onblur="setTimeout(() => { this.style.display = 'none'; document.getElementById('colecao-display').style.display = 'flex'; }, 200);">
-                        <option value="">Selecione a Coleção</option>
+                    
+                    <select id="colecao-desktop" name="colecao" multiple style="display: none !important;">
                         {% if colecoes and colecoes|length > 0 %}
                         {% for colecao in colecoes %}
-                        <option value="{{ colecao }}">{{ colecao }}</option>
+                        <option value="{{ colecao }}" {% if colecao in request.args.getlist('colecao') %}selected{% endif %}>{{ colecao }}</option>
                         {% endfor %}
-                        {% else %}
-                        <option disabled>Nenhuma coleção disponível</option>
                         {% endif %}
                     </select>
-                    <div id="colecao-display" class="form-control"
-                        style="min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
-                        onclick="toggleSelect('colecao-desktop')">
-                        <span id="colecao-text">Selecione a Coleção</span>
-                        <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione a Coleção</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            {% if todas_colecoes and todas_colecoes|length > 0 %}
+                            {% for colecao in todas_colecoes %}
+                            <div class="custom-option" data-value="{{ colecao }}">
+                                <input type="checkbox" {% if colecao in request.args.getlist('colecao') %}checked{% endif %}>
+                                <span>{{ colecao }}</span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div style="padding: 12px; text-align: center; color: #6c757d;">Nenhuma coleção disponível</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtro Responsável -->
+                <div class="custom-select-wrapper" data-select-id="responsavel">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-user"></i> Responsável</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <select id="responsavel-desktop" name="responsavel" multiple style="display: none !important;">
+                        {% if usuarios and usuarios|length > 0 %}
+                        {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if usuario.id|string in filtros_ativos.responsavel_list %}selected{% endif %}>{{ usuario.nome }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione o Responsável</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            {% if usuarios and usuarios|length > 0 %}
+                            {% for usuario in usuarios %}
+                            <div class="custom-option" data-value="{{ usuario.id }}">
+                                <input type="checkbox" {% if usuario.id|string in filtros_ativos.responsavel_list %}checked{% endif %}>
+                                <span>{{ usuario.nome }}</span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div style="padding: 12px; text-align: center; color: #6c757d;">Nenhum usuário disponível</div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -431,6 +747,7 @@
                         <i class="fas fa-filter"></i> Filtrar
                     </button>
                     <button type="button" class="btn btn-secondary" id="limpar-filtros-desktop"
+                        onclick="console.log('🔥 BOTÃO LIMPAR CLICADO!'); limparFiltrosFunction()"
                         style="flex: 1; min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; color: #6c757d;">
                         <i class="fas fa-eraser"></i> Limpar
                     </button>
@@ -535,16 +852,302 @@
     rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 window.projetosData = {{ projetos | tojson | safe }};
 const podeCriarProjeto = {{ pode_criar_projeto | tojson | safe }};
 const podeEditarProjeto = {{ pode_editar_projeto | tojson | safe }};
 const podeExcluirProjeto = {{ pode_excluir_projeto | tojson | safe }};
 const alertasProjetos = {{ alertas_projetos | tojson | safe }};
+console.log("ProjetosData:", window.projetosData);
 </script>
 <script>
+    console.log('🚀 SEGUNDO BLOCO DE SCRIPT INICIADO!');
     // window.projetosData já está definido antes deste bloco
+    
+    // === DEFINIÇÃO GLOBAL DA FUNÇÃO LIMPAR ===
+    console.log('📝 Definindo função limparFiltrosFunction globalmente...');
+    window.limparFiltrosFunction = function() {
+        console.log('🧹 === INÍCIO DA FUNÇÃO limparFiltrosFunction ===');
+
+        try {
+            console.log('📍 URL atual:', window.location.href);
+
+            // Primeiro, limpar todos os elementos visuais dos filtros
+            console.log('🧽 Limpando elementos visuais dos filtros...');
+
+            // Limpar selects customizados específicos
+            console.log('🧽 Limpando selects específicos...');
+            const selectIds = ['nome-desktop', 'status-desktop', 'status-projeto-desktop'];
+            selectIds.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    console.log(`🔍 Select ${selectId} antes da limpeza:`, select.value, 'opções selecionadas:', Array.from(select.selectedOptions).map(opt => opt.value));
+                    // Desmarcar todas as opções
+                    Array.from(select.options).forEach(option => {
+                        option.selected = false;
+                    });
+                    // Resetar o valor do select
+                    select.value = '';
+                    console.log(`✅ Select ${selectId} limpo e resetado:`, select.value, 'opções selecionadas:', Array.from(select.selectedOptions).map(opt => opt.value));
+                } else {
+                    console.log(`❌ Select ${selectId} não encontrado`);
+                }
+            });
+
+            // Limpar custom selects (checkboxes) específicos
+            console.log('🧽 Limpando custom selects específicos...');
+            const customSelectIds = ['nome', 'status', 'status-projeto', 'colecao', 'responsavel'];
+            let customSelectsLimpados = 0;
+
+            customSelectIds.forEach(dataSelectId => {
+                const wrapper = document.querySelector(`.custom-select-wrapper[data-select-id="${dataSelectId}"]`);
+                if (wrapper) {
+                    const instance = wrapper._customSelectInstance;
+                    if (instance) {
+                        console.log(`🔄 Limpando custom select: ${dataSelectId}`);
+
+                        // Método 1: Reset completo do select nativo
+                        instance.nativeSelect.selectedIndex = -1;
+                        Array.from(instance.nativeSelect.options).forEach(opt => {
+                            opt.selected = false;
+                        });
+
+                        // Método 2: Desmarcar todos os checkboxes visuais
+                        const checkboxes = wrapper.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach(checkbox => {
+                            checkbox.checked = false;
+                            console.log(`✅ Checkbox desmarcado para ${dataSelectId}`);
+                        });
+
+                        // Método 3: Limpar o valor do display diretamente
+                        const valueContainer = wrapper.querySelector('.custom-select-value');
+                        if (valueContainer) {
+                            // Remover todos os spans de texto
+                            valueContainer.querySelectorAll('.text').forEach(span => span.remove());
+
+                            // Mostrar placeholder
+                            const placeholder = valueContainer.querySelector('.placeholder');
+                            if (placeholder) {
+                                placeholder.style.display = 'inline';
+                                placeholder.textContent = placeholder.getAttribute('data-original-text') ||
+                                    (dataSelectId === 'nome' ? 'Selecione o Projeto' :
+                                     dataSelectId === 'status' ? 'Selecione o Status' :
+                                     'Selecione o Status');
+                                console.log(`✅ Placeholder restaurado para ${dataSelectId}`);
+                            }
+                        }
+
+                        // Método 4: Forçar atualização da interface
+                        try {
+                            instance.updateDisplay();
+                            instance.syncCheckboxes();
+                            console.log(`✅ updateDisplay e syncCheckboxes executados para ${dataSelectId}`);
+                        } catch (e) {
+                            console.warn(`⚠️ Erro ao atualizar display de ${dataSelectId}:`, e);
+                        }
+
+                        console.log(`✅ Custom select ${dataSelectId} limpo`);
+                        customSelectsLimpados++;
+                    } else {
+                        console.log(`❌ Instância do custom select ${dataSelectId} não encontrada`);
+                    }
+                } else {
+                    console.log(`❌ Wrapper do custom select ${dataSelectId} não encontrado`);
+                }
+            });
+
+            console.log(`📊 Total de custom selects limpados: ${customSelectsLimpados}/${customSelectIds.length}`);
+
+            // Retry com lógica corrigida
+            if (customSelectsLimpados < customSelectIds.length) {
+                console.log('⏳ Alguns custom selects não foram encontrados. Tentando novamente em 200ms...');
+                setTimeout(() => {
+                    console.log('🔄 Tentativa de limpeza retardada...');
+                    let retryCount = 0;
+                    customSelectIds.forEach(dataSelectId => {
+                        const wrapper = document.querySelector(`.custom-select-wrapper[data-select-id="${dataSelectId}"]`);
+                        if (wrapper) {
+                            const instance = wrapper._customSelectInstance;
+                            if (instance) {
+                                console.log(`🔄 Retry: Limpando custom select: ${dataSelectId}`);
+
+                                // Mesmo processo de limpeza
+                                instance.nativeSelect.selectedIndex = -1;
+                                Array.from(instance.nativeSelect.options).forEach(opt => opt.selected = false);
+
+                                const checkboxes = wrapper.querySelectorAll('input[type="checkbox"]');
+                                checkboxes.forEach(checkbox => checkbox.checked = false);
+
+                                const valueContainer = wrapper.querySelector('.custom-select-value');
+                                if (valueContainer) {
+                                    valueContainer.querySelectorAll('.text').forEach(span => span.remove());
+                                    const placeholder = valueContainer.querySelector('.placeholder');
+                                    if (placeholder) {
+                                        placeholder.style.display = 'inline';
+                                    }
+                                }
+
+                                try {
+                                    instance.updateDisplay();
+                                    instance.syncCheckboxes();
+                                } catch (e) {
+                                    console.warn(`⚠️ Erro no retry de ${dataSelectId}:`, e);
+                                }
+
+                                console.log(`✅ Custom select ${dataSelectId} limpo (retry)`);
+                                retryCount++;
+                            }
+                        }
+                    });
+                    console.log(`📊 Total de custom selects limpados na retry: ${retryCount}`);
+                }, 200);
+            }
+
+            // Limpar campos de data
+            console.log('🧽 Limpando campos de data...');
+            const dateFields = ['data_inicio-desktop', 'data_fim-desktop'];
+            dateFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    console.log(`🔍 Campo ${fieldId} encontrado, valor atual: "${field.value}"`);
+                    field.value = '';
+                    console.log(`✅ Campo de data ${fieldId} limpo, novo valor: "${field.value}"`);
+                } else {
+                    console.log(`❌ Campo de data ${fieldId} NÃO encontrado`);
+                }
+            });
+
+            // Limpar outros campos
+            const otherFields = []; // Removido: tipo-desktop e ambiente-desktop não existem
+            otherFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                    console.log(`✅ Campo ${fieldId} limpo`);
+                } else {
+                    console.log(`❌ Campo ${fieldId} não encontrado`);
+                }
+            });
+
+            // Limpar localStorage se existir
+            if (typeof localStorage !== 'undefined') {
+                const keysToRemove = ['sgp_filtros_projetos'];
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                    console.log(`🗑️ localStorage key '${key}' removido`);
+                });
+            }
+
+            console.log('✅ Todos os elementos visuais foram limpos');
+
+            // Resetar formulário completamente ANTES da limpeza específica
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.reset();
+                console.log('✅ Formulário resetado');
+            });
+
+            // Re-limpar campos de data após o form.reset() (que pode ter preenchido novamente)
+            console.log('🔄 Re-limpando campos de data após form.reset...');
+            dateFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                    console.log(`✅ Campo de data ${fieldId} re-limpo após form.reset`);
+                }
+            });
+
+            // Agora redirecionar com parâmetro especial para limpar filtros da sessão
+            const cleanUrl = window.location.origin + window.location.pathname + '?limpar_filtros=1';
+            console.log('🔗 URL de limpeza construída:', cleanUrl);
+            console.log('🔄 Verificando sessão antes do redirect...');
+
+            // Pequeno delay para mostrar visualmente que os campos foram limpos
+            console.log('⏳ Aguardando 300ms para feedback visual...');
+            setTimeout(() => {
+                console.log('🔄 Executando redirecionamento...');
+                window.location.href = cleanUrl;
+                console.log('✅ Redirecionamento executado!');
+            }, 300);
+
+        } catch (error) {
+            console.error('❌ ERRO no processo de limpeza:', error);
+            console.error('❌ Stack trace:', error.stack);
+            // Fallback: tentar redirect forçado
+            console.log('🔄 Tentando fallback redirect...');
+            window.location.href = window.location.origin + window.location.pathname;
+        }
+    };
+    console.log('✅ Função limparFiltrosFunction definida globalmente!');
+    
     $(document).ready(function () {
+        
+        // === INÍCIO PERSISTÊNCIA DE FILTROS ===
+        
+        // Constantes para localStorage
+        const FILTROS_STORAGE_KEY = 'sgp_filtros_projetos';
+        const FILTROS_EXPIRATION_MS = 30 * 60 * 1000; // 30 minutos
+        
+        // Função para salvar filtros atuais
+        function salvarFiltrosAtuais() {
+            try {
+                const filtros = {
+                    status: Array.from(document.getElementById('status-desktop')?.selectedOptions || []).map(o => o.value),
+                    responsavel: Array.from(document.getElementById('responsavel-desktop')?.selectedOptions || []).map(o => o.value),
+                    colecao: Array.from(document.getElementById('colecao-desktop')?.selectedOptions || []).map(o => o.value),
+                    projeto: Array.from(document.getElementById('nome-desktop')?.selectedOptions || []).map(o => o.value),
+                    data_inicio: document.getElementById('data_inicio-desktop')?.value || '',
+                    data_fim: document.getElementById('data_fim-desktop')?.value || ''
+                };
+                
+                // Verificar se há algum filtro aplicado
+                const temFiltros = filtros.status.length > 0 || filtros.responsavel.length > 0 || 
+                                   filtros.colecao.length > 0 || filtros.projeto.length > 0 || 
+                                   filtros.data_inicio || filtros.data_fim;
+                
+                if (temFiltros) {
+                    const dataToSave = {
+                        filtros: filtros,
+                        timestamp: Date.now()
+                    };
+                    
+                    localStorage.setItem(FILTROS_STORAGE_KEY, JSON.stringify(dataToSave));
+                    console.log('💾 Filtros salvos no localStorage:', filtros);
+                } else {
+                    localStorage.removeItem(FILTROS_STORAGE_KEY);
+                    console.log('🗑️ Nenhum filtro aplicado, localStorage limpo');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao salvar filtros:', error);
+            }
+        }
+        
+        // Interceptar submit do formulário para salvar filtros
+        const formFiltros = document.getElementById('filtros-desktop');
+        if (formFiltros) {
+            formFiltros.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevenir submit imediato
+                salvarFiltrosAtuais();
+                // Depois de salvar, submeter o form
+                setTimeout(() => {
+                    formFiltros.submit();
+                }, 1000);
+            });
+        }
+        
+        // Ao carregar a página: apenas salva no localStorage se houver filtros na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const temParametrosNaUrl = urlParams.toString().length > 0;
+        if (temParametrosNaUrl) {
+            setTimeout(() => {
+                salvarFiltrosAtuais();
+            }, 1000);
+        }
+        // Não faz mais redirecionamento automático, pois o backend já aplica os filtros da session
+        
+        // === FIM PERSISTÊNCIA DE FILTROS ===
+        
         const projetos = window.projetosData || [];
         const carousel = document.getElementById('projetos-carousel-js');
         const leftArrow = document.querySelector('.carousel-arrow.left');
@@ -631,8 +1234,12 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
                 cardStyle = statusInfo.borda;
             }
 
+            // Usar valores do backend para garantir consistência com detalhes_projeto
+            let diasCorridos = projeto.dias_corridos !== undefined && projeto.dias_corridos !== null ? projeto.dias_corridos : '-';
+            let diasUteis = projeto.dias_uteis !== undefined && projeto.dias_uteis !== null ? projeto.dias_uteis : '-';
+            const tooltip = `Duração: ${diasCorridos} dias\nDias Úteis: ${diasUteis} dias`;
             return `<div class="carousel-item">
-            <div class="card compact-card shadow-sm projeto-card-with-watermark" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; cursor:pointer;" onclick="window.location='/projetos/${projeto.id}'">
+            <div class="card compact-card shadow-sm projeto-card-with-watermark ${!(podeEditarProjeto || podeCriarProjeto || podeExcluirProjeto) ? 'card-no-footer' : ''}" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; cursor:pointer;" onclick="window.location='/projetos/${projeto.id}'" title="${tooltip}">
                 <!-- Marca d'água diagonal - estilo carimbo -->
                 <div class="projeto-watermark status-${statusProjeto}" style="
                 position: absolute;
@@ -660,11 +1267,13 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
                     `<i class="fas fa-exclamation-triangle text-danger me-1" title="${alerta.quantidade} tarefa(s) atrasada(s)"></i>` :
                     alerta && alerta.tipo === 'pendente' ?
                         `<i class="fas fa-clock text-warning me-1" title="${alerta.quantidade} tarefa(s) pendente(s)"></i>` :
-                        '<i class="fas fa-project-diagram"></i>'} 
+                    (projeto.tarefas && projeto.tarefas.filter(t => t.status === 'em progresso').length > 0 ?
+                        `<i class="fas fa-spinner text-info me-1" title="${projeto.tarefas.filter(t => t.status === 'em progresso').length} tarefa(s) em progresso"></i>` :
+                        '<i class="fas fa-project-diagram"></i>')} 
                         ${projeto.nome}
                     </h6>
                 </div>
-                <div class="card-body compact-body py-2" style="position: relative; z-index: 2;">
+                <div class="card-body compact-body" style="position: relative; z-index: 2; padding-top: 0; padding-bottom: 0;">
                     <div class="mb-1">
                         <small class="text-muted">
                             <i class="fas fa-calendar"></i> ${projeto.data_inicio ? (projeto.data_inicio.includes('-') ? projeto.data_inicio.split('-').reverse().join('/') : projeto.data_inicio) : 'Não definida'} - ${projeto.data_fim ? (projeto.data_fim.includes('-') ? projeto.data_fim.split('-').reverse().join('/') : projeto.data_fim) : 'Não definida'}
@@ -672,15 +1281,17 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
                     </div>
                     <div class="compact-tasks">${tarefasHtml}</div>
                 </div>
-                <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-center py-2" style="position: relative; z-index: 2;">
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Ações do projeto" style="gap: 0.5em;">
-                        ${podeEditarProjeto ? `<a href="/projetos/editar/${projeto.id}" class="btn" title="Editar Projeto" style="margin-right:0.3em;"><svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="editIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-2px;"><title id="editIconTitle">Editar Projeto</title><path d="M18.4142136 4.41421356L19.5857864 5.58578644C20.366835 6.36683502 20.366835 7.63316498 19.5857864 8.41421356L8 20 4 20 4 16 15.5857864 4.41421356C16.366835 3.63316498 17.633165 3.63316498 18.4142136 4.41421356zM14 6L18 10"></path></svg></a>` : ''}
-                        ${podeCriarProjeto ? `<button type="button" class="btn btn-duplicar-projeto" style="background:none;border:none;padding:0;margin-right:1em;" data-projeto-id="${projeto.id}" onclick="event.stopPropagation();document.getElementById('form-duplicar-${projeto.id}').submit();" title="Duplicar Projeto"><span style='display:inline-block;width:2em;height:2em;vertical-align:middle;'><svg width="24px" height="24px" viewBox="0 0 18 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"><title>Duplicar Projeto</title><desc>Created with Sketch.</desc><defs></defs><g id="out" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><path d="M13.6666667,4 L6.33333333,4 C5.6,4 5,4.6 5,5.33333333 L5,14.6666667 C5,15.4 5.6,16 6.33333333,16 L13.6666667,16 C14.4,16 15,15.4 15,14.6666667 L15,5.33333333 C15,4.6 14.4,4 13.6666667,4 L13.6666667,4 Z M6,5 L14,5 L14,15 L6,15 L6,5 L6,5 Z M4.03408486,13.9659151 C3.4435752,13.8291651 3,13.297202 3,12.6666667 L3,3.33333333 C3,2.6 3.6,2 4.33333333,2 L11.6666667,2 C12.297202,2 12.8291651,2.4435752 12.9659151,3.03408486 C12.8696426,3.01179011 12.7694647,3 12.6666667,3 L8.66666667,3 L4,3 L4,8.66666667 L4,13.6666667 C4,13.7694647 4.01179011,13.8696426 4.03408486,13.9659151 L4.03408486,13.9659151 Z" id="path" fill="currentColor" sketch:type="MSShapeGroup"></path></g></svg></span></button>` : ''}
-                        ${podeExcluirProjeto ? `<button type="button" class="btn" style="background:none;border:none;padding:0;color:#111;" onclick="event.stopPropagation();if(confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) document.getElementById('form-excluir-${projeto.id}').submit();" title="Excluir Projeto"><svg width="26px" height="26px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-3px;"><title id="binIconTitle">Excluir Projeto</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg></button>` : ''}
+                ${podeEditarProjeto || podeCriarProjeto || podeExcluirProjeto ? `
+                <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-center py-1" style="position: relative; z-index: 2;">
+                    <div style="display: flex; flex-wrap: nowrap; gap: 0.8em; align-items: center;">
+                        ${podeEditarProjeto ? `<a href="/projetos/editar/${projeto.id}" class="btn" title="Editar Projeto" style="flex-shrink: 0; padding: 0;"><svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="editIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-2px;"><title id="editIconTitle">Editar Projeto</title><path d="M18.4142136 4.41421356L19.5857864 5.58578644C20.366835 6.36683502 20.366835 7.63316498 19.5857864 8.41421356L8 20 4 20 4 16 15.5857864 4.41421356C16.366835 3.63316498 17.633165 3.63316498 18.4142136 4.41421356zM14 6L18 10"></path></svg></a>` : ''}
+                        ${podeCriarProjeto ? `<button type="button" class="btn btn-duplicar-projeto" style="background:none;border:none;padding:0; flex-shrink: 0; position: relative; top: -1px;" data-projeto-id="${projeto.id}" onclick="event.stopPropagation();document.getElementById('form-duplicar-${projeto.id}').submit();" title="Duplicar Projeto"><span style='display:inline-block;width:26px;height:26px;vertical-align:middle;'><svg width="24px" height="24px" viewBox="0 0 18 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"><title>Duplicar Projeto</title><desc>Created with Sketch.</desc><defs></defs><g id="out" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><path d="M13.6666667,4 L6.33333333,4 C5.6,4 5,4.6 5,5.33333333 L5,14.6666667 C5,15.4 5.6,16 6.33333333,16 L13.6666667,16 C14.4,16 15,15.4 15,14.6666667 L15,5.33333333 C15,4.6 14.4,4 13.6666667,4 L13.6666667,4 Z M6,5 L14,5 L14,15 L6,15 L6,5 L6,5 Z M4.03408486,13.9659151 C3.4435752,13.8291651 3,13.297202 3,12.6666667 L3,3.33333333 C3,2.6 3.6,2 4.33333333,2 L11.6666667,2 C12.297202,2 12.8291651,2.4435752 12.9659151,3.03408486 C12.8696426,3.01179011 12.7694647,3 12.6666667,3 L8.66666667,3 L4,3 L4,8.66666667 L4,13.6666667 C4,13.7694647 4.01179011,13.8696426 4.03408486,13.9659151 L4.03408486,13.9659151 Z" id="path" fill="currentColor" sketch:type="MSShapeGroup"></path></g></svg></span></button>` : ''}
+                        ${podeExcluirProjeto ? `<button type="button" class="btn" style="background:none;border:none;padding:0;color:#111; flex-shrink: 0;" onclick="event.stopPropagation();if(confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) document.getElementById('form-excluir-${projeto.id}').submit();" title="Excluir Projeto"><svg width="26px" height="26px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-3px;"><title id="binIconTitle">Excluir Projeto</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg></button>` : ''}
                     </div>
                     ${podeCriarProjeto ? `<form id="form-duplicar-${projeto.id}" action="/projetos/duplicar/${projeto.id}" method="POST" style="display:none;"></form>` : ''}
                     ${podeExcluirProjeto ? `<form id="form-excluir-${projeto.id}" action="/projetos/excluir/${projeto.id}" method="POST" style="display:none;"></form>` : ''}
                 </div>
+                ` : ''}
             </div>
         </div>`;
         } catch (error) {
@@ -875,6 +1486,22 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
     });
 </script>
 <style>
+    /* Linha vertical do cursor no Gantt */
+    .gantt-cursor-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background-color: rgba(74, 71, 163, 0.4);
+        pointer-events: none;
+        display: none;
+        z-index: 100;
+    }
+
+    body.dark .gantt-cursor-line {
+        background-color: rgba(138, 135, 223, 0.5);
+    }
+
     .projetos-carousel-wrapper {
         display: flex;
         align-items: center;
@@ -1118,6 +1745,27 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
         position: relative;
         transition: box-shadow 0.2s;
     }
+    
+    /* Modo escuro - preservar cores das bordas de status */
+    body.dark .card[style*="border-left: 4px solid #dc3545"] {
+        border-left: 4px solid #dc3545 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #17a2b8"] {
+        border-left: 4px solid #17a2b8 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #28a745"] {
+        border-left: 4px solid #28a745 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #ffc107"] {
+        border-left: 4px solid #ffc107 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #6c757d"] {
+        border-left: 4px solid #6c757d !important;
+    }
 
     .carousel-item:hover {
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
@@ -1125,17 +1773,17 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
     }
 
     .carousel-arrow {
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 50%;
-        width: 38px;
-        height: 38px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3em;
-        color: var(--text-color);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.7em !important;
+        color: var(--text-color) !important;
+        box-shadow: none !important;
         cursor: pointer;
         position: absolute;
         top: 50%;
@@ -1144,6 +1792,8 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
         transition: background 0.2s, opacity 0.2s;
         opacity: 0;
         pointer-events: none;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
     .carousel-arrow.left {
@@ -1160,20 +1810,20 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
     }
 
     .carousel-arrow:hover {
-        background: #f0f0f0;
+        background: none !important;
     }
 
     .carousel-arrow i {
-        width: 90%;
-        height: 90%;
-        font-size: 0.8em;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0;
-        padding: 0;
-        line-height: 1;
-        transform: translateY(2%);
+        font-size: 1em !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        width: 1em;
+        height: 1em;
+        transform: none !important;
     }
 
     @media (max-width: 900px) {
@@ -1462,6 +2112,26 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
     .compact-card {
         max-height: 280px;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Card sem footer - centralizar conteúdo verticalmente */
+    .compact-card.card-no-footer {
+        justify-content: space-evenly;
+    }
+
+    .compact-card.card-no-footer .card-header {
+        padding-top: 1rem !important;
+    }
+
+    .compact-card.card-no-footer .card-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-top: 0.25rem !important;
+        margin-top: -0.5rem;
     }
 
     /* Garantir que cards no carousel mantenham tamanho consistente */
@@ -1531,8 +2201,21 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
         padding: 0.5rem 1rem;
     }
 
+    .compact-footer .btn-group {
+        display: flex;
+        flex-wrap: nowrap !important;
+        gap: 0.3em;
+        align-items: center;
+    }
+
+    .compact-footer .btn,
+    .compact-footer .btn-duplicar-projeto {
+        flex-shrink: 0;
+        min-width: auto;
+    }
+
     .task-list {
-        max-height: 120px;
+        max-height: 140px;
         overflow-y: auto;
     }
 
@@ -2553,6 +3236,231 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
 
     // Evento de scroll para atualizar as linhas visíveis
     document.addEventListener('DOMContentLoaded', function () {
+        // === CUSTOM SELECT COMPONENT ===
+        class CustomSelect {
+            constructor(wrapper) {
+                this.wrapper = wrapper;
+                this.selectId = wrapper.dataset.selectId;
+                this.nativeSelect = wrapper.querySelector('select');
+                this.display = wrapper.querySelector('.custom-select-display');
+                this.dropdown = wrapper.querySelector('.custom-select-dropdown');
+                this.searchInput = wrapper.querySelector('.search-input');
+                this.optionsContainer = wrapper.querySelector('.custom-select-options');
+                this.valueContainer = wrapper.querySelector('.custom-select-value');
+                this.clearBtn = wrapper.querySelector('.clear-btn');
+                
+                // Armazenar instância no wrapper para acesso posterior
+                wrapper._customSelectInstance = this;
+                
+                this.init();
+            }
+            
+            init() {
+                // Sincronizar checkboxes com as opções selecionadas do select nativo
+                this.syncCheckboxes();
+                // Atualizar display inicial
+                this.updateDisplay();
+                // Toggle dropdown ao clicar no display
+                this.display.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggle();
+                });
+                // Busca
+                this.searchInput.addEventListener('input', () => this.filter());
+                this.searchInput.addEventListener('click', (e) => e.stopPropagation());
+                // Prevenir fechar ao clicar dentro do dropdown
+                this.dropdown.addEventListener('click', (e) => e.stopPropagation());
+                // Opções
+                this.optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+                    option.addEventListener('click', () => this.toggleOption(option));
+                });
+                // Limpar
+                if (this.clearBtn) {
+                    this.clearBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.clear();
+                    });
+                }
+                // Fechar ao clicar fora
+                document.addEventListener('click', (e) => {
+                    if (!this.wrapper.contains(e.target)) {
+                        this.close();
+                    }
+                });
+                // Sempre sincronizar checkboxes e display ao carregar a página (corrige bug do filtro Coleção)
+                // Sincronizar selects após o carregamento da página (corrige bug do filtro Coleção)
+                setTimeout(() => {
+                    this.syncCheckboxes();
+                    this.updateDisplay();
+                }, 300);
+            }
+            
+            syncCheckboxes() {
+                // Sincronizar os checkboxes com as opções selected do select nativo
+                Array.from(this.nativeSelect.options).forEach(option => {
+                    if (option.value !== '') {
+                        const checkbox = this.optionsContainer.querySelector(`[data-value="${option.value}"] input[type="checkbox"]`);
+                        if (checkbox) {
+                            checkbox.checked = option.selected;
+                        }
+                    }
+                });
+                // Atualizar o display após sincronizar
+                this.updateDisplay();
+            }
+            
+            toggle() {
+                if (this.wrapper.classList.contains('open')) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+            
+            open() {
+                console.log('open() chamado');
+                // Fechar todos os outros selects
+                document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+                    if (w !== this.wrapper) {
+                        w.classList.remove('open');
+                    }
+                });
+                
+                this.wrapper.classList.add('open');
+                this.searchInput.value = '';
+                this.filter();
+                
+                // Sincronizar checkboxes E atualizar display após abrir
+                // Usar setTimeout para garantir que o DOM foi atualizado
+                setTimeout(() => {
+                    console.log('setTimeout - chamando syncCheckboxes');
+                    this.syncCheckboxes();
+                }, 0);
+                
+                setTimeout(() => this.searchInput.focus(), 100);
+            }
+            
+            close() {
+                this.wrapper.classList.remove('open');
+            }
+            
+            filter() {
+                const term = this.searchInput.value.toLowerCase();
+                this.optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+                    const text = option.querySelector('span').textContent.toLowerCase();
+                    if (text.includes(term)) {
+                        option.classList.remove('hidden');
+                    } else {
+                        option.classList.add('hidden');
+                    }
+                });
+            }
+            
+            toggleOption(optionEl) {
+                const checkbox = optionEl.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+                
+                const value = optionEl.dataset.value;
+                const nativeOption = this.nativeSelect.querySelector(`option[value="${value}"]`);
+                if (nativeOption) {
+                    nativeOption.selected = checkbox.checked;
+                }
+                
+                this.updateDisplay();
+                
+                // Trigger change no select nativo (para filtros funcionarem)
+                const event = new Event('change', { bubbles: true });
+                this.nativeSelect.dispatchEvent(event);
+            }
+            
+            updateDisplay() {
+                const selected = Array.from(this.nativeSelect.selectedOptions).filter(opt => opt.value !== '');
+                const placeholder = this.valueContainer.querySelector('.placeholder');
+                
+                console.log('updateDisplay - selected count:', selected.length);
+                
+                // Salvar os selecionados no localStorage
+                if (selected.length > 0) {
+                    localStorage.setItem('selected_projetos_gantt', selected.map(o => o.value).join(','));
+                }
+                // Não remover quando vazio, para persistir até o clear
+                
+                // Remover TODOS os spans de texto anteriores
+                this.valueContainer.querySelectorAll('.text').forEach(t => t.remove());
+                
+                // Forçar reset completo do placeholder removendo o atributo style
+                if (placeholder) {
+                    placeholder.removeAttribute('style');
+                }
+                
+                if (selected.length === 0) {
+                    // Nenhuma seleção - mostrar placeholder
+                    if (placeholder) placeholder.style.display = 'inline';
+                    console.log('updateDisplay - mostrando placeholder');
+                } else if (selected.length === 1) {
+                    // Uma seleção - mostrar o texto
+                    if (placeholder) placeholder.style.display = 'none';
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'text';
+                    textSpan.textContent = selected[0].text;
+                    this.valueContainer.appendChild(textSpan);
+                    console.log('updateDisplay - mostrando 1 seleção:', selected[0].text);
+                } else {
+                    // Múltiplas seleções - mostrar "Seleções Múltiplas"
+                    if (placeholder) placeholder.style.display = 'none';
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'text';
+                    textSpan.textContent = 'Seleções Múltiplas';
+                    this.valueContainer.appendChild(textSpan);
+                    console.log('updateDisplay - mostrando Seleções Múltiplas');
+                }
+            }
+            
+            removeValue(value) {
+                const nativeOption = this.nativeSelect.querySelector(`option[value="${value}"]`);
+                if (nativeOption) {
+                    nativeOption.selected = false;
+                }
+                
+                const checkbox = this.optionsContainer.querySelector(`[data-value="${value}"] input`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+                
+                this.updateDisplay();
+                
+                // Trigger change
+                const event = new Event('change', { bubbles: true });
+                this.nativeSelect.dispatchEvent(event);
+            }
+            
+            clear() {
+                // Limpar checkboxes
+                this.optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                // Limpar o select nativo
+                Array.from(this.nativeSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+                // Atualizar display
+                const placeholder = this.valueContainer.querySelector('.placeholder');
+                const oldText = this.valueContainer.querySelector('.text');
+                if (oldText) oldText.remove();
+                if (placeholder) placeholder.style.display = 'inline';
+                // Limpar localStorage
+                localStorage.removeItem('selected_projetos_gantt');
+                // Disparar evento change para garantir atualização dos filtros
+                const event = new Event('change', { bubbles: true });
+                this.nativeSelect.dispatchEvent(event);
+            }
+        }
+        
+        // Inicializar todos os custom selects
+        document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+            new CustomSelect(wrapper);
+        });
+        // === FIM CUSTOM SELECT ===
+        
         montarGanttAgrupado();
         function atualizarZoomLabel() {
             const zoomLabel = document.getElementById('zoom-label');
@@ -2686,30 +3594,13 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
             });
         }
 
-        // Limpar filtros do painel lateral
-        const btnLimparFiltrosDesktop = document.getElementById('limpar-filtros-desktop');
-        if (btnLimparFiltrosDesktop) {
-            btnLimparFiltrosDesktop.addEventListener('click', function () {
-                // Limpa todos os campos do formulário do painel lateral
-                document.getElementById('filtros-desktop').reset();
-                // Limpa os selects múltiplos - desmarca todas as opções
-                const selects = document.querySelectorAll('#offcanvas-filtros-desktop select[multiple]');
-                selects.forEach(select => {
-                    for (let i = 0; i < select.options.length; i++) {
-                        select.options[i].selected = false;
-                    }
-                });
-                // Resetar os displays
-                document.getElementById('nome-text').textContent = 'Selecione o Projeto';
-                document.getElementById('status-text').textContent = 'Selecione o Status';
-                document.getElementById('colecao-text').textContent = 'Selecione a Coleção';
-                // Limpa os campos de data
-                document.getElementById('data_inicio-desktop').value = '';
-                document.getElementById('data_fim-desktop').value = '';
-                // Redireciona para a URL base, removendo filtros
-                window.location = window.location.pathname;
-            });
-        }
+        // Limpar filtros do painel lateral - REMOVIDO: conflito com onclick do HTML
+        // const btnLimparFiltrosDesktop = document.getElementById('limpar-filtros-desktop');
+        // if (btnLimparFiltrosDesktop) {
+        //     btnLimparFiltrosDesktop.addEventListener('click', function () {
+        //         // Código antigo que conflitava
+        //     });
+        // }
 
         // Função para limpar selects individuais
         window.limparSelect = function (selectId) {
@@ -2727,12 +3618,23 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
         };
 
         // Função para alternar a visibilidade do select
-        window.toggleSelect = function (selectId) {
+        window.toggleSelect = function (selectId, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
             const select = document.getElementById(selectId);
             const displayId = selectId.replace('-desktop', '-display');
             const display = document.getElementById(displayId);
+            const chevronOverlayId = selectId.replace('-desktop', '-chevron-overlay');
+            const chevronOverlay = document.getElementById(chevronOverlayId);
 
-            if (select.style.display === 'none' || select.style.display === '') {
+            // Verificar qual está visível atualmente
+            const selectVisible = select.style.display === 'block';
+
+            if (!selectVisible) {
+                // ABRIR select
                 select.style.display = 'block';
                 select.style.position = 'absolute';
                 select.style.zIndex = '1000';
@@ -2744,12 +3646,73 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
                 select.style.borderRadius = '10px';
                 select.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                 display.style.display = 'none';
+                display.classList.add('select-display-hidden'); // Adicionar classe para esconder completamente
+                if (chevronOverlay) chevronOverlay.style.display = 'block';
                 select.focus();
             } else {
+                // FECHAR select
                 select.style.display = 'none';
                 display.style.display = 'flex';
+                display.classList.remove('select-display-hidden'); // Remover classe ao mostrar novamente
+                if (chevronOverlay) chevronOverlay.style.display = 'none';
             }
         };
+        
+        // Adicionar listener para fechar quando clicar fora do select ativo
+        document.addEventListener('click', function(e) {
+            const allSelects = document.querySelectorAll('[id$="-desktop"]');
+            
+            allSelects.forEach(select => {
+                if (select.style.display === 'block') {
+                    const displayId = select.id.replace('-desktop', '-display');
+                    const display = document.getElementById(displayId);
+                    
+                    // Se clicou fora do select E fora do display parent
+                    if (!select.contains(e.target) && !select.parentElement.contains(e.target)) {
+                        select.style.display = 'none';
+                        display.style.display = 'flex';
+                        select.removeAttribute('data-can-close');
+                    }
+                }
+            });
+        }, true);
+
+        // Adicionar listeners para fechar selects quando clicar fora
+        document.addEventListener('DOMContentLoaded', function() {
+            const selects = document.querySelectorAll('[id$="-desktop"]');
+            
+            selects.forEach(select => {
+                const selectId = select.id;
+                const displayId = selectId.replace('-desktop', '-display');
+                const display = document.getElementById(displayId);
+                
+                // Quando o select perder o foco, fechar
+                select.addEventListener('blur', function() {
+                    setTimeout(() => {
+                        if (select.style.display === 'block') {
+                            select.style.display = 'none';
+                            display.style.display = 'flex';
+                        }
+                    }, 150);
+                });
+            });
+            
+            // Listener global para fechar ao clicar fora
+            document.addEventListener('click', function(e) {
+                const openSelects = document.querySelectorAll('[id$="-desktop"][style*="display: block"]');
+                
+                openSelects.forEach(select => {
+                    const displayId = select.id.replace('-desktop', '-display');
+                    const display = document.getElementById(displayId);
+                    
+                    // Se clicou fora do select e fora do display
+                    if (!select.contains(e.target) && !display.contains(e.target)) {
+                        select.style.display = 'none';
+                        display.style.display = 'flex';
+                    }
+                });
+            });
+        });
 
         // Função para mostrar as seleções no display
         window.mostrarSelecoes = function (selectId, displayId) {
@@ -2773,6 +3736,9 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
             // Não fechar automaticamente - deixar o usuário selecionar múltiplas opções
             // O select só fecha quando perder o foco (onblur)
         };
+
+        // PROTEÇÃO DOS ÍCONES SVG - Não é mais necessário pois SVG não muda
+        // Removido código obsoleto do MutationObserver
 
         // Controlar comportamento dos selects para não abrir automaticamente
         const selectsDesktop = document.querySelectorAll('#offcanvas-filtros-desktop select');
@@ -2814,15 +3780,27 @@ const alertasProjetos = {{ alertas_projetos | tojson | safe }};
     function configurarLinhaCursor() {
         const cronogramaArea = document.getElementById('gantt-cronograma-area');
         const cursorLine = document.getElementById('gantt-cursor-line');
+        const ganttCustom = document.getElementById('gantt-custom');
 
-        if (cronogramaArea && cursorLine) {
+        if (cronogramaArea && cursorLine && ganttCustom) {
 
             // Mostrar e mover linha do cursor
             cronogramaArea.addEventListener('mousemove', function (e) {
                 const rect = cronogramaArea.getBoundingClientRect();
+                const ganttRect = ganttCustom.getBoundingClientRect();
                 const x = e.clientX - rect.left;
-                cursorLine.style.left = x + 'px';
-                cursorLine.style.display = 'block';
+                const scrollLeft = ganttCustom.scrollLeft || 0;
+                
+                // Calcular posição do mouse em relação ao container do gantt (viewport)
+                const mouseXInViewport = e.clientX - ganttRect.left;
+                
+                // Só mostrar a linha se o mouse estiver além da coluna fixa de tarefas (320px na viewport)
+                if (mouseXInViewport > 320) {
+                    cursorLine.style.left = (x) + 'px';
+                    cursorLine.style.display = 'block';
+                } else {
+                    cursorLine.style.display = 'none';
+                }
             });
 
             cronogramaArea.addEventListener('mouseleave', function () {

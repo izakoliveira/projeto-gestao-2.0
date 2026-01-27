@@ -1,58 +1,132 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro</title>
+{% block title %}Cadastro - Gestão de Projetos{% endblock %}
 
-    <!-- Link para o Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+{% block extra_css %}
+<style>
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .password-field {
+        padding-right: 45px !important;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0 12px;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .password-toggle:hover {
+        color: #495057;
+    }
+    .password-toggle:focus {
+        outline: none;
+    }
+</style>
+{% endblock %}
 
-<body>
-    <div class="container my-5">
-        <h1>Cadastro</h1>
-
-        <!-- Exibir mensagens de erro ou sucesso -->
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="alert alert-info">
-                    <ul>
-                        {% for message in messages %}
-                            <li>{{ message }}</li>
-                        {% endfor %}
-                    </ul>
+{% block content %}
+<div class="container my-5 fade-in" style="max-width: 400px;">
+    <div class="card shadow">
+        <div class="card-body">
+            <h2 class="mb-4 text-center"><i class="fas fa-user-plus"></i> Cadastro</h2>
+            <!-- Exibir mensagens de erro ou sucesso -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome</label>
+                    <input type="text" class="form-control" id="nome" name="nome" autocomplete="off" required autofocus>
                 </div>
-            {% endif %}
-        {% endwith %}
-
-        <form method="POST">
-            <div class="mb-3">
-                <label for="nome" class="form-label">Nome</label>
-                <input type="text" class="form-control" id="nome" name="nome" required>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" autocomplete="off" required>
+                </div>
+                <div class="mb-3">
+                    <label for="senha" class="form-label">Senha</label>
+                    <div style="position: relative;">
+                        <input type="password" class="form-control" id="senha" name="senha" autocomplete="new-password" required style="padding-right: 45px;">
+                        <button class="password-toggle" type="button" id="toggleSenha" title="Mostrar/Ocultar senha" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px 8px; color: #6c757d; z-index: 5;">
+                            <i class="fas fa-eye" id="iconeSenha"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="confirmar_senha" class="form-label">Confirmar Senha</label>
+                    <div style="position: relative;">
+                        <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" required style="padding-right: 45px;">
+                        <button class="password-toggle" type="button" id="toggleConfirmarSenha" title="Mostrar/Ocultar senha" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px 8px; color: #6c757d; z-index: 5;">
+                            <i class="fas fa-eye" id="iconeConfirmarSenha"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
+            </form>
+            <div class="mt-3 text-center">
+                <p>Já tem uma conta? <a href="/login">Faça login aqui</a></p>
             </div>
-
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="senha" class="form-label">Senha</label>
-                <input type="password" class="form-control" id="senha" name="senha" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Cadastrar</button>
-        </form>
-
-        <div class="mt-3">
-            <p>Já tem uma conta? <a href="/login">Faça login aqui</a></p>
         </div>
     </div>
+</div>
 
-    <!-- Bootstrap 5 JS e dependências -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const senhaField = document.getElementById('senha');
+    const toggleSenhaBtn = document.getElementById('toggleSenha');
+    const iconeSenha = document.getElementById('iconeSenha');
+    
+    const confirmarSenhaField = document.getElementById('confirmar_senha');
+    const toggleConfirmarSenhaBtn = document.getElementById('toggleConfirmarSenha');
+    const iconeConfirmarSenha = document.getElementById('iconeConfirmarSenha');
 
-</html>
+    // Toggle visualização de senha
+    toggleSenhaBtn.addEventListener('click', function() {
+        const tipo = senhaField.getAttribute('type');
+        if (tipo === 'password') {
+            senhaField.setAttribute('type', 'text');
+            iconeSenha.classList.remove('fa-eye');
+            iconeSenha.classList.add('fa-eye-slash');
+            toggleSenhaBtn.setAttribute('title', 'Ocultar senha');
+        } else {
+            senhaField.setAttribute('type', 'password');
+            iconeSenha.classList.remove('fa-eye-slash');
+            iconeSenha.classList.add('fa-eye');
+            toggleSenhaBtn.setAttribute('title', 'Mostrar senha');
+        }
+    });
+
+    // Toggle visualização de confirmar senha
+    toggleConfirmarSenhaBtn.addEventListener('click', function() {
+        const tipo = confirmarSenhaField.getAttribute('type');
+        if (tipo === 'password') {
+            confirmarSenhaField.setAttribute('type', 'text');
+            iconeConfirmarSenha.classList.remove('fa-eye');
+            iconeConfirmarSenha.classList.add('fa-eye-slash');
+            toggleConfirmarSenhaBtn.setAttribute('title', 'Ocultar senha');
+        } else {
+            confirmarSenhaField.setAttribute('type', 'password');
+            iconeConfirmarSenha.classList.remove('fa-eye-slash');
+            iconeConfirmarSenha.classList.add('fa-eye');
+            toggleConfirmarSenhaBtn.setAttribute('title', 'Mostrar senha');
+        }
+    });
+});
+</script>
+{% endblock %}

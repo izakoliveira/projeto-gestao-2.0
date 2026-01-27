@@ -1,0 +1,27 @@
+pdfkit
+blinker==1.9.0
+certifi==2025.4.26
+charset-normalizer==3.4.2
+click==8.2.1
+colorama==0.4.6
+Flask-WTF==1.2.1
+idna==3.10
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+python-dotenv==1.1.0
+requests==2.32.4
+urllib3==2.4.0
+Werkzeug==3.1.3
+bcrypt==4.2.1
+
+gunicorn
+supabase
+
+# Dependências para relatórios e gráficos
+pandas>=2.0.0
+matplotlib>=3.7.0
+openpyxl>=3.1.0
+xlsxwriter>=3.0.0
+Pillow>=9.0.0
+reportlab>=4.0.0

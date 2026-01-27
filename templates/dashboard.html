@@ -3,6 +3,55 @@
 {% block title %}Dashboard - Gestão de Projetos{% endblock %}
 
 {% block content %}
+<style>
+    /* Cores dos badges baseadas nos status - Modo claro */
+    .badge.status-badge-concluido,
+    .badge.status-badge-concluida {
+        background-color: #28a745 !important;
+        color: #f8f9fa !important;
+    }
+    
+    .badge.status-badge-em_andamento,
+    .badge.status-badge-em_progresso {
+        background-color: #17a2b8 !important;
+        color: #f8f9fa !important;
+    }
+    
+    .badge.status-badge-pendente {
+        background-color: #ffc107 !important;
+        color: #f8f9fa !important;
+    }
+    
+    .badge.status-badge-atrasado,
+    .badge.status-badge-atrasada {
+        background-color: #dc3545 !important;
+        color: #f8f9fa !important;
+    }
+    
+    /* Modo escuro - fonte escura */
+    body.dark .badge.status-badge-concluido,
+    body.dark .badge.status-badge-concluida {
+        background-color: #28a745 !important;
+        color: #212529 !important;
+    }
+    
+    body.dark .badge.status-badge-em_andamento,
+    body.dark .badge.status-badge-em_progresso {
+        background-color: #17a2b8 !important;
+        color: #212529 !important;
+    }
+    
+    body.dark .badge.status-badge-pendente {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+    
+    body.dark .badge.status-badge-atrasado,
+    body.dark .badge.status-badge-atrasada {
+        background-color: #dc3545 !important;
+        color: #212529 !important;
+    }
+</style>
 <div class="container mt-4">
     <div class="row">
         <div class="col-12">
@@ -113,10 +162,7 @@
                                 </small>
                             </div>
                             <div>
-                                <span
-                                    class="badge {% if projeto.status == 'concluido' %}bg-success{% elif projeto.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %}">
-                                    {{ projeto.status|title }}
-                                </span>
+                                <span class="badge status-badge-{{ projeto.status|replace(' ', '_')|replace('í', 'i')|replace('ú', 'u')|replace('á', 'a')|replace('é', 'e')|replace('ó', 'o') }}">{{ projeto.status|title }}</span>
                                 <a href="{{ url_for('main.detalhes_projeto', projeto_id=projeto.id) }}"
                                     class="btn btn-sm btn-outline-primary ms-2">
                                     <i class="fas fa-eye"></i>
@@ -158,10 +204,7 @@
                                 </small>
                             </div>
                             <div class="d-flex align-items-center">
-                                <span
-                                    class="badge {% if tarefa.status == 'concluida' %}bg-success{% elif tarefa.status == 'em_andamento' %}bg-warning{% else %}bg-secondary{% endif %} me-2">
-                                    {{ tarefa.status|title }}
-                                </span>
+                                <span class="badge status-badge-{{ tarefa.status|replace(' ', '_')|replace('í', 'i')|replace('ú', 'u')|replace('á', 'a')|replace('é', 'e')|replace('ó', 'o') }} me-2">{{ tarefa.status|title }}</span>
                                 <a href="{{ url_for('main.detalhes_projeto', projeto_id=tarefa.projeto_id) }}#tarefa-{{ tarefa.id }}"
                                     class="btn btn-sm btn-outline-primary" title="Ver detalhes da tarefa no projeto">
                                     <i class="fas fa-eye"></i>

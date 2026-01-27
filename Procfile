@@ -1,1 +1,0 @@
-web: gunicorn app_refatorado_final:app 

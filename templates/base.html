@@ -4,23 +4,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Largura personalizada apenas para o dropdown de notificações */
+        #notificacaoDropdownLi .dropdown-menu {
+            max-width: 500px !important;
+            min-width: 500px !important;
+        }
+        
+        /* Reduzir tamanho do badge de notificações */
+        #notificacaoBadge {
+            font-size: 0.75rem !important;
+            padding: 0.25em 0.5em !important;
+            min-width: 1.4em !important;
+            height: 1.4em !important;
+            line-height: 1.1 !important;
+            color: #000 !important; /* Forçar texto preto para boa legibilidade */
+        }
+    </style>
     <title>{% block title %}Gestão de Projetos{% endblock %}</title>
+
+    <!-- Aplicar tema IMEDIATAMENTE antes de qualquer CSS -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('themeMode') || localStorage.getItem('tema') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode-loading');
+                document.documentElement.style.backgroundColor = '#1a1a1a';
+                document.documentElement.style.color = '#e0e0e0';
+            }
+        })();
+    </script>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}?v={{ config.get('VERSION', '1.0') }}" rel="stylesheet">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+        <link rel="icon" type="image/png" sizes="128x128" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+        <link rel="icon" type="image/png" sizes="1024x1024" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     <meta name="theme-color" content="#1976d2">
     <style>
+        /* Ocultar scrollbar de toda a aplicação */
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar,
+        *::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        html,
+        body,
+        * {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
+
         /* Estilos personalizados para notificações */
         .dropdown-menu {
-            max-width: 400px;
-            min-width: 350px;
             max-height: 500px;
             overflow-y: auto;
+            min-width: 270px;
+        }
+        /* Largura personalizada apenas para o dropdown de notificações */
+        #notificacaoDropdownLi .dropdown-menu {
+            max-width: 500px !important;
+            min-width: 500px !important;
         }
 
         .dropdown-item {
@@ -154,6 +210,17 @@
 </head>
 
 <body>
+    <script>
+        // Aplicar tema ao body imediatamente após ele existir
+        (function() {
+            const savedTheme = localStorage.getItem('themeMode') || localStorage.getItem('tema') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark');
+                document.body.style.backgroundColor = '#1a1a1a';
+                document.body.style.color = '#e0e0e0';
+            }
+        })();
+    </script>
     <!-- Navigation -->
     {% if session.user_id %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -167,7 +234,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto">
+                <ul class="navbar-nav flex-fill justify-content-center">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.dashboard') }}">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
@@ -194,51 +261,150 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="relatoriosDropdown">
                             <li>
-                                <a class="dropdown-item" href="{{ url_for('relatorio.pagina_exportacao') }}">
-                                    <i class="fas fa-download"></i> Exportação
+                                <a class="dropdown-item" href="{{ url_for('relatorio_datas_conflitantes') }}">
+                                    <i class="fas fa-exclamation-triangle"></i> Datas Conflitantes
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{{ url_for('relatorio.datas_conflitantes') }}">
-                                    <i class="fas fa-exclamation-triangle"></i> Datas Conflitantes
+                                <a class="dropdown-item" href="{{ url_for('relatorio.exportar_excel_projetos') }}">
+                                    <i class="fas fa-file-excel"></i> Exportar Projetos (Excel)
                                 </a>
+                                <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const excelLink = document.querySelector('a.dropdown-item[href*="exportar_excel_projetos"]');
+                                    if (excelLink) {
+                                        excelLink.addEventListener('click', function(e) {
+                                            // Só executa na tela de projetos
+                                            if (window.location.pathname.includes('/projetos')) {
+                                                e.preventDefault();
+                                                console.log("[DEBUG] Iniciando exportação Excel");
+                                                console.log("[DEBUG] URL atual:", window.location.pathname);
+                                                function getSelectValues(sel) {
+                                                    if (!sel) return [];
+                                                    return Array.from(sel.selectedOptions).map(opt => opt.value).filter(v => v);
+                                                }
+                                                let projeto_ids = [];
+                                                const nomeSelect = document.getElementById('nome-desktop');
+                                                console.log("[DEBUG] nomeSelect:", nomeSelect);
+                                                if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
+                                                    const projetosData = window.projetosData || [];
+                                                    console.log("[DEBUG] projetosData:", projetosData);
+                                                    const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
+                                                    console.log("[DEBUG] nomesSelecionados:", nomesSelecionados);
+                                                    projeto_ids = nomesSelecionados.map(nome => {
+                                                        const projeto = projetosData.find(p => p.nome === nome);
+                                                        console.log("[DEBUG] Procurando projeto:", nome, "->", projeto);
+                                                        return projeto ? projeto.id : null;
+                                                    }).filter(id => id !== null);
+                                                    console.log("[DEBUG] projeto_ids mapeados:", projeto_ids);
+                                                }
+                                                const statusProjeto = getSelectValues(document.getElementById('status-projeto-desktop'));
+                                                console.log("[DEBUG] statusProjeto:", statusProjeto);
+                                                // Coletar filtros de data
+                                                const dataInicio = document.getElementById('data_inicio-desktop')?.value || '';
+                                                const dataFim = document.getElementById('data_fim-desktop')?.value || '';
+                                                console.log("[DEBUG] dataInicio:", dataInicio, "dataFim:", dataFim);
+                                                
+                                                // Verificar se há algum filtro aplicado
+                                                const hasFilters = projeto_ids.length > 0 || statusProjeto.length > 0 || dataInicio || dataFim;
+                                                console.log("[DEBUG] Tem filtros aplicados:", hasFilters);
+                                                
+                                                const payload = {
+                                                    projeto_ids,
+                                                    status: statusProjeto,
+                                                    data_inicio: dataInicio,
+                                                    data_fim: dataFim
+                                                };
+                                                console.log("[DEBUG] Payload enviado:", payload);
+                                                // Gerar nome do arquivo no formato desejado
+                                                const agora = new Date();
+                                                const dia = String(agora.getDate()).padStart(2, '0');
+                                                const mes = String(agora.getMonth() + 1).padStart(2, '0');
+                                                const ano = agora.getFullYear();
+                                                const hora = String(agora.getHours()).padStart(2, '0');
+                                                const min = String(agora.getMinutes()).padStart(2, '0');
+                                                const nomeArquivo = `Relatório Projetos ${dia}-${mes}-${ano}  ${hora}h${min}.xlsx`;
+                                                fetch('/relatorio/exportar_excel_projetos', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        projeto_ids,
+                                                        status: statusProjeto,
+                                                        data_inicio: dataInicio,
+                                                        data_fim: dataFim
+                                                    })
+                                                })
+                                                .then(resp => resp.blob())
+                                                .then(blob => {
+                                                    const url = URL.createObjectURL(blob);
+                                                    const a = document.createElement('a');
+                                                    a.href = url;
+                                                    a.download = nomeArquivo;
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    setTimeout(() => {
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    }, 100);
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                                </script>
                             </li>
                         </ul>
                     </li>
                     {% if session.is_admin %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.admin_restricoes') }}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user-shield"></i> Administração
                         </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('admin.admin_restricoes') }}">
+                                    <i class="fas fa-user-shield"></i> Restrições
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.gerenciar_feriados') }}">
+                                    <i class="fas fa-calendar-times"></i> Feriados
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% endif %}
-                </ul>
-                {% if session.is_admin %}
-                <ul class="navbar-nav">
+                    {% if session.is_admin %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('pastas.listar_pastas') }}">Pastas</a>
                     </li>
+                    {% endif %}
                 </ul>
-                {% endif %}
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <!-- Toggle de tema -->
-                    <li class="nav-item me-2">
-                        <button id="themeToggle" class="btn btn-outline-light btn-sm" type="button"
-                            title="Alternar tema">
-                            <i class="fas fa-moon" id="themeToggleIcon"></i>
-                        </button>
+                    <li class="nav-item me-2" style="flex-shrink: 0;">
+                        <button id="themeToggle" type="button" title="Alternar tema"><span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></span></button>
+                        <script>
+                            // Aplicar estado correto do botão imediatamente
+                            (function() {
+                                const btn = document.getElementById('themeToggle');
+                                const savedTheme = localStorage.getItem('themeMode') || localStorage.getItem('tema') || 'light';
+                                if (btn && savedTheme === 'dark') {
+                                    btn.classList.add('dark-mode');
+                                }
+                            })();
+                        </script>
                     </li>
                     <!-- Ícone de sininho de notificações -->
                     <li class="nav-item dropdown me-3" id="notificacaoDropdownLi" style="position:relative;">
                         <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-bell"></i>
+                            <i class="fas fa-bell position-relative"></i>
                             <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                id="notificacaoBadge" style="display:none;">0</span>
+                                class="position-absolute badge rounded-pill bg-danger"
+                                id="notificacaoBadge" style="display:none; top: -4px; right: -4px;">0</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificacaoDropdown"
-                            style="min-width:350px; max-width:400px; max-height:400px; overflow-y:auto;">
+                            style="min-width:500px; max-width:500px; max-height:400px; overflow-y:auto;">
                             <li
                                 class="dropdown-header bg-light fw-bold d-flex justify-content-between align-items-center">
                                 Notificações
@@ -275,6 +441,97 @@
         </div>
     </nav>
     {% endif %}
+
+    <!-- Botão de tema flutuante (sempre visível) -->
+    <style>
+        #themeToggleContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        #themeToggle {
+            width: 50px;
+            height: 25px;
+            border-radius: 12.5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.55);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            outline: none;
+            padding: 0;
+            text-align: center;
+            display: inline-block;
+            overflow: hidden;
+            z-index: 1030;
+            margin-top: 5px;
+        }
+        
+        #themeToggle.dark-mode {
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        #themeToggle::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transform: translateX(0);
+        }
+
+        #themeToggle.dark-mode::before {
+            transform: translateX(25px);
+            background: #2c3e50;
+            color: #f39c12;
+            content: '\263D';
+            color: white;
+            font-weight: 900;
+        }
+
+        #themeToggle:not(.dark-mode)::before {
+            content: '\2600';
+            color: #333;
+            transform: translateX(0);
+        }
+
+        @keyframes activateBounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            #themeToggle {
+                width: 45px;
+                height: 22px;
+                border-radius: 11px;
+            }
+
+            #themeToggle::before {
+                width: 18px;
+                height: 18px;
+            }
+
+            #themeToggle.dark-mode::before {
+                transform: translateX(22px);
+            }
+        }
+    </style>
+
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -317,12 +574,35 @@
             });
             {% endfor %}
         });
+
+        // Função para atualizar estilos inline no modo escuro
+        function updateInlineStylesForDarkMode() {
+            console.log('[DEBUG] Executando updateInlineStylesForDarkMode global');
+            
+            // Aplicar estilos específicos para elementos que precisam de atualização dinâmica
+            const elementsWithInlineStyles = document.querySelectorAll('[style*="background-color"], [style*="color"], [style*="border-color"]');
+            
+            elementsWithInlineStyles.forEach(element => {
+                const currentStyle = element.getAttribute('style') || '';
+                
+                // Se o elemento tem estilos inline relacionados a cores, forçar atualização
+                if (document.body.classList.contains('dark')) {
+                    // Para modo escuro, garantir que cores sejam aplicadas
+                    if (currentStyle.includes('background-color') || currentStyle.includes('color') || currentStyle.includes('border-color')) {
+                        // Forçar reflow para aplicar estilos
+                        element.style.display = 'none';
+                        element.offsetHeight; // Trigger reflow
+                        element.style.display = '';
+                    }
+                }
+            });
+        }
     </script>
     {% endif %}
     {% endwith %}
 
     <!-- Container para notificações toast -->
-    <div id="toastContainerGlobal" class="position-fixed top-0 end-0 p-3" style="z-index: 1080; min-width: 350px;">
+    <div id="toastContainerGlobal" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080; min-width: 280px;">
     </div>
 
     <!-- Main Content -->
@@ -345,42 +625,64 @@
     <!-- Removido script de dark mode -->
     {% block scripts %}
     <script>
-        // Tema: aplica tema salvo e configura toggle
-        (function () {
+        // JavaScript para alternância de tema
+        document.addEventListener('DOMContentLoaded', function() {
             const THEME_KEY = 'themeMode';
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const saved = localStorage.getItem(THEME_KEY);
-            const body = document.body;
-            const apply = (mode) => {
-                if (mode === 'dark') {
-                    body.classList.add('dark');
+            const btn = document.getElementById('themeToggle');
+            const icon = document.getElementById('themeToggleIcon');
+
+            if (!btn) {
+                console.error('Tema: Botão não encontrado');
+                return;
+            }
+
+            // Sincronizar estado do botão com o tema já aplicado
+            const savedTheme = localStorage.getItem(THEME_KEY) || localStorage.getItem('tema') || 'light';
+            if (btn) {
+                btn.classList.toggle('dark-mode', savedTheme === 'dark');
+            }
+
+            // Handler do clique
+            function toggleTheme(event) {
+                event.preventDefault();
+                const wasDark = document.body.classList.contains('dark');
+                const newTheme = wasDark ? 'light' : 'dark';
+
+                // Aplicar ou remover tema
+                if (newTheme === 'dark') {
+                    document.body.classList.add('dark');
+                    document.documentElement.classList.add('dark-mode-loading');
+                    document.body.style.backgroundColor = '#1a1a1a';
+                    document.body.style.color = '#e0e0e0';
+                    document.documentElement.style.backgroundColor = '#1a1a1a';
+                    document.documentElement.style.color = '#e0e0e0';
                 } else {
-                    body.classList.remove('dark');
+                    document.body.classList.remove('dark');
+                    document.documentElement.classList.remove('dark-mode-loading');
+                    document.body.style.backgroundColor = '';
+                    document.body.style.color = '';
+                    document.documentElement.style.backgroundColor = '';
+                    document.documentElement.style.color = '';
                 }
-                const icon = document.getElementById('themeToggleIcon');
-                if (icon) {
-                    icon.className = mode === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                
+                localStorage.setItem(THEME_KEY, newTheme);
+                // Compatibilidade com código antigo
+                localStorage.setItem('tema', newTheme);
+
+                // Atualizar aparência do botão
+                if (btn) {
+                    btn.classList.toggle('dark-mode', newTheme === 'dark');
                 }
-                const metaTheme = document.querySelector('meta[name="theme-color"]');
-                if (metaTheme) metaTheme.setAttribute('content', mode === 'dark' ? '#111111' : '#1976d2');
-            };
-            apply(saved || (prefersDark ? 'dark' : 'light'));
+            }
 
-            document.addEventListener('DOMContentLoaded', function () {
-                const btn = document.getElementById('themeToggle');
-                if (!btn) return;
-                btn.addEventListener('click', function () {
-                    const isDark = document.body.classList.toggle('dark');
-                    const mode = isDark ? 'dark' : 'light';
-                    localStorage.setItem(THEME_KEY, mode);
-                    const icon = document.getElementById('themeToggleIcon');
-                    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-                    const metaTheme = document.querySelector('meta[name="theme-color"]');
-                    if (metaTheme) metaTheme.setAttribute('content', isDark ? '#111111' : '#1976d2');
-                });
-            });
-        })();
-
+            // Anexar event listener
+            btn.addEventListener('click', toggleTheme);
+        });
+    </script>
+    {% endblock %}
+    {% block extra_scripts %}
+    {% endblock %}
+    <script>
         // Função para mostrar notificação toast
         function mostrarNotificacaoToast(mensagem, tipo = 'info', duracao = 5000) {
             const container = document.getElementById('toastContainerGlobal');
@@ -440,12 +742,23 @@
             });
         }
 
-        // Função para buscar notificações do usuário logado
+        // Sistema de Notificações
         document.addEventListener('DOMContentLoaded', function () {
-            const usuarioId = '{{ session.user_id }}';
-            const badge = document.getElementById('notificacaoBadge');
             const lista = document.getElementById('notificacoesLista');
+            const badge = document.getElementById('notificacaoBadge');
             const btnLimpar = document.getElementById('btnLimparNotificacoes');
+
+            if (!lista || !badge) {
+                console.error('Elementos de notificação não encontrados');
+                return;
+            }
+
+            const usuarioId = '{{ session.user_id if session.user_id else "null" }}';
+            if (usuarioId === 'null' || !usuarioId) {
+                console.log('Usuário não logado, pulando carregamento de notificações');
+                if (badge) badge.style.display = 'none';
+                return;
+            }
 
             function mostrarBotaoLimpar(temNotificacoes) {
                 if (btnLimpar) btnLimpar.style.display = temNotificacoes ? 'inline-block' : 'none';
@@ -588,7 +901,18 @@
                 if (!confirm('Tem certeza que deseja limpar todas as notificações?')) return;
 
                 fetch(`/notificacoes/${usuarioId}/limpar`, { method: 'DELETE' })
-                    .then(resp => resp.json())
+                    .then(async resp => {
+                        if (!resp.ok) {
+                            const text = await resp.text();
+                            throw new Error('Erro HTTP: ' + resp.status + ' - ' + text);
+                        }
+                        // Tentar converter para JSON, mas se falhar, retorna objeto vazio
+                        try {
+                            return await resp.json();
+                        } catch (e) {
+                            return {};
+                        }
+                    })
                     .then(data => {
                         carregarNotificacoes();
                         mostrarNotificacaoToast('Todas as notificações foram limpas com sucesso!', 'success');
@@ -600,7 +924,6 @@
             };
         });
     </script>
-    {% endblock %}
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/service-worker.js')
@@ -610,11 +933,11 @@
     </script>
 
     <!-- Sistema de Logging Configurável -->
-    <script src="{{ url_for('static', filename='js/logger.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/log-config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/logger.js') }}?v={{ config.get('VERSION', '1.0') }}"></script>
+    <script src="{{ url_for('static', filename='js/log-config.js') }}?v={{ config.get('VERSION', '1.0') }}"></script>
 
     <!-- Sistema de Drag & Drop para Tarefas -->
-    <script src="{{ url_for('static', filename='js/sortable-tarefas.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sortable-tarefas.js') }}?v={{ config.get('VERSION', '1.0') }}"></script>
     <script>
         // Configurar logs baseado no ambiente
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {

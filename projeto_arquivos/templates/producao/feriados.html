@@ -1,0 +1,286 @@
+{% extends "producao/base.html" %}
+
+{% block producao_title %}Feriados{% endblock %}
+
+{% block producao_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-calendar-day"></i> Feriados
+                </h1>
+                <button class="btn btn-producao" onclick="showAddFeriadoModal()">
+                    <i class="fas fa-plus me-2"></i>Novo Feriado
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Feriados -->
+    <div class="row">
+        <!-- Feriados Manuais -->
+        <div class="col-md-6">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-plus"></i> Feriados Manuais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="feriados-manuais-table">
+                        <p class="text-muted">Nenhum feriado manual encontrado.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feriados da API -->
+        <div class="col-md-6">
+            <div class="card card-producao">
+                <div class="card-header card-header-producao">
+                    <h5 class="mb-0">
+                        <i class="fas fa-globe"></i> Feriados Nacionais {{ ano_atual }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="feriados-api-table">
+                        <p class="text-muted">Carregando feriados da API...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar/Editar Feriado -->
+<div class="modal fade" id="addFeriadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header card-header-producao">
+                <h5 class="modal-title text-white" id="modalTitle">Novo Feriado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFeriadoForm">
+                    <input type="hidden" id="feriadoId">
+                    <div class="mb-3">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-control" id="feriadoData" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="feriadoNome" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-producao" onclick="saveFeriado()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadFeriadosManuais();
+        loadFeriadosAPI();
+    });
+
+    function loadFeriadosManuais() {
+        // Feriados manuais vêm do backend via template
+        const feriadosManuais = {{ feriados_manuais|tojson|safe }};
+        const container = document.getElementById('feriados-manuais-table');
+
+        if (feriadosManuais.length === 0) {
+            container.innerHTML = '<p class="text-muted">Nenhum feriado manual encontrado.</p>';
+            return;
+        }
+
+        let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+        feriadosManuais.forEach(feriado => {
+            const date = new Date(feriado.data);
+            const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+            const tipo = feriado.tipo || 'manual';
+
+            tableHtml += `
+            <tr>
+                <td><strong>${formatDate(feriado.data)}</strong></td>
+                <td>${feriado.nome}</td>
+                <td><span class="badge bg-secondary">${tipo}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editFeriado('${feriado.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteFeriado('${feriado.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        });
+
+        tableHtml += '</tbody></table></div>';
+        container.innerHTML = tableHtml;
+    }
+
+    function loadFeriadosAPI() {
+        // Feriados da API vêm do backend via template
+        const feriadosAPI = {{ feriados_api|tojson|safe }};
+        const container = document.getElementById('feriados-api-table');
+
+        if (feriadosAPI.length === 0) {
+            container.innerHTML = '<p class="text-muted">Não foi possível carregar feriados da API.</p>';
+            return;
+        }
+
+        let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+        feriadosAPI.forEach(feriado => {
+            const date = new Date(feriado.date);
+            const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+            const tipo = feriado.type || 'nacional';
+
+            tableHtml += `
+            <tr>
+                <td><strong>${formatDate(feriado.date)}</strong></td>
+                <td>${feriado.name}</td>
+                <td><span class="badge bg-info">${tipo}</span></td>
+            </tr>
+        `;
+        });
+
+        tableHtml += '</tbody></table></div>';
+        container.innerHTML = tableHtml;
+    }
+
+    function showAddFeriadoModal() {
+        document.getElementById('modalTitle').textContent = 'Novo Feriado';
+        document.getElementById('feriadoId').value = '';
+        document.getElementById('addFeriadoForm').reset();
+
+        const modal = new bootstrap.Modal(document.getElementById('addFeriadoModal'));
+        modal.show();
+    }
+
+    function editFeriado(id) {
+        // Buscar feriado manual pelo ID
+        const feriadosManuais = {{ feriados_manuais|tojson|safe }};
+        const feriado = feriadosManuais.find(f => f.id === parseInt(id));
+
+        if (!feriado) {
+            alert('Feriado não encontrado.');
+            return;
+        }
+
+        document.getElementById('modalTitle').textContent = 'Editar Feriado';
+        document.getElementById('feriadoId').value = feriado.id;
+        document.getElementById('feriadoData').value = feriado.data;
+        document.getElementById('feriadoNome').value = feriado.nome;
+
+        const modal = new bootstrap.Modal(document.getElementById('addFeriadoModal'));
+        modal.show();
+    }
+
+    function saveFeriado() {
+        const id = document.getElementById('feriadoId').value;
+        const data = document.getElementById('feriadoData').value;
+        const nome = document.getElementById('feriadoNome').value;
+
+        if (!data || !nome) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/feriados/${id}` : '/feriados/adicionar';
+
+        const formData = new FormData();
+        formData.append('data', data);
+        formData.append('nome', nome);
+        if (!id) {
+            formData.append('tipo', 'manual');
+        }
+
+        fetch(url, {
+            method: method,
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Fechar modal e recarregar
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addFeriadoModal'));
+                modal.hide();
+
+                // Limpar formulário
+                document.getElementById('addFeriadoForm').reset();
+
+                // Recarregar lista
+                location.reload();
+                alert(id ? 'Feriado atualizado com sucesso!' : 'Feriado criado com sucesso!');
+            } else {
+                alert('Erro: ' + (data.message || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao salvar feriado');
+        });
+    }
+
+    function deleteFeriado(id) {
+        if (confirm('Tem certeza que deseja excluir este feriado?')) {
+            fetch(`/feriados/${id}/excluir`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                    alert('Feriado excluído com sucesso!');
+                } else {
+                    alert('Erro: ' + (data.message || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao excluir feriado');
+            });
+        }
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+</script>
+{% endblock %}

@@ -1,32 +1,371 @@
 {% extends "base.html" %}
-
 {% block title %}Datas Conflitantes - Gestão de Projetos{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
+<style>
+    .custom-select-value {
+        padding: 0 12px !important;
+    }
+    /* Variáveis CSS para modo escuro */
+    :root {
+        --card-bg: #ffffff;
+        --text-color: #212529;
+        --card-border: #dee2e6;
+        --muted-text: #6c757d;
+    }
+    
+    body.dark {
+        --card-bg: #1a1a1a;
+        --text-color: #e0e0e0;
+        --card-border: #495057;
+        --muted-text: #adb5bd;
+    }
+    
+    /* Aplicar modo escuro imediatamente via CSS */
+    body.dark .container-fluid,
+    body.dark .card,
+    body.dark .card-header,
+    body.dark .card-body,
+    body.dark .table,
+    body.dark .alert {
+        background-color: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border-color: var(--card-border) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    body.dark .card-header.bg-info {
+        background-color: #17a2b8 !important;
+        color: white !important;
+    }
+    
+    body.dark .text-muted {
+        color: var(--muted-text) !important;
+    }
+    
+    body.dark .btn-outline-secondary,
+    body.dark .btn-outline-primary {
+        border-color: var(--card-border) !important;
+        color: var(--text-color) !important;
+    }
+    
+    body.dark .btn-outline-secondary:hover,
+    body.dark .btn-outline-primary:hover {
+        background-color: #495057 !important;
+        color: #ffffff !important;
+    }
+
+    /* Custom Select Styles */
+    .custom-select-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    /* Display (campo que mostra as seleções) */
+    .custom-select-display {
+        min-height: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        padding: 0 !important;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        transition: border-color 0.2s;
+        position: relative;
+    }
+    
+    .custom-select-display:hover {
+        border-color: #4a47a3;
+    }
+    
+    .custom-select-display .chevron {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: transform 0.2s;
+        pointer-events: none;
+    }
+    
+    .custom-select-wrapper.open .custom-select-display .chevron {
+        transform: translateY(-50%) rotate(180deg);
+    }
+    
+    .custom-select-value {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.5;
+        min-height: auto;
+        background: transparent;
+    }
+    
+    .custom-select-value .placeholder {
+        color: #6c757d !important;
+        font-size: 1em !important;
+        line-height: 1.5 !important;
+        background: transparent !important;
+        pointer-events: none !important;
+        cursor: pointer !important;
+    }
+    
+    .custom-select-value .text {
+        color: #212529;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 1em;
+        line-height: 1.5;
+        background: transparent;
+    }
+    
+    body.dark .custom-select-value .text {
+        color: var(--text-color);
+    }
+    
+    /* Dropdown */
+    .custom-select-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-height: 300px;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    /* Card de filtros com z-index alto */
+    .card {
+        position: relative;
+    }
+    
+    .card:has(.custom-select-wrapper) {
+        z-index: 1001;
+    }
+    
+    .custom-select-wrapper.open .custom-select-dropdown {
+        display: flex;
+    }
+    
+    /* Campo de busca */
+    .custom-select-search {
+        padding: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .custom-select-search .search-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        outline: none;
+        font-size: 0.9em;
+    }
+    
+    .custom-select-search .search-input:focus {
+        border-color: #4a47a3;
+    }
+    
+    /* Lista de opções */
+    .custom-select-options {
+        overflow-y: auto;
+        flex: 1;
+        padding: 4px;
+    }
+    
+    .custom-option {
+        padding: 10px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 6px;
+        transition: background 0.15s;
+    }
+    
+    .custom-option:hover {
+        background: #f8f9fa;
+    }
+    
+    .custom-option input[type="checkbox"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        accent-color: #4a47a3;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        border: 2px solid #4a47a3;
+        border-radius: 3px;
+        background-color: transparent;
+        position: relative;
+    }
+    
+    .custom-option input[type="checkbox"]:checked {
+        background-color: transparent;
+    }
+    
+    .custom-option input[type="checkbox"]:checked::before {
+        content: '✓';
+        position: absolute;
+        top: -2px;
+        left: 2px;
+        color: #4a47a3;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .custom-option span {
+        flex: 1;
+        font-size: 0.95em;
+    }
+    
+    .custom-option.hidden {
+        display: none;
+    }
+    
+    /* Modo escuro */
+    body.dark .custom-select-display {
+        background: var(--card-bg);
+        border-color: var(--card-border);
+        color: var(--text-color);
+    }
+    
+    body.dark .custom-select-display .chevron path {
+        fill: #adb5bd;
+    }
+    
+    body.dark .custom-select-value .placeholder {
+        color: #adb5bd;
+    }
+    
+    body.dark .custom-select-dropdown {
+        background: var(--card-bg);
+        border-color: var(--card-border);
+    }
+    
+    body.dark .custom-select-search {
+        border-bottom-color: var(--card-border);
+    }
+    
+    body.dark .custom-select-search .search-input {
+        background: var(--bg-color);
+        border-color: var(--card-border);
+        color: var(--text-color);
+    }
+    
+    body.dark .custom-option:hover {
+        background: rgba(255,255,255,0.05);
+    }
+    
+    body.dark .custom-option span {
+        color: var(--text-color);
+    }
+    
+    /* Dropdown Menu Styles */
+    .dropdown-menu {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-height: none !important;
+        height: auto !important;
+    }
+    
+    .filtro-menu-flutuante {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        right: auto !important;
+        position: fixed !important;
+        width: 420px !important;
+        max-width: 85vw !important;
+        overflow-y: auto !important;
+        z-index: 1055 !important;
+        border-radius: 0 20px 20px 0 !important;
+        border: none !important;
+        border-right: 1px solid #e9ecef !important;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15) !important;
+    }
+    
+    body.dark .filtro-menu-flutuante {
+        background-color: var(--card-bg) !important;
+        border-right-color: var(--card-border) !important;
+    }
+    
+    body.dark .dropdown-menu .dropdown-header {
+        color: #4a47a3;
+    }
+    
+    body.dark .dropdown-menu .form-check-label {
+        color: var(--text-color);
+    }
+    
+    .dropdown-menu .custom-select-display {
+        min-height: 40px;
+        height: 40px;
+        font-size: 0.9em;
+    }
+    
+    /* Evitar fechar menu ao clicar nos filtros */
+    .dropdown-menu .form-check,
+    .dropdown-menu .custom-select-wrapper {
+        pointer-events: auto;
+    }
+    body.dark .card.border-secondary,
+    body.dark .card.border-danger,
+    body.dark .card.border-warning,
+    body.dark .card.border-info {
+        background-color: var(--card-bg) !important;
+        border-color: var(--card-border) !important;
+    }
+
+    .custom-select-wrapper[data-select-id^="responsavel-"] {
+        margin-bottom: 16px !important;
+    }
+
+    .custom-select-wrapper .custom-select-display {
+        margin-bottom: 0 !important;
+    }
+
+    .custom-select-wrapper[data-select-id="responsavel-tarefa1"],
+.custom-select-wrapper[data-select-id="responsavel-tarefa2"],
+.custom-select-wrapper[data-select-id="responsavel-conflitos"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+}
+
+.custom-select-wrapper[data-select-id^="responsavel-"] .custom-select-display {
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    width: 354.77px !important;
+    min-width: 0 !important;
+    max-width: 100%;
+}
+</style>
+<div class="container-fluid" style="margin-top: 20px; visibility: hidden;" id="conflitos-container">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 text-primary">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Datas Conflitantes
-                    </h1>
-                    <p class="text-muted mb-0">Identificação e análise de conflitos de datas no sistema</p>
-                </div>
-                <div>
-                    <button class="btn btn-outline-secondary me-2" onclick="toggleTodasSecoes(false)">
-                        <i class="fas fa-compress-alt"></i> Recolher Todas
-                    </button>
-                    <button class="btn btn-outline-secondary me-2" onclick="toggleTodasSecoes(true)">
-                        <i class="fas fa-expand-alt"></i> Expandir Todas
-                    </button>
-                    <button class="btn btn-outline-primary" onclick="location.reload()">
-                        <i class="fas fa-sync-alt"></i> Atualizar
-                    </button>
-                </div>
-            </div>
+            <h1 class="h3 text-primary">
+                <i class="fas fa-exclamation-triangle"></i>
+                Datas Conflitantes
+            </h1>
+            <p class="text-muted mb-0">Identificação e análise de conflitos de datas no sistema</p>
         </div>
     </div>
 
@@ -39,7 +378,7 @@
 
     <!-- Resumo dos Conflitos -->
     <div class="row mb-4">
-        <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+        <div class="col-lg col-md-2 col-sm-4 mb-3">
             <div class="card border-danger">
                 <div class="card-body text-center p-2">
                     <h6 class="card-title text-danger mb-1" style="font-size: 0.85em;">
@@ -50,7 +389,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+        <div class="col-lg col-md-2 col-sm-4 mb-3">
             <div class="card border-warning">
                 <div class="card-body text-center p-2">
                     <h6 class="card-title text-warning mb-1" style="font-size: 0.85em;">
@@ -61,7 +400,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+        <div class="col-lg col-md-2 col-sm-4 mb-3">
             <div class="card border-info">
                 <div class="card-body text-center p-2">
                     <h6 class="card-title text-info mb-1" style="font-size: 0.85em;">
@@ -72,7 +411,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+        <div class="col-lg col-md-2 col-sm-4 mb-3">
             <div class="card border-cyan">
                 <div class="card-body text-center p-2">
                     <h6 class="card-title text-cyan mb-1" style="font-size: 0.85em;">
@@ -83,7 +422,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+        <div class="col-lg col-md-2 col-sm-4 mb-3">
             <div class="card border-secondary">
                 <div class="card-body text-center p-2">
                     <h6 class="card-title text-secondary mb-1" style="font-size: 0.85em;">
@@ -94,7 +433,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+        <div class="col-lg col-md-2 col-sm-4 mb-3">
             <div class="card border-dark">
                 <div class="card-body text-center p-2">
                     <h6 class="card-title text-dark mb-1" style="font-size: 0.85em;">
@@ -105,7 +444,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+        <div class="col-lg col-md-2 col-sm-4 mb-3">
             <div class="card border-success">
                 <div class="card-body text-center p-2">
                     <h6 class="card-title text-success mb-1" style="font-size: 0.85em;">
@@ -118,74 +457,678 @@
         </div>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filtros em Menu -->
     <div class="row mb-3">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-filter"></i>
-                        Filtros
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-2 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input filtro-tipo" type="checkbox" value="projetos_inconsistentes" id="filtro_projetos" checked>
-                                <label class="form-check-label" for="filtro_projetos">
-                                    <small>Projetos Inconsistentes</small>
-                                </label>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-display="static">
+                        <i class="fas fa-sliders-h"></i> Filtros
+                    </button>
+                    <ul class="dropdown-menu p-3 filtro-menu-flutuante">
+                    <!-- Filtros de Tipo -->
+                    <li class="dropdown-header">Tipos de Conflito</li>
+                    <li class="px-3 py-2">
+                        <div class="custom-select-wrapper" data-select-id="tipos-conflito">
+                            <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span><i class="fas fa-layer-group"></i> Selecionar Tipos</span>
+                                <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                                    style="color: #b0b0b0; font-size: 1.1em;">
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+                            </label>
+                            
+                            <select id="filtro-tipos" name="tipos" multiple style="display: none !important;">
+                                <option value="projetos_inconsistentes" selected>Projetos Inconsistentes</option>
+                                <option value="tarefas_fora_projeto" selected>Tarefas Fora do Projeto</option>
+                                <option value="tarefas_sobrepostas" selected>Sobrepostas (Mesmo Projeto)</option>
+                                <option value="tarefas_sobrepostas_entre_projetos" selected>Sobrepostas (Entre Projetos)</option>
+                                <option value="datas_invalidas" selected>Datas Inválidas</option>
+                                <option value="predecessoras_conflito" selected>Predecessoras</option>
+                            </select>
+                            
+                            <div class="custom-select-display">
+                                <div class="custom-select-value">
+                                    <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione os Tipos</span>
+                                </div>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                                </svg>
+                            </div>
+                            
+                            <div class="custom-select-dropdown">
+                                <div class="custom-select-search">
+                                    <input type="text" placeholder="Buscar..." class="search-input">
+                                </div>
+                                <div class="custom-select-options">
+                                    <div class="custom-option" data-value="projetos_inconsistentes">
+                                        <input type="checkbox" checked>
+                                        <span>Projetos Inconsistentes</span>
+                                    </div>
+                                    <div class="custom-option" data-value="tarefas_fora_projeto">
+                                        <input type="checkbox" checked>
+                                        <span>Tarefas Fora do Projeto</span>
+                                    </div>
+                                    <div class="custom-option" data-value="tarefas_sobrepostas">
+                                        <input type="checkbox" checked>
+                                        <span>Sobrepostas (Mesmo Projeto)</span>
+                                    </div>
+                                    <div class="custom-option" data-value="tarefas_sobrepostas_entre_projetos">
+                                        <input type="checkbox" checked>
+                                        <span>Sobrepostas (Entre Projetos)</span>
+                                    </div>
+                                    <div class="custom-option" data-value="datas_invalidas">
+                                        <input type="checkbox" checked>
+                                        <span>Datas Inválidas</span>
+                                    </div>
+                                    <div class="custom-option" data-value="predecessoras_conflito">
+                                        <input type="checkbox" checked>
+                                        <span>Predecessoras</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input filtro-tipo" type="checkbox" value="tarefas_fora_projeto" id="filtro_tarefas_fora" checked>
-                                <label class="form-check-label" for="filtro_tarefas_fora">
-                                    <small>Tarefas Fora do Projeto</small>
-                                </label>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    
+                    <!-- Filtro de Responsáveis -->
+                    <li class="dropdown-header">Filtrar por Responsável</li>
+                    <li class="px-3 py-2">
+                        <div class="custom-select-wrapper" data-select-id="responsavel-conflitos">
+                            <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span><i class="fas fa-user"></i> Responsáveis</span>
+                                <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                                    style="color: #b0b0b0; font-size: 1.1em;">
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+                            </label>
+                            <select id="filtro-responsavel" name="responsavel" multiple style="display: none !important;">
+                                {% for usuario in usuarios %}
+                                <option value="{{ usuario.id }}" {% if usuario.id|string in responsaveis_selecionados %}selected{% endif %}>{{ usuario.nome }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="custom-select-display">
+                                <div class="custom-select-value">
+                                    <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione o Responsável</span>
+                                </div>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                                </svg>
+                            </div>
+                            <div class="custom-select-dropdown">
+                                <div class="custom-select-search">
+                                    <input type="text" placeholder="Buscar..." class="search-input">
+                                </div>
+                                <div class="custom-select-options">
+                                    {% for usuario in usuarios %}
+                                    <div class="custom-option" data-value="{{ usuario.id }}">
+                                        <input type="checkbox" {% if usuario.id|string in responsaveis_selecionados %}checked{% endif %}>
+                                        <span>{{ usuario.nome }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input filtro-tipo" type="checkbox" value="tarefas_sobrepostas" id="filtro_sobrepostas" checked>
-                                <label class="form-check-label" for="filtro_sobrepostas">
-                                    <small>Sobrepostas (Mesmo Proj.)</small>
-                                </label>
+                        <div class="row mt-3" style="margin-left: 0 !important; margin-right: 0 !important;">
+                            <div class="col-12 mb-2" style="padding-left: 0 !important; padding-right: 0 !important;">
+                                <div class="custom-select-wrapper" data-select-id="responsavel-tarefa1">
+                                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                        <span><i class="fas fa-user"></i> Responsável Tarefa 1</span>
+                                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                                            style="color: #b0b0b0; font-size: 1.1em;">
+                                            <i class="fas fa-eraser"></i>
+                                        </button>
+                                    </label>
+                                    <select id="filtro-responsavel-tarefa1" name="responsavel_tarefa1" multiple style="display: none !important;">
+                                        {% for usuario in usuarios %}
+                                        <option value="{{ usuario.id }}">{{ usuario.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="custom-select-display">
+                                        <div class="custom-select-value">
+                                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione o Responsável Tarefa 1</span>
+                                        </div>
+                                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                                        </svg>
+                                    </div>
+                                    <div class="custom-select-dropdown">
+                                        <div class="custom-select-search">
+                                            <input type="text" placeholder="Buscar..." class="search-input">
+                                        </div>
+                                        <div class="custom-select-options">
+                                            {% for usuario in usuarios %}
+                                            <div class="custom-option" data-value="{{ usuario.id }}">
+                                                <input type="checkbox">
+                                                <span>{{ usuario.nome }}</span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12" style="padding-left: 0 !important; padding-right: 0 !important;">
+                                <div class="custom-select-wrapper" data-select-id="responsavel-tarefa2">
+                                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                        <span><i class="fas fa-user"></i> Responsável Tarefa 2</span>
+                                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                                            style="color: #b0b0b0; font-size: 1.1em;">
+                                            <i class="fas fa-eraser"></i>
+                                        </button>
+                                    </label>
+                                    <select id="filtro-responsavel-tarefa2" name="responsavel_tarefa2" multiple style="display: none !important;">
+                                        {% for usuario in usuarios %}
+                                        <option value="{{ usuario.id }}">{{ usuario.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="custom-select-display">
+                                        <div class="custom-select-value">
+                                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione o Responsável Tarefa 2</span>
+                                        </div>
+                                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                                        </svg>
+                                    </div>
+                                    <div class="custom-select-dropdown">
+                                        <div class="custom-select-search">
+                                            <input type="text" placeholder="Buscar..." class="search-input">
+                                        </div>
+                                        <div class="custom-select-options">
+                                            {% for usuario in usuarios %}
+                                            <div class="custom-option" data-value="{{ usuario.id }}">
+                                                <input type="checkbox">
+                                                <span>{{ usuario.nome }}</span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input filtro-tipo" type="checkbox" value="tarefas_sobrepostas_entre_projetos" id="filtro_sobrepostas_entre" checked>
-                                <label class="form-check-label" for="filtro_sobrepostas_entre">
-                                    <small>Sobrepostas (Entre Proj.)</small>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input filtro-tipo" type="checkbox" value="datas_invalidas" id="filtro_invalidas" checked>
-                                <label class="form-check-label" for="filtro_invalidas">
-                                    <small>Datas Inválidas</small>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input filtro-tipo" type="checkbox" value="predecessoras_conflito" id="filtro_predecessoras" checked>
-                                <label class="form-check-label" for="filtro_predecessoras">
-                                    <small>Predecessoras</small>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6 mb-2">
-                            <button class="btn btn-sm btn-outline-primary" onclick="toggleTodosFiltros()">
-                                <i class="fas fa-toggle-on"></i> <small>Todos</small>
-                            </button>
-                        </div>
-                    </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    
+                    <!-- Botão Filtrar -->
+                    <li class="px-3 py-2">
+                        <button class="btn btn-primary w-100" onclick="aplicarFiltros()">
+                            <i class="fas fa-check"></i> Aplicar Filtros
+                        </button>
+                    </li>
+                </ul>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" onclick="toggleTodasSecoes(false)">
+                        <i class="fas fa-compress-alt"></i> Recolher Todas
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="toggleTodasSecoes(true)">
+                        <i class="fas fa-expand-alt"></i> Expandir Todas
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+<script>
+// Função para aplicar filtros (global, fora do DOMContentLoaded)
+function aplicarFiltros() {
+    // Obter tipos de conflito selecionados
+    const filtroTipos = document.getElementById('filtro-tipos');
+    const selectedTypes = Array.from(filtroTipos.selectedOptions).map(opt => opt.value);
+    
+    // Guardar tipos em sessionStorage para aplicar após recarregar
+    sessionStorage.setItem('filtroTiposConflitos', JSON.stringify(selectedTypes));
+    
+    // Sempre aplicar filtro de responsáveis ao clicar em "Aplicar Filtros"
+    verificarConflitos();
+}
+
+// Função para aplicar filtro de tipos APÓS a página carregar
+function aplicarFiltroTiposAposCarregar() {
+    const filtroTiposSalvo = sessionStorage.getItem('filtroTiposConflitos');
+    if (!filtroTiposSalvo) return;
+    
+    try {
+        const selectedTypes = JSON.parse(filtroTiposSalvo);
+        const tipos = ['projetos_inconsistentes', 'tarefas_fora_projeto', 'tarefas_sobrepostas', 'tarefas_sobrepostas_entre_projetos', 'datas_invalidas', 'predecessoras_conflito'];
+        
+        tipos.forEach(tipo => {
+            const secao = document.querySelector(`[data-tipo="${tipo}"]`);
+            if (secao) {
+                secao.style.display = selectedTypes.includes(tipo) ? 'block' : 'none';
+            }
+        });
+        
+        // Limpar após aplicar
+        sessionStorage.removeItem('filtroTiposConflitos');
+    } catch (e) {
+        console.error('Erro ao aplicar filtro de tipos:', e);
+    }
+}
+
+// Função para verificar conflitos com filtro de responsáveis
+function verificarConflitos() {
+    const filtroSelect = document.getElementById('filtro-responsavel');
+    const responsaveisSelecionados = Array.from(filtroSelect.selectedOptions)
+        .map(option => option.value)
+        .filter(value => value !== '');
+
+    // Novos filtros de tarefa 1 e tarefa 2
+    const filtroTarefa1 = document.getElementById('filtro-responsavel-tarefa1');
+    const filtroTarefa2 = document.getElementById('filtro-responsavel-tarefa2');
+    const responsaveisTarefa1 = filtroTarefa1 ? Array.from(filtroTarefa1.selectedOptions).map(option => option.value).filter(v => v !== '') : [];
+    const responsaveisTarefa2 = filtroTarefa2 ? Array.from(filtroTarefa2.selectedOptions).map(option => option.value).filter(v => v !== '') : [];
+
+    console.log('Verificar Conflitos - Responsáveis selecionados:', responsaveisSelecionados);
+    console.log('Responsáveis Tarefa 1:', responsaveisTarefa1);
+    console.log('Responsáveis Tarefa 2:', responsaveisTarefa2);
+
+    // Montar parâmetros da URL
+    let params = [];
+    if (responsaveisSelecionados.length > 0) {
+        params = params.concat(responsaveisSelecionados.map(id => `responsaveis=${id}`));
+    }
+    if (responsaveisTarefa1.length > 0) {
+        params = params.concat(responsaveisTarefa1.map(id => `responsavel_tarefa1=${id}`));
+    }
+    if (responsaveisTarefa2.length > 0) {
+        params = params.concat(responsaveisTarefa2.map(id => `responsavel_tarefa2=${id}`));
+    }
+    let url = '/relatorio/datas-conflitantes';
+    if (params.length > 0) {
+        url += '?' + params.join('&');
+    }
+
+    console.log('URL gerada:', url);
+    window.location.href = url;
+}
+
+// Função para alternar todos os filtros
+function toggleTodosFiltros() {
+    const filtros = document.querySelectorAll('.filtro-tipo');
+    const todosAtivos = Array.from(filtros).every(f => f.checked);
+    
+    filtros.forEach(filtro => {
+        filtro.checked = !todosAtivos;
+        // Simular evento change
+        const event = new Event('change', { bubbles: true });
+        filtro.dispatchEvent(event);
+    });
+    
+    // Atualizar texto do botão
+    const botao = document.querySelector('button[onclick="toggleTodosFiltros()"]');
+    if (botao) {
+        const icon = botao.querySelector('i');
+        const text = botao.querySelector('small');
+        if (todosAtivos) {
+            icon.className = 'fas fa-toggle-off';
+            text.textContent = 'Nenhum';
+        } else {
+            icon.className = 'fas fa-toggle-on';
+            text.textContent = 'Todos';
+        }
+    }
+}
+
+// Função para expandir/recolher todas as seções
+function toggleTodasSecoes(expandir) {
+    const contents = document.querySelectorAll('.section-content');
+    const toggleButtons = document.querySelectorAll('.toggle-section');
+    
+    contents.forEach(content => {
+        if (expandir) {
+            content.style.display = 'block';
+        } else {
+            content.style.display = 'none';
+        }
+    });
+    
+    toggleButtons.forEach(button => {
+        const icon = button.querySelector('i');
+        if (expandir) {
+            icon.className = 'fas fa-chevron-up';
+            button.title = 'Recolher seção';
+        } else {
+            icon.className = 'fas fa-chevron-down';
+            button.title = 'Expandir seção';
+        }
+    });
+}
+
+// Função para atualizar estilos inline no modo escuro
+function updateInlineStylesForDarkMode() {
+    console.log('[DEBUG] Executando updateInlineStylesForDarkMode');
+    
+    // Aplicar estilos específicos para elementos que precisam de atualização dinâmica
+    const elementsWithInlineStyles = document.querySelectorAll('[style*="background-color"], [style*="color"], [style*="border-color"]');
+    
+    elementsWithInlineStyles.forEach(element => {
+        const currentStyle = element.getAttribute('style') || '';
+        
+        // Se o elemento tem estilos inline relacionados a cores, forçar atualização
+        if (document.body.classList.contains('dark')) {
+            // Para modo escuro, garantir que cores sejam aplicadas
+            if (currentStyle.includes('background-color') || currentStyle.includes('color') || currentStyle.includes('border-color')) {
+                // Forçar reflow para aplicar estilos
+                element.style.display = 'none';
+                element.offsetHeight; // Trigger reflow
+                element.style.display = '';
+            }
+        }
+    });
+}
+
+// Função para limpar filtros de responsável
+function limparFiltrosResponsavel() {
+    // Limpar select HTML
+    const filtroSelect = document.getElementById('filtro-responsavel');
+    Array.from(filtroSelect.options).forEach(option => option.selected = false);
+    filtroSelect.dispatchEvent(new Event('change'));
+
+    // Limpar checkboxes visuais no dropdown
+    const customSelect = document.querySelector('.custom-select-wrapper[data-select-id="responsavel-conflitos"]');
+    if (customSelect) {
+        // Desmarcar todas as checkboxes visuais
+        const checkboxes = customSelect.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.removeAttribute('data-checked');
+
+            // Esconder o check visual
+            const wrapper = checkbox.parentElement;
+            const visualCheck = wrapper.querySelector('.visual-check');
+            if (visualCheck) {
+                visualCheck.style.display = 'none';
+            }
+
+            // Resetar estilo da checkbox
+            checkbox.style.cssText = 'width: 20px !important; height: 20px !important; cursor: pointer !important; appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; border: 2px solid #4a47a3 !important; border-radius: 4px !important; background-color: transparent !important; position: relative !important; flex-shrink: 0 !important;';
+        });
+
+        // Atualizar display do select - remover spans .text e mostrar placeholder
+        const valueContainer = customSelect.querySelector('.custom-select-value');
+        if (valueContainer) {
+            // Remover todos os spans .text existentes
+            valueContainer.querySelectorAll('.text').forEach(span => span.remove());
+            
+            // Mostrar placeholder
+            const placeholder = valueContainer.querySelector('.placeholder');
+            if (placeholder) {
+                placeholder.classList.remove('hidden');
+                placeholder.textContent = 'Selecione o Responsável';
+            }
+        }
+
+        // Resetar o display principal
+        const display = customSelect.querySelector('.custom-select-display');
+        if (display) {
+            display.classList.remove('has-selection');
+        }
+    }
+}
+
+// Usar MutationObserver para detectar mudanças no DOM após carregamento
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.body.classList.contains('dark')) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    // Pequeno delay para garantir que os elementos foram totalmente renderizados
+                    setTimeout(updateInlineStylesForDarkMode, 50);
+                }
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+});
+
+    // Inicializar tooltips e outros componentes quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adicionar tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    
+        // Não adicionar listeners automáticos nos filtros
+        // Os filtros só serão aplicados ao clicar em "Aplicar Filtros"
+
+        // Funcionalidade de expandir/recolher seções individuais
+        const toggleButtons = document.querySelectorAll('.toggle-section');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                if (!content) return;
+
+                if (content.style.display === 'none') {
+                    // Expandir
+                    content.style.display = 'block';
+                    if (icon) icon.className = 'fas fa-chevron-up';
+                    this.title = 'Recolher seção';
+                } else {
+                    // Recolher
+                    content.style.display = 'none';
+                    if (icon) icon.className = 'fas fa-chevron-down';
+                    this.title = 'Expandir seção';
+                }
+            });
+
+            // Tooltip/título inicial
+            button.title = 'Recolher seção';
+        });
+
+        // === Inicializar Custom Select ===
+        class CustomSelect {
+        constructor(wrapper) {
+            this.wrapper = wrapper;
+            this.selectId = wrapper.dataset.selectId;
+            this.nativeSelect = wrapper.querySelector('select');
+            this.display = wrapper.querySelector('.custom-select-display');
+            this.dropdown = wrapper.querySelector('.custom-select-dropdown');
+            this.searchInput = wrapper.querySelector('.search-input');
+            this.optionsContainer = wrapper.querySelector('.custom-select-options');
+            this.valueContainer = wrapper.querySelector('.custom-select-value');
+            this.clearBtn = wrapper.querySelector('.clear-btn');
+            
+            this.init();
+        }
+        
+        init() {
+            this.syncCheckboxes();
+            
+            this.display.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggle();
+            });
+            
+            this.searchInput.addEventListener('input', () => this.filter());
+            this.searchInput.addEventListener('click', (e) => e.stopPropagation());
+            
+            this.dropdown.addEventListener('click', (e) => e.stopPropagation());
+            
+            this.optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+                option.addEventListener('click', () => this.toggleOption(option));
+            });
+            
+            if (this.clearBtn) {
+                this.clearBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.clear();
+                });
+            }
+            
+            document.addEventListener('click', (e) => {
+                if (!this.wrapper.contains(e.target)) {
+                    this.close();
+                }
+            });
+            
+            this.updateDisplay();
+        }
+        
+        syncCheckboxes() {
+            Array.from(this.nativeSelect.options).forEach(option => {
+                if (option.value !== '') {
+                    const checkbox = this.optionsContainer.querySelector(`[data-value="${option.value}"] input[type="checkbox"]`);
+                    if (checkbox) {
+                        checkbox.checked = option.selected;
+                    }
+                }
+            });
+            this.updateDisplay();
+        }
+        
+        toggle() {
+            if (this.wrapper.classList.contains('open')) {
+                this.close();
+            } else {
+                this.open();
+            }
+        }
+        
+        open() {
+            document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+                if (w !== this.wrapper) {
+                    w.classList.remove('open');
+                }
+            });
+            
+            this.wrapper.classList.add('open');
+            this.searchInput.value = '';
+            this.filter();
+            
+            setTimeout(() => {
+                this.syncCheckboxes();
+            }, 0);
+            
+            setTimeout(() => this.searchInput.focus(), 100);
+        }
+        
+        close() {
+            this.wrapper.classList.remove('open');
+        }
+        
+        filter() {
+            const term = this.searchInput.value.toLowerCase();
+            this.optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+                const text = option.querySelector('span').textContent.toLowerCase();
+                if (text.includes(term)) {
+                    option.classList.remove('hidden');
+                } else {
+                    option.classList.add('hidden');
+                }
+            });
+        }
+        
+        toggleOption(optionEl) {
+            const checkbox = optionEl.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            
+            const value = optionEl.dataset.value;
+            const nativeOption = this.nativeSelect.querySelector(`option[value="${value}"]`);
+            if (nativeOption) {
+                nativeOption.selected = checkbox.checked;
+            }
+            
+            this.updateDisplay();
+            
+            // NÃO disparar evento change automaticamente
+            // O filtro só será aplicado ao clicar em "Aplicar Filtros"
+        }
+        
+        updateDisplay() {
+            const selected = Array.from(this.nativeSelect.selectedOptions).filter(opt => opt.value !== '');
+            const placeholder = this.valueContainer.querySelector('.placeholder');
+            
+            this.valueContainer.querySelectorAll('.text').forEach(t => t.remove());
+            
+            if (placeholder) {
+                placeholder.removeAttribute('style');
+            }
+            
+            if (selected.length === 0) {
+                if (placeholder) placeholder.style.display = 'inline';
+            } else if (selected.length === 1) {
+                if (placeholder) placeholder.style.display = 'none';
+                const textSpan = document.createElement('span');
+                textSpan.className = 'text';
+                textSpan.textContent = selected[0].text;
+                this.valueContainer.appendChild(textSpan);
+            } else {
+                if (placeholder) placeholder.style.display = 'none';
+                const textSpan = document.createElement('span');
+                textSpan.className = 'text';
+                textSpan.textContent = 'Seleções Múltiplas';
+                this.valueContainer.appendChild(textSpan);
+            }
+        }
+        
+        removeValue(value) {
+            const nativeOption = this.nativeSelect.querySelector(`option[value="${value}"]`);
+            if (nativeOption) {
+                nativeOption.selected = false;
+            }
+            
+            const checkbox = this.optionsContainer.querySelector(`[data-value="${value}"] input`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+            
+            this.updateDisplay();
+            
+            const event = new Event('change', { bubbles: true });
+            this.nativeSelect.dispatchEvent(event);
+        }
+        
+        clear() {
+            // Limpar as opções selecionadas no select nativo
+            Array.from(this.nativeSelect.options).forEach(option => {
+                option.selected = false;
+            });
+            
+            // Limpar os checkboxes visualmente
+            this.optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            
+            // Limpar display
+            const placeholder = this.valueContainer.querySelector('.placeholder');
+            const oldText = this.valueContainer.querySelector('.text');
+            if (oldText) oldText.remove();
+            if (placeholder) placeholder.style.display = 'inline';
+        }
+    }
+
+    document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+        new CustomSelect(wrapper);
+    });
+    // === FIM CUSTOM SELECT ===
+    
+    // Evitar fechar o dropdown menu ao clicar nos filtros
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        menu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+    
+    // Aplicar filtro de tipos se foi salvo em sessionStorage (último passo após tudo iniciado)
+    aplicarFiltroTiposAposCarregar();
+    
+    // Os filtros só serão aplicados ao clicar em "Aplicar Filtros"
+});
+
+// Mostrar a lista apenas após o DOM estar pronto e filtros aplicados
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        document.getElementById('conflitos-container').style.visibility = 'visible';
+    }, 100);
+});
+</script>
 
     <!-- Lista de Conflitos -->
     {% if conflitos.projetos_inconsistentes or conflitos.tarefas_fora_projeto or conflitos.tarefas_sobrepostas or conflitos.tarefas_sobrepostas_entre_projetos or conflitos.datas_invalidas or conflitos.predecessoras_conflito %}
@@ -246,14 +1189,14 @@
     <!-- Tarefas Fora do Projeto -->
     {% if conflitos.tarefas_fora_projeto %}
     <div class="conflito-secao" data-tipo="tarefas_fora_projeto">
-        <div class="card border-warning mb-3">
-            <div class="card-header bg-warning text-dark">
+        <div class="card border-info mb-3">
+            <div class="card-header bg-info text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-calendar-times"></i>
                         Tarefas Fora do Período do Projeto ({{ conflitos.tarefas_fora_projeto|length }})
                     </h5>
-                    <button class="btn btn-sm btn-outline-dark toggle-section" data-target="tarefas-fora-projeto" type="button">
+                    <button class="btn btn-sm btn-outline-light toggle-section" data-target="tarefas-fora-projeto" type="button">
                         <i class="fas fa-chevron-up"></i>
                     </button>
                 </div>
@@ -375,8 +1318,8 @@
     <!-- Tarefas Sobrepostas Entre Projetos -->
     {% if conflitos.tarefas_sobrepostas_entre_projetos %}
     <div class="conflito-secao" data-tipo="tarefas_sobrepostas_entre_projetos">
-        <div class="card border-warning mb-3" style="border-color: #17a2b8 !important;">
-            <div class="card-header text-white" style="background-color: #17a2b8 !important;">
+        <div class="card border-info mb-3">
+            <div class="card-header bg-info text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-exchange-alt"></i>
@@ -589,114 +1532,7 @@
     {% endif %}
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Filtros de tipo de conflito
-    const filtrosTipo = document.querySelectorAll('.filtro-tipo');
-    const secoes = document.querySelectorAll('.conflito-secao');
-    
-    filtrosTipo.forEach(filtro => {
-        filtro.addEventListener('change', function() {
-            const tipo = this.value;
-            const secao = document.querySelector(`[data-tipo="${tipo}"]`);
-            
-            if (secao) {
-                if (this.checked) {
-                    secao.style.display = 'block';
-                } else {
-                    secao.style.display = 'none';
-                }
-            }
-        });
-    });
-    
-    // Funcionalidade de expandir/recolher seções
-    const toggleButtons = document.querySelectorAll('.toggle-section');
-    
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const content = document.getElementById(targetId);
-            const icon = this.querySelector('i');
-            
-            if (content) {
-                if (content.style.display === 'none') {
-                    // Expandir
-                    content.style.display = 'block';
-                    icon.className = 'fas fa-chevron-up';
-                    this.title = 'Recolher seção';
-                } else {
-                    // Recolher
-                    content.style.display = 'none';
-                    icon.className = 'fas fa-chevron-down';
-                    this.title = 'Expandir seção';
-                }
-            }
-        });
-        
-        // Definir tooltip inicial
-        button.title = 'Recolher seção';
-    });
-    
-    // Adicionar tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
 
-// Função para alternar todos os filtros
-function toggleTodosFiltros() {
-    const filtros = document.querySelectorAll('.filtro-tipo');
-    const todosAtivos = Array.from(filtros).every(f => f.checked);
-    
-    filtros.forEach(filtro => {
-        filtro.checked = !todosAtivos;
-        // Simular evento change
-        const event = new Event('change', { bubbles: true });
-        filtro.dispatchEvent(event);
-    });
-    
-    // Atualizar texto do botão
-    const botao = document.querySelector('button[onclick="toggleTodosFiltros()"]');
-    if (botao) {
-        const icon = botao.querySelector('i');
-        const text = botao.querySelector('small');
-        if (todosAtivos) {
-            icon.className = 'fas fa-toggle-off';
-            text.textContent = 'Nenhum';
-        } else {
-            icon.className = 'fas fa-toggle-on';
-            text.textContent = 'Todos';
-        }
-    }
-}
-
-// Função para expandir/recolher todas as seções
-function toggleTodasSecoes(expandir) {
-    const contents = document.querySelectorAll('.section-content');
-    const toggleButtons = document.querySelectorAll('.toggle-section');
-    
-    contents.forEach(content => {
-        if (expandir) {
-            content.style.display = 'block';
-        } else {
-            content.style.display = 'none';
-        }
-    });
-    
-    toggleButtons.forEach(button => {
-        const icon = button.querySelector('i');
-        if (expandir) {
-            icon.className = 'fas fa-chevron-up';
-            button.title = 'Recolher seção';
-        } else {
-            icon.className = 'fas fa-chevron-down';
-            button.title = 'Expandir seção';
-        }
-    });
-}
-</script>
 
 <style>
 .conflito-secao {
@@ -761,5 +1597,4 @@ function toggleTodasSecoes(expandir) {
     background-color: rgba(255, 255, 255, 0.1) !important;
 }
 </style>
-
 {% endblock %}

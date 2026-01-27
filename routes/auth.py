@@ -40,28 +40,59 @@ def login():
         
         # Bloquear login de usuários simples (email termina com @sistema.local)
         if user and user['email'].endswith('@sistema.local'):
-            flash('Este usuário não tem permissão para fazer login.')
+            flash('Este usuário não tem permissão para fazer login.', 'danger')
             return render_template('login.html')
         
         if user:
             print('Hash salvo:', user['senha_hash'])
             print('Senha digitada:', senha)
-            # Garantir que a senha seja uma string
-            senha_str = str(senha) if senha is not None else ""
-            print('Verificação:', check_password_hash(user['senha_hash'], senha_str))
-        if user and check_password_hash(user['senha_hash'], str(senha) if senha is not None else ""):
-            # Configurar sessão como permanente SEMPRE (por padrão) para evitar deslogamentos
-            session.permanent = True
+            # Garantir que a senha seja uma string não vazia
+            senha_str = str(senha).strip() if senha is not None else ""
+            print('Senha processada:', repr(senha_str))
+            verificacao = False
+            
+            if senha_str:  # Só verificar se a senha não estiver vazia
+                try:
+                    # Primeiro tentar verificar com bcrypt diretamente
+                    import bcrypt
+                    if user['senha_hash'] and isinstance(user['senha_hash'], str):
+                        try:
+                            hash_bytes = user['senha_hash'].encode('utf-8')
+                            senha_bytes = senha_str.encode('utf-8')
+                            verificacao = bcrypt.checkpw(senha_bytes, hash_bytes)
+                            print('Verificação bcrypt direta:', verificacao)
+                        except Exception as bcrypt_error:
+                            print('Erro bcrypt direto:', str(bcrypt_error))
+                            verificacao = False
+                    
+                    # Se bcrypt falhou, tentar com werkzeug
+                    if not verificacao:
+                        try:
+                            verificacao = check_password_hash(user['senha_hash'], senha_str)
+                            print('Verificação werkzeug:', verificacao)
+                        except Exception as werkzeug_error:
+                            print('Erro werkzeug:', str(werkzeug_error))
+                            verificacao = False
+                            
+                except Exception as e:
+                    print('ERRO geral na verificação:', str(e))
+                    verificacao = False
+        if user and senha_str and verificacao:
+            # Configurar sessão como permanente apenas se "lembrar" estiver marcado
+            session.permanent = lembrar
             
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
             session['user_email'] = user['email']
-            # Flag de admin baseada no banco (campo is_admin). Não usar fallback aqui para respeitar o BD.
-            session['is_admin'] = bool(user.get('is_admin', False))
+            # Verificar se é admin usando a nova tabela usuarios_admin
+            from utils.auth import is_admin_session
+            is_admin = is_admin_session()
+            session['is_admin'] = is_admin
+            print(f"[DEBUG] Login - User: {user['email']}, is_admin: {is_admin}")
             
             return redirect('/dashboard')
         else:
-            flash('E-mail ou senha inválidos.')
+            flash('E-mail ou senha inválidos.', 'danger')
     return render_template('login.html')
 
 @auth_bp.route('/logout')
@@ -74,11 +105,21 @@ def logout():
 def cadastro():
     """Rota de cadastro de usuários"""
     if request.method == 'POST':
-        nome = request.form['nome']
-        email = request.form['email'].strip().lower()
-        senha = request.form['senha']
+        nome = request.form.get('nome', '')
+        email = request.form.get('email', '').strip().lower()
+        senha = request.form.get('senha', '')
+        confirmar_senha = request.form.get('confirmar_senha', '')
+        
+        if not nome or not email or not senha or not confirmar_senha:
+            flash('Todos os campos são obrigatórios.', 'danger')
+            return render_template('cadastro.html')
+        
+        if senha != confirmar_senha:
+            flash('As senhas não coincidem.', 'danger')
+            return render_template('cadastro.html')
+        
         if get_user_by_email(email):
-            flash('E-mail já cadastrado.')
+            flash('E-mail já cadastrado.', 'danger')
             return render_template('cadastro.html')
         senha_hash = generate_password_hash(senha)
         print("Dados enviados para o Supabase:", {
@@ -111,10 +152,10 @@ def cadastro():
                 with open(RESTRICOES_PATH, 'w') as f:
                     json.dump(restricoes, f)
             # --- FIM NOVO ---
-            flash('Cadastro realizado com sucesso! Faça login.')
+            flash('Cadastro realizado com sucesso! Faça login.', 'success')
             return redirect(url_for('auth.login'))
         else:
-            flash("Erro ao cadastrar usuário. Tente novamente mais tarde.")
+            flash("Erro ao cadastrar usuário. Tente novamente mais tarde.", 'danger')
     return render_template('cadastro.html')
 
 @auth_bp.route('/alterar_senha', methods=['GET', 'POST'])

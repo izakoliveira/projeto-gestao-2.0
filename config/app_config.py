@@ -27,4 +27,7 @@ class Config:
     
     # Limites de segurança
     MAX_PROJETOS = 100
-    MAX_TAREFAS = 200 
+    MAX_TAREFAS = 200
+    
+    # Versão da aplicação para cache busting
+    VERSION = "2.0.1" 

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Gestão de Projetos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .password-field {
+        padding-right: 45px !important;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0 12px;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .password-toggle:hover {
+        color: #495057;
+    }
+    .password-toggle:focus {
+        outline: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5 fade-in" style="max-width: 400px;">
+    <div class="card shadow">
+        <div class="card-body">
+            <h2 class="mb-4 text-center"><i class="fas fa-sign-in-alt"></i> Login</h2>
+            <!-- Exibindo mensagens de erro -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" autocomplete="off" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label for="senha" class="form-label">Senha</label>
+                    <div style="position: relative;">
+                        <input type="password" class="form-control" id="senha" name="senha" autocomplete="current-password" required style="padding-right: 45px;">
+                        <button class="password-toggle" type="button" id="toggleSenha" title="Mostrar/Ocultar senha" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px 8px; color: #6c757d; z-index: 5;">
+                            <i class="fas fa-eye" id="iconeSenha"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="lembrar" id="lembrar">
+                    <label class="form-check-label" for="lembrar">Lembrar-me</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Entrar</button>
+            </form>
+            <div class="mt-3 text-center">
+                <p>Não tem uma conta? <a href="/cadastro">Cadastre-se aqui</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emailField = document.getElementById('email');
+    const senhaField = document.getElementById('senha');
+    const lembrarCheckbox = document.getElementById('lembrar');
+    const toggleSenhaBtn = document.getElementById('toggleSenha');
+    const iconeSenha = document.getElementById('iconeSenha');
+
+    // Toggle visualização de senha
+    toggleSenhaBtn.addEventListener('click', function() {
+        const tipo = senhaField.getAttribute('type');
+        if (tipo === 'password') {
+            senhaField.setAttribute('type', 'text');
+            iconeSenha.classList.remove('fa-eye');
+            iconeSenha.classList.add('fa-eye-slash');
+            toggleSenhaBtn.setAttribute('title', 'Ocultar senha');
+        } else {
+            senhaField.setAttribute('type', 'password');
+            iconeSenha.classList.remove('fa-eye-slash');
+            iconeSenha.classList.add('fa-eye');
+            toggleSenhaBtn.setAttribute('title', 'Mostrar senha');
+        }
+    });
+
+    // Carregar dados salvos (apenas email)
+    const savedEmail = localStorage.getItem('loginEmail');
+    const savedLembrar = localStorage.getItem('loginLembrar') === 'true';
+
+    if (savedLembrar && savedEmail) {
+        emailField.value = savedEmail;
+        lembrarCheckbox.checked = true;
+        // Ativar autocomplete se lembrado
+        emailField.setAttribute('autocomplete', 'username');
+        senhaField.setAttribute('autocomplete', 'current-password');
+    }
+
+    // Atualizar autocomplete baseado na checkbox
+    lembrarCheckbox.addEventListener('change', function() {
+        if (lembrarCheckbox.checked) {
+            emailField.setAttribute('autocomplete', 'username');
+            senhaField.setAttribute('autocomplete', 'current-password');
+        } else {
+            emailField.setAttribute('autocomplete', 'off');
+            senhaField.setAttribute('autocomplete', 'off');
+        }
+    });
+
+    // Salvar dados ao submeter o formulário (apenas email)
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function() {
+        if (lembrarCheckbox.checked) {
+            localStorage.setItem('loginEmail', emailField.value);
+            localStorage.setItem('loginLembrar', 'true');
+        } else {
+            localStorage.removeItem('loginEmail');
+            localStorage.removeItem('loginLembrar');
+        }
+    });
+});
+</script>
+
+{% endblock %}

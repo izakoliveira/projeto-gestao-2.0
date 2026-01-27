@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Usuários Simples{% endblock %}
+
+{% block content %}
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-users me-2"></i>Gerenciar Usuários Simples</h2>
+                    <div>
+                        <a href="/admin/restricoes" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Voltar para Admin
+                        </a>
+                        <a href="/dashboard" class="btn btn-primary">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Exibir mensagens flash -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Card para criar novo usuário simples -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-user-plus me-2"></i>Criar Novo Usuário Simples</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" class="row g-3">
+                            <input type="hidden" name="acao" value="criar">
+                            <div class="col-md-8">
+                                <label for="nome" class="form-label">Nome do Usuário:</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required 
+                                       placeholder="Digite o nome completo do usuário">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-plus me-1"></i>Criar Usuário
+                                </button>
+                            </div>
+                        </form>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Usuários simples são criados apenas com nome e podem ser designados como responsáveis por tarefas, mas não conseguem fazer login no sistema.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de usuários simples -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list me-2"></i>Usuários Simples Cadastrados ({{ usuarios_simples|length }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if usuarios_simples %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Tipo</th>
+                                            <th>Data de Criação</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for usuario in usuarios_simples %}
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-user me-2 text-primary"></i>
+                                                {{ usuario.nome }}
+                                            </td>
+                                            <td>
+                                                {% if usuario.email and not usuario.email.endswith('@sistema.local') %}
+                                                    <span class="badge bg-info">Usuário com Email</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Usuário Simples</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if usuario.created_at %}
+                                                    {{ usuario.created_at[:10] }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <!-- Botão de converter para usuário completo -->
+                                                {% if usuario.email.endswith('@sistema.local') %}
+                                                <button type="button" class="btn btn-primary btn-sm me-1" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modalConverter{{ usuario.id }}"
+                                                        title="Adicionar email e senha">
+                                                    <i class="fas fa-envelope"></i>
+                                                </button>
+                                                {% else %}
+                                                <!-- Botão de redefinir senha para usuários reais -->
+                                                <button type="button" class="btn btn-warning btn-sm me-1" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modalRedefinirSenha{{ usuario.id }}"
+                                                        title="Redefinir senha">
+                                                    <i class="fas fa-key"></i>
+                                                </button>
+                                                {% endif %}
+                                                
+                                                <!-- Botão de excluir -->
+                                                <form method="POST" style="display: inline;" 
+                                                      onsubmit="return confirm('Tem certeza que deseja excluir o usuário {{ usuario.nome }}? Esta ação não pode ser desfeita.')">
+                                                    <input type="hidden" name="acao" value="excluir">
+                                                    <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                                                    <button type="submit" class="btn btn-danger btn-sm" title="Excluir usuário">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">Nenhum usuário simples cadastrado</h6>
+                                <p class="text-muted">Crie um usuário simples usando o formulário acima para designar responsáveis em tarefas.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Informações sobre usuários simples -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6><i class="fas fa-question-circle me-2"></i>Sobre Usuários Simples</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Objetivo:</strong> Permitir designar responsáveis para tarefas sem necessidade de criar contas completas</li>
+                            <li><strong>Limitações:</strong> Não podem fazer login no sistema, apenas aparecem como opção de responsável</li>
+                            <li><strong>Uso recomendado:</strong> Para colaboradores externos, estagiários ou pessoas que não precisam acessar o sistema</li>
+                            <li><strong>Exclusão:</strong> Só podem ser excluídos se não tiverem tarefas atribuídas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais para redefinir senha de usuários reais -->
+    {% for usuario in usuarios_simples %}
+    {% if usuario.email and not usuario.email.endswith('@sistema.local') %}
+    <div class="modal fade" id="modalRedefinirSenha{{ usuario.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key me-2"></i>Redefinir Senha
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="acao" value="redefinir_senha">
+                        <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Redefinir senha de <strong>{{ usuario.nome }}</strong> ({{ usuario.email }})
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nova_senha{{ usuario.id }}" class="form-label">Nova Senha:</label>
+                            <input type="password" class="form-control" id="nova_senha{{ usuario.id }}" 
+                                   name="nova_senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmar_nova_senha{{ usuario.id }}" class="form-label">Confirmar Nova Senha:</label>
+                            <input type="password" class="form-control" id="confirmar_nova_senha{{ usuario.id }}" 
+                                   name="confirmar_nova_senha" required minlength="6" placeholder="Digite a senha novamente">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-key me-1"></i>Redefinir Senha
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <!-- Modais para converter usuários simples em completos -->
+    {% for usuario in usuarios_simples %}
+    {% if usuario.email.endswith('@sistema.local') %}
+    <div class="modal fade" id="modalConverter{{ usuario.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-edit me-2"></i>Adicionar Email e Senha
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="acao" value="converter">
+                        <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Converter o usuário <strong>{{ usuario.nome }}</strong> em usuário completo com acesso ao sistema.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email{{ usuario.id }}" class="form-label">Email:</label>
+                            <input type="email" class="form-control" id="email{{ usuario.id }}" 
+                                   name="email" required placeholder="usuario@exemplo.com">
+                            <small class="text-muted">Este será o email de login do usuário</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="senha{{ usuario.id }}" class="form-label">Senha:</label>
+                            <input type="password" class="form-control" id="senha{{ usuario.id }}" 
+                                   name="senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+                            <small class="text-muted">O usuário poderá alterar depois</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmar_senha{{ usuario.id }}" class="form-label">Confirmar Senha:</label>
+                            <input type="password" class="form-control" id="confirmar_senha{{ usuario.id }}" 
+                                   name="confirmar_senha" required minlength="6" placeholder="Digite a senha novamente">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-1"></i>Converter Usuário
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+{% endblock %}

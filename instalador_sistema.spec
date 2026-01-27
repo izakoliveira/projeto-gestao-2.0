@@ -5,7 +5,7 @@ a = Analysis(
     ['instalador_sistema.py'],
     pathex=[],
     binaries=[],
-    datas=[('app_producao.py', '.'), ('projeto_arquivos/requirements.txt', '.'), ('supabase_client.py', '.'), ('projeto_arquivos/restricoes.json', '.'), ('sgp_icon.ico', '.'), ('routes', 'routes'), ('templates', 'templates'), ('static', 'static'), ('utils', 'utils'), ('projeto_arquivos/config', 'config')],
+    datas=[('app_producao.py', '.'), ('projeto_arquivos/requirements.txt', '.'), ('supabase_client.py', '.'), ('projeto_arquivos/restricoes.json', '.'), ('novo icone.ico', '.'), ('routes', 'routes'), ('templates', 'templates'), ('static', 'static'), ('utils', 'utils'), ('projeto_arquivos/config', 'config')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

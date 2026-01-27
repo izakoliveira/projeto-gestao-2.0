@@ -1,20 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Relatório de Calendários</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 32px; }
-        h1 { color: #007bff; }
-        table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 12px; }
-        th, td { border: 1px solid #ccc; padding: 6px 4px; text-align: left; }
-        .text-center { text-align: center; }
-        th { background: #f8f9fa; font-size: 12px; }
-    .gantt-img { display: block; margin: 24px auto; width: 100%; max-width: none; }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Relatório de Calendários{% endblock %}
+
+{% block content %}
     <h1>Relatório de Calendários</h1>
     <!-- Imagem do gráfico de Gantt removida conforme solicitado -->
     {% macro normalizar(nome) %}
@@ -78,6 +66,4 @@
             {% endfor %}
         </tbody>
     </table>
-    {% endfor %}
-</body>
-</html>
+{% endblock %}

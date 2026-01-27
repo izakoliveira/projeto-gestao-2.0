@@ -1,0 +1,981 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Feriados{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --info-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        --card-shadow-hover: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 50px 50px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stats-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .accordion-button {
+        background: var(--primary-gradient) !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: var(--success-gradient) !important;
+        color: white !important;
+        box-shadow: none !important;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .accordion-item {
+        border: none !important;
+        border-radius: 10px !important;
+        margin-bottom: 1rem !important;
+        box-shadow: var(--card-shadow) !important;
+        overflow: hidden;
+    }
+
+    .accordion-body {
+        border-top: 1px solid rgba(0,0,0,0.1) !important;
+    }
+
+    .accordion-collapse {
+        border-radius: 0 0 10px 10px !important;
+    }
+
+    .btn-custom {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-right: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn-add {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn-api {
+            background: var(--info-gradient);
+            color: white;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border: none;
+        }
+
+        .card-header-custom h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .table-custom {
+            margin-bottom: 0;
+        }
+
+        .table-custom thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+            padding: 1rem;
+        }
+
+        .table-custom tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .table-custom tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .badge-nacional {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .badge-estadual {
+            background: var(--warning-gradient);
+            color: white;
+        }
+
+        .badge-municipal {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .badge-manual {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #495057;
+        }
+
+        .btn-action {
+            border-radius: 20px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h4 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+
+        .modal-custom .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .modal-custom .modal-header {
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            border-bottom: none;
+            padding: 1.5rem;
+        }
+
+        .modal-custom .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-custom .btn-close {
+            filter: invert(1);
+        }
+
+        .modal-custom .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-custom .modal-footer {
+            border-top: none;
+            padding: 1.5rem 2rem;
+            background: #f8f9fa;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .form-control-custom {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control-custom:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-label-custom {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .stats-card {
+                margin-bottom: 1rem;
+            }
+
+            .btn-custom {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <div class="container-fluid">
+        <!-- Hero Section -->
+        <div class="hero-section fade-in">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h1 class="hero-title">
+                            <i class="fas fa-calendar-alt me-3"></i>
+                            Gerenciar Feriados
+                        </h1>
+                        <p class="hero-subtitle">
+                            Gerencie feriados manuais que serão considerados nos cálculos de dias úteis do sistema
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Stats Cards -->
+            <div class="row mb-4 g-3">
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="stats-card fade-in">
+                        <div class="stats-icon mx-auto" style="background: var(--primary-gradient);">
+                            <i class="fas fa-calendar-check text-white"></i>
+                        </div>
+                        <div class="stats-number text-primary">{{ feriados_manuais|length if feriados_manuais else 0 }}</div>
+                        <div class="stats-label">Feriados Manuais</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="stats-card fade-in">
+                        <div class="stats-icon mx-auto" style="background: var(--success-gradient);">
+                            <i class="fas fa-cloud text-white"></i>
+                        </div>
+                        <div class="stats-number text-success">{{ feriados_api|length if feriados_api else 0 }}</div>
+                        <div class="stats-label">Feriados da API</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="stats-card fade-in">
+                        <div class="stats-icon mx-auto" style="background: var(--warning-gradient);">
+                            <i class="fas fa-flag text-white"></i>
+                        </div>
+                        <div class="stats-number text-warning">
+                            {% set todos_feriados = (feriados_manuais or []) + (feriados_api or []) %}
+                            {% set nacionais = [] %}
+                            {% for f in todos_feriados %}
+                                {% if f.tipo == 'nacional' or f.tipo == 'API' %}
+                                    {% set _ = nacionais.append(f) %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ nacionais|length if nacionais else 0 }}
+                        </div>
+                        <div class="stats-label">Feriados Nacionais</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="stats-card fade-in">
+                        <div class="stats-icon mx-auto" style="background: var(--info-gradient);">
+                            <i class="fas fa-city text-white"></i>
+                        </div>
+                        <div class="stats-number text-info">
+                            {% set todos_feriados = (feriados_manuais or []) + (feriados_api or []) %}
+                            {% set municipais = [] %}
+                            {% for f in todos_feriados %}
+                                {% if f.tipo == 'municipal' %}
+                                    {% set _ = municipais.append(f) %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ municipais|length if municipais else 0 }}
+                        </div>
+                        <div class="stats-label">Feriados Municipais</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Main Content - Two Column Layout -->
+            <div class="row">
+                <!-- Feriados Manuais -->
+                <div class="col-lg-6 col-md-12 mb-4">
+                    <div class="main-card fade-in">
+                        <div class="card-header-custom">
+                            <h5>
+                                <i class="fas fa-edit me-2"></i>
+                                Feriados Manuais
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <button class="btn btn-custom btn-add btn-sm" data-bs-toggle="modal" data-bs-target="#modalAdicionarFeriado">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    Adicionar Feriado
+                                </button>
+                            </div>
+                            {% if feriados_manuais %}
+                            {% set anos_unicos = [] %}
+                            {% for feriado in feriados_manuais %}
+                                {% if feriado.data %}
+                                    {% set ano = feriado.data[:4] %}
+                                    {% if ano not in anos_unicos %}
+                                        {% set _ = anos_unicos.append(ano) %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% set anos_unicos = anos_unicos | sort %}
+
+                            <div class="accordion" id="accordionFeriadosManuais">
+                                {% for ano in anos_unicos %}
+                                    {% set feriados_ano = [] %}
+                                    {% for feriado in feriados_manuais %}
+                                        {% if feriado.data and feriado.data[:4] == ano %}
+                                            {% set _ = feriados_ano.append(feriado) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingManual{{ ano }}">
+                                        <button class="accordion-button {% if loop.first %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseManual{{ ano }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapseManual{{ ano }}">
+                                            <i class="fas fa-calendar-year me-2"></i>
+                                            {{ ano }} - {{ feriados_ano|length }} feriado{{ 's' if feriados_ano|length > 1 else '' }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapseManual{{ ano }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="headingManual{{ ano }}" data-bs-parent="#accordionFeriadosManuais">
+                                        <div class="accordion-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-custom mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th><i class="fas fa-calendar-day me-2"></i>Data</th>
+                                                            <th><i class="fas fa-tag me-2"></i>Nome</th>
+                                                            <th><i class="fas fa-layer-group me-2"></i>Tipo</th>
+                                                            <th><i class="fas fa-cogs me-2"></i>Ações</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for feriado in feriados_ano %}
+                                                        <tr>
+                                                            <td>
+                                                                <strong>
+                                                                {% if feriado.get('data') %}
+                                                                    {{ feriado.data[:10].split('-') | reverse | join('/') }}
+                                                                {% else %}
+                                                                    Data não informada
+                                                                {% endif %}
+                                                                </strong>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="fas fa-calendar-times text-primary me-2"></i>
+                                                                    {{ feriado.get('nome', 'Nome não informado') }}
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                {% if feriado.get('tipo') == 'nacional' %}
+                                                                    <span class="badge badge-custom badge-nacional">
+                                                                        <i class="fas fa-flag me-1"></i>Nacional
+                                                                    </span>
+                                                                {% elif feriado.get('tipo') == 'estadual' %}
+                                                                    <span class="badge badge-custom badge-estadual">
+                                                                        <i class="fas fa-map-marker-alt me-1"></i>Estadual
+                                                                    </span>
+                                                                {% elif feriado.get('tipo') == 'municipal' %}
+                                                                    <span class="badge badge-custom badge-municipal">
+                                                                        <i class="fas fa-city me-1"></i>Municipal
+                                                                    </span>
+                                                                {% else %}
+                                                                    <span class="badge badge-custom badge-manual">
+                                                                        <i class="fas fa-hand-paper me-1"></i>{{ feriado.get('tipo', 'manual')|title }}
+                                                                    </span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                <div class="btn-group" role="group">
+                                                                    <button type="button" class="btn btn-warning btn-action btn-sm"
+                                                                            onclick="editarFeriado({{ feriado.get('id') }}, '{{ feriado.get('data') }}', '{{ feriado.get('nome') }}', '{{ feriado.get('tipo', 'manual') }}', '{{ feriado.get('uf', '') }}', '{{ feriado.get('cidade', '') }}')">
+                                                                        <i class="fas fa-edit me-1"></i>
+                                                                        Editar
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-danger btn-action btn-sm"
+                                                                            onclick="excluirFeriado({{ feriado.get('id') }}, '{{ feriado.get('nome', 'Feriado') }}')">
+                                                                        <i class="fas fa-trash-alt me-1"></i>
+                                                                        Excluir
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-times"></i>
+                                <h4>Nenhum feriado manual</h4>
+                                <p>Adicione feriados manuais que serão considerados nos cálculos de dias úteis.</p>
+                                <button class="btn btn-custom btn-add mt-3" data-bs-toggle="modal" data-bs-target="#modalAdicionarFeriado">
+                                    <span class="d-inline-flex align-items-center justify-content-center">
+                                        <i class="fas fa-plus-circle" style="margin-right: 0.5rem; margin-bottom: 0px;"></i>
+                                        Adicionar Primeiro Feriado
+                                    </span>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feriados da API -->
+                <div class="col-lg-6 col-md-12 mb-4">
+                    <div class="main-card fade-in">
+                        <div class="card-header-custom">
+                            <h5>
+                                <i class="fas fa-cloud me-2"></i>
+                                Feriados da API ({{ feriados_api|length if feriados_api else 0 }})
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <button class="btn btn-custom btn-api btn-sm" data-bs-toggle="modal" data-bs-target="#modalCarregarAPI">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    Atualizar da API
+                                </button>
+                            </div>
+                            {% if feriados_api %}
+                            {% set anos_unicos_api = [] %}
+                            {% for feriado in feriados_api %}
+                                {% if feriado.data %}
+                                    {% set ano = feriado.data[:4] %}
+                                    {% if ano not in anos_unicos_api %}
+                                        {% set _ = anos_unicos_api.append(ano) %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% set anos_unicos_api = anos_unicos_api | sort %}
+
+                            <div class="accordion" id="accordionFeriadosAPI">
+                                {% for ano in anos_unicos_api %}
+                                    {% set feriados_ano = [] %}
+                                    {% for feriado in feriados_api %}
+                                        {% if feriado.data and feriado.data[:4] == ano %}
+                                            {% set _ = feriados_ano.append(feriado) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingAPI{{ ano }}">
+                                        <button class="accordion-button {% if loop.first %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAPI{{ ano }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapseAPI{{ ano }}">
+                                            <i class="fas fa-cloud me-2"></i>
+                                            {{ ano }} - {{ feriados_ano|length }} feriado{{ 's' if feriados_ano|length > 1 else '' }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapseAPI{{ ano }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="headingAPI{{ ano }}" data-bs-parent="#accordionFeriadosAPI">
+                                        <div class="accordion-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-custom mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th><i class="fas fa-calendar-day me-2"></i>Data</th>
+                                                            <th><i class="fas fa-tag me-2"></i>Nome</th>
+                                                            <th><i class="fas fa-layer-group me-2"></i>Tipo</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for feriado in feriados_ano %}
+                                                        <tr>
+                                                            <td>
+                                                                <strong>
+                                                                {% if feriado.data %}
+                                                                    {{ feriado.data.split('-') | reverse | join('/') }}
+                                                                {% else %}
+                                                                    Data não informada
+                                                                {% endif %}
+                                                                </strong>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="fas fa-globe text-info me-2"></i>
+                                                                    {{ feriado.nome }}
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge badge-custom badge-nacional">
+                                                                    <i class="fas fa-flag me-1"></i>Nacional
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-cloud"></i>
+                                <h4>Nenhum feriado da API</h4>
+                                <p>Carregue os feriados nacionais da API BrasilAPI para visualização.</p>
+                                <button class="btn btn-custom btn-api mt-3" data-bs-toggle="modal" data-bs-target="#modalCarregarAPI">
+                                    <span class="d-inline-flex align-items-center justify-content-center">
+                                        <i class="fas fa-cloud-download-alt" style="margin-right: 0.5rem; margin-bottom: 0px;"></i>
+                                        Carregar Feriados da API
+                                    </span>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para adicionar feriado -->
+    <div class="modal fade modal-custom" id="modalAdicionarFeriado" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span class="d-inline-flex align-items-center">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Adicionar Novo Feriado
+                        </span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('main.adicionar_feriado') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="data" class="form-label-custom">
+                                        <i class="fas fa-calendar-day me-2"></i>Data do Feriado
+                                    </label>
+                                    <input type="date" class="form-control form-control-custom" id="data" name="data" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tipo" class="form-label-custom">
+                                        <i class="fas fa-layer-group me-2"></i>Tipo de Feriado
+                                    </label>
+                                    <select class="form-control form-control-custom" id="tipo" name="tipo">
+                                        <option value="manual">Manual</option>
+                                        <option value="nacional">Nacional</option>
+                                        <option value="estadual">Estadual</option>
+                                        <option value="municipal">Municipal</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nome" class="form-label-custom">
+                                <i class="fas fa-tag me-2"></i>Nome do Feriado
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="nome" name="nome"
+                                   placeholder="Ex: Carnaval, Corpus Christi, etc." required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="uf" class="form-label-custom">
+                                        <i class="fas fa-map-marked me-2"></i>UF (Estado)
+                                    </label>
+                                    <input type="text" class="form-control form-control-custom" id="uf" name="uf"
+                                           maxlength="2" placeholder="Ex: SP, RJ" style="text-transform: uppercase;">
+                                    <small class="text-muted">Opcional para feriados estaduais</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cidade" class="form-label-custom">
+                                        <i class="fas fa-city me-2"></i>Cidade
+                                    </label>
+                                    <input type="text" class="form-control form-control-custom" id="cidade" name="cidade"
+                                           placeholder="Ex: São Paulo, Rio de Janeiro">
+                                    <small class="text-muted">Opcional para feriados municipais</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-custom" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-success btn-custom">
+                            <i class="fas fa-save me-2"></i>Adicionar Feriado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para carregar feriados da API -->
+    <div class="modal fade modal-custom" id="modalCarregarAPI" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cloud-download-alt me-2"></i>
+                        Carregar Feriados da API
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" id="formCarregarAPI">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="modal-body">
+                        <div style="font-size: 3rem; color: #667eea; margin-bottom: 1rem; text-align: center;">
+                            <i class="fas fa-globe-americas"></i>
+                        </div>
+                        <h5 style="text-align: center;">Carregar Feriados Nacionais</h5>
+                        <p class="mb-3" style="text-align: center;">Selecione o ano desejado para carregar os feriados da API BrasilAPI.</p>
+
+                        <div class="mb-3">
+                            <label for="anoSelecionado" class="form-label-custom">
+                                <i class="fas fa-calendar-alt me-2"></i>Ano
+                            </label>
+                            <select class="form-control form-control-custom" id="anoSelecionado" name="ano">
+                                {% for ano in range(2024, 2031) %}
+                                <option value="{{ ano }}" {% if ano == 2026 %}selected{% endif %}>{{ ano }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Os feriados serão armazenados em cache e considerados automaticamente nos cálculos de dias úteis.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-custom" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-info btn-custom" id="btnCarregarAPI">
+                            <i class="fas fa-cloud-download-alt me-2"></i>Carregar Feriados 2026
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animações de entrada
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.stats-card, .main-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('fade-in');
+            });
+        });
+
+        // Auto-uppercase para UF
+        document.getElementById('uf').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        // Anexar event listener do formulário quando o modal é mostrado
+        document.getElementById('modalAdicionarFeriado').addEventListener('show.bs.modal', function() {
+            const form = this.querySelector('form');
+            if (form) {
+                // Remover event listeners existentes para evitar duplicatas
+                form.removeEventListener('submit', handleFormSubmit);
+                form.addEventListener('submit', handleFormSubmit);
+            }
+        });
+
+        // Função para lidar com submit do formulário
+        function handleFormSubmit(e) {
+            e.preventDefault(); // Impedir submissão padrão
+
+            const tipo = document.getElementById('tipo').value;
+            const uf = document.getElementById('uf').value;
+            const cidade = document.getElementById('cidade').value;
+
+            if (tipo === 'estadual' && !uf) {
+                alert('Para feriados estaduais, o campo UF é obrigatório.');
+                return false;
+            }
+
+            if (tipo === 'municipal' && (!uf || !cidade)) {
+                alert('Para feriados municipais, os campos UF e Cidade são obrigatórios.');
+                return false;
+            }
+
+            // Preparar dados do formulário como URL-encoded
+            const formData = new FormData(this);
+            const urlEncodedData = new URLSearchParams();
+            for (let [key, value] of formData.entries()) {
+                urlEncodedData.append(key, value);
+            }
+
+            // Fazer requisição AJAX
+            fetch(this.action, {
+                method: this.method,
+                body: urlEncodedData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Sucesso - mostrar notificação e recarregar página
+                    alert(data.message || 'Feriado salvo com sucesso!');
+                    location.reload();
+                } else {
+                    // Erro - mostrar mensagem
+                    alert(data.message || 'Erro ao salvar feriado');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao processar a requisição: ' + error.message);
+            });
+        }
+
+        // Atualizar URL do form quando o ano for selecionado
+        document.getElementById('anoSelecionado').addEventListener('change', function() {
+            const anoSelecionado = this.value;
+            const form = document.getElementById('formCarregarAPI');
+            const btnCarregar = document.getElementById('btnCarregarAPI');
+
+            // Atualizar a action do form com o ano selecionado
+            form.action = `/feriados/carregar_api/${anoSelecionado}`;
+
+            // Atualizar o texto do botão
+            btnCarregar.innerHTML = `<i class="fas fa-cloud-download-alt me-2"></i>Carregar Feriados ${anoSelecionado}`;
+        });
+
+        // Inicializar o form com o ano padrão
+        document.addEventListener('DOMContentLoaded', function() {
+            const anoSelecionado = document.getElementById('anoSelecionado').value;
+            const form = document.getElementById('formCarregarAPI');
+            const btnCarregar = document.getElementById('btnCarregarAPI');
+
+            form.action = `/feriados/carregar_api/${anoSelecionado}`;
+            btnCarregar.innerHTML = `<i class="fas fa-cloud-download-alt me-2"></i>Carregar Feriados ${anoSelecionado}`;
+        });
+
+        // Função para editar feriado
+        function editarFeriado(id, data, nome, tipo, uf, cidade) {
+            // Preencher os campos do modal
+            document.getElementById('data').value = data;
+            document.getElementById('nome').value = nome;
+            document.getElementById('tipo').value = tipo || 'nacional';
+
+            // Preencher UF e cidade se existirem
+            const ufField = document.getElementById('uf');
+            const cidadeField = document.getElementById('cidade');
+
+            if (ufField && uf) {
+                ufField.value = uf;
+            }
+            if (cidadeField && cidade) {
+                cidadeField.value = cidade;
+            }
+
+            // Alterar o título do modal
+            document.querySelector('#modalAdicionarFeriado .modal-title').innerHTML =
+                '<i class="fas fa-edit me-2"></i>Editar Feriado';
+
+            // Alterar o texto do botão
+            document.querySelector('#modalAdicionarFeriado .btn-success').innerHTML =
+                '<i class="fas fa-save me-2"></i>Salvar Alterações';
+
+            // Alterar a action do form para edição
+            const form = document.querySelector('#modalAdicionarFeriado form');
+            form.action = `/feriados/${id}`;
+            form.method = 'POST';
+
+            // Adicionar campo hidden para método PUT
+            let methodField = form.querySelector('input[name="_method"]');
+            if (!methodField) {
+                methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                form.appendChild(methodField);
+            }
+            methodField.value = 'PUT';
+
+            // Mostrar o modal
+            const modal = new bootstrap.Modal(document.getElementById('modalAdicionarFeriado'));
+            modal.show();
+        }
+
+        // Função para excluir feriado
+        function excluirFeriado(id, nome) {
+            if (confirm(`Tem certeza que deseja excluir o feriado "${nome}"?`)) {
+                fetch(`/feriados/${id}/excluir`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || 'Feriado excluído com sucesso!');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Erro ao excluir feriado');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao processar a requisição');
+                });
+            }
+        }
+
+        // Resetar modal quando for fechado
+        document.getElementById('modalAdicionarFeriado').addEventListener('hidden.bs.modal', function() {
+            // Resetar título
+            document.querySelector('#modalAdicionarFeriado .modal-title').innerHTML =
+                '<i class="fas fa-plus me-2"></i>Adicionar Feriado Manual';
+
+            // Resetar botão
+            document.querySelector('#modalAdicionarFeriado .btn-success').innerHTML =
+                '<i class="fas fa-save me-2"></i>Adicionar Feriado';
+
+            // Resetar form
+            const form = document.querySelector('#modalAdicionarFeriado form');
+            form.action = '/feriados/adicionar';
+            form.method = 'POST';
+
+            // Remover campo _method se existir
+            const methodField = form.querySelector('input[name="_method"]');
+            if (methodField) {
+                methodField.remove();
+            }
+
+            // Limpar campos
+            form.reset();
+        });
+    </script>
+{% endblock %}

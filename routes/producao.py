@@ -115,7 +115,28 @@ def producao_atividades():
 @login_required
 def producao_feriados():
     """Feriados"""
-    return render_template('producao/feriados.html')
+    try:
+        # Buscar feriados manuais do banco
+        feriados_manuais = []
+        try:
+            from supabase_client import SUPABASE_URL, headers
+            url = f"{SUPABASE_URL}/rest/v1/feriados?order=data"
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                feriados_manuais = response.json()
+        except Exception as e:
+            print(f"Erro ao buscar feriados manuais: {e}")
+            feriados_manuais = []
+
+        # Buscar feriados da API para o ano atual
+        from utils.dias_uteis import obter_feriados_ano_completos
+        ano_atual = datetime.now().year
+        feriados_api = obter_feriados_ano_completos(ano_atual)
+
+        return render_template('producao/feriados.html', feriados_manuais=feriados_manuais, feriados_api=feriados_api, ano_atual=ano_atual)
+    except Exception as e:
+        print(f"Erro ao carregar feriados: {e}")
+        return render_template('producao/feriados.html', feriados_manuais=[], feriados_api=[], ano_atual=datetime.now().year)
 
 # API endpoints para o sistema de produção
 @producao_bp.route('/api/producao/colecoes', methods=['GET'])

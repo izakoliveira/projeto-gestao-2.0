@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
+import copy
 from utils.auth import login_required, funcionalidade_restrita, is_admin_session
 from utils.validators import validar_projeto, normaliza_opcional, verificar_tarefa_atrasada, contar_tarefas_atrasadas, normalizar
 from config.database import supabase, SUPABASE_URL, SUPABASE_KEY
@@ -12,21 +13,140 @@ projetos_bp = Blueprint('projetos', __name__)
 @projetos_bp.route('/projetos', methods=['GET', 'POST'])
 @login_required
 def listar_projetos():
+    # --- PRIMEIRO: Verificar se é uma requisição de limpeza de filtros ---
+    if request.args.get('limpar_filtros') == '1':
+        print(f"[DEBUG-LIMPAR] 🔄 INICIANDO LIMPEZA DE FILTROS...")
+        print(f"[DEBUG-LIMPAR] 📊 Sessão antes da limpeza: {dict(session)}")
+
+        # Limpar TODOS os possíveis filtros da sessão - ser mais abrangente
+        filtros_para_remover = [
+            'filtros_projetos',
+            'nome', 'tarefa', 'responsavel', 'status', 'status_projeto',
+            'data_inicio', 'data_fim', 'tipo_id', 'ambiente'
+        ]
+        for filtro_key in filtros_para_remover:
+            if filtro_key in session:
+                print(f"[DEBUG-LIMPAR] 🗑️ Removendo {filtro_key}: {session[filtro_key]}")
+                del session[filtro_key]
+                print(f"[DEBUG-LIMPAR] ✅ {filtro_key} removido da sessão")
+            else:
+                print(f"[DEBUG-LIMPAR] ℹ️ {filtro_key} não estava na sessão")
+
+        print(f"[DEBUG-LIMPAR] 📊 Sessão após limpeza: {dict(session)}")
+        print(f"[DEBUG-LIMPAR] 🔄 Redirecionando para URL limpa...")
+
+        # Definir flag para evitar re-aplicação na próxima requisição
+        session['acabou_de_limpar_filtros'] = True
+        print(f"[DEBUG-LIMPAR] 🏁 Flag de limpeza definida")
+
+        # Garantir redirect para URL completamente limpa
+        return redirect(url_for('projetos.listar_projetos'))
+
+    # --- FLAG PARA EVITAR REAPLICAÇÃO APÓS LIMPEZA ---
+    # Se acabamos de limpar filtros, não reaplicar nada
+    if session.get('acabou_de_limpar_filtros'):
+        print(f"[DEBUG-LIMPAR] 🚫 EVITANDO REAPLICAÇÃO APÓS LIMPEZA RECENTE")
+        del session['acabou_de_limpar_filtros']
+        print(f"[DEBUG-LIMPAR] ✅ Flag de limpeza removida")
+
+    # --- DEPOIS: Lógica normal de filtros ---
+    print(f"[DEBUG-FILTROS] 📥 Args recebidos: {dict(request.args)}")
+    print(f"[DEBUG-FILTROS] 💾 Filtros na sessão: {session.get('filtros_projetos', 'NENHUM')}")
+
+    filtros_keys = [
+        'nome[]', 'tarefa', 'responsavel', 'status', 'status_projeto',
+        'data_inicio', 'data_fim', 'tipo_id', 'ambiente'
+    ]
+    # Se for POST ou GET com filtros, salva na session
+    filtros_atual = {}
+    for k in filtros_keys:
+        v = request.values.getlist(k) if k.endswith('[]') or k in ['tarefa', 'responsavel', 'status', 'status_projeto'] else request.values.get(k, '')
+        if isinstance(v, list) and not v:
+            continue
+        if v:
+            filtros_atual[k] = v
+    if filtros_atual:
+        session['filtros_projetos'] = copy.deepcopy(filtros_atual)
+        print(f"[DEBUG-FILTROS] 💾 Filtros salvos na sessão: {filtros_atual}")
+    elif 'filtros_projetos' in session and session['filtros_projetos'] and not any(request.args.getlist(key) for key in filtros_keys if key != 'limpar_filtros') and not session.get('acabou_de_limpar_filtros'):
+        # Se não há filtros na URL (exceto limpar_filtros), mas há na session, aplica eles
+        print(f"[DEBUG-FILTROS] 🔄 REAPLICANDO filtros da sessão: {session['filtros_projetos']}")
+        print(f"[DEBUG-FILTROS] 🔍 Verificação de filtros na URL:")
+        for key in filtros_keys:
+            if key != 'limpar_filtros':
+                valores = request.args.getlist(key)
+                print(f"  {key}: {valores}")
+        print(f"[DEBUG-FILTROS] 📊 any() result: {any(request.args.getlist(key) for key in filtros_keys if key != 'limpar_filtros')}")
+
+        filtros_salvos = session['filtros_projetos']
+        # Verificar se filtros_salvos não está vazio
+        if filtros_salvos:
+            # Monta query string e redireciona
+            from urllib.parse import urlencode
+            params = []
+            for k, v in filtros_salvos.items():
+                if isinstance(v, list):
+                    for item in v:
+                        params.append((k, item))
+                else:
+                    params.append((k, v))
+            redirect_url = url_for('projetos.listar_projetos') + '?' + urlencode(params)
+            print(f"[DEBUG-FILTROS] 🔄 Redirecionando para reaplicar filtros: {redirect_url}")
+            return redirect(redirect_url)
+        else:
+            print(f"[DEBUG-FILTROS] ⚠️ Filtros salvos estão vazios, não reaplicando")
+    else:
+        print(f"[DEBUG-FILTROS] ✅ Nenhuma ação de filtro necessária")
     # (Bloco removido para evitar erro de variável não inicializada)
     """Lista todos os projetos com filtros"""
     usuario_id = session['user_id']
     # DEBUG: Mostrar SUPABASE_URL e SUPABASE_KEY para garantir ambiente
     print(f"[DEBUG] SUPABASE_URL: {SUPABASE_URL}")
     print(f"[DEBUG] SUPABASE_KEY: {SUPABASE_KEY[:10]}... (truncada)")
-    nome_list = request.args.getlist('nome[]')  # Lista de nomes de projetos (múltiplo)
-    tarefa_list = request.args.getlist('tarefa')  # Lista de nomes de tarefas (múltiplo)
-    # responsavel_list = request.args.getlist('responsavel')  # REMOVIDO: coluna não existe
-    status_list = request.args.getlist('status')  # Lista de status (múltiplo)
-    data_inicio = request.args.get('data_inicio', '')  # Data de início
-    data_fim = request.args.get('data_fim', '')  # Data de término
+    nome_list = request.args.getlist('nome[]')
+    tarefa_list = request.args.getlist('tarefa')
+    responsavel_list = request.args.getlist('responsavel')
+    status_list = request.args.getlist('status')
+    status_projeto_list = request.args.getlist('status_projeto')
+    data_inicio = request.args.get('data_inicio', '')
+    data_fim = request.args.get('data_fim', '')
     tipo_id = request.args.get('tipo_id', '')
     ambiente = request.args.get('ambiente', '')
+    print(f"[DEBUG-FILTRO] data_inicio recebido: {data_inicio}")
+    print(f"[DEBUG-FILTRO] data_fim recebido: {data_fim}")
 
+    # PRIMEIRO: Buscar TODOS os projetos (sem filtros) para popular os selects
+    if is_admin_session():
+        todos_projetos = supabase.table("projetos").select("*").execute().data
+    else:
+        resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
+        projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
+        if projetos_ids_visiveis:
+            todos_projetos = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis).execute().data
+        else:
+            todos_projetos = []
+    
+    # Buscar tarefas de TODOS os projetos para poder ordená-los
+    todos_projeto_ids = [p['id'] for p in todos_projetos]
+    if todos_projeto_ids:
+        todas_tarefas = supabase.table("tarefas").select("*").in_("projeto_id", todos_projeto_ids).execute().data
+        # Associar tarefas a cada projeto
+        for projeto in todos_projetos:
+            projeto['tarefas'] = [t for t in todas_tarefas if t.get('projeto_id') == projeto['id']]
+        
+        # Ordenar todos_projetos usando a mesma lógica de data_inicio_lancamento
+        def data_inicio_lancamento_todos(projeto):
+            tarefas = projeto.get('tarefas', [])
+            tarefas_lancamento = [t for t in tarefas if normalizar(t.get('nome', '')) == 'lancamento']
+            datas = [t.get('data_inicio') or t.get('data_inicio_tarefa') for t in tarefas_lancamento if (t.get('data_inicio') or t.get('data_inicio_tarefa'))]
+            datas_validas = [d for d in datas if d]
+            if datas_validas:
+                return min(datas_validas)
+            return '9999-12-31'
+        
+        todos_projetos = sorted(todos_projetos, key=lambda p: (data_inicio_lancamento_todos(p), normalizar(p.get('nome', ''))))
+    
+    # DEPOIS: Aplicar filtros para mostrar apenas os projetos filtrados
     if is_admin_session():
         # Admin vê todos os projetos
         query = supabase.table("projetos").select("*")
@@ -39,21 +159,97 @@ def listar_projetos():
                     projetos.append(projeto)
         else:
             projetos = query.execute().data
+        print(f"[DEBUG-FILTRO] datas dos projetos antes do filtro:")
+        for p in projetos:
+            print(f"  Projeto: {p.get('nome')} | data_inicio: {p.get('data_inicio')} | data_fim: {p.get('data_fim')}")
         # Aplicar outros filtros
-        if data_inicio:
-            projetos = [p for p in projetos if p.get('data_inicio', '') >= data_inicio]
-        if data_fim:
-            projetos = [p for p in projetos if p.get('data_fim', '') <= data_fim]
+        from datetime import datetime
+        def parse_data(data_str):
+            if not data_str:
+                return None
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y'):
+                try:
+                    return datetime.strptime(data_str, fmt)
+                except Exception:
+                    continue
+            return None
+
+        if data_inicio or data_fim:
+            data_inicio_dt = parse_data(data_inicio) if data_inicio else None
+            data_fim_dt = parse_data(data_fim) if data_fim else None
+            projetos_filtrados = []
+            for p in projetos:
+                data_inicio_proj = parse_data(p.get('data_inicio'))
+                data_fim_proj = parse_data(p.get('data_fim'))
+                print(f"[DEBUG-FILTRO] Comparando projeto '{p.get('nome')}' data_inicio: {data_inicio_proj} data_fim: {data_fim_proj} com filtro: {data_inicio_dt} a {data_fim_dt}")
+                if data_inicio_proj and data_fim_proj:
+                    # Interseção de períodos
+                    if (not data_fim_dt or data_inicio_proj <= data_fim_dt) and (not data_inicio_dt or data_fim_proj >= data_inicio_dt):
+                        projetos_filtrados.append(p)
+                else:
+                    # Se não tem datas, mantém por segurança
+                    projetos_filtrados.append(p)
+            projetos = projetos_filtrados
         if tipo_id:
             projetos = [p for p in projetos if p.get('tipo_id') == tipo_id]
         if ambiente:
             projetos = [p for p in projetos if p.get('tipo_id') == ambiente]
+        if status_projeto_list:
+            # Normalizar status para aceitar concluído/concluída
+            status_normalizado = []
+            for s in status_projeto_list:
+                status_normalizado.append(s)
+                if s == 'concluído':
+                    status_normalizado.append('concluída')
+                elif s == 'concluída':
+                    status_normalizado.append('concluído')
+            projetos = [p for p in projetos if p.get('status') in status_normalizado]
     else:
         # Usuário comum vê apenas projetos autorizados
         resp = supabase.table("projetos_usuarios_visiveis").select("projeto_id").eq("usuario_id", usuario_id).execute()
         projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
         if projetos_ids_visiveis:
             projetos = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis).execute().data
+            # Aplicar filtro de status do projeto
+            if status_projeto_list:
+                # Normalizar status para aceitar concluído/concluída
+                status_normalizado = []
+                for s in status_projeto_list:
+                    status_normalizado.append(s)
+                    if s == 'concluído':
+                        status_normalizado.append('concluída')
+                    elif s == 'concluída':
+                        status_normalizado.append('concluído')
+                projetos = [p for p in projetos if p.get('status') in status_normalizado]
+            print(f"[DEBUG-FILTRO] datas dos projetos antes do filtro:")
+            for p in projetos:
+                print(f"  Projeto: {p.get('nome')} | data_inicio: {p.get('data_inicio')} | data_fim: {p.get('data_fim')}")
+            # Aplicar filtro de data_inicio/data_fim para usuários comuns também
+            def parse_data(data_str):
+                if not data_str:
+                    return None
+                for fmt in ('%Y-%m-%d', '%d/%m/%Y'):
+                    try:
+                        return datetime.strptime(data_str, fmt)
+                    except Exception:
+                        continue
+                return None
+            if data_inicio or data_fim:
+                data_inicio_dt = parse_data(data_inicio) if data_inicio else None
+                data_fim_dt = parse_data(data_fim) if data_fim else None
+                projetos_filtrados = []
+                for p in projetos:
+                    data_inicio_proj = parse_data(p.get('data_inicio'))
+                    data_fim_proj = parse_data(p.get('data_fim'))
+                    print(f"[DEBUG-FILTRO] Comparando projeto '{p.get('nome')}' data_inicio: {data_inicio_proj} data_fim: {data_fim_proj} com filtro: {data_inicio_dt} a {data_fim_dt}")
+                    if data_inicio_proj and data_fim_proj:
+                        # Interseção de períodos
+                        if (not data_fim_dt or data_inicio_proj <= data_fim_dt) and (not data_inicio_dt or data_fim_proj >= data_inicio_dt):
+                            projetos_filtrados.append(p)
+                    else:
+                        # Se não tem datas, mantém por segurança
+                        projetos_filtrados.append(p)
+                projetos = projetos_filtrados
         else:
             projetos = []
 
@@ -65,13 +261,14 @@ def listar_projetos():
     if projeto_ids:
         print(f"[DEBUG] status_list: {status_list}")
         print(f"[DEBUG] colecao_list: {request.args.getlist('colecao')}")
+        print(f"[DEBUG] responsavel_list: {responsavel_list}")
         
-        if not status_list and not request.args.getlist('colecao'):
+        if not status_list and not request.args.getlist('colecao') and not responsavel_list:
             print(f"[DEBUG] Usando caminho SEM FILTROS - busca todas as tarefas")
             try:
-                # WORKAROUND: Especificar apenas colunas que existem para evitar erro PGRST204
-                print(f"[DEBUG] Tentando buscar tarefas com colunas específicas...")
-                tarefas_filtradas = supabase.table("tarefas").select("id, nome, status, data_inicio, data_fim, projeto_id, colecao, usuario_id, ativa, excluida").in_("projeto_id", projeto_ids).execute().data or []
+                # WORKAROUND: Usar select(*) para buscar todas as colunas
+                print(f"[DEBUG] Tentando buscar tarefas...")
+                tarefas_filtradas = supabase.table("tarefas").select("*").in_("projeto_id", projeto_ids).execute().data or []
                 print(f"[DEBUG] Total de tarefas encontradas SEM filtros: {len(tarefas_filtradas)}")
                 
                 # DEBUG ESPECÍFICO: Verificar tarefas dos projetos problemáticos
@@ -99,18 +296,53 @@ def listar_projetos():
             print(f"[DEBUG] Usando caminho COM FILTROS - aplicando filtros de status/coleção")
             try:
                 for projeto_id in projeto_ids:
-                    tarefas_projeto = supabase.table("tarefas").select("id, nome, status, data_inicio, data_fim, projeto_id, colecao, usuario_id, ativa, excluida").eq("projeto_id", projeto_id).execute()
+                    tarefas_projeto = supabase.table("tarefas").select("*").eq("projeto_id", projeto_id).execute()
                     if hasattr(tarefas_projeto, 'data') and tarefas_projeto.data:
                         tarefas_filtradas.extend(tarefas_projeto.data)
                 print(f"[DEBUG] Total de tarefas ANTES dos filtros: {len(tarefas_filtradas)}")
                 
                 # Filtro de status (múltiplo)
                 if status_list:
+                    from datetime import datetime
                     tarefas_antes = len(tarefas_filtradas)
-                    tarefas_filtradas = [
-                        t for t in tarefas_filtradas
-                        if t.get('status') in status_list or normalizar(t.get('nome', '')) == 'lancamento'
-                    ]
+                    tarefas_resultado = []
+                    
+                    print(f"[DEBUG] Status filtrados: {status_list}")
+                    print(f"[DEBUG] Analisando {len(tarefas_filtradas)} tarefas...")
+                    
+                    for t in tarefas_filtradas:
+                        status_tarefa = t.get('status', '')
+                        incluir = False
+                        
+                        # Verificar se o status da tarefa está na lista de filtros
+                        if status_tarefa in status_list:
+                            incluir = True
+                            print(f"[DEBUG] Tarefa '{t.get('nome')}' incluída (status={status_tarefa})")
+                        
+                        # Verificar se filtrou "atrasado" e a tarefa está atrasada
+                        if 'atrasado' in status_list and not incluir:
+                            try:
+                                data_fim = t.get('data_fim')
+                                if data_fim and status_tarefa not in ['concluída', 'concluído']:
+                                    # Converter data_fim para datetime
+                                    if isinstance(data_fim, str):
+                                        data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                                    else:
+                                        data_fim_dt = data_fim
+                                    # Verificar se está atrasada
+                                    if data_fim_dt.date() < datetime.now().date():
+                                        incluir = True
+                                        print(f"[DEBUG] Tarefa '{t.get('nome')}' incluída (atrasada, data_fim={data_fim})")
+                            except Exception as ex:
+                                print(f"[DEBUG] Erro ao verificar atraso da tarefa {t.get('id')}: {ex}")
+                        
+                        if not incluir:
+                            print(f"[DEBUG] Tarefa '{t.get('nome')}' EXCLUÍDA (status={status_tarefa}, data_fim={t.get('data_fim')})")
+                        
+                        if incluir:
+                            tarefas_resultado.append(t)
+                    
+                    tarefas_filtradas = tarefas_resultado
                     print(f"[DEBUG] Filtro de STATUS aplicado: {tarefas_antes} -> {len(tarefas_filtradas)} tarefas")
                 # Filtro de colecao (múltiplo)
                 colecao_list = request.args.getlist('colecao')
@@ -118,6 +350,26 @@ def listar_projetos():
                     tarefas_antes = len(tarefas_filtradas)
                     tarefas_filtradas = [t for t in tarefas_filtradas if t.get('colecao') in colecao_list]
                     print(f"[DEBUG] Filtro de COLEÇÃO aplicado: {tarefas_antes} -> {len(tarefas_filtradas)} tarefas")
+                
+                # Filtro de responsável (múltiplo)
+                if responsavel_list:
+                    tarefas_antes = len(tarefas_filtradas)
+                    print(f"[DEBUG] Responsáveis selecionados: {responsavel_list}")
+                    
+                    # Debug: mostrar alguns responsavel_id das tarefas
+                    if tarefas_filtradas:
+                        print(f"[DEBUG] Exemplos de usuario_id nas tarefas:")
+                        for t in tarefas_filtradas[:5]:
+                            print(f"  Tarefa '{t.get('nome')}': usuario_id = {t.get('usuario_id')}")
+                    
+                    tarefas_filtradas = [t for t in tarefas_filtradas if t.get('usuario_id') in responsavel_list]
+                    print(f"[DEBUG] Filtro de RESPONSÁVEL aplicado: {tarefas_antes} -> {len(tarefas_filtradas)} tarefas")
+            except Exception as e:
+                # Filtro de responsável (múltiplo)
+                if responsavel_list:
+                    tarefas_antes = len(tarefas_filtradas)
+                    tarefas_filtradas = [t for t in tarefas_filtradas if t.get('responsavel_id') in responsavel_list]
+                    print(f"[DEBUG] Filtro de RESPONSÁVEL aplicado: {tarefas_antes} -> {len(tarefas_filtradas)} tarefas")
             except Exception as e:
                 print(f"Erro ao buscar tarefas dos projetos com filtros: {e}")
                 tarefas_filtradas = []
@@ -169,6 +421,12 @@ def listar_projetos():
             projeto['data_fim'] = projeto['data_fim'].split('T')[0] if 'T' in projeto['data_fim'] else projeto['data_fim']
         # Adiciona lista de tarefas ao projeto
         projeto['tarefas'] = [t for t in tarefas_filtradas if t.get('projeto_id') == projeto['id']]
+    
+    # Filtrar projetos: remover projetos sem tarefas quando há filtro de status ou coleção ativo
+    if status_list or request.args.getlist('colecao'):
+        projetos_antes = len(projetos)
+        projetos = [p for p in projetos if len(p.get('tarefas', [])) > 0]
+        print(f"[DEBUG] Filtro de PROJETOS SEM TAREFAS: {projetos_antes} -> {len(projetos)} projetos")
 
     # Buscar tipos de projeto
     try:
@@ -177,6 +435,26 @@ def listar_projetos():
     except Exception as e:
         print(f"Erro ao consultar tipos_projeto: {e}")
         tipos = []
+    
+    # Buscar todos os usuários para o filtro de responsável
+    try:
+        usuarios_response = supabase.table("usuarios").select("id, nome").order("nome").execute()
+        usuarios = usuarios_response.data or []
+        # Criar lista de todos os responsáveis (nomes) para o select
+        todos_responsaveis = [u['nome'] for u in usuarios if u.get('nome')]
+    except Exception as e:
+        print(f"Erro ao consultar usuários: {e}")
+        usuarios = []
+        todos_responsaveis = []
+    
+    # Buscar todas as coleções (de todas as tarefas) para o select
+    try:
+        if todos_projeto_ids:
+            todas_colecoes = sorted(list({str(t.get('colecao')).strip() for t in todas_tarefas if t.get('colecao')}))
+        else:
+            todas_colecoes = []
+    except Exception:
+        todas_colecoes = []
 
     # Resolver nomes das pastas
     tipos = [t for t in tipos if t['nome'].lower() not in ['calendarios', 'tarefas diarias']]
@@ -372,7 +650,7 @@ def listar_projetos():
                 # Garantir que todos os campos sejam strings válidas
                 gantt_geral_data.append({
                     'id': str(tarefa.get('id', '')),
-                    'name': str(tarefa.get('nome', '') or tarefa.get('titulo', '') or 'Tarefa sem nome'),
+                    'name': str(tarefa.get('nome', '') or 'Tarefa sem nome'),
                     'start': str(data_inicio),
                     'end': str(data_fim),
                     'status': str(tarefa.get('status', 'pendente')),
@@ -486,11 +764,44 @@ def listar_projetos():
                 print(f"[DEBUG-PROBLEMA]   - {tl['nome']}: data_final = {tl['data_final']}")
         
         print(f"Projeto: {nome_projeto} | Data lançamento: {data_lanc}")
+    # Garante que todos os projetos enviados ao frontend tenham dias_corridos e dias_uteis
+    from utils.dias_uteis import dias_uteis_entre_datas
+    for projeto in projetos:
+        data_inicio_proj = projeto.get('data_inicio')
+        data_fim_proj = projeto.get('data_fim')
+        try:
+            if data_inicio_proj and data_fim_proj:
+                from datetime import datetime
+                # Aceita formatos 'YYYY-MM-DD', 'DD/MM/YYYY' ou com 'T'
+                if '/' in data_inicio_proj:
+                    data_inicio_dt = datetime.strptime(data_inicio_proj, '%d/%m/%Y')
+                elif 'T' in data_inicio_proj:
+                    data_inicio_dt = datetime.strptime(data_inicio_proj.split('T')[0], '%Y-%m-%d')
+                else:
+                    data_inicio_dt = datetime.strptime(data_inicio_proj, '%Y-%m-%d')
+                if '/' in data_fim_proj:
+                    data_fim_dt = datetime.strptime(data_fim_proj, '%d/%m/%Y')
+                elif 'T' in data_fim_proj:
+                    data_fim_dt = datetime.strptime(data_fim_proj.split('T')[0], '%Y-%m-%d')
+                else:
+                    data_fim_dt = datetime.strptime(data_fim_proj, '%Y-%m-%d')
+                dias_corridos = (data_fim_dt - data_inicio_dt).days + 1 if data_fim_dt >= data_inicio_dt else 0
+                dias_uteis = dias_uteis_entre_datas(data_inicio_dt.date(), data_fim_dt.date())
+                projeto['dias_corridos'] = dias_corridos if dias_corridos is not None else 0
+                projeto['dias_uteis'] = dias_uteis if dias_uteis is not None else 0
+            else:
+                projeto['dias_corridos'] = 0
+                projeto['dias_uteis'] = 0
+        except Exception as e:
+            projeto['dias_corridos'] = 0
+            projeto['dias_uteis'] = 0
+
     if is_mobile:
         return render_template('projetos_gantt_mobile.html', 
                              projetos=projetos, 
                              tarefas_filtradas=tarefas_filtradas,
                              tipos=tipos,
+                             usuarios=usuarios,
                              nome_pasta=nome_pasta,
                              projects_colors=projects_colors,
                              pode_criar_projeto=pode_criar_projeto,
@@ -499,10 +810,15 @@ def listar_projetos():
                              alertas_projetos=alertas_projetos,
                              gantt_geral_data=gantt_geral_data,
                              colecoes=colecoes,
+                             # Passar TODAS as opções para os selects (não filtradas)
+                             todos_projetos=todos_projetos,
+                             todos_responsaveis=todos_responsaveis,
+                             todas_colecoes=todas_colecoes,
                              # Passar os valores dos filtros para manter seleções
                              filtros_ativos={
                                  'nome_list': nome_list,
                                  'tarefa_list': tarefa_list,
+                                 'responsavel_list': responsavel_list,
                                  'status_list': status_list,
                                  'data_inicio': data_inicio,
                                  'data_fim': data_fim,
@@ -514,6 +830,7 @@ def listar_projetos():
                              projetos=projetos, 
                              tarefas_filtradas=tarefas_filtradas,
                              tipos=tipos,
+                             usuarios=usuarios,
                              nome_pasta=nome_pasta,
                              projects_colors=projects_colors,
                              pode_criar_projeto=pode_criar_projeto,
@@ -522,10 +839,15 @@ def listar_projetos():
                              alertas_projetos=alertas_projetos,
                              gantt_geral_data=gantt_geral_data,
                              colecoes=colecoes,
+                             # Passar TODAS as opções para os selects (não filtradas)
+                             todos_projetos=todos_projetos,
+                             todos_responsaveis=todos_responsaveis,
+                             todas_colecoes=todas_colecoes,
                              # Passar os valores dos filtros para manter seleções
                              filtros_ativos={
                                  'nome_list': nome_list,
                                  'tarefa_list': tarefa_list,
+                                 'responsavel_list': responsavel_list,
                                  'status_list': status_list,
                                  'data_inicio': data_inicio,
                                  'data_fim': data_fim,
@@ -638,6 +960,21 @@ def editar_projeto(projeto_id):
             }
             resp = supabase.table('projetos').update(update_data).eq('id', projeto_id).execute()
             if hasattr(resp, 'data') and resp.data:
+                # Verificar se o nome do projeto mudou e atualizar coleção das tarefas
+                nome_antigo = projeto.get('nome', '')
+                if nome != nome_antigo:
+                    try:
+                        # Atualizar coleção de todas as tarefas do projeto
+                        tarefas_update = supabase.table('tarefas').update({
+                            'colecao': nome
+                        }).eq('projeto_id', projeto_id).execute()
+                        print(f'Coleção atualizada para {len(tarefas_update.data) if tarefas_update.data else 0} tarefas')
+                    except Exception as e:
+                        print(f'Erro ao atualizar coleção das tarefas: {e}')
+                        # Não falhar a operação se a atualização da coleção falhar
+                else:
+                    print('DEBUG: Nome não mudou, coleção não será atualizada')
+                
                 flash('Projeto atualizado com sucesso!')
                 return redirect('/projetos')
             else:

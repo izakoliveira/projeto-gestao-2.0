@@ -48,7 +48,7 @@ Thumbs.db
 temp/
 tmp/
 
-# Excel Files (podem conter dados sensíveis)
+# Excel Files (podem conter dados sensÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­veis)
 *.xlsx
 *.xls
 
@@ -74,3 +74,21 @@ yarn-error.log*
 .secrets
 secrets/
 private_keys/
+
+# ProteÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de CÃƒÆ’Ã‚Â³digo e Credenciais
+.env.*
+*.env
+.env.key
+.env.encrypted
+license.dat
+credenciais.txt
+senhas.txt
+*.pfx
+*.p12
+certificado.*
+# Arquivos ofuscados
+dist_ofuscado/
+*.pyc.encrypted
+# ProteÃƒÂ§ÃƒÂ£o de CÃƒÂ³digo e Credenciais
+# ProteÃ§Ã£o de CÃ³digo e Credenciais
+# Proteção de Código e Credenciais

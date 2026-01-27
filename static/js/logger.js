@@ -33,53 +33,10 @@ class Logger {
             localStorage.setItem('logLevel', logParam);
         }
 
-        // Botão para alternar logs (apenas em desenvolvimento)
-        if (this.enabled && this.level !== 'none') {
-            this.createLogToggle();
-        }
+        // Removido botão flutuante de alternância de logs
     }
 
-    createLogToggle() {
-        // Criar botão flutuante para controlar logs
-        const toggle = document.createElement('div');
-        toggle.id = 'log-toggle';
-        toggle.innerHTML = `
-            <div style="
-                position: fixed; 
-                top: 20px; 
-                right: 20px; 
-                z-index: 9999; 
-                background: rgba(0,0,0,0.8); 
-                color: white; 
-                padding: 10px; 
-                border-radius: 5px; 
-                font-size: 12px; 
-                cursor: pointer;
-                font-family: monospace;
-            ">
-                <div>📝 Logs: ${this.level.toUpperCase()}</div>
-                <div style="font-size: 10px; margin-top: 5px;">
-                    Clique para alternar
-                </div>
-            </div>
-        `;
-
-        toggle.addEventListener('click', () => {
-            const levels = ['none', 'error', 'warn', 'info', 'debug'];
-            const currentIndex = levels.indexOf(this.level);
-            const nextIndex = (currentIndex + 1) % levels.length;
-            this.level = levels[nextIndex];
-            localStorage.setItem('logLevel', this.level);
-            toggle.querySelector('div').textContent = `📝 Logs: ${this.level.toUpperCase()}`;
-
-            // Recarregar página para aplicar mudanças
-            if (this.level === 'none') {
-                setTimeout(() => location.reload(), 500);
-            }
-        });
-
-        document.body.appendChild(toggle);
-    }
+    // Removido método createLogToggle()
 
     shouldLog(level) {
         if (!this.enabled) return false;

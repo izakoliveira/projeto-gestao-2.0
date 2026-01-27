@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exportação de Relatórios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2>Exportação de Relatórios</h2>
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Selecionar Projetos para Exportação</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="projeto-select">Projetos:</label>
+                            <select multiple class="form-control" id="projeto-select" style="height: 200px;">
+                                <option value="todos">🔄 Todos os projetos</option>
+                                {% for projeto in projetos %}
+                                <option value="{{ projeto.id }}">{{ projeto.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="incluir_tarefas" checked>
+                                <label class="form-check-label" for="incluir_tarefas">
+                                    Incluir Tarefas
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="incluir_pastas" checked>
+                                <label class="form-check-label" for="incluir_pastas">
+                                    Incluir Pastas
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button id="btn-exportar-excel" class="btn btn-success mr-2">
+                                <i class="fas fa-file-excel"></i> Exportar Excel
+                            </button>
+                            <button id="btn-exportar-csv" class="btn btn-info">
+                                <i class="fas fa-file-csv"></i> Exportar CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnExportarExcel = document.getElementById('btn-exportar-excel');
+            const btnExportarCSV = document.getElementById('btn-exportar-csv');
+            
+            btnExportarExcel.addEventListener('click', function() {
+                const projetosSelecionados = getProjetosSelecionados();
+                
+                if (projetosSelecionados.length === 0) {
+                    alert('Selecione pelo menos um projeto para exportar');
+                    return;
+                }
+                
+                // Mostrar loading
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
+                this.disabled = true;
+                
+                fetch('/relatorio/exportar_excel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        projetos: projetosSelecionados
+                    })
+                })
+                .then(response => {
+                    this.innerHTML = '<i class="fas fa-file-excel"></i> Exportar Excel';
+                    this.disabled = false;
+                    
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta: ' + response.status);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'relatorio_projetos.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    alert('Relatório Excel exportado com sucesso!');
+                })
+                .catch(error => {
+                    this.innerHTML = '<i class="fas fa-file-excel"></i> Exportar Excel';
+                    this.disabled = false;
+                    console.error('Erro ao exportar Excel:', error);
+                    alert('Erro ao exportar Excel: ' + error.message);
+                });
+            });
+            
+            function getProjetosSelecionados() {
+                const select = document.getElementById('projeto-select');
+                const valores = Array.from(select.selectedOptions).map(option => option.value);
+                
+                // Se 'todos' foi selecionado, retornar lista vazia (backend entende como "buscar todos")
+                if (valores.includes('todos')) {
+                    return [];
+                }
+                
+                // Se nenhum projeto foi selecionado, retornar lista vazia (buscar todos)
+                if (valores.length === 0) {
+                    return [];
+                }
+                
+                // Retornar apenas os IDs dos projetos selecionados
+                return valores.map(v => parseInt(v)).filter(v => !isNaN(v));
+            }
+            
+            btnExportarCSV.addEventListener('click', function() {
+                const projetosSelecionados = getProjetosSelecionados();
+                
+                if (projetosSelecionados.length === 0) {
+                    alert('Selecione pelo menos um projeto para exportar');
+                    return;
+                }
+                
+                // Mostrar loading
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
+                this.disabled = true;
+                
+                fetch('/relatorio/exportar_csv', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        projetos: projetosSelecionados
+                    })
+                })
+                .then(response => {
+                    this.innerHTML = '<i class="fas fa-file-csv"></i> Exportar CSV';
+                    this.disabled = false;
+                    
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta: ' + response.status);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'projetos.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    alert('Arquivo CSV exportado com sucesso!');
+                })
+                .catch(error => {
+                    this.innerHTML = '<i class="fas fa-file-csv"></i> Exportar CSV';
+                    this.disabled = false;
+                    console.error('Erro ao exportar CSV:', error);
+                    alert('Erro ao exportar CSV: ' + error.message);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

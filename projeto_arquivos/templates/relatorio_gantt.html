@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório de Calendários{% endblock %}
+
+{% block content %}
+    <h1>Relatório de Calendários</h1>
+    <!-- Imagem do gráfico de Gantt removida conforme solicitado -->
+    {% macro normalizar(nome) %}
+        {{ nome|lower|replace('ã','a')|replace('á','a')|replace('â','a')|replace('é','e')|replace('ê','e')|replace('í','i')|replace('ó','o')|replace('ô','o')|replace('ú','u')|replace('ç','c')|trim }}
+    {% endmacro %}
+
+    {% macro data_inicio_lancamento(projeto) %}
+        {% set datas = [] %}
+        {% for t in projeto.tarefas %}
+            {% if normalizar(t.nome) == 'lancamento' %}
+                {% if t.inicio %}
+                    {% set _ = datas.append(t.inicio) %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% if datas %}
+            {{ datas|min }}
+        {% else %}
+            9999-12-31
+        {% endif %}
+    {% endmacro %}
+
+    {# Projetos já vêm ordenados do backend por data de lançamento #}
+    {% for projeto in projetos %}
+    <h2>Tarefas - {{ projeto.nome }}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tarefa</th>
+                <th class="text-center">Início</th>
+                <th class="text-center">Fim</th>
+                <th class="text-center">Duração</th>
+                <th class="text-center">Dias Úteis</th>
+                <th>Coleção</th>
+                <th>Responsável</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tarefa in projeto.tarefas %}
+            {% if tarefa.nome|lower|trim == 'lançamento' %}
+            <tr style="color: red; font-weight: bold;">
+                <td>{{ tarefa.nome }}</td>
+                <td class="text-center">{{ tarefa.inicio }}</td>
+                <td class="text-center">{{ tarefa.fim }}</td>
+                <td class="text-center">{{ tarefa.duracao }}</td>
+                <td class="text-center">{{ tarefa.dias_uteis }}</td>
+                <td>{{ tarefa.colecao }}</td>
+                <td>{{ tarefa.responsavel }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>{{ tarefa.nome }}</td>
+                <td class="text-center">{{ tarefa.inicio }}</td>
+                <td class="text-center">{{ tarefa.fim }}</td>
+                <td class="text-center">{{ tarefa.duracao }}</td>
+                <td class="text-center">{{ tarefa.dias_uteis }}</td>
+                <td>{{ tarefa.colecao }}</td>
+                <td>{{ tarefa.responsavel }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

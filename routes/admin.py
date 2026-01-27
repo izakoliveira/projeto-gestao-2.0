@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, session, flash,
 from utils.auth import login_required, apenas_admin_izak, carregar_restricoes, salvar_restricoes
 from config.database import supabase, SUPABASE_URL, SUPABASE_KEY
 from supabase_client import create_simple_user
+from utils.email_notifications import notificar_tarefas_pendentes_liberacao, notificar_tarefas_pendentes_liberacao
 import json
 import requests
 import bcrypt
@@ -16,6 +17,77 @@ headers = {
 
 # Criar blueprint para administração
 admin_bp = Blueprint('admin', __name__)
+
+def notificar_tarefas_pendentes_ao_liberar_acesso(usuario_id, projeto_id):
+    """
+    Notifica o usuário sobre tarefas onde ele é responsável quando o acesso ao projeto é liberado.
+    Envia uma única notificação agrupada com todas as tarefas do usuário no projeto.
+    """
+    try:
+        # Buscar dados do usuário
+        usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", str(usuario_id)).single().execute()
+        usuario = usuario_resp.data if hasattr(usuario_resp, 'data') else None
+        
+        if not usuario:
+            print(f"[INFO] Usuário {usuario_id} não encontrado para notificação")
+            return
+        
+        # Buscar informações do projeto
+        projeto_resp = supabase.table("projetos").select("nome").eq("id", str(projeto_id)).single().execute()
+        projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
+        
+        if not projeto:
+            print(f"[INFO] Projeto {projeto_id} não encontrado para notificação")
+            return
+        
+        projeto_nome = projeto.get('nome', 'Projeto')
+        projeto_url = f"http://localhost:5000/projetos/{projeto_id}"
+        
+        # Buscar tarefas onde o usuário é responsável neste projeto
+        tarefas_resp = supabase.table("tarefas").select("*").eq("projeto_id", str(projeto_id)).eq("usuario_id", str(usuario_id)).execute()
+        tarefas = tarefas_resp.data if hasattr(tarefas_resp, 'data') else []
+        
+        if not tarefas:
+            print(f"[INFO] Nenhuma tarefa pendente para notificar o usuário {usuario_id} no projeto {projeto_id}")
+            return
+        
+        # Criar notificações no sistema para cada tarefa
+        notificacoes_criadas = 0
+        for tarefa in tarefas:
+            try:
+                supabase.table('notificacoes').insert({
+                    'usuario_id': str(usuario_id),
+                    'mensagem': f"Você foi designado para a tarefa '{tarefa.get('nome', '')}' no projeto '{projeto_nome}'",
+                    'tipo': 'designacao',
+                    'projeto_id': str(projeto_id)
+                }).execute()
+                notificacoes_criadas += 1
+            except Exception as e:
+                print(f"[ERRO] Erro ao criar notificação no sistema para tarefa {tarefa.get('id')}: {e}")
+        
+        # Enviar um único email com todas as tarefas
+        try:
+            sucesso_email = notificar_tarefas_pendentes_liberacao(
+                usuario['email'],
+                usuario['nome'],
+                projeto_nome,
+                tarefas,
+                projeto_url
+            )
+            
+            if sucesso_email:
+                print(f"[INFO] Email agrupado enviado com sucesso para {usuario['email']} com {len(tarefas)} tarefa(s) do projeto {projeto_id}")
+            else:
+                print(f"[ERRO] Falha ao enviar email agrupado para {usuario['email']}")
+                
+        except Exception as e:
+            print(f"[ERRO] Erro ao enviar email agrupado: {e}")
+        
+        if notificacoes_criadas > 0:
+            print(f"[INFO] {notificacoes_criadas} notificação(ões) criada(s) no sistema para o usuário {usuario_id} sobre tarefas no projeto {projeto_id}")
+    
+    except Exception as e:
+        print(f"[ERRO] Erro ao processar notificações pendentes: {e}")
 
 @admin_bp.route('/admin/restricoes', methods=['GET', 'POST'])
 @apenas_admin_izak
@@ -52,6 +124,9 @@ def admin_restricoes():
                                     "projeto_id": pid,
                                     "usuario_id": usuario_id
                                 }).execute()
+                                
+                                # Notificar usuário sobre tarefas pendentes no projeto
+                                notificar_tarefas_pendentes_ao_liberar_acesso(usuario_id, pid)
                             except Exception as e:
                                 print(f"[ERRO] Erro ao adicionar permissão para projeto {pid}, usuário {usuario_id}: {e}")
                 
@@ -68,6 +143,9 @@ def admin_restricoes():
                             "projeto_id": projeto_id,
                             "usuario_id": usuario_id
                         }).execute()
+                        
+                        # Notificar usuário sobre tarefas pendentes no projeto
+                        notificar_tarefas_pendentes_ao_liberar_acesso(usuario_id, projeto_id)
                     
                     flash("Permissões de visualização atualizadas com sucesso!")
                 except Exception as e:
@@ -301,8 +379,9 @@ def gerenciar_usuarios_simples():
             
             # Converter usuário
             try:
-                # Gerar hash da senha
-                senha_hash = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                # Gerar hash da senha usando o mesmo método do cadastro (Werkzeug/scrypt)
+                from werkzeug.security import generate_password_hash
+                senha_hash = generate_password_hash(senha)
                 
                 # Atualizar usuário no banco
                 url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{usuario_id}"
@@ -322,6 +401,52 @@ def gerenciar_usuarios_simples():
             except Exception as e:
                 flash(f'Erro ao converter usuário: {str(e)}')
                 print(f"Exceção ao converter usuário: {e}")
+        
+        elif acao == 'redefinir_senha':
+            usuario_id = request.form.get('usuario_id')
+            nova_senha = request.form.get('nova_senha', '').strip()
+            confirmar_nova_senha = request.form.get('confirmar_nova_senha', '').strip()
+            
+            # Validações
+            if not usuario_id or not nova_senha:
+                flash('Todos os campos são obrigatórios.')
+                return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            
+            if nova_senha != confirmar_nova_senha:
+                flash('As senhas não coincidem.')
+                return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            
+            if len(nova_senha) < 6:
+                flash('A senha deve ter no mínimo 6 caracteres.')
+                return redirect(url_for('admin.gerenciar_usuarios_simples'))
+            
+            # Redefinir senha
+            try:
+                # Gerar hash da nova senha usando Werkzeug/scrypt
+                from werkzeug.security import generate_password_hash
+                nova_senha_hash = generate_password_hash(nova_senha)
+                
+                # Atualizar senha no banco
+                url = f"{SUPABASE_URL}/rest/v1/usuarios?id=eq.{usuario_id}"
+                dados_update = {
+                    'senha_hash': nova_senha_hash
+                }
+                
+                response = requests.patch(url, json=dados_update, headers=headers)
+                
+                if response.status_code in [200, 204]:
+                    # Buscar nome do usuário para mensagem
+                    usuario_resp = supabase.table("usuarios").select("nome, email").eq("id", usuario_id).execute()
+                    nome_usuario = usuario_resp.data[0]['nome'] if usuario_resp.data else 'Usuário'
+                    
+                    flash(f'Senha de "{nome_usuario}" redefinida com sucesso!')
+                    print(f"✓ Senha do usuário {usuario_id} redefinida")
+                else:
+                    flash(f'Erro ao redefinir senha: {response.status_code}')
+                    print(f"✗ Erro ao redefinir senha: {response.text}")
+            except Exception as e:
+                flash(f'Erro ao redefinir senha: {str(e)}')
+                print(f"Exceção ao redefinir senha: {e}")
         
         elif acao == 'excluir':
             usuario_id = request.form.get('usuario_id')
@@ -348,16 +473,57 @@ def gerenciar_usuarios_simples():
         
         return redirect(url_for('admin.gerenciar_usuarios_simples'))
     
-    # Buscar todos os usuários simples
+    # Buscar todos os usuários simples (incluindo os convertidos)
     try:
-        # Buscar todos os usuários e filtrar os simples no código
+        # Buscar todos os usuários e filtrar os que não são admins
         usuarios_resp = supabase.table("usuarios").select("id, nome, email").order("nome").execute()
         todos_usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
         
-        # Filtrar apenas usuários simples (email com padrão do sistema)
-        usuarios_simples = [u for u in todos_usuarios if u.get('email', '').endswith('@sistema.local')]
+        # Buscar lista de admins para excluir da listagem
+        try:
+            admins_resp = supabase.table("usuarios_admin").select("usuario_id").execute()
+            admin_ids = [a['usuario_id'] for a in admins_resp.data] if admins_resp.data else []
+        except:
+            admin_ids = []
+        
+        # Filtrar: mostrar usuários simples E usuários convertidos (que não são admins)
+        # Excluir apenas admins da listagem
+        usuarios_simples = [u for u in todos_usuarios if u.get('id') not in admin_ids]
     except Exception as e:
         usuarios_simples = []
-        flash(f"Erro ao buscar usuários simples: {str(e)}")
+        flash(f"Erro ao buscar usuários: {str(e)}")
+        print(f"Erro detalhado: {e}")
     
     return render_template('admin_usuarios_simples.html', usuarios_simples=usuarios_simples)
+
+@admin_bp.route('/admin/notificacoes-status', methods=['GET'])
+@apenas_admin_izak
+@login_required
+def notificacoes_status():
+    """Página para consultar o status de envio das notificações por email"""
+    try:
+        # Buscar notificações com status de email
+        notificacoes_resp = supabase.table('notificacoes').select("""
+            *,
+            usuarios!inner(nome, email)
+        """).order('data_criacao', desc=True).limit(100).execute()
+
+        notificacoes = notificacoes_resp.data if hasattr(notificacoes_resp, 'data') else []
+
+        # Estatísticas
+        total = len(notificacoes)
+        enviadas = len([n for n in notificacoes if n.get('email_enviado')])
+        pendentes = len([n for n in notificacoes if not n.get('email_enviado') and not n.get('email_erro')])
+        erros = len([n for n in notificacoes if n.get('email_erro')])
+
+    except Exception as e:
+        notificacoes = []
+        total = enviadas = pendentes = erros = 0
+        flash(f"Erro ao buscar notificações: {str(e)}")
+
+    return render_template('admin_notificacoes_status.html',
+                         notificacoes=notificacoes,
+                         total=total,
+                         enviadas=enviadas,
+                         pendentes=pendentes,
+                         erros=erros)

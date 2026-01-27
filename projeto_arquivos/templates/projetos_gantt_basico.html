@@ -1,0 +1,3965 @@
+<style>
+                /* Modo escuro para estatísticas dos projetos */
+                body.dark #estatisticas-projetos {
+                    background: #23272e !important;
+                    border: 1px solid #374151 !important;
+                }
+                body.dark #estatisticas-projetos .fas.fa-chart-bar,
+                body.dark #estatisticas-projetos span {
+                    color: #90caf9 !important;
+                }
+                body.dark #estatisticas-conteudo {
+                    color: #e0e0e0 !important;
+                }
+                body.dark #estatisticas-projetos div[style*="background: white"] {
+                    background: #181a20 !important;
+                    border: 1px solid #333a47 !important;
+                    color: #e0e0e0 !important;
+                }
+        /* Modo escuro para botões do carousel */
+        body.dark .carousel-arrow {
+            background: none !important;
+            color: #fff !important;
+            border: none !important;
+        }
+        body.dark .carousel-arrow i {
+            color: #fff !important;
+        }
+</style>
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Cache Buster: 2026-01-06-10:40 -->
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h1 class="mb-0">
+            {% if nome_pasta.lower() == 'calendarios' %}
+            <i class="fas fa-calendar-alt"></i>
+            {% else %}
+            <i class="fas fa-project-diagram"></i>
+            {% endif %}
+            {{ nome_pasta }}
+        </h1>
+        <div>
+            <button id="btn-relatorio-gantt" class="btn btn-success" style="border-radius: 10px; font-weight: bold;">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+        </div>
+    <script>
+    console.log('🔥 SCRIPT INICIADO - Verificando se JavaScript está funcionando');
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnRelatorio = document.getElementById('btn-relatorio-gantt');
+        if (btnRelatorio) {
+            btnRelatorio.addEventListener('click', function() {
+                // Coletar filtros ativos (sem imagem do Gantt)
+                function getSelectValues(sel) {
+                    if (!sel) return [];
+                    return Array.from(sel.selectedOptions).map(opt => opt.value).filter(v => v);
+                }
+                // Pega todos os projeto_ids dos projetos selecionados
+                let projeto_ids = [];
+                const nomeSelect = document.getElementById('nome-desktop');
+                if (nomeSelect && nomeSelect.selectedOptions.length > 0) {
+                    const projetosData = window.projetosData || [];
+                    const nomesSelecionados = Array.from(nomeSelect.selectedOptions).map(opt => opt.value);
+                    projeto_ids = nomesSelecionados.map(nome => {
+                        const projeto = projetosData.find(p => p.nome === nome);
+                        return projeto ? projeto.id : null;
+                    }).filter(id => id !== null);
+                }
+                    // Coletar status do projeto (não da tarefa)
+                    const statusProjeto = getSelectValues(document.getElementById('status-projeto-desktop'));
+                    const colecao = getSelectValues(document.getElementById('colecao-desktop'));
+                    const data_inicio = document.getElementById('data_inicio-desktop')?.value || '';
+                    const data_fim = document.getElementById('data_fim-desktop')?.value || '';
+                    const responsavel = getSelectValues(document.getElementById('responsavel-desktop'));
+
+                    fetch('/relatorio/pdf', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            projeto_ids,
+                            status: statusProjeto,
+                            colecao,
+                            data_inicio,
+                            data_fim
+                        })
+                    })
+                    .then(resp => resp.blob())
+                    .then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                    });
+            });
+        }
+
+    });
+    </script>
+
+    <!-- Script de exportação para Excel removido para reescrita -->
+        <!-- Botão de menu para filtros -->
+        <button id="btn-abrir-filtros-desktop" type="button" class="btn btn-primary"
+            style="border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+            <i class="fas fa-filter"></i> Filtros
+        </button>
+    </div>
+    <!-- Cards de 'Calendarios' e 'Tarefas Diarias' removidos -->
+
+    <!-- Barra de navegação visual de pastas (tipos de projeto) -->
+    <div class="tipos-scroll mb-4">
+        {% for tipo in tipos %}
+        <div class="tipo-card">
+            <a href="/projetos?tipo_id={{ tipo.id }}" class="text-decoration-none w-100 h-100">
+                <div class="card shadow-sm folder-card h-100 {% if request.args.get('tipo_id') == tipo.id|string %}border-primary bg-light{% endif %}"
+                    style="cursor:pointer;">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
+                        <i class="fas fa-folder fa-2x mb-1 text-warning"></i>
+                        <span class="fw-bold text-center">{{ tipo.nome }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <style>
+        /* VERSION: 3.0.0 - Custom Select Component 20260105-010 */
+        
+        /* Botão de limpar (borracha) */
+        .clear-btn {
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        .clear-btn:focus,
+        .clear-btn:active,
+        .clear-btn:hover {
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        /* Wrapper do select customizado */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        /* Display (campo que mostra as seleções) */
+        .custom-select-display {
+            min-height: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #e9ecef;
+            padding: 0 40px 0 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+        
+        .custom-select-display:hover {
+            border-color: #4a47a3;
+        }
+        
+        .custom-select-display .chevron {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.2s;
+            pointer-events: none;
+        }
+        
+        .custom-select-wrapper.open .custom-select-display .chevron {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        
+        .custom-select-value {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.5;
+            min-height: auto;
+            background: transparent;
+        }
+        
+        .custom-select-value .placeholder {
+            color: #6c757d !important;
+            font-size: 1em !important;
+            line-height: 1.5 !important;
+            background: transparent !important;
+            pointer-events: none !important;
+            cursor: pointer !important;
+        }
+        
+        .custom-select-value .text {
+            color: #212529;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 1em;
+            line-height: 1.5;
+            background: transparent;
+        }
+        
+        body.dark .custom-select-value .text {
+            color: var(--text-color);
+        }
+        
+        /* Dropdown */
+        .custom-select-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 300px;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .custom-select-wrapper.open .custom-select-dropdown {
+            display: flex;
+        }
+        
+        /* Campo de busca */
+        .custom-select-search {
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .custom-select-search .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.9em;
+        }
+        
+        .custom-select-search .search-input:focus {
+            border-color: #4a47a3;
+        }
+        
+        /* Lista de opções */
+        .custom-select-options {
+            overflow-y: auto;
+            max-height: 240px;
+            padding: 4px;
+        }
+        
+        .custom-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+        
+        .custom-option:hover {
+            background: #f8f9fa;
+        }
+        
+        .custom-option input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #4a47a3;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid #4a47a3;
+            border-radius: 3px;
+            background-color: transparent;
+            position: relative;
+        }
+        
+        .custom-option input[type="checkbox"]:checked {
+            background-color: transparent;
+        }
+        
+        .custom-option input[type="checkbox"]:checked::before {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: #4a47a3;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .custom-option span {
+            flex: 1;
+            font-size: 0.95em;
+        }
+        
+        .custom-option.hidden {
+            display: none;
+        }
+        
+        /* Modo escuro */
+        body.dark .custom-select-display {
+            background: var(--card-bg);
+            border-color: var(--card-border);
+            color: var(--text-color);
+        }
+        
+        body.dark .custom-select-display .chevron path {
+            fill: #adb5bd;
+        }
+        
+        body.dark .custom-select-value .placeholder {
+            color: #adb5bd;
+        }
+        
+        body.dark .custom-select-dropdown {
+            background: var(--card-bg);
+            border-color: var(--card-border);
+        }
+        
+        body.dark .custom-select-search {
+            border-bottom-color: var(--card-border);
+        }
+        
+        body.dark .custom-select-search .search-input {
+            background: var(--bg-color);
+            border-color: var(--card-border);
+            color: var(--text-color);
+        }
+        
+        body.dark .custom-option:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        body.dark .custom-option span {
+            color: var(--text-color);
+        }
+
+        /* Estilos para modo escuro - selects e campos de filtro */
+        body.dark select.form-control,
+        body.dark .form-control {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-color: var(--card-border) !important;
+        }
+
+        body.dark select.form-control option {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Estilos para modo escuro - selects e campos de filtro */
+        body.dark select.form-control,
+        body.dark .form-control {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-color: var(--card-border) !important;
+        }
+
+        body.dark select.form-control option {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Modo escuro - chevrons */
+        body.dark .fa-chevron-down,
+        body.dark .fa-chevron-up,
+        body.dark i.fa-chevron-down,
+        body.dark i.fa-chevron-up,
+        body.dark div[id$="-display"] > i {
+            color: #adb5bd !important;
+        }
+
+        body.dark .fa-chevron-down:hover,
+        body.dark .fa-chevron-up:hover,
+        body.dark .fa-chevron-down:active,
+        body.dark .fa-chevron-up:active,
+        body.dark div[id$="-display"]:hover > i,
+        body.dark div[id$="-display"]:active > i,
+        body.dark [id$="-display"]:focus i.fa-chevron-down,
+        body.dark [id$="-display"]:focus i.fa-chevron-up,
+        body.dark [id$="-display"]:focus i {
+            color: #adb5bd !important;
+        }
+
+        .tipos-scroll {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 16px;
+            overflow-x: auto !important;
+            overflow-y: hidden;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .tipo-card {
+            flex: 0 0 160px !important;
+            max-width: 180px;
+            min-width: 140px;
+            margin-bottom: 0 !important;
+        }
+
+        @media (min-width: 992px) {
+            .tipos-scroll {
+                flex-wrap: wrap !important;
+                overflow-x: visible !important;
+                justify-content: flex-start;
+            }
+
+            .tipo-card {
+                flex: 0 0 180px !important;
+            }
+        }
+    </style>
+
+    <!-- Filtros removidos - agora usando painel lateral -->
+    <!-- Os filtros estão no painel lateral que abre com o botão "Filtros" -->
+
+    {% if projetos and gantt_geral_data|length == 0 %}
+    <div class="alert alert-info text-center" style="background: #d2f6fd;">
+        <i class="fas fa-info-circle fa-2x mb-3"></i>
+        <h5>Nenhuma tarefa encontrada</h5>
+        <p>Não há tarefas para exibir no gráfico. Ajuste os filtros ou cadastre novas tarefas.</p>
+    </div>
+    {% endif %}
+
+    <!-- Carousel de projetos SEM condicional -->
+    <div class="projetos-carousel-wrapper mb-4">
+        <button class="carousel-arrow left" type="button" aria-label="Anterior"><i
+                class="fas fa-chevron-left"></i></button>
+        <div class="projetos-carousel" id="projetos-carousel-js"></div>
+        <button class="carousel-arrow right" type="button" aria-label="Próximo"><i
+                class="fas fa-chevron-right"></i></button>
+
+    </div>
+    <!-- Indicadores do carousel -->
+    <div class="carousel-indicators mt-3 mb-2 d-flex justify-content-center align-items-center" style="gap: 8px;"></div>
+
+    <!-- Painel lateral de filtros para Desktop -->
+    <div id="offcanvas-filtros-desktop"
+        style="position: fixed; top: 0; left: 0; height: 100vh; width: 400px; background: #fff; box-shadow: 2px 0 24px rgba(0,0,0,0.18); z-index: 9999; display: flex; flex-direction: column; border-top-right-radius: 18px; border-bottom-right-radius: 18px; overflow: hidden; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,1.4,.6,1);">
+        <!-- Cabeçalho fixo -->
+        <div id="filtros-header-desktop"
+            style="position: relative; display: flex; align-items: center; justify-content: flex-start; padding: 20px 18px 12px 18px; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0;">
+            <span style="display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-filter" style="font-size: 1.3em; color: #4a47a3;"></i>
+                <span style="font-weight: 600; color: #4a47a3; font-size: 1.1em;">Filtros</span>
+            </span>
+            <button id="btn-fechar-filtros-desktop" type="button"
+                style="position: absolute; top: 20px; right: 18px; background: none; border: none; font-size: 1.5em; color: #b0b0b0; cursor: pointer; padding: 2px 8px 2px 8px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Área de scroll para os filtros -->
+        <div class="filtros-scroll-area" style="flex: 1; overflow-y: auto; padding: 18px;">
+            <form id="filtros-desktop" method="GET" action="/projetos"
+                style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+                <!-- Filtro Projeto -->
+                <div class="custom-select-wrapper" data-select-id="nome">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-search"></i> Projeto</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <!-- Select nativo hidden para enviar os valores -->
+                    <select id="nome-desktop" name="nome[]" multiple style="display: none !important;">
+                        {% for projeto in todos_projetos %}
+                        <option value="{{ projeto.nome }}" {% if projeto.nome in filtros_ativos.nome_list %}selected{% endif %}>{{ projeto.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <!-- Display customizado -->
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione o Projeto</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- Dropdown -->
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            {% for projeto in todos_projetos %}
+                            <div class="custom-option" data-value="{{ projeto.nome }}">
+                                <input type="checkbox" {% if projeto.nome in filtros_ativos.nome_list %}checked{% endif %}>
+                                <span>{{ projeto.nome }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtro Status da Tarefa -->
+                <div class="custom-select-wrapper" data-select-id="status">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-tasks"></i> Status da Tarefa</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <select id="status-desktop" name="status" multiple style="display: none !important;">
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status') %}selected{% endif %}>Pendente</option>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status') %}selected{% endif %}>Em Progresso</option>
+                        <option value="concluída" {% if 'concluída' in request.args.getlist('status') %}selected{% endif %}>Concluída</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status') %}selected{% endif %}>Atrasado</option>
+                    </select>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline;">Selecione o Status</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option" data-value="pendente">
+                                <input type="checkbox" {% if 'pendente' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Pendente</span>
+                            </div>
+                            <div class="custom-option" data-value="em progresso">
+                                <input type="checkbox" {% if 'em progresso' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Em Progresso</span>
+                            </div>
+                            <div class="custom-option" data-value="concluída">
+                                <input type="checkbox" {% if 'concluída' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Concluída</span>
+                            </div>
+                            <div class="custom-option" data-value="atrasado">
+                                <input type="checkbox" {% if 'atrasado' in request.args.getlist('status') %}checked{% endif %}>
+                                <span>Atrasado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtro Status do Projeto -->
+                <div class="custom-select-wrapper" data-select-id="status-projeto">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-project-diagram"></i> Status do Projeto</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <select id="status-projeto-desktop" name="status_projeto" multiple style="display: none !important;">
+                        <option value="pendente" {% if 'pendente' in request.args.getlist('status_projeto') %}selected{% endif %}>Pendente</option>
+                        <option value="em progresso" {% if 'em progresso' in request.args.getlist('status_projeto') %}selected{% endif %}>Em Progresso</option>
+                        <option value="concluído" {% if 'concluído' in request.args.getlist('status_projeto') %}selected{% endif %}>Concluído</option>
+                        <option value="atrasado" {% if 'atrasado' in request.args.getlist('status_projeto') %}selected{% endif %}>Atrasado</option>
+                    </select>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline;">Selecione o Status</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option" data-value="pendente">
+                                <input type="checkbox" {% if 'pendente' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Pendente</span>
+                            </div>
+                            <div class="custom-option" data-value="em progresso">
+                                <input type="checkbox" {% if 'em progresso' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Em Progresso</span>
+                            </div>
+                            <div class="custom-option" data-value="concluído">
+                                <input type="checkbox" {% if 'concluído' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Concluído</span>
+                            </div>
+                            <div class="custom-option" data-value="atrasado">
+                                <input type="checkbox" {% if 'atrasado' in request.args.getlist('status_projeto') %}checked{% endif %}>
+                                <span>Atrasado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtro Coleção -->
+                <div class="custom-select-wrapper" data-select-id="colecao">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-layer-group"></i> Coleção</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <select id="colecao-desktop" name="colecao" multiple style="display: none !important;">
+                        {% if colecoes and colecoes|length > 0 %}
+                        {% for colecao in colecoes %}
+                        <option value="{{ colecao }}" {% if colecao in request.args.getlist('colecao') %}selected{% endif %}>{{ colecao }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione a Coleção</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            {% if todas_colecoes and todas_colecoes|length > 0 %}
+                            {% for colecao in todas_colecoes %}
+                            <div class="custom-option" data-value="{{ colecao }}">
+                                <input type="checkbox" {% if colecao in request.args.getlist('colecao') %}checked{% endif %}>
+                                <span>{{ colecao }}</span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div style="padding: 12px; text-align: center; color: #6c757d;">Nenhuma coleção disponível</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtro Responsável -->
+                <div class="custom-select-wrapper" data-select-id="responsavel">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-user"></i> Responsável</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <select id="responsavel-desktop" name="responsavel" multiple style="display: none !important;">
+                        {% if usuarios and usuarios|length > 0 %}
+                        {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if usuario.id|string in filtros_ativos.responsavel_list %}selected{% endif %}>{{ usuario.nome }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione o Responsável</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            {% if usuarios and usuarios|length > 0 %}
+                            {% for usuario in usuarios %}
+                            <div class="custom-option" data-value="{{ usuario.id }}">
+                                <input type="checkbox" {% if usuario.id|string in filtros_ativos.responsavel_list %}checked{% endif %}>
+                                <span>{{ usuario.nome }}</span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div style="padding: 12px; text-align: center; color: #6c757d;">Nenhum usuário disponível</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros de datas na mesma linha -->
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex: 1; position: relative;">
+                        <label for="data_inicio-desktop"
+                            style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-calendar"></i> Início</span>
+                            <button type="button" class="btn btn-link p-0 m-0"
+                                onclick="document.getElementById('data_inicio-desktop').value = ''; event.preventDefault();"
+                                style="color: #b0b0b0; font-size: 1.1em;">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </label>
+                        <input type="date" id="data_inicio-desktop" name="data_inicio" class="form-control"
+                            style="min-height: 48px; border-radius: 10px;"
+                            value="{{ request.args.get('data_inicio', '') }}">
+                    </div>
+                    <div style="flex: 1; position: relative;">
+                        <label for="data_fim-desktop"
+                            style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-calendar-check"></i> Fim</span>
+                            <button type="button" class="btn btn-link p-0 m-0"
+                                onclick="document.getElementById('data_fim-desktop').value = ''; event.preventDefault();"
+                                style="color: #b0b0b0; font-size: 1.1em;">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </label>
+                        <input type="date" id="data_fim-desktop" name="data_fim" class="form-control"
+                            style="min-height: 48px; border-radius: 10px;"
+                            value="{{ request.args.get('data_fim', '') }}">
+                    </div>
+                </div>
+
+                <!-- Botões de ação -->
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button type="submit" class="btn btn-primary"
+                        style="flex: 1; min-height: 48px; border-radius: 10px; background: #4a47a3; border: 1px solid #4a47a3;">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="limpar-filtros-desktop"
+                        onclick="console.log('🔥 BOTÃO LIMPAR CLICADO!'); limparFiltrosFunction()"
+                        style="flex: 1; min-height: 48px; border-radius: 10px; background: #fff; border: 1px solid #e9ecef; color: #6c757d;">
+                        <i class="fas fa-eraser"></i> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backdrop para fechar o painel -->
+    <div id="filtros-backdrop-desktop"
+        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9998; display: none;">
+    </div>
+
+    <!-- Gantt agrupado estilo teste_agrupamento_gantt.html -->
+    <div class="card mb-4 mt-5">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-chart-bar"></i> Cronograma de Tarefas
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0px; gap: 8px;">
+                <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Diminuir Zoom"
+                    style="font-size: 1.2em;">-</button>
+                <span id="zoom-label" style="min-width: 40px; text-align: center;">100%</span>
+                <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Aumentar Zoom"
+                    style="font-size: 1.2em;">+</button>
+            </div>
+            <div id="gantt-custom" style="width: 100%; overflow-x: auto;">
+                <div style="display: flex; flex-direction: column;">
+                    <div style="display: flex;">
+
+                    </div>
+                </div>
+                <div id="gantt-cronograma-area" style="position: relative;">
+                    <div id="gantt-cursor-line" class="gantt-cursor-line"></div>
+                    <div id="gantt-hoje-container"></div>
+                    <table style="border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th
+                                    style="width: 320px; min-width: 320px; max-width: 320px; text-align: left; padding: 8px;">
+                                    Tarefa
+                                </th>
+                                {% for mes in meses %}
+                                <th colspan="{{ mes.dias }}" style="text-align: center;">{{ mes.nome }}</th>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <th></th>
+                                {% for dia in dias %}
+                                <th style="text-align: center;">{{ dia }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody id="gantt-body">
+                            <!-- Linhas das tarefas geradas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Legenda colorida por projeto -->
+            <div class="legend mt-3"
+                style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
+                <div style="width: 100%; text-align: center; margin-bottom: 12px;">
+                    <h6 style="margin: 0; color: var(--muted-text); font-weight: 600;">
+                        <i class="fas fa-palette"></i> Cores dos Projetos
+                    </h6>
+                </div>
+                {% for projeto, cor in projects_colors.items() %}
+                <div class="legend-item"
+                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted-text); cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease; border: 1px solid transparent;"
+                    data-projeto="{{ projeto }}">
+                    <div class="legend-color"
+                        style="width: 16px; height: 16px; border-radius: 3px; background-color: {{ cor }}; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    <span style="font-weight: 500;">{{ projeto }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Estatísticas dos projetos selecionados -->
+            <div id="estatisticas-projetos" class="mt-3"
+                style="display: none; padding: 12px; background: #e3f2fd; border-radius: 8px; border: 1px solid #bbdefb;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <i class="fas fa-chart-bar" style="color: #1976d2;"></i>
+                    <span style="font-weight: 600; color: #1976d2;">Estatísticas dos Projetos Selecionados</span>
+                </div>
+                <div id="estatisticas-conteudo" style="font-size: 13px; color: #424242;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<!-- Select2 para o campo de nome do projeto -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+window.projetosData = {{ projetos | tojson | safe }};
+const podeCriarProjeto = {{ pode_criar_projeto | tojson | safe }};
+const podeEditarProjeto = {{ pode_editar_projeto | tojson | safe }};
+const podeExcluirProjeto = {{ pode_excluir_projeto | tojson | safe }};
+const alertasProjetos = {{ alertas_projetos | tojson | safe }};
+console.log("ProjetosData:", window.projetosData);
+</script>
+<script>
+    console.log('🚀 SEGUNDO BLOCO DE SCRIPT INICIADO!');
+    // window.projetosData já está definido antes deste bloco
+    
+    // === DEFINIÇÃO GLOBAL DA FUNÇÃO LIMPAR ===
+    console.log('📝 Definindo função limparFiltrosFunction globalmente...');
+    window.limparFiltrosFunction = function() {
+        console.log('🧹 === INÍCIO DA FUNÇÃO limparFiltrosFunction ===');
+
+        try {
+            console.log('📍 URL atual:', window.location.href);
+
+            // Primeiro, limpar todos os elementos visuais dos filtros
+            console.log('🧽 Limpando elementos visuais dos filtros...');
+
+            // Limpar selects customizados específicos
+            console.log('🧽 Limpando selects específicos...');
+            const selectIds = ['nome-desktop', 'status-desktop', 'status-projeto-desktop'];
+            selectIds.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    console.log(`🔍 Select ${selectId} antes da limpeza:`, select.value, 'opções selecionadas:', Array.from(select.selectedOptions).map(opt => opt.value));
+                    // Desmarcar todas as opções
+                    Array.from(select.options).forEach(option => {
+                        option.selected = false;
+                    });
+                    // Resetar o valor do select
+                    select.value = '';
+                    console.log(`✅ Select ${selectId} limpo e resetado:`, select.value, 'opções selecionadas:', Array.from(select.selectedOptions).map(opt => opt.value));
+                } else {
+                    console.log(`❌ Select ${selectId} não encontrado`);
+                }
+            });
+
+            // Limpar custom selects (checkboxes) específicos
+            console.log('🧽 Limpando custom selects específicos...');
+            const customSelectIds = ['nome', 'status', 'status-projeto', 'colecao', 'responsavel'];
+            let customSelectsLimpados = 0;
+
+            customSelectIds.forEach(dataSelectId => {
+                const wrapper = document.querySelector(`.custom-select-wrapper[data-select-id="${dataSelectId}"]`);
+                if (wrapper) {
+                    const instance = wrapper._customSelectInstance;
+                    if (instance) {
+                        console.log(`🔄 Limpando custom select: ${dataSelectId}`);
+
+                        // Método 1: Reset completo do select nativo
+                        instance.nativeSelect.selectedIndex = -1;
+                        Array.from(instance.nativeSelect.options).forEach(opt => {
+                            opt.selected = false;
+                        });
+
+                        // Método 2: Desmarcar todos os checkboxes visuais
+                        const checkboxes = wrapper.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach(checkbox => {
+                            checkbox.checked = false;
+                            console.log(`✅ Checkbox desmarcado para ${dataSelectId}`);
+                        });
+
+                        // Método 3: Limpar o valor do display diretamente
+                        const valueContainer = wrapper.querySelector('.custom-select-value');
+                        if (valueContainer) {
+                            // Remover todos os spans de texto
+                            valueContainer.querySelectorAll('.text').forEach(span => span.remove());
+
+                            // Mostrar placeholder
+                            const placeholder = valueContainer.querySelector('.placeholder');
+                            if (placeholder) {
+                                placeholder.style.display = 'inline';
+                                placeholder.textContent = placeholder.getAttribute('data-original-text') ||
+                                    (dataSelectId === 'nome' ? 'Selecione o Projeto' :
+                                     dataSelectId === 'status' ? 'Selecione o Status' :
+                                     'Selecione o Status');
+                                console.log(`✅ Placeholder restaurado para ${dataSelectId}`);
+                            }
+                        }
+
+                        // Método 4: Forçar atualização da interface
+                        try {
+                            instance.updateDisplay();
+                            instance.syncCheckboxes();
+                            console.log(`✅ updateDisplay e syncCheckboxes executados para ${dataSelectId}`);
+                        } catch (e) {
+                            console.warn(`⚠️ Erro ao atualizar display de ${dataSelectId}:`, e);
+                        }
+
+                        console.log(`✅ Custom select ${dataSelectId} limpo`);
+                        customSelectsLimpados++;
+                    } else {
+                        console.log(`❌ Instância do custom select ${dataSelectId} não encontrada`);
+                    }
+                } else {
+                    console.log(`❌ Wrapper do custom select ${dataSelectId} não encontrado`);
+                }
+            });
+
+            console.log(`📊 Total de custom selects limpados: ${customSelectsLimpados}/${customSelectIds.length}`);
+
+            // Retry com lógica corrigida
+            if (customSelectsLimpados < customSelectIds.length) {
+                console.log('⏳ Alguns custom selects não foram encontrados. Tentando novamente em 200ms...');
+                setTimeout(() => {
+                    console.log('🔄 Tentativa de limpeza retardada...');
+                    let retryCount = 0;
+                    customSelectIds.forEach(dataSelectId => {
+                        const wrapper = document.querySelector(`.custom-select-wrapper[data-select-id="${dataSelectId}"]`);
+                        if (wrapper) {
+                            const instance = wrapper._customSelectInstance;
+                            if (instance) {
+                                console.log(`🔄 Retry: Limpando custom select: ${dataSelectId}`);
+
+                                // Mesmo processo de limpeza
+                                instance.nativeSelect.selectedIndex = -1;
+                                Array.from(instance.nativeSelect.options).forEach(opt => opt.selected = false);
+
+                                const checkboxes = wrapper.querySelectorAll('input[type="checkbox"]');
+                                checkboxes.forEach(checkbox => checkbox.checked = false);
+
+                                const valueContainer = wrapper.querySelector('.custom-select-value');
+                                if (valueContainer) {
+                                    valueContainer.querySelectorAll('.text').forEach(span => span.remove());
+                                    const placeholder = valueContainer.querySelector('.placeholder');
+                                    if (placeholder) {
+                                        placeholder.style.display = 'inline';
+                                    }
+                                }
+
+                                try {
+                                    instance.updateDisplay();
+                                    instance.syncCheckboxes();
+                                } catch (e) {
+                                    console.warn(`⚠️ Erro no retry de ${dataSelectId}:`, e);
+                                }
+
+                                console.log(`✅ Custom select ${dataSelectId} limpo (retry)`);
+                                retryCount++;
+                            }
+                        }
+                    });
+                    console.log(`📊 Total de custom selects limpados na retry: ${retryCount}`);
+                }, 200);
+            }
+
+            // Limpar campos de data
+            console.log('🧽 Limpando campos de data...');
+            const dateFields = ['data_inicio-desktop', 'data_fim-desktop'];
+            dateFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    console.log(`🔍 Campo ${fieldId} encontrado, valor atual: "${field.value}"`);
+                    field.value = '';
+                    console.log(`✅ Campo de data ${fieldId} limpo, novo valor: "${field.value}"`);
+                } else {
+                    console.log(`❌ Campo de data ${fieldId} NÃO encontrado`);
+                }
+            });
+
+            // Limpar outros campos
+            const otherFields = []; // Removido: tipo-desktop e ambiente-desktop não existem
+            otherFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                    console.log(`✅ Campo ${fieldId} limpo`);
+                } else {
+                    console.log(`❌ Campo ${fieldId} não encontrado`);
+                }
+            });
+
+            // Limpar localStorage se existir
+            if (typeof localStorage !== 'undefined') {
+                const keysToRemove = ['sgp_filtros_projetos'];
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                    console.log(`🗑️ localStorage key '${key}' removido`);
+                });
+            }
+
+            console.log('✅ Todos os elementos visuais foram limpos');
+
+            // Resetar formulário completamente ANTES da limpeza específica
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.reset();
+                console.log('✅ Formulário resetado');
+            });
+
+            // Re-limpar campos de data após o form.reset() (que pode ter preenchido novamente)
+            console.log('🔄 Re-limpando campos de data após form.reset...');
+            dateFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                    console.log(`✅ Campo de data ${fieldId} re-limpo após form.reset`);
+                }
+            });
+
+            // Agora redirecionar com parâmetro especial para limpar filtros da sessão
+            const cleanUrl = window.location.origin + window.location.pathname + '?limpar_filtros=1';
+            console.log('🔗 URL de limpeza construída:', cleanUrl);
+            console.log('🔄 Verificando sessão antes do redirect...');
+
+            // Pequeno delay para mostrar visualmente que os campos foram limpos
+            console.log('⏳ Aguardando 300ms para feedback visual...');
+            setTimeout(() => {
+                console.log('🔄 Executando redirecionamento...');
+                window.location.href = cleanUrl;
+                console.log('✅ Redirecionamento executado!');
+            }, 300);
+
+        } catch (error) {
+            console.error('❌ ERRO no processo de limpeza:', error);
+            console.error('❌ Stack trace:', error.stack);
+            // Fallback: tentar redirect forçado
+            console.log('🔄 Tentando fallback redirect...');
+            window.location.href = window.location.origin + window.location.pathname;
+        }
+    };
+    console.log('✅ Função limparFiltrosFunction definida globalmente!');
+    
+    $(document).ready(function () {
+        
+        // === INÍCIO PERSISTÊNCIA DE FILTROS ===
+        
+        // Constantes para localStorage
+        const FILTROS_STORAGE_KEY = 'sgp_filtros_projetos';
+        const FILTROS_EXPIRATION_MS = 30 * 60 * 1000; // 30 minutos
+        
+        // Função para salvar filtros atuais
+        function salvarFiltrosAtuais() {
+            try {
+                const filtros = {
+                    status: Array.from(document.getElementById('status-desktop')?.selectedOptions || []).map(o => o.value),
+                    responsavel: Array.from(document.getElementById('responsavel-desktop')?.selectedOptions || []).map(o => o.value),
+                    colecao: Array.from(document.getElementById('colecao-desktop')?.selectedOptions || []).map(o => o.value),
+                    projeto: Array.from(document.getElementById('nome-desktop')?.selectedOptions || []).map(o => o.value),
+                    data_inicio: document.getElementById('data_inicio-desktop')?.value || '',
+                    data_fim: document.getElementById('data_fim-desktop')?.value || ''
+                };
+                
+                // Verificar se há algum filtro aplicado
+                const temFiltros = filtros.status.length > 0 || filtros.responsavel.length > 0 || 
+                                   filtros.colecao.length > 0 || filtros.projeto.length > 0 || 
+                                   filtros.data_inicio || filtros.data_fim;
+                
+                if (temFiltros) {
+                    const dataToSave = {
+                        filtros: filtros,
+                        timestamp: Date.now()
+                    };
+                    
+                    localStorage.setItem(FILTROS_STORAGE_KEY, JSON.stringify(dataToSave));
+                    console.log('💾 Filtros salvos no localStorage:', filtros);
+                } else {
+                    localStorage.removeItem(FILTROS_STORAGE_KEY);
+                    console.log('🗑️ Nenhum filtro aplicado, localStorage limpo');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao salvar filtros:', error);
+            }
+        }
+        
+        // Interceptar submit do formulário para salvar filtros
+        const formFiltros = document.getElementById('filtros-desktop');
+        if (formFiltros) {
+            formFiltros.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevenir submit imediato
+                salvarFiltrosAtuais();
+                // Depois de salvar, submeter o form
+                setTimeout(() => {
+                    formFiltros.submit();
+                }, 1000);
+            });
+        }
+        
+        // Ao carregar a página: apenas salva no localStorage se houver filtros na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const temParametrosNaUrl = urlParams.toString().length > 0;
+        if (temParametrosNaUrl) {
+            setTimeout(() => {
+                salvarFiltrosAtuais();
+            }, 1000);
+        }
+        // Não faz mais redirecionamento automático, pois o backend já aplica os filtros da session
+        
+        // === FIM PERSISTÊNCIA DE FILTROS ===
+        
+        const projetos = window.projetosData || [];
+        const carousel = document.getElementById('projetos-carousel-js');
+        const leftArrow = document.querySelector('.carousel-arrow.left');
+        const rightArrow = document.querySelector('.carousel-arrow.right');
+        const indicators = document.querySelector('.carousel-indicators');
+        if (!carousel) { console.log('Container do carousel não encontrado'); return; }
+        if (!projetos.length) { console.log('Nenhum projeto encontrado em window.projetosData'); }
+
+        // Configurações
+        const CARD_WIDTH = 260;
+        const CARD_GAP = 18;
+        const BUFFER = 2; // Quantos cards extras renderizar antes/depois
+
+    // Renderiza o card de "Novo Projeto" somente se permitido
+    function renderNovoProjetoCard() {
+        if (!podeCriarProjeto) return '';
+        return `<div class="carousel-item">
+            <div class="card compact-card shadow-sm h-100 d-flex align-items-center justify-content-center"
+                style="min-height: 180px; border: 2px dashed #28a745; background: #f8fff8; cursor: pointer; min-width: 260px; max-width: 260px;">
+                <a href="/projetos/criar"
+                    class="d-flex flex-column align-items-center justify-content-center text-success text-decoration-none w-100 h-100"
+                    style="height: 100%;">
+                    <div style="font-size: 2.5em; margin-bottom: 0.3em;"><i class="fas fa-plus-circle"></i></div>
+                    <span style="font-size: 1.1em; font-weight: 600;">Novo Projeto</span>
+                </a>
+            </div>
+        </div>`;
+    }
+
+    // Renderiza um card de projeto
+    function renderProjetoCard(projeto) {
+        try {
+            if (!projeto) {
+                console.error('Projeto inválido:', projeto);
+                return '';
+            }
+            // Verificar se há alertas para este projeto
+            const alerta = alertasProjetos[projeto.id];
+
+            let tarefasHtml = '';
+            if (projeto.tarefas && projeto.tarefas.length > 0) {
+                // Sempre mostrar todas as tarefas, independentemente do alerta
+                let tarefasFiltradas = projeto.tarefas;
+
+                if (tarefasFiltradas.length > 0) {
+                    tarefasHtml += `<small><strong>Tarefas (${tarefasFiltradas.length}):</strong></small><div class="task-list">`;
+                    tarefasFiltradas.forEach(tarefa => {
+                        tarefasHtml += `<div class="task-item d-flex justify-content-between align-items-center py-1">
+                        <span class="task-name"><i class="fas fa-tasks"></i> ${tarefa.nome.length > 30 ? tarefa.nome.slice(0, 30) + '...' : tarefa.nome}</span>
+                        <span class="badge ${tarefa.status === 'pendente' ? 'bg-warning text-dark' : tarefa.status === 'em progresso' ? 'bg-info' : tarefa.status === 'concluída' ? 'bg-success' : tarefa.status === 'atrasado' ? 'bg-danger' : 'bg-secondary'}">
+                            ${tarefa.status ? tarefa.status.charAt(0).toUpperCase() + tarefa.status.slice(1) : 'Sem status'}
+                        </span>
+                    </div>`;
+                    });
+                    tarefasHtml += `</div>`;
+                } else {
+                    tarefasHtml += `<div class="text-muted small">Nenhuma tarefa ${alerta ? alerta.tipo : ''} encontrada.</div>`;
+                }
+            } else {
+                tarefasHtml += '<div class="text-muted small">Nenhuma tarefa encontrada.</div>';
+            }
+
+            let alertaHtml = '';
+            let cardStyle = '';
+
+            // Determinar status do projeto baseado nos alertas (igual ao sistema de bordas)
+            let statusProjeto = 'normal';
+            let statusText = 'NORMAL';
+            let statusColor = '#6c757d';
+            if (projeto.status) {
+                const statusNorm = (projeto.status || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ /g, '');
+                const statusMap = {
+                    'atrasado': { projeto: 'atrasado', texto: 'ATRASADO', cor: '#dc3545', borda: 'border-left: 4px solid #dc3545;' },
+                    'emprogresso': { projeto: 'emprogresso', texto: 'EM PROGRESSO', cor: '#17a2b8', borda: 'border-left: 4px solid #17a2b8;' },
+                    'concluido': { projeto: 'concluido', texto: 'CONCLUÍDO', cor: '#28a745', borda: 'border-left: 4px solid #28a745;' },
+                    'concluida': { projeto: 'concluido', texto: 'CONCLUÍDO', cor: '#28a745', borda: 'border-left: 4px solid #28a745;' },
+                    'pendente': { projeto: 'pendente', texto: 'PENDENTE', cor: '#ffc107', borda: 'border-left: 4px solid #ffc107;' },
+                    'normal': { projeto: 'normal', texto: 'NORMAL', cor: '#6c757d', borda: 'border-left: 4px solid #6c757d;' }
+                };
+                const statusInfo = statusMap[statusNorm] || { projeto: 'normal', texto: 'NORMAL', cor: '#6c757d', borda: 'border-left: 4px solid #6c757d;' };
+                statusProjeto = statusInfo.projeto;
+                statusText = statusInfo.texto;
+                statusColor = statusInfo.cor;
+                cardStyle = statusInfo.borda;
+            }
+
+            // Usar valores do backend para garantir consistência com detalhes_projeto
+            let diasCorridos = projeto.dias_corridos !== undefined && projeto.dias_corridos !== null ? projeto.dias_corridos : '-';
+            let diasUteis = projeto.dias_uteis !== undefined && projeto.dias_uteis !== null ? projeto.dias_uteis : '-';
+            const tooltip = `Duração: ${diasCorridos} dias\nDias Úteis: ${diasUteis} dias`;
+            return `<div class="carousel-item">
+            <div class="card compact-card shadow-sm projeto-card-with-watermark ${!(podeEditarProjeto || podeCriarProjeto || podeExcluirProjeto) ? 'card-no-footer' : ''}" style="min-width: 260px; max-width: 260px; ${cardStyle} position: relative; cursor:pointer;" onclick="window.location='/projetos/${projeto.id}'" title="${tooltip}">
+                <!-- Marca d'água diagonal - estilo carimbo -->
+                <div class="projeto-watermark status-${statusProjeto}" style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 24px;
+                font-weight: 900;
+                color: #2ecc40;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                white-space: nowrap;
+                pointer-events: none;
+                z-index: 10;
+                padding: 8px 16px;
+                border-radius: 8px;
+                border: 5px solid #2ecc40;
+                background: transparent !important;
+                box-shadow: 0 2px 8px rgba(46,204,64,0.18);
+                ">${statusText}</div>
+                
+                <div class="card-header compact-header d-flex justify-content-between align-items-center py-2" style="position: relative; z-index: 2;">
+                    <h6 class="mb-0 w-100 text-center" style="justify-content: center; align-items: center; display: flex; gap: 0.5em;">
+                        ${alerta && alerta.tipo === 'atrasado' ?
+                    `<i class="fas fa-exclamation-triangle text-danger me-1" title="${alerta.quantidade} tarefa(s) atrasada(s)"></i>` :
+                    alerta && alerta.tipo === 'pendente' ?
+                        `<i class="fas fa-clock text-warning me-1" title="${alerta.quantidade} tarefa(s) pendente(s)"></i>` :
+                    (projeto.tarefas && projeto.tarefas.filter(t => t.status === 'em progresso').length > 0 ?
+                        `<i class="fas fa-spinner text-info me-1" title="${projeto.tarefas.filter(t => t.status === 'em progresso').length} tarefa(s) em progresso"></i>` :
+                        '<i class="fas fa-project-diagram"></i>')} 
+                        ${projeto.nome}
+                    </h6>
+                </div>
+                <div class="card-body compact-body" style="position: relative; z-index: 2; padding-top: 0; padding-bottom: 0;">
+                    <div class="mb-1">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> ${projeto.data_inicio ? (projeto.data_inicio.includes('-') ? projeto.data_inicio.split('-').reverse().join('/') : projeto.data_inicio) : 'Não definida'} - ${projeto.data_fim ? (projeto.data_fim.includes('-') ? projeto.data_fim.split('-').reverse().join('/') : projeto.data_fim) : 'Não definida'}
+                        </small>
+                    </div>
+                    <div class="compact-tasks">${tarefasHtml}</div>
+                </div>
+                ${podeEditarProjeto || podeCriarProjeto || podeExcluirProjeto ? `
+                <div class="card-footer compact-footer bg-white border-0 d-flex justify-content-center py-1" style="position: relative; z-index: 2;">
+                    <div style="display: flex; flex-wrap: nowrap; gap: 0.8em; align-items: center;">
+                        ${podeEditarProjeto ? `<a href="/projetos/editar/${projeto.id}" class="btn" title="Editar Projeto" style="flex-shrink: 0; padding: 0;"><svg viewBox="0 0 24 24" width="26px" height="26px" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="editIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-2px;"><title id="editIconTitle">Editar Projeto</title><path d="M18.4142136 4.41421356L19.5857864 5.58578644C20.366835 6.36683502 20.366835 7.63316498 19.5857864 8.41421356L8 20 4 20 4 16 15.5857864 4.41421356C16.366835 3.63316498 17.633165 3.63316498 18.4142136 4.41421356zM14 6L18 10"></path></svg></a>` : ''}
+                        ${podeCriarProjeto ? `<button type="button" class="btn btn-duplicar-projeto" style="background:none;border:none;padding:0; flex-shrink: 0; position: relative; top: -1px;" data-projeto-id="${projeto.id}" onclick="event.stopPropagation();document.getElementById('form-duplicar-${projeto.id}').submit();" title="Duplicar Projeto"><span style='display:inline-block;width:26px;height:26px;vertical-align:middle;'><svg width="24px" height="24px" viewBox="0 0 18 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"><title>Duplicar Projeto</title><desc>Created with Sketch.</desc><defs></defs><g id="out" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><path d="M13.6666667,4 L6.33333333,4 C5.6,4 5,4.6 5,5.33333333 L5,14.6666667 C5,15.4 5.6,16 6.33333333,16 L13.6666667,16 C14.4,16 15,15.4 15,14.6666667 L15,5.33333333 C15,4.6 14.4,4 13.6666667,4 L13.6666667,4 Z M6,5 L14,5 L14,15 L6,15 L6,5 L6,5 Z M4.03408486,13.9659151 C3.4435752,13.8291651 3,13.297202 3,12.6666667 L3,3.33333333 C3,2.6 3.6,2 4.33333333,2 L11.6666667,2 C12.297202,2 12.8291651,2.4435752 12.9659151,3.03408486 C12.8696426,3.01179011 12.7694647,3 12.6666667,3 L8.66666667,3 L4,3 L4,8.66666667 L4,13.6666667 C4,13.7694647 4.01179011,13.8696426 4.03408486,13.9659151 L4.03408486,13.9659151 Z" id="path" fill="currentColor" sketch:type="MSShapeGroup"></path></g></svg></span></button>` : ''}
+                        ${podeExcluirProjeto ? `<button type="button" class="btn" style="background:none;border:none;padding:0;color:#111; flex-shrink: 0;" onclick="event.stopPropagation();if(confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) document.getElementById('form-excluir-${projeto.id}').submit();" title="Excluir Projeto"><svg width="26px" height="26px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="currentColor" style="vertical-align:middle;position:relative;top:-3px;"><title id="binIconTitle">Excluir Projeto</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg></button>` : ''}
+                    </div>
+                    ${podeCriarProjeto ? `<form id="form-duplicar-${projeto.id}" action="/projetos/duplicar/${projeto.id}" method="POST" style="display:none;"></form>` : ''}
+                    ${podeExcluirProjeto ? `<form id="form-excluir-${projeto.id}" action="/projetos/excluir/${projeto.id}" method="POST" style="display:none;"></form>` : ''}
+                </div>
+                ` : ''}
+            </div>
+        </div>`;
+        } catch (error) {
+            console.error('Erro ao renderizar card do projeto:', projeto, error);
+            return '';
+        }
+    }
+
+    // Renderiza todos os cards
+    function renderCards() {
+        try {
+
+            let html = renderNovoProjetoCard();
+
+            // Renderizar todos os projetos
+            for (let i = 0; i < projetos.length; i++) {
+                if (projetos[i]) {
+                    html += renderProjetoCard(projetos[i]);
+                }
+            }
+
+            carousel.innerHTML = html;
+
+            // Reaplicar eventos de expandir tarefas
+            document.querySelectorAll('.expand-tasks-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const projetoId = btn.getAttribute('data-projeto-id');
+                    const hiddenTasks = document.getElementById('hidden-tasks-' + projetoId);
+                    const icon = btn.querySelector('i');
+                    if (hiddenTasks.style.display === 'none') {
+                        hiddenTasks.style.display = 'block';
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                        btn.style.color = '#dc3545';
+                    } else {
+                        hiddenTasks.style.display = 'none';
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                        btn.style.color = '#007bff';
+                    }
+                });
+            });
+            
+            atualizarIndicadoresCarousel();
+        } catch (error) {
+            console.error('Erro ao renderizar cards:', error);
+            carousel.innerHTML = '<div class="alert alert-danger">Erro ao carregar projetos</div>';
+        }
+    }
+
+    // Indicadores (bolinhas)
+    function atualizarIndicadoresCarousel() {
+        if (!indicators) return;
+        const items = projetos.length;
+        const visibleWidth = carousel.clientWidth;
+        const itemsPerPage = Math.max(1, Math.floor(visibleWidth / (CARD_WIDTH + CARD_GAP)));
+        const totalPages = Math.ceil(items / itemsPerPage);
+        indicators.innerHTML = '';
+        for (let i = 0; i < totalPages; i++) {
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'carousel-dot';
+            dot.setAttribute('aria-label', 'Ir para página ' + (i + 1));
+            dot.style.width = '12px';
+            dot.style.height = '12px';
+            dot.style.borderRadius = '50%';
+            dot.style.border = 'none';
+            dot.style.background = '#bbb';
+            dot.style.margin = '0 3px';
+            dot.style.outline = 'none';
+            dot.style.transition = 'background 0.2s';
+            dot.addEventListener('click', function () {
+                carousel.scrollTo({ left: i * visibleWidth, behavior: 'smooth' });
+            });
+            indicators.appendChild(dot);
+        }
+        atualizarBolinhasAtivas();
+    }
+    function atualizarBolinhasAtivas() {
+        if (!indicators) return;
+        const dots = indicators.querySelectorAll('.carousel-dot');
+        const visibleWidth = carousel.clientWidth;
+        const scrollLeft = carousel.scrollLeft;
+        const itemsPerPage = Math.max(1, Math.floor(visibleWidth / (CARD_WIDTH + CARD_GAP)));
+        const page = Math.round(scrollLeft / visibleWidth);
+        dots.forEach((dot, idx) => {
+            dot.style.background = (idx === page) ? '#007bff' : '#bbb';
+        });
+    }
+
+    // Setas
+    if (leftArrow && rightArrow) {
+        leftArrow.addEventListener('click', function () {
+            carousel.scrollBy({ left: -(CARD_WIDTH + CARD_GAP), behavior: 'smooth' });
+        });
+        rightArrow.addEventListener('click', function () {
+            carousel.scrollBy({ left: (CARD_WIDTH + CARD_GAP), behavior: 'smooth' });
+        });
+    }
+    carousel.addEventListener('scroll', atualizarBolinhasAtivas);
+    window.addEventListener('resize', function () {
+        renderCards();
+        atualizarIndicadoresCarousel();
+    });
+
+    // Inicializa
+    renderCards();
+
+    // Garantir que o carousel funcione corretamente
+    function garantirCarouselFuncional() {
+        const carousel = document.getElementById('projetos-carousel-js');
+        if (carousel) {
+            // Forçar recálculo do layout
+            carousel.style.display = 'none';
+            carousel.offsetHeight; // Trigger reflow
+            carousel.style.display = 'flex';
+
+            // Verificar se há scroll horizontal
+            const temScroll = carousel.scrollWidth > carousel.clientWidth;
+
+            // Mostrar/ocultar setas baseado no scroll
+            const leftArrow = document.querySelector('.carousel-arrow.left');
+            const rightArrow = document.querySelector('.carousel-arrow.right');
+            if (leftArrow && rightArrow) {
+                if (temScroll) {
+                    leftArrow.style.display = 'flex';
+                    rightArrow.style.display = 'flex';
+                } else {
+                    leftArrow.style.display = 'none';
+                    rightArrow.style.display = 'none';
+                }
+            }
+
+            // Forçar scroll se necessário
+            if (temScroll && carousel.scrollLeft === 0) {
+                carousel.scrollLeft = 0;
+            }
+        }
+    }
+
+    // Executar após renderização
+    setTimeout(garantirCarouselFuncional, 100);
+
+    // Re-executar em resize
+    window.addEventListener('resize', function () {
+        setTimeout(garantirCarouselFuncional, 100);
+    });
+
+
+
+    if ($('#colecao').length) {
+        try {
+            if ($.fn.select2 && $('#colecao').data('select2')) {
+                $('#colecao').select2('destroy');
+            }
+            $('#colecao').select2({
+                placeholder: 'Filtrar por coleção',
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5',
+                closeOnSelect: false,
+                dropdownAutoWidth: true,
+                minimumResultsForSearch: -1,
+                dropdownParent: $('body')
+            });
+        } catch (error) {
+            console.error('Erro ao inicializar Select2:', error);
+        }
+    } else {
+    }
+
+    if ($('#status').length) {
+        try {
+            if ($.fn.select2 && $('#status').data('select2')) {
+                $('#status').select2('destroy');
+            }
+            $('#status').select2({
+                placeholder: 'Filtrar por status',
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5',
+                closeOnSelect: false,
+                dropdownAutoWidth: true,
+                minimumResultsForSearch: -1,
+                dropdownParent: $('body')
+            });
+        } catch (error) {
+            console.error('Erro ao inicializar Select2:', error);
+        }
+    } else {
+    }
+    });
+</script>
+<style>
+    /* Linha vertical do cursor no Gantt */
+    .gantt-cursor-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background-color: rgba(74, 71, 163, 0.4);
+        pointer-events: none;
+        display: none;
+        z-index: 100;
+    }
+
+    body.dark .gantt-cursor-line {
+        background-color: rgba(138, 135, 223, 0.5);
+    }
+
+    .projetos-carousel-wrapper {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        position: relative;
+        min-height: 220px;
+        margin-bottom: 24px;
+        background: none;
+        overflow: hidden !important;
+    }
+
+    .projetos-carousel {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 18px;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-behavior: smooth;
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px 0;
+        min-height: 220px;
+        background: none;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        word-wrap: normal !important;
+        word-break: normal !important;
+        position: relative;
+    }
+
+    /* Remover overflow global que atrapalha o scroll do carousel */
+    body,
+    html,
+    .container,
+    .row {
+        overflow: unset !important;
+    }
+
+    /* Garantir que o carousel funcione corretamente */
+    .projetos-carousel-wrapper {
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .projetos-carousel {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Forçar que os cards não quebrem linha */
+    .carousel-item {
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        display: block !important;
+    }
+
+    /* Garantir compatibilidade com Safari e outros navegadores */
+    .projetos-carousel {
+        -webkit-overflow-scrolling: touch !important;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+        scrollbar-width: thin;
+        scrollbar-color: #ccc #f8f9fa;
+    }
+
+    .projetos-carousel::-webkit-scrollbar {
+        height: 8px;
+        background: #f8f9fa;
+    }
+
+    .projetos-carousel::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+    .projetos-carousel::-webkit-scrollbar-track {
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+
+    /* Forçar que o container pai não interfira */
+    .projetos-carousel-wrapper {
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        position: relative !important;
+    }
+
+    /* Garantir que não há quebra de linha */
+    .projetos-carousel>* {
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+    }
+
+    /* Forçar comportamento de scroll horizontal */
+    #projetos-carousel-js {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-behavior: smooth !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Garantir que os cards não quebrem */
+    #projetos-carousel-js .carousel-item {
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        display: block !important;
+    }
+
+    /* Estilos para marca d'água dos projetos */
+    .projeto-card-with-watermark {
+        position: relative;
+        overflow: hidden;
+    }
+
+    body.dark .projeto-watermark {
+        z-index: 10 !important;
+        opacity: 0.25;
+    }
+    .projeto-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 24px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.25;
+        transition: all 0.3s ease;
+        animation: watermark-fade-in 0.5s ease-in-out;
+
+        /* Estilo de carimbo */
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 5px solid;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow:
+            0 4px 8px rgba(0, 0, 0, 0.2),
+            inset 0 2px 4px rgba(255, 255, 255, 0.8),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+
+        /* Textura desgastada */
+        background-image:
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+            radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+        background-size: 4px 4px, 6px 6px;
+
+        /* Efeito de desgaste */
+        filter: contrast(1.2) brightness(1.1);
+
+        /* Fonte mais grossa */
+        font-stretch: condensed;
+        text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes watermark-fade-in {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(0.8);
+        }
+
+        to {
+            opacity: 0.2;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+        }
+    }
+
+    .projeto-card-with-watermark:hover .projeto-watermark {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) rotate(-45deg) scale(1.05);
+        box-shadow:
+            0 6px 12px rgba(0, 0, 0, 0.3),
+            inset 0 2px 4px rgba(255, 255, 255, 0.9),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Cores específicas para cada status - estilo carimbo */
+    .projeto-watermark.status-normal {
+        color: #6c757d !important;
+        border-color: #6c757d !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-pendente {
+        color: #e0a800 !important;
+        border-color: #e0a800 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-atrasado {
+        color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-emprogresso {
+        color: #17a2b8 !important;
+        border-color: #17a2b8 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .projeto-watermark.status-concluido {
+        color: #28a745 !important;
+        border-color: #28a745 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .carousel-item {
+        flex: 0 0 auto;
+        flex-shrink: 0;
+        min-width: 260px;
+        max-width: 260px;
+        margin-right: 0;
+        border: none;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        display: block;
+        position: relative;
+        transition: box-shadow 0.2s;
+    }
+    
+    /* Modo escuro - preservar cores das bordas de status */
+    body.dark .card[style*="border-left: 4px solid #dc3545"] {
+        border-left: 4px solid #dc3545 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #17a2b8"] {
+        border-left: 4px solid #17a2b8 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #28a745"] {
+        border-left: 4px solid #28a745 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #ffc107"] {
+        border-left: 4px solid #ffc107 !important;
+    }
+    
+    body.dark .card[style*="border-left: 4px solid #6c757d"] {
+        border-left: 4px solid #6c757d !important;
+    }
+
+    .carousel-item:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+        z-index: 2;
+    }
+
+    .carousel-arrow {
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.7em !important;
+        color: var(--text-color) !important;
+        box-shadow: none !important;
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 20;
+        transition: background 0.2s, opacity 0.2s;
+        opacity: 0;
+        pointer-events: none;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .carousel-arrow.left {
+        left: 8px;
+    }
+
+    .carousel-arrow.right {
+        right: 8px;
+    }
+
+    .projetos-carousel-wrapper:hover .carousel-arrow {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .carousel-arrow:hover {
+        background: none !important;
+    }
+
+    .carousel-arrow i {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1em !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        width: 1em;
+        height: 1em;
+        transform: none !important;
+    }
+
+    @media (max-width: 900px) {
+        .carousel-item {
+            min-width: 48vw;
+            max-width: 48vw;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .carousel-item {
+            min-width: 90vw;
+            max-width: 90vw;
+        }
+
+        .carousel-arrow.left,
+        .carousel-arrow.right {
+            display: none;
+        }
+
+        .projetos-carousel {
+            gap: 8px;
+            padding-left: 2vw;
+            padding-right: 2vw;
+        }
+    }
+
+    /* Estilos para filtros customizados idênticos e centralizados */
+    .filters-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 24px 0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Tema escuro para filtros */
+    body.dark .filters-container {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Tema escuro para o painel lateral de filtros */
+    body.dark #offcanvas-filtros-desktop {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+    }
+
+    /* Tema escuro para o cabeçalho do painel de filtros */
+    body.dark #filtros-header-desktop {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .filters-form {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-group,
+    .filter-actions {
+        flex: 0 0 210px;
+        min-width: 210px;
+        max-width: 210px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .filter-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #4a47a3;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 7px;
+        width: 100%;
+        text-align: left;
+    }
+
+    /* Tema escuro para labels dos filtros */
+    body.dark .filter-label {
+        color: #e0e0e0 !important;
+    }
+
+    .filter-label i {
+        margin-right: 5px;
+        opacity: 0.9;
+    }
+
+    .filter-select,
+    .filter-input,
+    .select2-container--default .select2-selection--single,
+    .select2-container--default .select2-selection--multiple {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        min-height: 48px !important;
+        padding: 8px 16px !important;
+        border: 1px solid #e9ecef !important;
+        border-radius: 10px !important;
+        background: #fff !important;
+        font-size: 1rem !important;
+        color: var(--text-color) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+        box-sizing: border-box;
+        transition: all 0.3s;
+    }
+
+    .select2-selection__rendered {
+        line-height: 28px !important;
+        color: var(--text-color) !important;
+    }
+
+    .filter-select:focus,
+    .filter-input:focus,
+    .select2-container--default .select2-selection--single:focus,
+    .select2-container--default .select2-selection--multiple:focus {
+        outline: none !important;
+        background: #fff !important;
+        border-color: #4a47a3 !important;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25) !important;
+    }
+
+    /* Tema escuro para campos de filtro */
+    body.dark .filter-select,
+    body.dark .filter-input,
+    body.dark .select2-container--default .select2-selection--single,
+    body.dark .select2-container--default .select2-selection--multiple {
+        background: var(--card-bg) !important;
+        border-color: var(--card-border) !important;
+        color: var(--text-color) !important;
+    }
+
+    /* Tema escuro para foco dos campos de filtro */
+    body.dark .filter-select:focus,
+    body.dark .filter-input:focus,
+    body.dark .select2-container--default .select2-selection--single:focus,
+    body.dark .select2-container--default .select2-selection--multiple:focus {
+        background: var(--card-bg) !important;
+        border-color: #4a47a3 !important;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25) !important;
+    }
+
+    .filter-actions {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        min-width: 210px;
+        max-width: 210px;
+    }
+
+    .btn-filter,
+    .btn-clear {
+        width: 100%;
+        height: 48px;
+        padding: 0;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        text-decoration: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        background: #fff;
+        color: var(--text-color);
+        border: 1px solid #e9ecef;
+    }
+
+    /* Tema escuro para botões dos filtros */
+    body.dark .btn-filter,
+    body.dark .btn-clear {
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--card-border) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .btn-filter {
+        background: #4a47a3;
+        color: white;
+        border: 1px solid #4a47a3;
+    }
+
+    .btn-filter:hover {
+        background: #3d3a8a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(74, 71, 163, 0.3);
+    }
+
+    .btn-clear {
+        border: 1px solid #e9ecef;
+        background: #fff;
+        color: #6c757d;
+    }
+
+    .btn-clear:hover {
+        background: #f8f9fa;
+        color: var(--muted-text);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Tema escuro para hover dos botões */
+    body.dark .btn-clear:hover {
+        background: #2a2a2a !important;
+        color: var(--muted-text) !important;
+    }
+
+    /* Responsividade */
+    @media (max-width: 1200px) {
+        .filters-row {
+            gap: 10px;
+        }
+
+        .filter-group,
+        .filter-actions {
+            min-width: 150px;
+            max-width: 150px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .filters-row {
+            flex-direction: row;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            width: 100%;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-group,
+        .filter-actions {
+            min-width: 180px;
+            max-width: 220px;
+            flex: 0 0 180px;
+            box-sizing: border-box;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .filters-row {
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            overflow-y: hidden;
+            gap: 8px;
+            width: 100%;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-group,
+        .filter-actions {
+            min-width: 160px;
+            max-width: 220px;
+            flex: 0 0 160px;
+            box-sizing: border-box;
+        }
+    }
+
+    /* Estilos para cards compactos */
+    .compact-card {
+        max-height: 280px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Card sem footer - centralizar conteúdo verticalmente */
+    .compact-card.card-no-footer {
+        justify-content: space-evenly;
+    }
+
+    .compact-card.card-no-footer .card-header {
+        padding-top: 1rem !important;
+    }
+
+    .compact-card.card-no-footer .card-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-top: 0.25rem !important;
+        margin-top: -0.5rem;
+    }
+
+    /* Garantir que cards no carousel mantenham tamanho consistente */
+    .projetos-carousel .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        height: 260px !important;
+    }
+
+    /* Regras de alta prioridade para carousel items */
+    .projetos-carousel .carousel-item {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .projetos-carousel .carousel-item .card,
+    .projetos-carousel .carousel-item .compact-card {
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        height: 260px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Forçar tamanho mesmo em telas pequenas */
+    @media (max-width: 767.98px) {
+        .projetos-carousel .carousel-item {
+            min-width: 260px !important;
+            max-width: 260px !important;
+            width: 260px !important;
+        }
+
+        .projetos-carousel .carousel-item .card,
+        .projetos-carousel .carousel-item .compact-card {
+            min-width: 260px !important;
+            max-width: 260px !important;
+            width: 260px !important;
+            min-height: 260px !important;
+            max-height: 260px !important;
+            height: 260px !important;
+        }
+    }
+
+    .compact-header {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .compact-header h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .compact-body {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .compact-footer {
+        padding: 0.5rem 1rem;
+    }
+
+    .compact-footer .btn-group {
+        display: flex;
+        flex-wrap: nowrap !important;
+        gap: 0.3em;
+        align-items: center;
+    }
+
+    .compact-footer .btn,
+    .compact-footer .btn-duplicar-projeto {
+        flex-shrink: 0;
+        min-width: auto;
+    }
+
+    .task-list {
+        max-height: 140px;
+        overflow-y: auto;
+    }
+
+    .task-item {
+    border-bottom: none !important;
+    font-size: 0.8rem;
+    }
+
+    .task-item:last-child {
+        border-bottom: none;
+    }
+
+    .task-name {
+        max-width: 70%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .expand-tasks-btn {
+        transition: color 0.2s ease;
+        font-weight: 500;
+    }
+
+    .expand-tasks-btn:hover {
+        color: #dc3545;
+    }
+
+    .hidden-tasks {
+        border-top: 1px solid #e9ecef;
+        padding-top: 0.5rem;
+    }
+
+    /* Estilos do Gantt */
+    .gantt-header {
+        display: flex;
+        border-bottom: 2px solid #dee2e6;
+        background: #f8f9fa;
+    }
+
+    .gantt-header-cell {
+        padding: 10px;
+        text-align: center;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+        transition: min-width 0.3s ease;
+    }
+
+    .gantt-controls .btn-group {
+        margin-left: 5px;
+    }
+
+    .gantt-controls .btn {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .gantt-controls .btn.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .gantt-row {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        min-height: 40px;
+    }
+
+    .gantt-row:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .gantt-task-name,
+    td[style*='min-width: 200px'] {
+        font-size: 13px !important;
+    }
+
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
+
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
+
+    /* Tooltip personalizado */
+    .gantt-tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 9999;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid rgba(0, 0, 0, 0.9);
+    }
+
+    .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .gantt-tooltip-project {
+        color: #ffd700;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+
+    .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-tooltip-days {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip-days .gantt-tooltip-info {
+        margin-bottom: 2px;
+    }
+
+    .gantt-task-bar.pendente {
+        background: #ffc107;
+    }
+
+    .gantt-task-bar.em-progresso {
+        background: #17a2b8;
+    }
+
+    .gantt-task-bar.concluida {
+        background: #28a745;
+    }
+
+    .gantt-day {
+        padding: 10px;
+        border-right: 1px solid #dee2e6;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+    }
+
+    .gantt-today {
+        background: rgba(255, 193, 7, 0.2);
+        font-weight: bold;
+    }
+
+    .gantt-weekend {
+        background: rgba(220, 53, 69, 0.1);
+    }
+
+    #gantt-timeline {
+        position: relative;
+        min-width: 800px;
+        background: #fff;
+        overflow: visible;
+    }
+
+    .gantt-task-bar {
+        position: absolute;
+        height: 20px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        z-index: 10;
+        opacity: 1;
+    }
+
+    .gantt-task-bar:hover {
+        background: #0056b3;
+    }
+
+    /* Coluna fixa para Tarefa */
+    #gantt-custom th:first-child,
+    #gantt-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 50;
+        /* aumentado para garantir sobreposição */
+        width: 320px;
+        min-width: 320px;
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Cabeçalho de meses e dias do Gantt */
+    #gantt-date-header {
+        font-family: inherit;
+    }
+
+    /* CSS extra para centralizar e aumentar altura do cabeçalho */
+    .gantt-dia-cell {
+        font-size: 11px;
+        color: #888;
+        background: #f8f9fa;
+        border-right: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 20px;
+    }
+
+    .gantt-hoje-linha {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: repeating-linear-gradient(to bottom,
+                #e74c3c 0px, #e74c3c 8px,
+                transparent 8px, transparent 16px);
+        z-index: 5;
+        /* reduzido para ficar atrás da coluna fixa */
+        pointer-events: none;
+    }
+
+    #gantt-hoje-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
+
+    #gantt-cronograma-area {
+        position: relative;
+    }
+
+    .gantt-row-compact {
+        height: 16px !important;
+    }
+
+    .gantt-bar-compact {
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 10px !important;
+        top: 2.5px !important;
+    }
+
+    .gantt-tooltip-detalhado {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-info {
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-label {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .gantt-tooltip-detalhado .gantt-tooltip-value {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .gantt-row-compact td,
+    .gantt-row-compact th {
+        height: 16px !important;
+        min-height: 16px !important;
+        max-height: 24px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 13px !important;
+    }
+
+    .gantt-h-linha {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #dee2e6;
+        z-index: 0;
+        /* reduzido para ficar atrás da coluna fixa */
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: none !important;
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+    }
+
+    #gantt-custom.dragging {
+        cursor: grabbing !important;
+        user-select: none !important;
+    }
+
+    .form-row.align-items-end.mb-4 {
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 44px !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        border-radius: 12px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        font-size: 1rem !important;
+        color: var(--text-color) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        box-sizing: border-box;
+        transition: all 0.3s;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        line-height: 28px !important;
+        color: var(--text-color) !important;
+        padding: 0 !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        display: flex !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    /* Mantém apenas esta regra para o campo de busca do Select2 do filtro de coleção */
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        line-height: 44px !important;
+        padding: 0 8px !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        resize: none !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline {
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        text-align: center !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        line-height: 44px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple {
+        display: flex !important;
+        align-items: center !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        justify-content: center !important;
+        align-items: center !important;
+        display: flex !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple,
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered,
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline,
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        padding: 0 !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: flex !important;
+        align-items: center !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        overflow-x: hidden !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        min-width: 0 !important;
+    }
+
+    #colecao+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+        max-width: none !important;
+        min-width: 0 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: initial !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: 0.85em !important;
+        padding: 1px 8px 1px 6px !important;
+        border-radius: 10px !important;
+        margin: 2px 3px 2px 0 !important;
+        min-height: 20px !important;
+        line-height: 18px !important;
+        height: 22px !important;
+    }
+
+    .carousel-indicators {
+        min-height: 20px;
+        position: static !important;
+        z-index: 1;
+        margin-top: 32px;
+        margin-bottom: 24px;
+    }
+
+    /* Opções do dropdown */
+    .select2-container--bootstrap-5 .select2-results__option {
+        padding: 10px 18px;
+        font-size: 1.08em;
+        border-radius: 8px;
+        margin: 2px 0;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background: #e9f5ff;
+        color: #007bff;
+    }
+
+    /* Ícone de pasta nas opções */
+    .select2-container--bootstrap-5 .select2-results__option:before {
+        content: '\f07b';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        margin-right: 8px;
+        color: #ffc107;
+        font-size: 1.1em;
+    }
+
+    /* Coleções selecionadas como badges */
+    .select2-container--bootstrap-5 .select2-selection__choice {
+        color: #007bff !important;
+        font-size: 0.85em !important;
+        font-weight: 500 !important;
+        background: #e9f5ff !important;
+        border-radius: 10px !important;
+        padding: 1px 8px 1px 6px !important;
+        margin: 2px 3px 2px 0 !important;
+        border: 1px solid #b6e0fe !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        display: flex !important;
+        align-items: center !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        min-height: 20px !important;
+        line-height: 18px !important;
+        height: 22px !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__choice__remove {
+        color: #dc3545 !important;
+        margin-left: 4px !important;
+        font-size: 1em !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+    }
+
+    /* Placeholder */
+    .select2-container--bootstrap-5 .select2-selection__placeholder {
+        color: #888;
+        font-size: 1.05em;
+        font-style: italic;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__rendered {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        min-height: 28px !important;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__choice {
+        max-width: 200px !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+    }
+
+    body .select2-container--bootstrap-5 .select2-selection__choice__display {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        display: inline-block !important;
+        max-width: 160px !important;
+        vertical-align: middle !important;
+    }
+
+    /* Estilos para o scroll dos filtros */
+    #offcanvas-filtros-novo .filtros-scroll-area {
+        scrollbar-width: thin;
+        scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    #offcanvas-filtros-novo .filtros-scroll-area::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Estilos para o carimbo no mobile */
+    .projeto-watermark {
+        transition: all 0.3s ease;
+    }
+
+    /* Estilos para os selects nativos - não abrir automaticamente */
+    #offcanvas-filtros-desktop select,
+    #offcanvas-filtros-novo select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 16px;
+        padding-right: 32px;
+    }
+
+    /* Prevenir que o select abra automaticamente */
+    #offcanvas-filtros-desktop select:focus,
+    #offcanvas-filtros-novo select:focus {
+        outline: none;
+        border-color: #4a47a3;
+        box-shadow: 0 0 0 0.2rem rgba(74, 71, 163, 0.25);
+    }
+
+    /* Ocultar barra de rolagem dos selects dos filtros */
+    #offcanvas-filtros-desktop select::-webkit-scrollbar {
+        display: none;
+    }
+    #offcanvas-filtros-desktop select {
+        -webkit-scrollbar: none;
+    }
+
+    .legend-item:hover {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: #dee2e6;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .legend-item.selecionada {
+        outline: 2px solid #222;
+        outline-offset: 2px;
+        background: #f3f3f3;
+        border-radius: 5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Melhorar a aparência das barras do Gantt */
+    .gantt-bar-compact {
+        position: absolute;
+        height: 16px;
+        background: #007bff;
+        border-radius: 3px;
+        margin-top: 0px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .gantt-bar-compact:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        z-index: 25;
+    }
+
+    .gantt-bar-compact.evidencia {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        opacity: 1 !important;
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .gantt-bar-compact.apagada {
+        opacity: 0.25 !important;
+        filter: grayscale(0.5);
+    }
+
+    /* Ocultar barra de scroll do Gantt */
+    #gantt-custom {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE e Edge */
+    }
+    #gantt-custom::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Edge */
+    }
+</style>
+
+<script>
+    window.ganttData = {{ gantt_geral_data | tojson | safe }};
+</script>
+
+<script>
+    const larguraBase = 4; // 100% = 4px
+    let larguraDia = larguraBase;
+    const larguraMin = 1;
+    const larguraMax = 32;
+    const ROW_HEIGHT = 32; // altura de cada linha (ajuste conforme seu CSS)
+    const VISIBLE_ROWS = 18; // quantas linhas mostrar de cada vez (ajuste conforme altura do container)
+    let tarefas = [];
+    let nomesOrdenados = [];
+    let grupos = {};
+    let periodo = { min: null, max: null };
+    let diasTotais = 0;
+
+    // Função utilitária para agrupar tarefas por nome
+    function agruparTarefasPorNome(tarefas) {
+        const grupos = {};
+        tarefas.forEach(tarefa => {
+            if (!grupos[tarefa.name]) grupos[tarefa.name] = [];
+            grupos[tarefa.name].push(tarefa);
+        });
+        return grupos;
+    }
+
+    // Função para obter datas mínimas e máximas
+    function obterPeriodo(tarefas) {
+        let min = null, max = null;
+        tarefas.forEach(t => {
+            // Criar datas no fuso horário local para evitar problemas de UTC
+            const ini = new Date(t.start + 'T00:00:00');
+            const fim = new Date(t.end + 'T00:00:00');
+            if (!min || ini < min) min = ini;
+            if (!max || fim > max) max = fim;
+        });
+        return { min, max };
+    }
+
+    // Função para calcular dias entre datas
+    function diasEntre(a, b) {
+        // Usar datas no fuso horário local para cálculo preciso
+        const dataA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+        const dataB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.ceil((dataB - dataA) / (1000 * 60 * 60 * 24));
+    }
+
+    // Função para cor de status
+    function corStatus(tarefa) {
+        if (tarefa.bar_color) return tarefa.bar_color;
+        if (tarefa.status === 'concluida') return '#28a745';
+        if (tarefa.status === 'em-progresso' || tarefa.status === 'em_progresso') return '#17a2b8';
+        return '#ffc107';
+    }
+
+    // Função para cor da borda baseada no status
+    function corBordaStatus(tarefa) {
+        if (tarefa.status === 'concluída') return '#1e7e34'; // Verde escuro
+        if (tarefa.status === 'em progresso') return '#138496'; // Azul escuro
+        if (tarefa.status === 'pendente') return '#e0a800'; // Amarelo escuro
+        if (tarefa.status === 'atrasada') return '#dc3545'; // Vermelho
+        return '#6c757d'; // Cinza padrão
+    }
+
+    // Função para tooltip
+    function tooltipBarra(tarefa) {
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const ini = new Date(tarefa.start + 'T00:00:00').toLocaleDateString('pt-BR');
+        const fim = new Date(tarefa.end + 'T00:00:00').toLocaleDateString('pt-BR');
+        return `${tarefa.projeto_origem || tarefa.projeto_nome || ''}: ${ini} a ${fim}`;
+    }
+
+    function calcularDiasUteis(dataInicio, dataFim) {
+        let diasUteis = 0;
+        const dataAtual = new Date(dataInicio);
+        while (dataAtual <= dataFim) {
+            if (dataAtual.getDay() !== 0 && dataAtual.getDay() !== 6) {
+                diasUteis++;
+            }
+            dataAtual.setDate(dataAtual.getDate() + 1);
+        }
+        return diasUteis;
+    }
+
+    function mostrarTooltipDetalhado(event, barra) {
+        esconderTooltipDetalhado();
+        // Criar datas no fuso horário local para evitar problemas de UTC
+        const startDate = new Date(barra.start + 'T00:00:00');
+        const endDate = new Date(barra.end + 'T00:00:00');
+        const diasCorridos = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        const diasUteis = calcularDiasUteis(startDate, endDate);
+        const diasUteisTexto = diasUteis === 1 ? 'dia' : 'dias';
+        const tooltip = document.createElement('div');
+        tooltip.className = 'gantt-tooltip-detalhado';
+        tooltip.id = 'gantt-tooltip-detalhado';
+        const dataInicio = startDate.toLocaleDateString('pt-BR');
+        const dataFim = endDate.toLocaleDateString('pt-BR');
+        const nomeProjeto = barra.projeto_origem || barra.projeto_nome || 'Projeto não definido';
+        tooltip.innerHTML = `
+            <div class=\"gantt-tooltip-title\">${barra.name || 'Tarefa sem nome'}</div>
+            <div style=\"color:#ffd700;font-size:11px;margin-bottom:6px;line-height:1.2;\">${nomeProjeto}</div>
+            <div style=\"color:#fff;font-size:11px;margin-bottom:6px;line-height:1.2;font-weight:bold;\"><b>Coleção:</b> ${barra.colecao || '-'} </div>
+            <div class=\"gantt-tooltip-info\" style=\"gap: 12px;\">
+                <span class=\"gantt-tooltip-label\">🏁 Início:</span>
+                <span class=\"gantt-tooltip-value\">${dataInicio}</span>
+                <span class=\"gantt-tooltip-label\">🎯 Fim:</span>
+                <span class=\"gantt-tooltip-value\">${dataFim}</span>
+            </div>
+            <div class=\"gantt-tooltip-info\">
+                <span class=\"gantt-tooltip-label\">📆 Dias Corridos:</span>
+                <span class=\"gantt-tooltip-value\">${diasCorridos} dias</span>
+            </div>
+            <div class=\"gantt-tooltip-info\">
+                <span class=\"gantt-tooltip-label\">📆 Dias Úteis:</span>
+                <span class=\"gantt-tooltip-value\">${diasUteis} ${diasUteisTexto}</span>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
+        atualizarPosicaoTooltipDetalhado(event);
+    }
+
+    function esconderTooltipDetalhado() {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) tooltip.remove();
+    }
+
+    function atualizarPosicaoTooltipDetalhado(event) {
+        const tooltip = document.getElementById('gantt-tooltip-detalhado');
+        if (tooltip) {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = event.clientX + 12;
+            let top = event.clientY + 12;
+            if (left + tooltipRect.width > window.innerWidth) {
+                left = window.innerWidth - tooltipRect.width - 8;
+            }
+            if (top + tooltipRect.height > window.innerHeight) {
+                top = window.innerHeight - tooltipRect.height - 8;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+    }
+
+    // Função principal para montar o Gantt (sem virtualização)
+    function montarGanttAgrupado() {
+        const dados = window.ganttData || [];
+        const body = document.getElementById('gantt-body');
+        if (body) body.innerHTML = '<tr><td colspan="2">Carregando...</td></tr>';
+        if (!dados.length) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Nenhuma tarefa para exibir.</td></tr>';
+            return;
+        }
+        const tarefas = dados.filter(t => !t.type || t.type !== 'project');
+        tarefas.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+        const grupos = agruparTarefasPorNome(tarefas);
+        const nomesOrdenados = Object.keys(grupos).sort((a, b) => {
+            const ordemA = Math.min(...grupos[a].map(t => t.ordem ?? 0));
+            const ordemB = Math.min(...grupos[b].map(t => t.ordem ?? 0));
+            return ordemA - ordemB;
+        });
+        const periodo = obterPeriodo(tarefas);
+        if (!periodo.min || !periodo.max || isNaN(periodo.min) || isNaN(periodo.max)) {
+            if (body) body.innerHTML = '<tr><td colspan="2">Período inválido para o Gantt.</td></tr>';
+            return;
+        }
+        const diasTotais = Math.max(0, diasEntre(periodo.min, periodo.max));
+        // Linha de hoje, cabeçalhos, etc (igual ao seu código)
+        const hojeContainer = document.getElementById('gantt-hoje-container');
+        if (hojeContainer) {
+            hojeContainer.innerHTML = '';
+            hojeContainer.style.position = 'absolute';
+            hojeContainer.style.top = '0';
+            hojeContainer.style.left = '0';
+            hojeContainer.style.bottom = '0';
+            hojeContainer.style.right = '0';
+            hojeContainer.style.zIndex = '10';
+            hojeContainer.style.pointerEvents = 'none';
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            if (hoje >= periodo.min && hoje <= periodo.max) {
+                const offset = diasEntre(periodo.min, hoje);
+                const left = 320 + (offset * larguraDia); // 320px da coluna tarefa
+                const linhaHoje = document.createElement('div');
+                linhaHoje.className = 'gantt-hoje-linha';
+                linhaHoje.style.left = left + 'px';
+                linhaHoje.style.height = '100%';
+                hojeContainer.appendChild(linhaHoje);
+                // Adicionar label com a data
+                const hojeLabel = document.createElement('div');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                hojeLabel.textContent = `Hoje ${dia}/${mes}`;
+                hojeLabel.style.position = 'absolute';
+                hojeLabel.style.top = '0px';
+                hojeLabel.style.left = (left + 6) + 'px'; // 6px à direita da linha
+                hojeLabel.style.transform = 'none';
+                hojeLabel.style.fontSize = '12px';
+                hojeLabel.style.color = '#e74c3c';
+                hojeLabel.style.fontWeight = 'bold';
+                hojeLabel.style.padding = '2px 6px';
+                hojeLabel.style.borderRadius = '4px';
+                hojeLabel.style.zIndex = '20';
+                hojeContainer.appendChild(hojeLabel);
+            }
+        }
+        // Cabeçalho de datas de um nível (apenas dias)
+        const dateHeader = document.getElementById('gantt-date-header');
+        if (dateHeader) {
+            dateHeader.innerHTML = '';
+            // Espaço à esquerda para alinhar com a coluna Tarefa
+            const espacoTarefa = document.createElement('div');
+            espacoTarefa.style.width = '320px';
+            espacoTarefa.style.minWidth = '320px';
+            espacoTarefa.style.maxWidth = '320px';
+            espacoTarefa.style.display = 'inline-block';
+            espacoTarefa.style.height = '19px';
+            espacoTarefa.style.background = 'transparent';
+            dateHeader.appendChild(espacoTarefa);
+            // Não renderizar mais os dias
+        }
+        // Renderizar todas as linhas de uma vez
+        body.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        nomesOrdenados.forEach((nome, idx) => {
+            const barras = grupos[nome];
+            const tr = document.createElement('tr');
+            tr.className = 'gantt-row-compact';
+            // Nome da tarefa
+            const tdNome = document.createElement('td');
+            tdNome.textContent = nome;
+            tdNome.title = nome;
+            tdNome.style.padding = "2px 8px";
+            tdNome.style.whiteSpace = "nowrap";
+            tdNome.style.overflow = "hidden";
+            tdNome.style.textOverflow = "ellipsis";
+            tdNome.style.height = "16px";
+            tdNome.style.fontSize = "13px";
+            tr.appendChild(tdNome);
+            // Cronograma
+            const tdCrono = document.createElement('td');
+            tdCrono.style.position = "relative";
+            tdCrono.style.height = "16px";
+            tdCrono.style.minWidth = (diasTotais * larguraDia) + "px";
+            // Adicionar linha horizontal de grade
+            const linhaH = document.createElement('div');
+            linhaH.className = 'gantt-h-linha';
+            linhaH.style.position = 'absolute';
+            linhaH.style.left = '0';
+            linhaH.style.right = '0';
+            linhaH.style.bottom = '0';
+            linhaH.style.height = '1px';
+            linhaH.style.background = '#dee2e6';
+            linhaH.style.zIndex = '1';
+            tdCrono.appendChild(linhaH);
+            barras.forEach((barra, idx) => {
+                // Criar datas no fuso horário local para evitar problemas de UTC
+                const inicio = new Date(barra.start + 'T00:00:00');
+                const fim = new Date(barra.end + 'T00:00:00');
+                const offset = diasEntre(periodo.min, inicio);
+                const largura = diasEntre(inicio, fim) + 1;
+                const div = document.createElement('div');
+                div.className = 'gantt-bar-compact';
+                div.style.position = "absolute";
+                div.style.left = (offset * larguraDia) + "px";
+                div.style.top = "8px";
+                div.style.height = "16px";
+                // Ajustar largura para evitar ultrapassar visualmente o último dia
+                div.style.width = ((largura * larguraDia) - 1) + "px";
+                div.style.background = barra.bar_color || corStatus(barra);
+                div.style.borderRadius = "4px";
+                div.style.textAlign = "center";
+                div.style.color = "#fff";
+                div.style.fontSize = "10px";
+                div.style.lineHeight = "12px";
+                div.style.cursor = "pointer";
+                div.style.fontWeight = "500";
+                div.style.textShadow = "0 1px 2px rgba(0,0,0,0.3)";
+                div.setAttribute('data-projeto', barra.projeto_origem || barra.projeto_nome || '');
+                div.setAttribute('data-tarefa', barra.name || '');
+                tdCrono.appendChild(div);
+                div.onmouseenter = function (e) {
+                    mostrarTooltipDetalhado(e, barra);
+                    this._mousemoveHandler = function (ev) {
+                        atualizarPosicaoTooltipDetalhado(ev);
+                    };
+                    this.addEventListener('mousemove', this._mousemoveHandler);
+                };
+                div.onmouseleave = function () {
+                    esconderTooltipDetalhado();
+                    if (this._mousemoveHandler) {
+                        this.removeEventListener('mousemove', this._mousemoveHandler);
+                        this._mousemoveHandler = null;
+                    }
+                };
+            });
+            tr.appendChild(tdCrono);
+            fragment.appendChild(tr);
+        });
+        body.appendChild(fragment);
+    }
+
+    // Evento de scroll para atualizar as linhas visíveis
+    document.addEventListener('DOMContentLoaded', function () {
+        // === CUSTOM SELECT COMPONENT ===
+        class CustomSelect {
+            constructor(wrapper) {
+                this.wrapper = wrapper;
+                this.selectId = wrapper.dataset.selectId;
+                this.nativeSelect = wrapper.querySelector('select');
+                this.display = wrapper.querySelector('.custom-select-display');
+                this.dropdown = wrapper.querySelector('.custom-select-dropdown');
+                this.searchInput = wrapper.querySelector('.search-input');
+                this.optionsContainer = wrapper.querySelector('.custom-select-options');
+                this.valueContainer = wrapper.querySelector('.custom-select-value');
+                this.clearBtn = wrapper.querySelector('.clear-btn');
+                
+                // Armazenar instância no wrapper para acesso posterior
+                wrapper._customSelectInstance = this;
+                
+                this.init();
+            }
+            
+            init() {
+                // Sincronizar checkboxes com as opções selecionadas do select nativo
+                this.syncCheckboxes();
+                // Atualizar display inicial
+                this.updateDisplay();
+                // Toggle dropdown ao clicar no display
+                this.display.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggle();
+                });
+                // Busca
+                this.searchInput.addEventListener('input', () => this.filter());
+                this.searchInput.addEventListener('click', (e) => e.stopPropagation());
+                // Prevenir fechar ao clicar dentro do dropdown
+                this.dropdown.addEventListener('click', (e) => e.stopPropagation());
+                // Opções
+                this.optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+                    option.addEventListener('click', () => this.toggleOption(option));
+                });
+                // Limpar
+                if (this.clearBtn) {
+                    this.clearBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.clear();
+                    });
+                }
+                // Fechar ao clicar fora
+                document.addEventListener('click', (e) => {
+                    if (!this.wrapper.contains(e.target)) {
+                        this.close();
+                    }
+                });
+                // Sempre sincronizar checkboxes e display ao carregar a página (corrige bug do filtro Coleção)
+                // Sincronizar selects após o carregamento da página (corrige bug do filtro Coleção)
+                setTimeout(() => {
+                    this.syncCheckboxes();
+                    this.updateDisplay();
+                }, 300);
+            }
+            
+            syncCheckboxes() {
+                // Sincronizar os checkboxes com as opções selected do select nativo
+                Array.from(this.nativeSelect.options).forEach(option => {
+                    if (option.value !== '') {
+                        const checkbox = this.optionsContainer.querySelector(`[data-value="${option.value}"] input[type="checkbox"]`);
+                        if (checkbox) {
+                            checkbox.checked = option.selected;
+                        }
+                    }
+                });
+                // Atualizar o display após sincronizar
+                this.updateDisplay();
+            }
+            
+            toggle() {
+                if (this.wrapper.classList.contains('open')) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+            
+            open() {
+                console.log('open() chamado');
+                // Fechar todos os outros selects
+                document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+                    if (w !== this.wrapper) {
+                        w.classList.remove('open');
+                    }
+                });
+                
+                this.wrapper.classList.add('open');
+                this.searchInput.value = '';
+                this.filter();
+                
+                // Sincronizar checkboxes E atualizar display após abrir
+                // Usar setTimeout para garantir que o DOM foi atualizado
+                setTimeout(() => {
+                    console.log('setTimeout - chamando syncCheckboxes');
+                    this.syncCheckboxes();
+                }, 0);
+                
+                setTimeout(() => this.searchInput.focus(), 100);
+            }
+            
+            close() {
+                this.wrapper.classList.remove('open');
+            }
+            
+            filter() {
+                const term = this.searchInput.value.toLowerCase();
+                this.optionsContainer.querySelectorAll('.custom-option').forEach(option => {
+                    const text = option.querySelector('span').textContent.toLowerCase();
+                    if (text.includes(term)) {
+                        option.classList.remove('hidden');
+                    } else {
+                        option.classList.add('hidden');
+                    }
+                });
+            }
+            
+            toggleOption(optionEl) {
+                const checkbox = optionEl.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+                
+                const value = optionEl.dataset.value;
+                const nativeOption = this.nativeSelect.querySelector(`option[value="${value}"]`);
+                if (nativeOption) {
+                    nativeOption.selected = checkbox.checked;
+                }
+                
+                this.updateDisplay();
+                
+                // Trigger change no select nativo (para filtros funcionarem)
+                const event = new Event('change', { bubbles: true });
+                this.nativeSelect.dispatchEvent(event);
+            }
+            
+            updateDisplay() {
+                const selected = Array.from(this.nativeSelect.selectedOptions).filter(opt => opt.value !== '');
+                const placeholder = this.valueContainer.querySelector('.placeholder');
+                
+                console.log('updateDisplay - selected count:', selected.length);
+                
+                // Salvar os selecionados no localStorage
+                if (selected.length > 0) {
+                    localStorage.setItem('selected_projetos_gantt', selected.map(o => o.value).join(','));
+                }
+                // Não remover quando vazio, para persistir até o clear
+                
+                // Remover TODOS os spans de texto anteriores
+                this.valueContainer.querySelectorAll('.text').forEach(t => t.remove());
+                
+                // Forçar reset completo do placeholder removendo o atributo style
+                if (placeholder) {
+                    placeholder.removeAttribute('style');
+                }
+                
+                if (selected.length === 0) {
+                    // Nenhuma seleção - mostrar placeholder
+                    if (placeholder) placeholder.style.display = 'inline';
+                    console.log('updateDisplay - mostrando placeholder');
+                } else if (selected.length === 1) {
+                    // Uma seleção - mostrar o texto
+                    if (placeholder) placeholder.style.display = 'none';
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'text';
+                    textSpan.textContent = selected[0].text;
+                    this.valueContainer.appendChild(textSpan);
+                    console.log('updateDisplay - mostrando 1 seleção:', selected[0].text);
+                } else {
+                    // Múltiplas seleções - mostrar "Seleções Múltiplas"
+                    if (placeholder) placeholder.style.display = 'none';
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'text';
+                    textSpan.textContent = 'Seleções Múltiplas';
+                    this.valueContainer.appendChild(textSpan);
+                    console.log('updateDisplay - mostrando Seleções Múltiplas');
+                }
+            }
+            
+            removeValue(value) {
+                const nativeOption = this.nativeSelect.querySelector(`option[value="${value}"]`);
+                if (nativeOption) {
+                    nativeOption.selected = false;
+                }
+                
+                const checkbox = this.optionsContainer.querySelector(`[data-value="${value}"] input`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+                
+                this.updateDisplay();
+                
+                // Trigger change
+                const event = new Event('change', { bubbles: true });
+                this.nativeSelect.dispatchEvent(event);
+            }
+            
+            clear() {
+                // Limpar checkboxes
+                this.optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                // Limpar o select nativo
+                Array.from(this.nativeSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+                // Atualizar display
+                const placeholder = this.valueContainer.querySelector('.placeholder');
+                const oldText = this.valueContainer.querySelector('.text');
+                if (oldText) oldText.remove();
+                if (placeholder) placeholder.style.display = 'inline';
+                // Limpar localStorage
+                localStorage.removeItem('selected_projetos_gantt');
+                // Disparar evento change para garantir atualização dos filtros
+                const event = new Event('change', { bubbles: true });
+                this.nativeSelect.dispatchEvent(event);
+            }
+        }
+        
+        // Inicializar todos os custom selects
+        document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+            new CustomSelect(wrapper);
+        });
+        // === FIM CUSTOM SELECT ===
+        
+        montarGanttAgrupado();
+        function atualizarZoomLabel() {
+            const zoomLabel = document.getElementById('zoom-label');
+            if (zoomLabel) {
+                const percent = Math.round((larguraDia / larguraBase) * 100);
+                zoomLabel.textContent = percent + '%';
+            }
+        }
+        atualizarZoomLabel();
+        document.getElementById('zoom-in').onclick = function () {
+            if (larguraDia < larguraMax) {
+                larguraDia += larguraBase * 0.1;
+                if (larguraDia > larguraMax) larguraDia = larguraMax;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+        document.getElementById('zoom-out').onclick = function () {
+            if (larguraDia > larguraMin) {
+                larguraDia -= larguraBase * 0.1;
+                if (larguraDia < larguraMin) larguraDia = larguraMin;
+                montarGanttAgrupado();
+                atualizarZoomLabel();
+            }
+        };
+
+        // Evidenciar barras ao clicar na legenda (agora com seleção múltipla via Ctrl)
+        let projetosSelecionados = [];
+        document.querySelectorAll('.legend-item[data-projeto]').forEach(item => {
+            item.addEventListener('click', function (e) {
+                const projeto = this.getAttribute('data-projeto');
+                const ctrl = e.ctrlKey || e.metaKey; // metaKey para Mac
+
+                if (ctrl) {
+                    // Seleção múltipla
+                    if (projetosSelecionados.includes(projeto)) {
+                        projetosSelecionados = projetosSelecionados.filter(p => p !== projeto);
+                    } else {
+                        projetosSelecionados.push(projeto);
+                    }
+                } else {
+                    // Seleção única
+                    if (projetosSelecionados.length === 1 && projetosSelecionados[0] === projeto) {
+                        projetosSelecionados = [];
+                    } else {
+                        projetosSelecionados = [projeto];
+                    }
+                }
+
+                // Atualizar barras
+                if (projetosSelecionados.length === 0) {
+                    // Mostrar todas as barras
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        bar.classList.remove('evidencia', 'apagada');
+                    });
+                    document.querySelectorAll('.legend-item').forEach(l => l.classList.remove('selecionada'));
+                } else {
+                    // Destacar apenas os projetos selecionados
+                    document.querySelectorAll('.gantt-bar-compact').forEach(bar => {
+                        const barProjeto = bar.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(barProjeto)) {
+                            bar.classList.add('evidencia');
+                            bar.classList.remove('apagada');
+                        } else {
+                            bar.classList.remove('evidencia');
+                            bar.classList.add('apagada');
+                        }
+                    });
+
+                    // Atualizar legenda
+                    document.querySelectorAll('.legend-item').forEach(l => {
+                        const p = l.getAttribute('data-projeto');
+                        if (projetosSelecionados.includes(p)) {
+                            l.classList.add('selecionada');
+                        } else {
+                            l.classList.remove('selecionada');
+                        }
+                    });
+                }
+
+                // Adicionar feedback visual
+                if (projetosSelecionados.length > 0) {
+                    mostrarEstatisticasProjetos(projetosSelecionados);
+                } else {
+                    esconderEstatisticasProjetos();
+                }
+            });
+        });
+
+        // Limpar filtros
+        $('#limpar-filtros').on('click', function () {
+            // Limpa todos os campos do formulário
+            $(this).closest('form')[0].reset();
+            // Limpa o select2 do nome
+            $('#nome').val('').trigger('change');
+            // Limpa o select2 do status
+            $('#status').val(null).trigger('change');
+            // Limpa o select2 do colecao, mesmo se não houver opções
+            $('#colecao').val(null).trigger('change');
+            // Redireciona para a URL base, removendo filtros
+            window.location = window.location.pathname;
+        });
+
+        // Controle do painel lateral de filtros para Desktop
+        const btnAbrirFiltrosDesktop = document.getElementById('btn-abrir-filtros-desktop');
+        const btnFecharFiltrosDesktop = document.getElementById('btn-fechar-filtros-desktop');
+        const offcanvasFiltrosDesktop = document.getElementById('offcanvas-filtros-desktop');
+        const backdropFiltrosDesktop = document.getElementById('filtros-backdrop-desktop');
+
+        if (btnAbrirFiltrosDesktop && offcanvasFiltrosDesktop) {
+            btnAbrirFiltrosDesktop.addEventListener('click', function () {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(0)';
+                backdropFiltrosDesktop.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (btnFecharFiltrosDesktop && offcanvasFiltrosDesktop) {
+            btnFecharFiltrosDesktop.addEventListener('click', function () {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
+                backdropFiltrosDesktop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+
+        if (backdropFiltrosDesktop && offcanvasFiltrosDesktop) {
+            backdropFiltrosDesktop.addEventListener('click', function () {
+                offcanvasFiltrosDesktop.style.transform = 'translateX(-100%)';
+                backdropFiltrosDesktop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+
+        // Limpar filtros do painel lateral - REMOVIDO: conflito com onclick do HTML
+        // const btnLimparFiltrosDesktop = document.getElementById('limpar-filtros-desktop');
+        // if (btnLimparFiltrosDesktop) {
+        //     btnLimparFiltrosDesktop.addEventListener('click', function () {
+        //         // Código antigo que conflitava
+        //     });
+        // }
+
+        // Função para limpar selects individuais
+        window.limparSelect = function (selectId) {
+            const select = document.getElementById(selectId);
+            if (select) {
+                for (let i = 0; i < select.options.length; i++) {
+                    select.options[i].selected = false;
+                }
+                // Atualizar o display
+                const displayId = selectId.replace('-desktop', '-display');
+                const textId = selectId.replace('-desktop', '-text');
+                document.getElementById(displayId).style.display = 'flex';
+                document.getElementById(textId).textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
+            }
+        };
+
+        // Função para alternar a visibilidade do select
+        window.toggleSelect = function (selectId, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
+            const select = document.getElementById(selectId);
+            const displayId = selectId.replace('-desktop', '-display');
+            const display = document.getElementById(displayId);
+            const chevronOverlayId = selectId.replace('-desktop', '-chevron-overlay');
+            const chevronOverlay = document.getElementById(chevronOverlayId);
+
+            // Verificar qual está visível atualmente
+            const selectVisible = select.style.display === 'block';
+
+            if (!selectVisible) {
+                // ABRIR select
+                select.style.display = 'block';
+                select.style.position = 'absolute';
+                select.style.zIndex = '1000';
+                select.style.width = '100%';
+                select.style.maxHeight = '120px';
+                select.style.overflow = 'auto';
+                select.style.backgroundColor = '#fff';
+                select.style.border = '1px solid #e9ecef';
+                select.style.borderRadius = '10px';
+                select.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                display.style.display = 'none';
+                display.classList.add('select-display-hidden'); // Adicionar classe para esconder completamente
+                if (chevronOverlay) chevronOverlay.style.display = 'block';
+                select.focus();
+            } else {
+                // FECHAR select
+                select.style.display = 'none';
+                display.style.display = 'flex';
+                display.classList.remove('select-display-hidden'); // Remover classe ao mostrar novamente
+                if (chevronOverlay) chevronOverlay.style.display = 'none';
+            }
+        };
+        
+        // Adicionar listener para fechar quando clicar fora do select ativo
+        document.addEventListener('click', function(e) {
+            const allSelects = document.querySelectorAll('[id$="-desktop"]');
+            
+            allSelects.forEach(select => {
+                if (select.style.display === 'block') {
+                    const displayId = select.id.replace('-desktop', '-display');
+                    const display = document.getElementById(displayId);
+                    
+                    // Se clicou fora do select E fora do display parent
+                    if (!select.contains(e.target) && !select.parentElement.contains(e.target)) {
+                        select.style.display = 'none';
+                        display.style.display = 'flex';
+                        select.removeAttribute('data-can-close');
+                    }
+                }
+            });
+        }, true);
+
+        // Adicionar listeners para fechar selects quando clicar fora
+        document.addEventListener('DOMContentLoaded', function() {
+            const selects = document.querySelectorAll('[id$="-desktop"]');
+            
+            selects.forEach(select => {
+                const selectId = select.id;
+                const displayId = selectId.replace('-desktop', '-display');
+                const display = document.getElementById(displayId);
+                
+                // Quando o select perder o foco, fechar
+                select.addEventListener('blur', function() {
+                    setTimeout(() => {
+                        if (select.style.display === 'block') {
+                            select.style.display = 'none';
+                            display.style.display = 'flex';
+                        }
+                    }, 150);
+                });
+            });
+            
+            // Listener global para fechar ao clicar fora
+            document.addEventListener('click', function(e) {
+                const openSelects = document.querySelectorAll('[id$="-desktop"][style*="display: block"]');
+                
+                openSelects.forEach(select => {
+                    const displayId = select.id.replace('-desktop', '-display');
+                    const display = document.getElementById(displayId);
+                    
+                    // Se clicou fora do select e fora do display
+                    if (!select.contains(e.target) && !display.contains(e.target)) {
+                        select.style.display = 'none';
+                        display.style.display = 'flex';
+                    }
+                });
+            });
+        });
+
+        // Função para mostrar as seleções no display
+        window.mostrarSelecoes = function (selectId, displayId) {
+            const select = document.getElementById(selectId);
+            const textId = selectId.replace('-desktop', '-text');
+            const textElement = document.getElementById(textId);
+
+            const selecoes = [];
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].selected && select.options[i].value !== '') {
+                    selecoes.push(select.options[i].text);
+                }
+            }
+
+            if (selecoes.length > 0) {
+                textElement.textContent = selecoes.join(', ');
+            } else {
+                textElement.textContent = 'Selecione o ' + (selectId.includes('nome') ? 'Projeto' : selectId.includes('status') ? 'Status' : 'Coleção');
+            }
+
+            // Não fechar automaticamente - deixar o usuário selecionar múltiplas opções
+            // O select só fecha quando perder o foco (onblur)
+        };
+
+        // PROTEÇÃO DOS ÍCONES SVG - Não é mais necessário pois SVG não muda
+        // Removido código obsoleto do MutationObserver
+
+        // Controlar comportamento dos selects para não abrir automaticamente
+        const selectsDesktop = document.querySelectorAll('#offcanvas-filtros-desktop select');
+        selectsDesktop.forEach(select => {
+            // Prevenir que o select abra automaticamente ao focar
+            select.addEventListener('focus', function (e) {
+                // Não fazer nada - deixar o usuário clicar para abrir
+            });
+
+            // Garantir que o select só abra quando clicado
+            select.addEventListener('click', function (e) {
+                // Permitir que o select abra apenas quando clicado
+            });
+
+            // Prevenir que o select abra ao pressionar Tab
+            select.addEventListener('keydown', function (e) {
+                if (e.key === 'Tab') {
+                    // Permitir navegação com Tab
+                    return;
+                }
+                // Para outras teclas, não abrir automaticamente
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                }
+            });
+
+            // Permitir múltipla seleção com Ctrl+clique
+            select.addEventListener('mousedown', function (e) {
+                // Permitir seleção múltipla
+                if (e.ctrlKey || e.metaKey) {
+                    // Permitir seleção múltipla com Ctrl/Cmd
+                    return;
+                }
+            });
+        });
+    });
+
+    // Função para configurar a linha do cursor
+    function configurarLinhaCursor() {
+        const cronogramaArea = document.getElementById('gantt-cronograma-area');
+        const cursorLine = document.getElementById('gantt-cursor-line');
+        const ganttCustom = document.getElementById('gantt-custom');
+
+        if (cronogramaArea && cursorLine && ganttCustom) {
+
+            // Mostrar e mover linha do cursor
+            cronogramaArea.addEventListener('mousemove', function (e) {
+                const rect = cronogramaArea.getBoundingClientRect();
+                const ganttRect = ganttCustom.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const scrollLeft = ganttCustom.scrollLeft || 0;
+                
+                // Calcular posição do mouse em relação ao container do gantt (viewport)
+                const mouseXInViewport = e.clientX - ganttRect.left;
+                
+                // Só mostrar a linha se o mouse estiver além da coluna fixa de tarefas (320px na viewport)
+                if (mouseXInViewport > 320) {
+                    cursorLine.style.left = (x) + 'px';
+                    cursorLine.style.display = 'block';
+                } else {
+                    cursorLine.style.display = 'none';
+                }
+            });
+
+            cronogramaArea.addEventListener('mouseleave', function () {
+                cursorLine.style.display = 'none';
+            });
+
+        } else {
+            setTimeout(configurarLinhaCursor, 100);
+        }
+    }
+
+    // Chamar a função quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', configurarLinhaCursor);
+    } else {
+        configurarLinhaCursor();
+    }
+
+    // Pan/drag horizontal no Gantt
+    (function () {
+        const ganttCustom = document.getElementById('gantt-custom');
+        let isDown = false;
+        let startX, scrollLeft;
+        if (ganttCustom) {
+            ganttCustom.addEventListener('mousedown', function (e) {
+                if (e.button !== 0) return; // só botão esquerdo
+                isDown = true;
+                ganttCustom.classList.add('dragging');
+                startX = e.pageX - ganttCustom.offsetLeft;
+                scrollLeft = ganttCustom.scrollLeft;
+                document.body.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function (e) {
+                if (!isDown) return;
+                const x = e.pageX - ganttCustom.offsetLeft;
+                const walk = (x - startX) * -1; // sentido inverso
+                ganttCustom.scrollLeft = scrollLeft + walk;
+            });
+            document.addEventListener('mouseup', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+            // Evita seleção de texto durante o drag
+            ganttCustom.addEventListener('mouseleave', function () {
+                isDown = false;
+                ganttCustom.classList.remove('dragging');
+                document.body.style.cursor = '';
+            });
+        }
+    })();
+
+    // Função para mostrar estatísticas dos projetos selecionados
+    function mostrarEstatisticasProjetos(projetosSelecionados) {
+        const estatisticasDiv = document.getElementById('estatisticas-projetos');
+        const conteudoDiv = document.getElementById('estatisticas-conteudo');
+
+        if (!estatisticasDiv || !conteudoDiv) return;
+
+        const dados = window.ganttData || [];
+        const tarefasSelecionadas = dados.filter(t =>
+            projetosSelecionados.includes(t.projeto_origem || t.projeto_nome || '')
+        );
+
+        const totalTarefas = tarefasSelecionadas.length;
+        const projetosUnicos = [...new Set(tarefasSelecionadas.map(t => t.projeto_origem || t.projeto_nome || ''))];
+
+        let estatisticas = `
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Projetos:</strong> ${projetosUnicos.length}
+                </div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Tarefas:</strong> ${totalTarefas}
+                </div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <strong>Projetos:</strong> ${projetosSelecionados.join(', ')}
+                </div>
+            </div>
+        `;
+
+        conteudoDiv.innerHTML = estatisticas;
+        estatisticasDiv.style.display = 'block';
+    }
+
+    // Função para esconder estatísticas
+    function esconderEstatisticasProjetos() {
+        const estatisticasDiv = document.getElementById('estatisticas-projetos');
+        if (estatisticasDiv) {
+            estatisticasDiv.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
+
+<!-- Modal de confirmação de exclusão de projeto -->
+<div class="modal fade" id="modalConfirmarExclusaoProjeto" tabindex="-1"
+    aria-labelledby="modalConfirmarExclusaoProjetoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalConfirmarExclusaoProjetoLabel"><svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg> Confirmar
+                    Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusaoProjeto">
+                    <svg width="20px" height="20px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="binIconTitle" stroke="#000" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000"><title id="binIconTitle">Bin</title><path d="M19 6L5 6M14 5L10 5M6 10L6 20C6 20.6666667 6.33333333 21 7 21 7.66666667 21 11 21 17 21 17.6666667 21 18 20.6666667 18 20 18 19.3333333 18 16 18 10"/></svg> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Modal de confirmação de exclusão de projeto
+    let projetoIdParaExcluir = null;
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // Event delegation simples para botões de exclusão
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-excluir-projeto');
+            if (btn) {
+                e.preventDefault();
+                if (confirm('Tem certeza que deseja excluir este projeto?')) {
+                    const form = btn.closest('form');
+                    if (form) form.submit();
+                }
+            }
+        });
+        document.getElementById('btnConfirmarExclusaoProjeto').addEventListener('click', function () {
+            if (!projetoIdParaExcluir) return;
+            const form = document.querySelector(`.btn-excluir-projeto[data-projeto-id='${projetoIdParaExcluir}']`).closest('form');
+            if (!form) return;
+            form.submit();
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusaoProjeto'));
+            if (modal) modal.hide();
+            projetoIdParaExcluir = null;
+        });
+
+        // Evento de confirmação para duplicação de projeto
+        document.querySelectorAll('.btn-duplicar-projeto').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const projetoId = this.getAttribute('data-projeto-id');
+                const form = this.closest('form');
+                
+                if (confirm('Tem certeza que deseja duplicar este projeto? Uma cópia será criada com todas as tarefas.')) {
+                    form.submit();
+                }
+            });
+        });
+
+        // Debug para verificar seleções
+    });
+</script>

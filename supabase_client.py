@@ -178,3 +178,46 @@ def delete_task(tarefa_id):
     url = f"{SUPABASE_URL}/rest/v1/tarefas?id=eq.{tarefa_id}"
     resp = requests.delete(url, headers=headers)
     return resp.status_code in [200, 204]
+
+# NOTIFICATION CACHE
+
+def get_notification_cache():
+    """Retorna todo o cache de notificações como dicionário {task_id: notified_at}"""
+    url = f"{SUPABASE_URL}/rest/v1/notification_cache?select=task_id,notified_at"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        data = resp.json()
+        return {item['task_id']: item['notified_at'] for item in data}
+    return {}
+
+def add_to_notification_cache(task_id):
+    """Adiciona uma tarefa ao cache de notificações"""
+    url = f"{SUPABASE_URL}/rest/v1/notification_cache"
+    data = {"task_id": task_id}
+    resp = requests.post(url, headers=headers, json=data)
+    return resp.status_code in [200, 201]
+
+def remove_from_notification_cache(task_id):
+    """Remove uma tarefa do cache de notificações"""
+    url = f"{SUPABASE_URL}/rest/v1/notification_cache?task_id=eq.{task_id}"
+    resp = requests.delete(url, headers=headers)
+    return resp.status_code in [200, 204]
+
+def cleanup_old_notification_cache(days=30):
+    """Remove entradas do cache mais antigas que X dias"""
+    from datetime import datetime, timedelta
+    cutoff_date = datetime.now() - timedelta(days=days)
+    cutoff_iso = cutoff_date.isoformat()
+
+    url = f"{SUPABASE_URL}/rest/v1/notification_cache?notified_at=lt.{cutoff_iso}"
+    resp = requests.delete(url, headers=headers)
+    return resp.status_code in [200, 204]
+
+def is_task_notified(task_id):
+    """Verifica se uma tarefa já foi notificada"""
+    url = f"{SUPABASE_URL}/rest/v1/notification_cache?select=task_id&task_id=eq.{task_id}"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        data = resp.json()
+        return len(data) > 0
+    return False

@@ -300,7 +300,7 @@ def detalhes_projeto(projeto_id):
                 # Garantir que todos os campos sejam strings válidas
                 gantt_geral_data.append({
                     'id': str(tarefa.get('id', '')),
-                    'name': str(tarefa.get('nome', '') or tarefa.get('titulo', '') or 'Tarefa sem nome'),
+                    'name': str(tarefa.get('nome', '') or 'Tarefa sem nome'),
                     'start': str(data_inicio),
                     'end': str(data_fim),
                     'status': str(tarefa.get('status', 'pendente')),
@@ -352,22 +352,84 @@ def detalhes_projeto(projeto_id):
         pode_editar_nome_tarefa = not restricoes_usuario.get('restr_editar_nome_tarefa', False)
     
     # Buscar usuários para o select de responsável (incluindo usuários simples)
+    # Buscar TODOS os usuários do sistema para permitir seleção completa
     try:
         usuarios_resp = supabase.table("usuarios").select("id, nome, email").order("nome").execute()
         usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
     except Exception as e:
         print(f"Erro ao buscar usuarios: {e}")
         usuarios = []
-
+    # Buscar usuários para o FILTRO (apenas responsáveis únicos das tarefas desse projeto)
+    try:
+        responsaveis_ids = list(set([t.get('usuario_id') for t in tarefas if t.get('usuario_id')]))
+        if responsaveis_ids:
+            usuarios_filtro_resp = supabase.table("usuarios").select("id, nome, email").in_("id", responsaveis_ids).order("nome").execute()
+            usuarios_filtro = usuarios_filtro_resp.data if hasattr(usuarios_filtro_resp, 'data') else []
+        else:
+            usuarios_filtro = []
+    except Exception as e:
+        print(f"Erro ao buscar usuarios_filtro: {e}")
+        usuarios_filtro = []
     # Criar dicionário com todas as variáveis para debug
-    from utils.dias_uteis import dias_uteis_entre_datas
+    from utils.dias_uteis import dias_uteis_entre_datas, obter_feriados_banco, obter_feriados_ano
+    # Buscar anos relevantes das tarefas
+    anos_tarefas = set()
+    for tarefa in tarefas:
+        for campo in ['data_inicio_iso', 'data_fim_iso']:
+            data = tarefa.get(campo)
+            if data and len(data) >= 4:
+                try:
+                    ano = int(data[:4])
+                    anos_tarefas.add(ano)
+                except Exception:
+                    pass
+    if not anos_tarefas:
+        anos_tarefas = {datetime.now().year}
+
+    # Buscar feriados manuais do banco
+    feriados_manuais = obter_feriados_banco()
+    # Buscar feriados nacionais da API para os anos relevantes
+    feriados_api = set()
+    for ano in anos_tarefas:
+        feriados_api.update(obter_feriados_ano(ano))
+    feriados_api = list(feriados_api)
+
+    # Cálculo de duração do projeto
+    from datetime import datetime
+    dias_corridos = None
+    dias_uteis = None
+    data_inicio_proj = projeto.get('data_inicio')
+    data_fim_proj = projeto.get('data_fim')
+    if data_inicio_proj and data_fim_proj:
+        try:
+            # Aceita formatos 'YYYY-MM-DD', 'DD/MM/YYYY' ou com 'T'
+            if '/' in data_inicio_proj:
+                data_inicio_dt = datetime.strptime(data_inicio_proj, '%d/%m/%Y')
+            elif 'T' in data_inicio_proj:
+                data_inicio_dt = datetime.strptime(data_inicio_proj.split('T')[0], '%Y-%m-%d')
+            else:
+                data_inicio_dt = datetime.strptime(data_inicio_proj, '%Y-%m-%d')
+            if '/' in data_fim_proj:
+                data_fim_dt = datetime.strptime(data_fim_proj, '%d/%m/%Y')
+            elif 'T' in data_fim_proj:
+                data_fim_dt = datetime.strptime(data_fim_proj.split('T')[0], '%Y-%m-%d')
+            else:
+                data_fim_dt = datetime.strptime(data_fim_proj, '%Y-%m-%d')
+            dias_corridos = (data_fim_dt - data_inicio_dt).days + 1 if data_fim_dt >= data_inicio_dt else 0
+            from utils.dias_uteis import dias_uteis_entre_datas
+            dias_uteis = dias_uteis_entre_datas(data_inicio_dt.date(), data_fim_dt.date())
+        except Exception as e:
+            dias_corridos = None
+            dias_uteis = None
     template_vars = {
         'projeto': projeto,
         'tarefas': tarefas,
         'usuarios': usuarios,
+        'usuarios_filtro': usuarios_filtro,
         'projects_colors': projects_colors,
         'gantt_geral_data': gantt_geral_data,
         'is_admin': is_admin,
+        'usuario_id': usuario_id,
         'pode_criar_projeto': pode_criar_projeto,
         'pode_editar_projeto': pode_editar_projeto,
         'pode_excluir_projeto': pode_excluir_projeto,
@@ -380,14 +442,23 @@ def detalhes_projeto(projeto_id):
         'pode_editar_data_termino': pode_editar_data_termino,
         'pode_editar_predecessoras': pode_editar_predecessoras,
         'pode_editar_nome_tarefa': pode_editar_nome_tarefa,
-    'dias_uteis_entre_datas': dias_uteis_entre_datas,
-    'meses': meses,
-    'dias': dias
+        'dias_uteis_entre_datas': dias_uteis_entre_datas,
+        'meses': meses,
+        'dias': dias,
+        'feriados_manuais': feriados_manuais,
+        'feriados_api': feriados_api,
+        'dias_corridos': dias_corridos,
+        'dias_uteis': dias_uteis
     }
     
     # Detectar se é dispositivo mobile
     user_agent = request.headers.get('User-Agent', '')
     is_mobile = is_mobile_device(user_agent)
+    
+    # DEBUG: Log para verificar qual template está sendo usado
+    print(f"[DEBUG] User-Agent: {user_agent}")
+    print(f"[DEBUG] is_mobile: {is_mobile}")
+    print(f"[DEBUG] Template escolhido: {'detalhes_projeto_mobile.html' if is_mobile else 'detalhes_projeto.html'}")
     
     # Escolher template baseado no dispositivo
     template_name = 'detalhes_projeto_mobile.html' if is_mobile else 'detalhes_projeto.html'
@@ -576,6 +647,10 @@ def editar_projeto(projeto_id):
             return render_template('editar_projeto.html', projeto=projeto, tipos=tipos)
         
         try:
+            # Verificar se o nome do projeto mudou
+            nome_anterior = projeto['nome']
+            nome_mudou = nome_anterior != nome
+            
             # Atualizar projeto
             projeto_data = {
                 "nome": nome,
@@ -588,6 +663,15 @@ def editar_projeto(projeto_id):
             resp = supabase.table("projetos").update(projeto_data).eq("id", str(projeto_id)).execute()
             
             if resp.data:
+                # Se o nome do projeto mudou, atualizar a coleção de todas as tarefas do projeto
+                if nome_mudou:
+                    try:
+                        tarefas_resp = supabase.table("tarefas").update({"colecao": nome}).eq("projeto_id", str(projeto_id)).execute()
+                        print(f"Coleção de {len(tarefas_resp.data) if tarefas_resp.data else 0} tarefas atualizada para '{nome}'")
+                    except Exception as e:
+                        print(f"Erro ao atualizar coleção das tarefas: {e}")
+                        # Não falhar a operação se houver erro na atualização da coleção
+                
                 flash("Projeto atualizado com sucesso!")
                 return redirect(f'/projetos/{projeto_id}')
             else:
@@ -729,3 +813,266 @@ def limpar_notificacoes(user_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/feriados')
+@login_required
+@apenas_admin_izak
+def gerenciar_feriados():
+    """Página para gerenciar feriados manuais e mostrar feriados da API"""
+    try:
+        # Buscar feriados manuais via REST API para contornar RLS
+        from supabase_client import SUPABASE_URL, headers
+        url = f"{SUPABASE_URL}/rest/v1/feriados?order=data"
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            todos_feriados = response.json()
+            # Separar feriados manuais e da API
+            feriados_manuais = [f for f in todos_feriados if f.get('tipo') != 'API']
+            feriados_api_salvos = [f for f in todos_feriados if f.get('tipo') == 'API']
+        else:
+            feriados_manuais = []
+            feriados_api_salvos = []
+
+        # Buscar feriados da API do BrasilAPI para o ano atual (para mostrar disponíveis)
+        from utils.dias_uteis import obter_feriados_ano_completos
+        from datetime import datetime
+
+        try:
+            ano_atual = datetime.now().year
+            feriados_api_disponiveis = obter_feriados_ano_completos(ano_atual)
+        except Exception as e:
+            print(f"Erro ao carregar feriados da API: {e}")
+            feriados_api_disponiveis = []
+
+        return render_template('feriados.html',
+                             feriados_manuais=feriados_manuais,
+                             feriados_api=feriados_api_salvos,
+                             feriados_api_disponiveis=feriados_api_disponiveis,
+                             ano_atual=ano_atual)
+    except Exception as e:
+        flash(f"Erro ao carregar feriados: {str(e)}")
+        return render_template('feriados.html',
+                             feriados_manuais=[],
+                             feriados_api=[],
+                             feriados_api_disponiveis=[],
+                             ano_atual=datetime.now().year)
+
+@main_bp.route('/feriados/adicionar', methods=['POST'])
+@login_required
+@apenas_admin_izak
+def adicionar_feriado():
+    """Adiciona um novo feriado manual"""
+    try:
+        data = request.form.get('data')
+        nome = request.form.get('nome')
+        tipo = request.form.get('tipo', 'manual')
+        uf = request.form.get('uf', '')
+        cidade = request.form.get('cidade', '')
+
+        if not data or not nome:
+            flash("Data e nome são obrigatórios")
+            return redirect('/feriados')
+
+        # Extrair ano da data
+        ano = datetime.strptime(data, '%Y-%m-%d').year
+
+        # Usar API REST diretamente para contornar RLS
+        from supabase_client import SUPABASE_URL, headers
+
+        dados_insercao = {
+            'data': data,
+            'nome': nome,
+            'tipo': tipo,
+            'uf': uf,
+            'cidade': cidade,
+            'ano': ano
+        }
+
+        # Inserir via REST API
+        url = f"{SUPABASE_URL}/rest/v1/feriados"
+        response = requests.post(url, json=dados_insercao, headers=headers)
+
+        if response.status_code in [200, 201]:
+            # Verificar se é uma requisição AJAX
+            if request.headers.get('Content-Type') == 'application/json' or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': True, 'message': 'Feriado adicionado com sucesso!'})
+
+            flash("Feriado adicionado com sucesso!")
+        else:
+            if request.headers.get('Content-Type') == 'application/json' or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'message': f'Erro ao adicionar feriado: {response.text}'})
+
+            flash(f"Erro ao adicionar feriado: {response.text}")
+
+        return redirect('/feriados')
+
+    except Exception as e:
+        # Verificar se é uma requisição AJAX
+        if request.headers.get('Content-Type') == 'application/json' or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': f'Erro ao adicionar feriado: {str(e)}'})
+
+        flash(f"Erro ao adicionar feriado: {str(e)}")
+        return redirect('/feriados')
+
+@main_bp.route('/feriados/<int:feriado_id>/excluir', methods=['POST'])
+@login_required
+@apenas_admin_izak
+def excluir_feriado(feriado_id):
+    """Exclui um feriado manual"""
+    try:
+        supabase.table('feriados').delete().eq('id', feriado_id).execute()
+
+        # Verificar se é uma requisição AJAX
+        if request.headers.get('Content-Type') == 'application/json' or request.is_json:
+            return jsonify({'success': True, 'message': 'Feriado excluído com sucesso!'})
+
+        flash("Feriado excluído com sucesso!")
+        return redirect('/feriados')
+    except Exception as e:
+        if request.headers.get('Content-Type') == 'application/json' or request.is_json:
+            return jsonify({'success': False, 'message': str(e)})
+
+        flash(f"Erro ao excluir feriado: {str(e)}")
+        return redirect('/feriados')
+
+@main_bp.route('/feriados/<int:feriado_id>', methods=['PUT', 'POST'])
+@login_required
+@apenas_admin_izak
+def editar_feriado(feriado_id):
+    """Edita um feriado manual"""
+    try:
+        # Verificar se é uma requisição PUT simulada via POST
+        if request.method == 'POST' and request.form.get('_method') == 'PUT':
+            # Trata como PUT
+            pass
+        elif request.method != 'PUT':
+            return jsonify({'success': False, 'message': 'Método não permitido'}), 405
+
+        data = request.form.get('data')
+        nome = request.form.get('nome')
+        tipo = request.form.get('tipo', 'manual')
+        uf = request.form.get('uf', '')
+        cidade = request.form.get('cidade', '')
+
+        if not data or not nome:
+            return jsonify({'success': False, 'message': 'Data e nome são obrigatórios'})
+
+        # Extrair ano da data
+        ano = datetime.strptime(data, '%Y-%m-%d').year
+
+        # Atualizar feriado
+        dados_atualizacao = {
+            'data': data,
+            'nome': nome,
+            'tipo': tipo,
+            'uf': uf,
+            'cidade': cidade,
+            'ano': ano
+        }
+
+        supabase.table("feriados").update(dados_atualizacao).eq("id", feriado_id).execute()
+
+        return jsonify({'success': True, 'message': 'Feriado atualizado com sucesso!'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@main_bp.route('/feriados/carregar_api/<int:ano>', methods=['POST'])
+@login_required
+@apenas_admin_izak
+def carregar_feriados_api(ano):
+    """Carrega feriados de um ano específico da API BrasilAPI e salva no banco"""
+    try:
+        print(f"[DEBUG] Iniciando carregamento de feriados para o ano {ano}")
+        from utils.dias_uteis import obter_feriados_ano_completos
+        from supabase_client import SUPABASE_URL, headers
+        import requests
+
+        # Buscar feriados da API
+        print(f"[DEBUG] Carregando feriados da API para {ano}")
+        feriados_api = obter_feriados_ano_completos(ano)
+        print(f"[DEBUG] Feriados carregados da API: {len(feriados_api) if feriados_api else 0}")
+
+        if not feriados_api:
+            print(f"[DEBUG] Nenhum feriado carregado da API para {ano}")
+            flash(f"Erro ao carregar feriados de {ano} da API BrasilAPI")
+            return redirect('/feriados')
+
+        # Verificar quais feriados já existem no banco para evitar duplicatas
+        print(f"[DEBUG] Verificando feriados existentes no banco")
+        url = f"{SUPABASE_URL}/rest/v1/feriados?select=data,nome"
+        response = requests.get(url, headers=headers)
+        feriados_existentes = []
+
+        if response.status_code == 200:
+            feriados_banco = response.json()
+            feriados_existentes = [(f.get('data'), f.get('nome'), f.get('tipo')) for f in feriados_banco]
+            print(f"[DEBUG] Feriados existentes no banco: {len(feriados_existentes)}")
+
+        # Filtrar feriados que ainda não existem no banco
+        feriados_para_salvar = []
+        for feriado in feriados_api:
+            data_feriado = feriado.get('date')
+            nome_feriado = feriado.get('name')
+            tipo_feriado = feriado.get('type', 'national')  # Usar o tipo da API
+
+            # Mapear tipos da API para os tipos do sistema
+            if tipo_feriado == 'national':
+                tipo_sistema = 'nacional'
+            elif tipo_feriado == 'state':
+                tipo_sistema = 'estadual'
+            elif tipo_feriado == 'municipal':
+                tipo_sistema = 'municipal'
+            else:
+                tipo_sistema = 'nacional'  # fallback
+
+            # Verificar se já existe (comparar data, nome e tipo)
+            feriado_chave = (data_feriado, nome_feriado, tipo_sistema)
+            if feriado_chave not in feriados_existentes:
+                # Extrair ano da data
+                ano_feriado = int(data_feriado.split('-')[0]) if data_feriado else ano
+                feriados_para_salvar.append({
+                    'data': data_feriado,
+                    'nome': nome_feriado,
+                    'tipo': tipo_sistema,  # Usar o tipo mapeado
+                    'uf': None,
+                    'cidade': None,
+                    'ano': ano_feriado
+                })
+
+        print(f"[DEBUG] Feriados para salvar: {len(feriados_para_salvar)}")
+
+        # Salvar os feriados no banco
+        salvos = 0
+        for feriado in feriados_para_salvar:
+            try:
+                print(f"[DEBUG] Salvando feriado: {feriado['nome']} - {feriado['data']}")
+                url = f"{SUPABASE_URL}/rest/v1/feriados"
+                response = requests.post(url, headers=headers, json=feriado)
+                print(f"[DEBUG] Status do salvamento: {response.status_code}")
+                if response.status_code == 201:
+                    salvos += 1
+                    print(f"[DEBUG] Feriado salvo com sucesso: {feriado['nome']}")
+                else:
+                    print(f"[DEBUG] Erro ao salvar {feriado['nome']}: {response.text}")
+            except Exception as e:
+                print(f"[DEBUG] Exceção ao salvar feriado {feriado['nome']}: {e}")
+
+        print(f"[DEBUG] Total de feriados salvos: {salvos}")
+
+        # Mensagem de sucesso
+        if salvos > 0:
+            flash(f"✅ {salvos} feriados de {ano} foram carregados e salvos com sucesso!")
+        else:
+            flash(f"ℹ️ Todos os feriados de {ano} já estavam cadastrados no sistema.")
+
+        print(f"[DEBUG] Redirecionando para /feriados")
+        return redirect('/feriados')
+
+    except Exception as e:
+        print(f"[DEBUG] Erro geral na função: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash(f"❌ Erro ao carregar feriados da API: {str(e)}")
+        return redirect('/feriados')
