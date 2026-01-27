@@ -1,7 +1,8 @@
 from datetime import date, timedelta
 import requests
 import json
-from config.database import supabase
+# Removido import do supabase para evitar erro na inicialização
+# from config.database import supabase
 
 # Cache global para feriados (para evitar múltiplas chamadas à API)
 _cache_feriados = {}
@@ -13,6 +14,7 @@ def obter_feriados_banco():
     Retorna um dicionário com data como chave e nome como valor
     """
     try:
+        from config.database import supabase  # Import movido para dentro da função
         result = supabase.table('feriados').select('data, nome').execute()
         feriados_db = {item['data']: item['nome'] for item in result.data}
         return feriados_db

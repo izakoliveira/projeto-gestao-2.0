@@ -148,14 +148,19 @@ except ImportError as e:
 # Criar aplicação Flask
 app = Flask(__name__)
 
-# Configurar CORS
-CORS(app, resources={
-    r"/login": {"origins": "*"},
-    r"/logout": {"origins": "*"},
-    r"/verificar_sessao": {"origins": "*"},
-    r"/projetos": {"origins": "*"},
-    r"/tarefas": {"origins": "*"},
-})
+# Configurar CORS com suporte a requisições do mobile
+CORS(app, 
+    resources={
+        r"/*": {
+            "origins": ["*"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": False
+        }
+    },
+    send_wildcard=True,
+    expose_headers=['Content-Type', 'X-Total-Count']
+)
 
 # Definir SECRET_KEY imediatamente para evitar erro de hash method
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sua-chave-secreta-producao-padrao-123456789')
