@@ -7,6 +7,7 @@ SGP - Sistema de Gestão de Projetos
 import os
 from datetime import timedelta
 from flask import Flask, session, jsonify, send_from_directory, request, render_template
+from flask_cors import CORS
 from utils.dias_uteis import dias_uteis_entre_datas
 from dotenv import load_dotenv
 
@@ -146,6 +147,15 @@ except ImportError as e:
 
 # Criar aplicação Flask
 app = Flask(__name__)
+
+# Configurar CORS
+CORS(app, resources={
+    r"/login": {"origins": "*"},
+    r"/logout": {"origins": "*"},
+    r"/verificar_sessao": {"origins": "*"},
+    r"/projetos": {"origins": "*"},
+    r"/tarefas": {"origins": "*"},
+})
 
 # Definir SECRET_KEY imediatamente para evitar erro de hash method
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sua-chave-secreta-producao-padrao-123456789')
