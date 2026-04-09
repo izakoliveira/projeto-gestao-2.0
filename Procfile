@@ -1,0 +1,1 @@
+web: gunicorn app_producao:app
