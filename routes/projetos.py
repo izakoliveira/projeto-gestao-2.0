@@ -210,6 +210,9 @@ def listar_projetos():
         projetos_ids_visiveis = [r['projeto_id'] for r in resp.data]
         if projetos_ids_visiveis:
             projetos = supabase.table("projetos").select("*").in_("id", projetos_ids_visiveis).execute().data
+            # Aplicar filtro de nome do projeto
+            if nome_list:
+                projetos = [p for p in projetos if any(nome.lower() in p['nome'].lower() for nome in nome_list)]
             # Aplicar filtro de status do projeto
             if status_projeto_list:
                 # Normalizar status para aceitar concluído/concluída
@@ -252,6 +255,12 @@ def listar_projetos():
                 projetos = projetos_filtrados
         else:
             projetos = []
+
+    # Aplicar filtros adicionais para todos os usuários (tipo_id, ambiente)
+    if tipo_id:
+        projetos = [p for p in projetos if p.get('tipo_id') == tipo_id]
+    if ambiente:
+        projetos = [p for p in projetos if p.get('tipo_id') == ambiente]
 
     # Buscar tarefas dos projetos
     projeto_ids = [projeto['id'] for projeto in projetos]
@@ -350,6 +359,12 @@ def listar_projetos():
                     tarefas_antes = len(tarefas_filtradas)
                     tarefas_filtradas = [t for t in tarefas_filtradas if t.get('colecao') in colecao_list]
                     print(f"[DEBUG] Filtro de COLEÇÃO aplicado: {tarefas_antes} -> {len(tarefas_filtradas)} tarefas")
+                
+                # Filtro de tarefa (múltiplo)
+                if tarefa_list:
+                    tarefas_antes = len(tarefas_filtradas)
+                    tarefas_filtradas = [t for t in tarefas_filtradas if any(tarefa.lower() in t.get('nome', '').lower() for tarefa in tarefa_list)]
+                    print(f"[DEBUG] Filtro de TAREFA aplicado: {tarefas_antes} -> {len(tarefas_filtradas)} tarefas")
                 
                 # Filtro de responsável (múltiplo)
                 if responsavel_list:
@@ -455,6 +470,15 @@ def listar_projetos():
             todas_colecoes = []
     except Exception:
         todas_colecoes = []
+
+    # Buscar todos os nomes de tarefas para o select de filtro
+    try:
+        if todos_projeto_ids:
+            tarefas_nomes = sorted(list({str(t.get('nome')).strip() for t in todas_tarefas if t.get('nome')}))
+        else:
+            tarefas_nomes = []
+    except Exception:
+        tarefas_nomes = []
 
     # Resolver nomes das pastas
     tipos = [t for t in tipos if t['nome'].lower() not in ['calendarios', 'tarefas diarias']]
@@ -814,6 +838,7 @@ def listar_projetos():
                              todos_projetos=todos_projetos,
                              todos_responsaveis=todos_responsaveis,
                              todas_colecoes=todas_colecoes,
+                             tarefas_nomes=tarefas_nomes,
                              # Passar os valores dos filtros para manter seleções
                              filtros_ativos={
                                  'nome_list': nome_list,
@@ -843,6 +868,7 @@ def listar_projetos():
                              todos_projetos=todos_projetos,
                              todos_responsaveis=todos_responsaveis,
                              todas_colecoes=todas_colecoes,
+                             tarefas_nomes=tarefas_nomes,
                              # Passar os valores dos filtros para manter seleções
                              filtros_ativos={
                                  'nome_list': nome_list,

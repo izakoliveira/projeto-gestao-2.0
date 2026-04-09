@@ -43,13 +43,13 @@
     }
 
     /* Ajustar tamanho do card para acomodar melhor */
-    .col-md-8.col-lg-6 {
-        max-width: 900px !important;
+    .col-md-10.col-lg-8 {
+        max-width: 1200px !important;
     }
 </style>
 <div class="container-fluid mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
+        <div class="col-md-10 col-lg-8">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="fas fa-user-shield"></i> Administração de Restrições</h4>
@@ -92,6 +92,14 @@
                                 <div class="col-md-4 mb-2">
                                     <strong>Projetos</strong>
                                     <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notificar_projeto" name="notificar_projeto" {% if usuario_id and usuario_id|length==1 and restricoes.get(usuario_id[0], {}).get('notificar_projeto', True) %}checked{% endif %}>
+                                        <label class="form-check-label" for="notificar_projeto">Receber notificações de projetos</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="email_projeto" name="email_projeto" {% if usuario_id and usuario_id|length==1 and restricoes.get(usuario_id[0], {}).get('email_projeto', True) %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_projeto">Receber e-mails de projetos</label>
+                                    </div>
+                                    <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_criar_projeto"
                                             name="restr_criar_projeto" {% if usuario_id and usuario_id|length==1 and
                                             restricoes.get(usuario_id[0], {}).get('restr_criar_projeto') %}checked{%
@@ -117,6 +125,14 @@
                                 </div>
                                 <div class="col-md-4 mb-2">
                                     <strong>Tarefas</strong>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notificar_tarefa" name="notificar_tarefa" {% if usuario_id and usuario_id|length==1 and restricoes.get(usuario_id[0], {}).get('notificar_tarefa', True) %}checked{% endif %}>
+                                        <label class="form-check-label" for="notificar_tarefa">Receber notificações de tarefas</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="email_tarefa" name="email_tarefa" {% if usuario_id and usuario_id|length==1 and restricoes.get(usuario_id[0], {}).get('email_tarefa', True) %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_tarefa">Receber e-mails de tarefas</label>
+                                    </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="restr_criar_tarefa"
                                             name="restr_criar_tarefa" {% if usuario_id and usuario_id|length==1 and
@@ -180,6 +196,14 @@
                                             and restricoes.get(usuario_id[0], {}).get('restr_editar_nome_tarefa')
                                             %}checked{% endif %}>
                                         <label class="form-check-label" for="restr_editar_nome_tarefa">Editar Nome/Ordem
+                                            da Tarefa</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="restr_editar_status_tarefa"
+                                            name="restr_editar_status_tarefa" {% if usuario_id and usuario_id|length==1
+                                            and restricoes.get(usuario_id[0], {}).get('restr_editar_status_tarefa')
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="restr_editar_status_tarefa">Editar Status
                                             da Tarefa</label>
                                     </div>
                                 </div>

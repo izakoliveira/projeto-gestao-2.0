@@ -1,3 +1,4 @@
+// Arquivo renomeado para evitar conflito de importação. Usar apenas o admin.py da pasta routes/ principal.
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, jsonify
 from utils.auth import login_required, apenas_admin_izak, carregar_restricoes, salvar_restricoes
 from config.database import supabase, SUPABASE_URL, SUPABASE_KEY

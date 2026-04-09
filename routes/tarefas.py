@@ -308,53 +308,6 @@ def criar_tarefa(projeto_id):
         # Se coleção não foi fornecida, usar o nome do projeto como padrão
         if not colecao:
             colecao = projeto.get('nome', '')
-        predecessoras = normaliza_opcional(request.form.get('predecessoras'))
-
-        # Validação básica
-        if not nome:
-            flash("Nome da tarefa é obrigatório!")
-            return render_template('criar_tarefa.html', projeto=projeto)
-
-        try:
-            # Buscar ordem máxima atual
-            tarefas_resp = supabase.table("tarefas").select("ordem").eq("projeto_id", str(projeto_id)).order("ordem", desc=True).limit(1).execute()
-            nova_ordem = 1
-            if tarefas_resp.data:
-                nova_ordem = tarefas_resp.data[0]['ordem'] + 1
-
-            # Criar tarefa
-            tarefa_data = {
-                "nome": nome,
-                "data_inicio": data_inicio,
-                "data_fim": data_fim,
-                "duracao": duracao,
-                "status": status,
-                "colecao": colecao,
-                "predecessoras": predecessoras,
-                "projeto_id": str(projeto_id),
-                "ordem": nova_ordem
-            }
-            if usuario_id:
-                tarefa_data["usuario_id"] = usuario_id
-
-            resp = supabase.table("tarefas").insert(tarefa_data).execute()
-
-            if resp.data:
-                flash("Tarefa criada com sucesso!")
-                return redirect(f'/projetos/{projeto_id}')
-            else:
-                flash(f"Erro ao criar tarefa: {resp}")
-        except Exception as e:
-            flash(f"Erro ao criar tarefa: {str(e)}")
-            print(f"Erro ao criar tarefa: {e}")
-    
-    # Buscar usuários para o select de responsável (incluindo usuários simples)
-    try:
-        usuarios_resp = supabase.table("usuarios").select("id, nome, email").order("nome").execute()
-        usuarios = usuarios_resp.data if hasattr(usuarios_resp, 'data') else []
-    except Exception as e:
-        usuarios = []
-    
     return render_template('criar_tarefa.html', projeto=projeto, usuarios=usuarios)
 
 @tarefas_bp.route('/tarefas/editar/<uuid:tarefa_id>', methods=['GET', 'POST'])
@@ -378,6 +331,11 @@ def editar_tarefa(tarefa_id):
         projeto = projeto_resp.data if hasattr(projeto_resp, 'data') else None
     except Exception as e:
         projeto = None
+
+    # Carregar restrições do usuário
+    restricoes = carregar_restricoes()
+    usuario_id_sessao = session.get('user_id')
+    restricoes_usuario = restricoes.get(str(usuario_id_sessao), {}) if usuario_id_sessao else {}
 
     if request.method == 'POST':
         # Verificar se é uma requisição JSON
@@ -433,7 +391,7 @@ def editar_tarefa(tarefa_id):
             projeto_id_ref = tarefa.get('projeto_id') if tarefa else None
             nome_tarefa_ref = tarefa.get('nome') if tarefa else ''
 
-            # Verificar permissão para alterar o status: apenas o responsável (ou admin específico) pode
+            # Verificar permissão para alterar o status baseado nas restrições
             pode_alterar_status = False
             try:
                 tarefa_existente_resp = supabase.table("tarefas").select("usuario_id").eq("id", str(tarefa_id)).single().execute()
@@ -444,8 +402,15 @@ def editar_tarefa(tarefa_id):
             usuario_id_sessao = session.get('user_id')
             if is_admin_session():
                 pode_alterar_status = True
-            elif tarefa_existente and tarefa_existente.get('usuario_id') and usuario_id_sessao and str(tarefa_existente.get('usuario_id')) == str(usuario_id_sessao):
-                pode_alterar_status = True
+            else:
+                restrito_status = restricoes_usuario.get('restr_editar_status_tarefa', False)
+                if restrito_status:
+                    # Apenas tarefas próprias
+                    if tarefa_existente and tarefa_existente.get('usuario_id') and usuario_id_sessao and str(tarefa_existente.get('usuario_id')) == str(usuario_id_sessao):
+                        pode_alterar_status = True
+                else:
+                    # Pode alterar status de qualquer tarefa
+                    pode_alterar_status = True
 
             # Montar payload base
             tarefa_data = {

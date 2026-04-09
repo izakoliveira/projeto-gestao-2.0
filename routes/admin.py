@@ -188,7 +188,12 @@ def admin_restricoes():
                     'restr_editar_duracao': request.form.get('restr_editar_duracao') == 'on',
                     'restr_editar_datas': request.form.get('restr_editar_datas') == 'on',
                     'restr_editar_predecessoras': request.form.get('restr_editar_predecessoras') == 'on',
-                    'restr_editar_nome_tarefa': request.form.get('restr_editar_nome_tarefa') == 'on'
+                    'restr_editar_nome_tarefa': request.form.get('restr_editar_nome_tarefa') == 'on',
+                    'restr_editar_status_tarefa': request.form.get('restr_editar_status_tarefa') == 'on',
+                    'notificar_projeto': request.form.get('notificar_projeto') == 'on',
+                    'email_projeto': request.form.get('email_projeto') == 'on',
+                    'notificar_tarefa': request.form.get('notificar_tarefa') == 'on',
+                    'email_tarefa': request.form.get('email_tarefa') == 'on'
                 })
                 
                 print(f"[DEBUG] Restrições atualizadas para {usuario_id}: {restricoes[usuario_id]}")

@@ -11,7 +11,6 @@ import threading
 import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from supabase import create_client, Client
 
 # Importar funções do cliente Supabase para cache
 try:
@@ -33,6 +32,13 @@ except ImportError:
     logger.error("Erro ao importar função verificar_tarefa_atrasada")
     verificar_tarefa_atrasada = None
 
+# Importar cliente Supabase existente
+try:
+    from config.database import supabase as existing_supabase
+except ImportError:
+    logger.error("Erro ao importar cliente Supabase existente")
+    existing_supabase = None
+
 # Carregar variáveis de ambiente
 try:
     from dotenv import load_dotenv
@@ -48,16 +54,13 @@ class OverdueNotificationManager:
     """Gerenciador de notificações de tarefas atrasadas"""
 
     def __init__(self):
-        # Configurações do Supabase
-        self.supabase_url = os.getenv('SUPABASE_URL')
-        self.supabase_key = os.getenv('SUPABASE_KEY')
-
-        if not self.supabase_url or not self.supabase_key:
-            logger.error("Configurações do Supabase não encontradas")
-            self.supabase = None
+        # Usar cliente Supabase existente
+        if existing_supabase is not None:
+            self.supabase = existing_supabase
+            logger.info("Usando cliente Supabase existente para notificações atrasadas")
         else:
-            self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
-            logger.info("Conectado ao Supabase para notificações atrasadas")
+            logger.error("Cliente Supabase existente não disponível")
+            self.supabase = None
 
         # Configurações de agendamento
         self.check_interval_hours = int(os.getenv('OVERDUE_CHECK_INTERVAL_HOURS', '24'))  # Verificar a cada 24 horas por padrão
@@ -67,10 +70,10 @@ class OverdueNotificationManager:
         self.running = False
         self.thread = None
 
-        # Cache para evitar notificações duplicadas (carregado do banco)
-        self.last_notification_cache = self._load_notification_cache()
+        # Cache para evitar notificações duplicadas (inicializado vazio, carregado depois)
+        self.last_notification_cache = {}  # self._load_notification_cache()
 
-        logger.info(f"Cache de notificações carregado: {len(self.last_notification_cache)} entradas")
+        logger.info("Cache de notificações inicializado vazio (será carregado quando necessário)")
 
     def _load_notification_cache(self) -> Dict[str, datetime]:
         """Carrega o cache de notificações do banco de dados"""
@@ -92,7 +95,8 @@ class OverdueNotificationManager:
                     continue
 
             # Limpar entradas antigas (mais de 30 dias) - será feito no banco também
-            cutoff_date = datetime.now() - timedelta(days=30)
+            from datetime import timezone
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
             cache = {k: v for k, v in cache.items() if v > cutoff_date}
 
             logger.info(f"Cache carregado com {len(cache)} entradas válidas")
@@ -101,10 +105,12 @@ class OverdueNotificationManager:
             logger.error(f"Erro ao carregar cache de notificações: {str(e)}")
             return {}
 
-    def _save_notification_cache(self):
-        """Salva o cache de notificações no banco (não necessário - operações são síncronas)"""
-        # Com banco de dados, as operações são síncronas, então não precisamos salvar explicitamente
-        logger.debug(f"Cache em memória: {len(self.last_notification_cache)} entradas")
+    def _ensure_cache_loaded(self):
+        """Garante que o cache está carregado antes de usar"""
+        if not self.last_notification_cache:
+            logger.info("Carregando cache de notificações sob demanda...")
+            self.last_notification_cache = self._load_notification_cache()
+            logger.info(f"Cache carregado: {len(self.last_notification_cache)} entradas")
 
     def _cleanup_old_cache_entries(self):
         """Remove entradas antigas do cache no banco de dados (mais de 7 dias)"""
@@ -135,7 +141,7 @@ class OverdueNotificationManager:
             return
 
         self.running = True
-        self.thread = threading.Thread(target=self._monitoring_loop, daemon=True)
+        self.thread = threading.Thread(target=self._monitoring_loop, daemon=False)
         self.thread.start()
         logger.info(f"Monitoramento de tarefas atrasadas iniciado (intervalo: {self.check_interval_hours} horas)")
 
@@ -414,13 +420,22 @@ class OverdueNotificationManager:
             self.check_and_notify_overdue_tasks()
 
 
-# Instância global do gerenciador
-overdue_manager = OverdueNotificationManager()
+# Instância global do gerenciador (inicializada sob demanda)
+overdue_manager = None
+
+
+def get_overdue_manager():
+    """Retorna a instância do gerenciador, criando se necessário"""
+    global overdue_manager
+    if overdue_manager is None:
+        overdue_manager = OverdueNotificationManager()
+    return overdue_manager
 
 
 def start_overdue_monitoring():
     """Inicia o monitoramento de tarefas atrasadas"""
-    overdue_manager.start_background_monitoring()
+    manager = get_overdue_manager()
+    manager.start_background_monitoring()
 
 
 def stop_overdue_monitoring():

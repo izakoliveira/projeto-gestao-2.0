@@ -7,6 +7,7 @@ SGP - Sistema de Gestão de Projetos
 import os
 from datetime import timedelta
 from flask import Flask, session, jsonify, send_from_directory, request, render_template
+from flask_cors import CORS
 from utils.dias_uteis import dias_uteis_entre_datas
 from dotenv import load_dotenv
 
@@ -146,6 +147,13 @@ except ImportError as e:
 
 # Criar aplicação Flask
 app = Flask(__name__)
+
+# Configurar CORS para permitir requisições do app mobile e navegador
+CORS(app, 
+     origins=["*"],  # Permitir qualquer origem
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["*"],  # Permitir qualquer header
+     supports_credentials=True)
 
 # Definir SECRET_KEY imediatamente para evitar erro de hash method
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sua-chave-secreta-producao-padrao-123456789')
@@ -689,6 +697,111 @@ def handle_method_override():
         method = request.form.get('_method', '').upper()
         if method in ['PUT', 'DELETE', 'PATCH']:
             request.environ['REQUEST_METHOD'] = method
+
+# ===================================
+# API Routes for Mobile App
+# ===================================
+
+@app.route('/api/dashboard', methods=['GET'])
+def api_dashboard():
+    """API para dashboard mobile - retorna estatísticas"""
+    try:
+        # Por enquanto sem autenticação para teste
+        # Buscar projetos
+        projetos_resp = supabase.table("projetos").select("*").execute()
+        projetos = projetos_resp.data or []
+        
+        # Buscar tarefas
+        tarefas_resp = supabase.table("tarefas").select("*").execute()
+        tarefas = tarefas_resp.data or []
+        
+        # Calcular estatísticas
+        total_projetos = len(projetos)
+        total_tarefas = len(tarefas)
+        tarefas_pendentes = len([t for t in tarefas if t.get('status') in ['PENDENTE', 'AGUARDANDO']])
+        tarefas_em_andamento = len([t for t in tarefas if t.get('status') == 'EM_ANDAMENTO'])
+        tarefas_concluidas = len([t for t in tarefas if t.get('status') == 'CONCLUIDA'])
+        
+        stats = {
+            'projetos_count': total_projetos,
+            'tarefas_count': total_tarefas,
+            'tarefas_pendentes': tarefas_pendentes,
+            'tarefas_em_andamento': tarefas_em_andamento,
+            'tarefas_concluidas': tarefas_concluidas,
+        }
+        
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projetos', methods=['GET'])
+def api_projetos():
+    """API para projetos recentes"""
+    try:
+        # Buscar projetos (últimos 5 por id)
+        projetos_resp = supabase.table("projetos").select("*").limit(5).execute()
+        projetos = projetos_resp.data or []
+        
+        # Mapeamento de status
+        status_map = {
+            'EM_ANDAMENTO': 'em progresso',
+            'PENDENTE': 'pendente',
+            'CONCLUIDA': 'concluída',
+            'CANCELADA': 'cancelada'
+        }
+        
+        # Formatar para mobile
+        projetos_formatados = []
+        for p in projetos:
+            status_db = p.get('status', 'PENDENTE')
+            status_display = status_map.get(status_db, 'pendente')
+            projetos_formatados.append({
+                'id': p['id'],
+                'nome': p['nome'],
+                'status': status_display,
+                'data_inicio': p.get('data_inicio'),
+                'data_fim': p.get('data_fim')
+            })
+        
+        return jsonify(projetos_formatados)
+    except Exception as e:
+        print(f"[API ERROR] /api/projetos: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/tarefas', methods=['GET'])
+def api_tarefas():
+    """API para tarefas recentes"""
+    try:
+        # Buscar tarefas com nome do projeto (join opcional)
+        tarefas_resp = supabase.table("tarefas").select("*, projetos!left(nome)").limit(5).execute()
+        tarefas = tarefas_resp.data or []
+        
+        # Mapeamento de status
+        status_map = {
+            'EM_ANDAMENTO': 'em progresso',
+            'PENDENTE': 'pendente',
+            'AGUARDANDO': 'pendente',
+            'CONCLUIDA': 'concluída',
+            'CANCELADA': 'cancelada'
+        }
+        
+        # Formatar para mobile
+        tarefas_formatadas = []
+        for t in tarefas:
+            projeto_nome = t.get('projetos', {}).get('nome', 'N/A') if t.get('projetos') else 'N/A'
+            status_db = t.get('status', 'PENDENTE')
+            status_display = status_map.get(status_db, 'pendente')
+            tarefas_formatadas.append({
+                'id': t['id'],
+                'nome': t['nome'],
+                'status': status_display,
+                'projeto_nome': projeto_nome
+            })
+        
+        return jsonify(tarefas_formatadas)
+    except Exception as e:
+        print(f"[API ERROR] /api/tarefas: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 # ===================================
 

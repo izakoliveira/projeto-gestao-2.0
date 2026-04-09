@@ -25,7 +25,8 @@ def carregar_restricoes():
                 'restr_criar_projeto', 'restr_editar_projeto', 'restr_excluir_projeto',
                 'restr_criar_tarefa', 'restr_editar_tarefa', 'restr_excluir_tarefa',
                 'restr_editar_responsavel', 'restr_editar_duracao', 'restr_editar_datas',
-                'restr_editar_predecessoras', 'restr_editar_nome_tarefa'
+                'restr_editar_predecessoras', 'restr_editar_nome_tarefa', 'restr_editar_status_tarefa',
+                'notificar_projeto', 'email_projeto', 'notificar_tarefa', 'email_tarefa'
             ]
             
             for usuario in usuarios:
@@ -69,7 +70,8 @@ def salvar_restricoes(restricoes):
                 'restr_criar_projeto', 'restr_editar_projeto', 'restr_excluir_projeto',
                 'restr_criar_tarefa', 'restr_editar_tarefa', 'restr_excluir_tarefa',
                 'restr_editar_responsavel', 'restr_editar_duracao', 'restr_editar_datas',
-                'restr_editar_predecessoras', 'restr_editar_nome_tarefa'
+                'restr_editar_predecessoras', 'restr_editar_nome_tarefa', 'restr_editar_status_tarefa',
+                'notificar_projeto', 'email_projeto', 'notificar_tarefa', 'email_tarefa'
             ]
             
             dados_update = {}

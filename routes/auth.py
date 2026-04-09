@@ -25,22 +25,34 @@ auth_bp = Blueprint('auth', __name__)
 def login():
     """Rota de login"""
     # Verificar se é uma requisição de API (JSON)
-    # Mais permissivo: aceita JSON, ou headers específicos de mobile/API
+    # Priorizar o parâmetro 'api' no form data - se presente, sempre tratar como API
     is_api_request = (
-        request.is_json or 
+        request.form.get('api') == 'true' or  # Prioridade máxima
+        request.is_json or
         request.headers.get('Accept') == 'application/json' or
         request.headers.get('Content-Type') == 'application/json' or
         request.headers.get('User-Agent', '').lower().find('mobile') >= 0 or
         request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
         'api' in request.headers.get('Accept', '').lower()
     )
-    
-    print(f"[DEBUG] is_api_request: {is_api_request}")
-    print(f"[DEBUG] Content-Type: {request.headers.get('Content-Type')}")
-    print(f"[DEBUG] Accept: {request.headers.get('Accept')}")
-    print(f"[DEBUG] User-Agent: {request.headers.get('User-Agent')}")
-    
+
+    print(f"[MOBILE-DEBUG] ===== NOVA REQUISIÇÃO DE LOGIN =====")
+    print(f"[MOBILE-DEBUG] Remote addr: {request.remote_addr}")
+    print(f"[MOBILE-DEBUG] is_api_request: {is_api_request}")
+    print(f"[MOBILE-DEBUG] api parameter: {request.form.get('api')}")
+    print(f"[MOBILE-DEBUG] User-Agent: {request.headers.get('User-Agent')}")
+    print(f"[MOBILE-DEBUG] Accept: {request.headers.get('Accept')}")
+
     if request.method == 'POST':
+        # Verificar também o parâmetro api no form data (depois de POST)
+        if request.form.get('api') == 'true':
+            is_api_request = True
+
+        print(f"[MOBILE-DEBUG] Nova requisição de login de: {request.remote_addr}")
+        print(f"[MOBILE-DEBUG] User-Agent: {request.headers.get('User-Agent')}")
+        print(f"[MOBILE-DEBUG] is_api_request final: {is_api_request}")
+        print(f"[MOBILE-DEBUG] Form data keys: {list(request.form.keys())}")
+        
         if request.is_json:
             data = request.get_json()
             email = data.get('email', '').strip().lower()
@@ -51,32 +63,94 @@ def login():
             senha = request.form.get('senha')
             lembrar = 'lembrar' in request.form
 
-        # TESTE SIMPLES: aceitar qualquer email/senha para API
-        if is_api_request and email and senha:
+        user = get_user_by_email(email)
+        print("Usuário retornado:", user)
+        
+        # Bloquear login de usuários simples (email termina com @sistema.local)
+        if user and user['email'].endswith('@sistema.local'):
+            if is_api_request:
+                return jsonify({'success': False, 'message': 'Este usuário não tem permissão para fazer login.'}), 403
+            flash('Este usuário não tem permissão para fazer login.', 'danger')
+            return render_template('login.html')
+        
+        if user:
+            print('Hash salvo:', user['senha_hash'])
+            print('Senha digitada:', senha)
+            # Garantir que a senha seja uma string não vazia
+            senha_str = str(senha).strip() if senha is not None else ""
+            print('Senha processada:', repr(senha_str))
+            verificacao = False
+            
+            if senha_str:  # Só verificar se a senha não estiver vazia
+                try:
+                    # Primeiro tentar verificar com bcrypt diretamente
+                    import bcrypt
+                    if user['senha_hash'] and isinstance(user['senha_hash'], str):
+                        try:
+                            hash_bytes = user['senha_hash'].encode('utf-8')
+                            senha_bytes = senha_str.encode('utf-8')
+                            verificacao = bcrypt.checkpw(senha_bytes, hash_bytes)
+                            print('Verificação bcrypt direta:', verificacao)
+                        except Exception as bcrypt_error:
+                            print('Erro bcrypt direto:', str(bcrypt_error))
+                            verificacao = False
+                    
+                    # Se bcrypt falhou, tentar com werkzeug
+                    if not verificacao:
+                        try:
+                            verificacao = check_password_hash(user['senha_hash'], senha_str)
+                            print('Verificação werkzeug:', verificacao)
+                        except Exception as werkzeug_error:
+                            print('Erro werkzeug:', str(werkzeug_error))
+                            verificacao = False
+                            
+                except Exception as e:
+                    print('ERRO geral na verificação:', str(e))
+                    verificacao = False
+        
+        if user and senha_str and verificacao:
             # Configurar sessão como permanente apenas se "lembrar" estiver marcado
             session.permanent = lembrar
             
-            session['user_id'] = 1
-            session['user_nome'] = 'Test User'
-            session['user_email'] = email
-            session['is_admin'] = False
+            session['user_id'] = user['id']
+            session['user_nome'] = user['nome']
+            session['user_email'] = user['email']
+            # Verificar se é admin usando a nova tabela usuarios_admin
+            from utils.auth import is_admin_session
+            is_admin = is_admin_session()
+            session['is_admin'] = is_admin
+            print(f"[DEBUG] Login - User: {user['email']}, is_admin: {is_admin}")
             
-            return jsonify({
-                'success': True,
-                'message': 'Login realizado com sucesso!',
-                'user': {
-                    'id': 1,
-                    'nome': 'Test User',
-                    'email': email,
-                    'is_admin': False
-                }
-            }), 200
+            if is_api_request:
+                print(f"[MOBILE-DEBUG] Retornando JSON de sucesso para API request")
+                print(f"[MOBILE-DEBUG] Response: success=True, user={user['email']}")
+                return jsonify({
+                    'success': True,
+                    'message': 'Login realizado com sucesso!',
+                    'user': {
+                        'id': user['id'],
+                        'nome': user['nome'],
+                        'email': user['email'],
+                        'is_admin': is_admin
+                    }
+                }), 200
+            
+            return redirect('/dashboard')
         
-        return redirect('/dashboard')
+        # Login falhou
+        if is_api_request:
+            print(f"[MOBILE-DEBUG] Login falhou, retornando JSON de erro")
+            print(f"[MOBILE-DEBUG] Response: success=False, message=E-mail ou senha incorretos")
+            return jsonify({'success': False, 'message': 'E-mail ou senha incorretos.'}), 401
+        flash('E-mail ou senha incorretos.', 'danger')
+        return render_template('login.html')
     
     # Para requisições GET ou quando não é API
     if is_api_request:
+        print(f"[MOBILE-DEBUG] Requisição GET ou não-API, retornando JSON de erro")
+        print(f"[MOBILE-DEBUG] Response: success=False, message=Método não permitido")
         return jsonify({'success': False, 'message': 'Método não permitido ou dados inválidos.'}), 405
+    print(f"[MOBILE-DEBUG] Retornando template HTML login.html")
     return render_template('login.html')
 
 @auth_bp.route('/logout')
@@ -130,7 +204,8 @@ def cadastro():
                     'restr_editar_duracao': False,
                     'restr_editar_datas': False,
                     'restr_editar_predecessoras': False,
-                    'restr_editar_nome_tarefa': False
+                    'restr_editar_nome_tarefa': False,
+                    'restr_editar_status_tarefa': False
                 }
                 restricoes[str(novo_usuario['id'])] = restricoes_padrao
                 with open(RESTRICOES_PATH, 'w') as f:

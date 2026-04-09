@@ -11,7 +11,25 @@ Sistema web moderno para gestão completa de projetos, desenvolvido em Python Fl
 - **Controle de Usuários**: Sistema de permissões e níveis de acesso
 - **Interface Moderna**: Design responsivo e intuitivo
 
-## 🛠️ Tecnologias Utilizadas
+## � App Mobile
+
+O sistema inclui um **servidor dedicado para app mobile** completamente independente:
+
+### Servidor Mobile Separado
+- **Arquivo**: `app_mobile.py`
+- **Porta**: 5001 (diferente do sistema principal)
+- **Propósito**: API exclusiva para app React Native
+- **Vantagens**: Leve, rápido, sem dependências do sistema web
+
+### Como Usar
+1. Execute: `INICIAR_SERVIDOR_MOBILE.bat` (Windows)
+2. Ou: `python app_mobile.py`
+3. App mobile se conecta automaticamente à porta 5001
+
+### Documentação Detalhada
+Veja `SERVIDOR_MOBILE_README.md` para informações completas.
+
+## �🛠️ Tecnologias Utilizadas
 
 - **Backend**: Python Flask
 - **Banco de Dados**: Supabase (PostgreSQL)

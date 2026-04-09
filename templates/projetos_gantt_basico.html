@@ -708,6 +708,52 @@
                     </div>
                 </div>
 
+                <!-- Filtro Tarefa -->
+                <div class="custom-select-wrapper" data-select-id="tarefa">
+                    <label style="font-weight: 600; color: #4a47a3; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-tasks"></i> Tarefa</span>
+                        <button type="button" class="btn btn-link p-0 m-0 clear-btn"
+                            style="color: #b0b0b0; font-size: 1.1em;">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </label>
+                    
+                    <select id="tarefa-desktop" name="tarefa" multiple style="display: none !important;">
+                        {% if tarefas_nomes and tarefas_nomes|length > 0 %}
+                        {% for tarefa_nome in tarefas_nomes %}
+                        <option value="{{ tarefa_nome }}" {% if tarefa_nome in request.args.getlist('tarefa') %}selected{% endif %}>{{ tarefa_nome }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    
+                    <div class="custom-select-display">
+                        <div class="custom-select-value">
+                            <span class="placeholder" style="display: inline; cursor: pointer !important; pointer-events: none !important;">Selecione a Tarefa</span>
+                        </div>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 11L3 6L4.5 4.5L8 8L11.5 4.5L13 6L8 11Z" fill="#6c757d"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown">
+                        <div class="custom-select-search">
+                            <input type="text" placeholder="Buscar..." class="search-input">
+                        </div>
+                        <div class="custom-select-options">
+                            {% if tarefas_nomes and tarefas_nomes|length > 0 %}
+                            {% for tarefa_nome in tarefas_nomes %}
+                            <div class="custom-option" data-value="{{ tarefa_nome }}">
+                                <input type="checkbox" {% if tarefa_nome in request.args.getlist('tarefa') %}checked{% endif %}>
+                                <span>{{ tarefa_nome }}</span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div style="padding: 12px; text-align: center; color: #6c757d;">Nenhuma tarefa disponível</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Filtros de datas na mesma linha -->
                 <div style="display: flex; gap: 8px;">
                     <div style="flex: 1; position: relative;">
